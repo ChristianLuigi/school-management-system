@@ -5,8 +5,8 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- =========================================================
 -- ENUMS
--- =========================================================
-DO $$
+-- ========================================================
+DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'locale_code') THEN
         CREATE TYPE locale_code AS ENUM ('fr', 'en');
