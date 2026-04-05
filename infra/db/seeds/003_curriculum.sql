@@ -1,0 +1,119 @@
+-- SUBJECTS
+INSERT INTO subjects (
+  id, school_id, code, name_i18n, default_coefficient, is_core
+)
+VALUES
+(
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+  '11111111-1111-4111-8111-111111111111',
+  'MATH',
+  '{"fr":"Mathématiques","en":"Mathematics"}'::jsonb,
+  5.00,
+  TRUE
+),
+(
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
+  '11111111-1111-4111-8111-111111111111',
+  'FR',
+  '{"fr":"Français","en":"French"}'::jsonb,
+  4.00,
+  TRUE
+),
+(
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
+  '11111111-1111-4111-8111-111111111111',
+  'ENG',
+  '{"fr":"Anglais","en":"English"}'::jsonb,
+  4.00,
+  TRUE
+),
+(
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4',
+  '11111111-1111-4111-8111-111111111111',
+  'SCI',
+  '{"fr":"Sciences","en":"Science"}'::jsonb,
+  3.00,
+  TRUE
+)
+ON CONFLICT (school_id, code) DO NOTHING;
+
+-- SECTION SUBJECTS
+INSERT INTO section_subjects (
+  id,
+  school_id,
+  academic_year_id,
+  section_id,
+  subject_id,
+  teacher_id,
+  coefficient,
+  grading_configuration_id,
+  is_active
+)
+VALUES
+(
+  '8bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1',
+  '11111111-1111-4111-8111-111111111111',
+  '33333333-3333-4333-8333-333333333333',
+  '66666666-6666-4666-8666-666666666671',
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+  '79999999-9999-4999-8999-999999999991',
+  5.00,
+  '22222222-2222-4222-8222-222222222222',
+  TRUE
+),
+(
+  '8bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2',
+  '11111111-1111-4111-8111-111111111111',
+  '33333333-3333-4333-8333-333333333333',
+  '66666666-6666-4666-8666-666666666671',
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
+  '79999999-9999-4999-8999-999999999991',
+  4.00,
+  '22222222-2222-4222-8222-222222222222',
+  TRUE
+),
+(
+  '8bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb3',
+  '11111111-1111-4111-8111-111111111111',
+  '33333333-3333-4333-8333-333333333333',
+  '66666666-6666-4666-8666-666666666672',
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+  '79999999-9999-4999-8999-999999999992',
+  5.00,
+  '22222222-2222-4222-8222-222222222222',
+  TRUE
+),
+(
+  '8bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb4',
+  '11111111-1111-4111-8111-111111111111',
+  '33333333-3333-4333-8333-333333333333',
+  '66666666-6666-4666-8666-666666666672',
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
+  '79999999-9999-4999-8999-999999999992',
+  4.00,
+  '22222222-2222-4222-8222-222222222222',
+  TRUE
+),
+(
+  '8bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb5',
+  '11111111-1111-4111-8111-111111111111',
+  '33333333-3333-4333-8333-333333333333',
+  '66666666-6666-4666-8666-666666666673',
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+  '79999999-9999-4999-8999-999999999991',
+  5.00,
+  '22222222-2222-4222-8222-222222222222',
+  TRUE
+),
+(
+  '8bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb6',
+  '11111111-1111-4111-8111-111111111111',
+  '33333333-3333-4333-8333-333333333333',
+  '66666666-6666-4666-8666-666666666673',
+  '8aaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4',
+  '79999999-9999-4999-8999-999999999992',
+  3.00,
+  '22222222-2222-4222-8222-222222222222',
+  TRUE
+)
+ON CONFLICT (section_id, subject_id, academic_year_id) DO NOTHING;
