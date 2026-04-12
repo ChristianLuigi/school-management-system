@@ -6,6 +6,7 @@ const AUTH_COOKIE_NAME =
 function isPublicPath(pathname: string) {
   return (
     pathname === "/login" ||
+    pathname.startsWith("/api/session/") ||
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico"
   );
@@ -18,11 +19,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
 
-  if (!session) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();

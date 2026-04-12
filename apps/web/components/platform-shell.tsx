@@ -3,35 +3,26 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BookOpen,
-  ClipboardCheck,
-  ClipboardList,
-  CreditCard,
-  GraduationCap,
-  Home,
+  Building2,
+  LayoutDashboard,
   LogOut,
-  Settings,
-  Users,
+  Mail,
+  Settings2,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 
-type SchoolShellProps = {
+type PlatformShellProps = {
   children: ReactNode;
-  headerExtra?: ReactNode;
 };
 
 const navItems = [
-  { href: "/school", label: "Dashboard", icon: Home },
-  { href: "/setup", label: "Setup", icon: Settings },
-  { href: "/students", label: "Students", icon: Users },
-  { href: "/academics", label: "Academics", icon: GraduationCap },
-  { href: "/attendance", label: "Attendance", icon: ClipboardCheck },
-  { href: "/gradebooks", label: "Gradebooks", icon: ClipboardList },
-  { href: "/finance", label: "Finance", icon: CreditCard },
-  { href: "/reports", label: "Reports", icon: BookOpen },
+  { href: "/platform", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/platform/schools", label: "Schools", icon: Building2 },
+  { href: "/platform/invitations", label: "Invitations", icon: Mail },
+  { href: "/platform/onboarding", label: "Onboarding", icon: Settings2 },
 ];
 
-export function AdminShell({ children, headerExtra }: SchoolShellProps) {
+export function PlatformShell({ children }: PlatformShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -57,9 +48,9 @@ export function AdminShell({ children, headerExtra }: SchoolShellProps) {
         <aside className="border-r border-slate-200 bg-white">
           <div className="border-b border-slate-200 px-6 py-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              School Management
+              Platform
             </div>
-            <div className="mt-1 text-xl font-bold">School Workspace</div>
+            <div className="mt-1 text-xl font-bold">Super Admin</div>
           </div>
 
           <nav className="flex flex-col gap-1 p-4">
@@ -86,26 +77,22 @@ export function AdminShell({ children, headerExtra }: SchoolShellProps) {
         </aside>
 
         <main className="min-w-0">
-          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-6 py-4">
+          <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
             <div>
               <div className="text-xs uppercase tracking-wider text-slate-500">
-                Internal Operations
+                Multi-school SaaS
               </div>
-              <div className="text-lg font-semibold">School Workspace</div>
+              <div className="text-lg font-semibold">Platform Workspace</div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              {headerExtra}
-
-              <button
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
-              >
-                <LogOut size={16} />
-                {loggingOut ? "Signing out..." : "Logout"}
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+            >
+              <LogOut size={16} />
+              {loggingOut ? "Signing out..." : "Logout"}
+            </button>
           </header>
 
           <div className="p-6">{children}</div>
