@@ -3,26 +3,32 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const ADMIN_EMAIL =
-  process.env.NEXT_PUBLIC_ADMIN_LOGIN_EMAIL ?? "admin@local.test";
-
-const ADMIN_PASSWORD =
-  process.env.NEXT_PUBLIC_ADMIN_LOGIN_PASSWORD ?? "admin123";
-
-const AUTH_COOKIE_NAME =
-  process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME ?? "school_admin_session";
+type LoginResponse = {
+  ok: boolean;
+  user: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    platformRole: "SUPER_ADMIN" | null;
+  };
+  schools: Array<{
+    school_id: string;
+    school_name: string;
+    school_code: string;
+    membership_id: string;
+    membership_status: string;
+    roles: string[];
+  }>;
+};
 
 export default function LoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("admin@local.test");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("superadmin@almac.local");
+  const [password, setPassword] = useState("SuperAdmin123");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  function setSessionCookie() {
-    document.cookie = `${AUTH_COOKIE_NAME}=authenticated; path=/; max-age=${60 * 60 * 8}; samesite=lax`;
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -30,11 +36,23 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      if (email.trim() !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-        throw new Error("Invalid credentials.");
-      }
+      const res = await fetch("/api/session/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      setSessionCookie();
+      const data: LoginResponse | { message?: string } = await res
+        .json()
+        .catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          "message" in data && data.message ? data.message : "Login failed.",
+        );
+      }
 
       router.push("/");
       router.refresh();
@@ -52,9 +70,9 @@ export default function LoginPage() {
           <div className="text-sm uppercase tracking-wider text-slate-500">
             School Management System
           </div>
-          <h1 className="mt-2 text-3xl font-bold">Admin Login</h1>
+          <h1 className="mt-2 text-3xl font-bold">Internal Staff Login</h1>
           <p className="mt-2 text-sm text-slate-600">
-            Starter authentication for the internal admin workspace.
+            Login with a real backend account and school-aware session.
           </p>
         </div>
 
