@@ -17,7 +17,13 @@ BEGIN
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'school_role') THEN
-        CREATE TYPE school_role AS ENUM ('SUPER_ADMIN', 'SCHOOL_ADMIN', 'TEACHER', 'PARENT');
+        CREATE TYPE school_role AS ENUM (
+            'SUPER_ADMIN',
+            'SCHOOL_ADMIN',
+            'TEACHER',
+            'PARENT',
+            'FINANCE_ADMIN'
+        );
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'academic_year_status') THEN

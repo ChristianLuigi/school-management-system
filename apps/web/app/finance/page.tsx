@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin-shell";
 import { apiGet } from "@/lib/api";
+import Link from "next/link";
 
 type Invoice = {
   id: string;
@@ -38,7 +39,15 @@ export default async function FinancePage() {
             Invoice and overdue balance overview.
           </p>
         </div>
-
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/finance/actions"
+            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Open Finance Actions
+          </Link>
+        </div>
+        
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div className="text-sm text-slate-500">Invoices</div>
