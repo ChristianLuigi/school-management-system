@@ -1,4 +1,5 @@
-import { PlatformShell } from "@/components/platform-shell";
+import Link from "next/link";
+import { PlatformPageShell } from "@/components/platform-page-shell";
 import { getMeContext } from "@/lib/server-context";
 import { serverApiGet } from "@/lib/server-api";
 
@@ -21,13 +22,22 @@ export default async function PlatformDashboardPage() {
   const suspendedCount = schools.filter((s) => s.status === "SUSPENDED").length;
 
   return (
-    <PlatformShell>
+    <PlatformPageShell>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Platform Dashboard</h1>
-          <p className="mt-1 text-slate-600">
-            Super admin view across all school tenants.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Platform Dashboard</h1>
+            <p className="mt-1 text-slate-600">
+              Super admin view across all school tenants.
+            </p>
+          </div>
+
+          <Link
+            href="/platform/schools/new"
+            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Create School
+          </Link>
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -61,9 +71,17 @@ export default async function PlatformDashboardPage() {
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Recent Schools</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Recent Schools</h2>
+            <Link
+              href="/platform/schools"
+              className="text-sm text-slate-600 hover:text-slate-900 underline underline-offset-2"
+            >
+              View all
+            </Link>
+          </div>
           <div className="mt-4 space-y-3">
-            {schools.map((school) => (
+            {schools.slice(0, 5).map((school) => (
               <div
                 key={school.id}
                 className="rounded-xl border border-slate-200 p-4"
@@ -75,9 +93,21 @@ export default async function PlatformDashboardPage() {
                 </div>
               </div>
             ))}
+
+            {schools.length === 0 ? (
+              <div className="py-4 text-center text-sm text-slate-500">
+                No schools yet.{" "}
+                <Link
+                  href="/platform/schools/new"
+                  className="font-medium text-slate-900 underline underline-offset-2"
+                >
+                  Create the first one.
+                </Link>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
-    </PlatformShell>
+    </PlatformPageShell>
   );
 }

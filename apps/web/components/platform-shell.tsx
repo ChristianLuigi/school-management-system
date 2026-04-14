@@ -56,7 +56,10 @@ export function PlatformShell({ children }: PlatformShellProps) {
           <nav className="flex flex-col gap-1 p-4">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const active = pathname === item.href;
+              const active =
+                item.href === "/platform"
+                  ? pathname === "/platform"
+                  : pathname.startsWith(item.href);
 
               return (
                 <Link

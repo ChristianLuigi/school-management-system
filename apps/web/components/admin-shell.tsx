@@ -13,28 +13,79 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 
 type SchoolShellProps = {
   children: ReactNode;
   headerExtra?: ReactNode;
+  currentRoles: string[];
 };
 
 const navItems = [
-  { href: "/school", label: "Dashboard", icon: Home },
-  { href: "/setup", label: "Setup", icon: Settings },
-  { href: "/students", label: "Students", icon: Users },
-  { href: "/academics", label: "Academics", icon: GraduationCap },
-  { href: "/attendance", label: "Attendance", icon: ClipboardCheck },
-  { href: "/gradebooks", label: "Gradebooks", icon: ClipboardList },
-  { href: "/finance", label: "Finance", icon: CreditCard },
-  { href: "/reports", label: "Reports", icon: BookOpen },
+  {
+    href: "/school",
+    label: "Dashboard",
+    icon: Home,
+    roles: ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"],
+  },
+  {
+    href: "/setup",
+    label: "Setup",
+    icon: Settings,
+    roles: ["SCHOOL_ADMIN"],
+  },
+  {
+    href: "/students",
+    label: "Students",
+    icon: Users,
+    roles: ["SCHOOL_ADMIN"],
+  },
+  {
+    href: "/academics",
+    label: "Academics",
+    icon: GraduationCap,
+    roles: ["SCHOOL_ADMIN", "TEACHER"],
+  },
+  {
+    href: "/attendance",
+    label: "Attendance",
+    icon: ClipboardCheck,
+    roles: ["SCHOOL_ADMIN", "TEACHER"],
+  },
+  {
+    href: "/gradebooks",
+    label: "Gradebooks",
+    icon: ClipboardList,
+    roles: ["SCHOOL_ADMIN", "TEACHER"],
+  },
+  {
+    href: "/finance",
+    label: "Finance",
+    icon: CreditCard,
+    roles: ["SCHOOL_ADMIN", "FINANCE_ADMIN"],
+  },
+  {
+    href: "/reports",
+    label: "Reports",
+    icon: BookOpen,
+    roles: ["SCHOOL_ADMIN", "FINANCE_ADMIN"],
+  },
 ];
 
-export function AdminShell({ children, headerExtra }: SchoolShellProps) {
+export function AdminShell({
+  children,
+  headerExtra,
+  currentRoles,
+}: SchoolShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const visibleNavItems = useMemo(() => {
+    return navItems.filter((item) =>
+      item.roles.some((role) => currentRoles.includes(role)),
+    );
+  }, [currentRoles]);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -63,7 +114,7 @@ export function AdminShell({ children, headerExtra }: SchoolShellProps) {
           </div>
 
           <nav className="flex flex-col gap-1 p-4">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
 

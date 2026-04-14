@@ -1,5 +1,10 @@
-import { AdminShell } from "@/components/admin-shell";
-import { apiGet } from "@/lib/api";
+import { SchoolPageShell } from "@/components/school-page-shell";
+import {
+  getActiveAcademicContext,
+  getMeContext,
+  resolveCurrentSchoolId,
+} from "@/lib/server-context";
+import { serverApiGet } from "@/lib/server-api";
 
 type GradeLevel = {
   id: string;
@@ -23,22 +28,27 @@ type SectionSubject = {
   coefficient: string;
 };
 
-const SCHOOL_ID = "11111111-1111-4111-8111-111111111111";
-const ACADEMIC_YEAR_ID = "33333333-3333-4333-8333-333333333333";
-
 export default async function AcademicsPage() {
+  const context = await getMeContext();
+  const schoolId = resolveCurrentSchoolId(context);
+  const { academicYearId } = await getActiveAcademicContext(schoolId);
+
   const [gradeLevels, sections, sectionSubjects] = await Promise.all([
-    apiGet<GradeLevel[]>(`/academic/grade-levels?schoolId=${SCHOOL_ID}`),
-    apiGet<Section[]>(
-      `/academic/sections?academicYearId=${ACADEMIC_YEAR_ID}`,
-    ),
-    apiGet<SectionSubject[]>(
-      `/section-subjects?academicYearId=${ACADEMIC_YEAR_ID}`,
-    ),
+    serverApiGet<GradeLevel[]>(`/academic/grade-levels?schoolId=${schoolId}`),
+    academicYearId
+      ? serverApiGet<Section[]>(
+          `/academic/sections?academicYearId=${academicYearId}`,
+        )
+      : Promise.resolve<Section[]>([]),
+    academicYearId
+      ? serverApiGet<SectionSubject[]>(
+          `/section-subjects?academicYearId=${academicYearId}`,
+        )
+      : Promise.resolve<SectionSubject[]>([]),
   ]);
 
   return (
-    <AdminShell>
+    <SchoolPageShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Academics</h1>
@@ -47,12 +57,16 @@ export default async function AcademicsPage() {
           </p>
         </div>
 
+        {!academicYearId ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
+            No active academic year found. Complete school setup first.
+          </div>
+        ) : null}
+
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div className="text-sm text-slate-500">Grade Levels</div>
-            <div className="mt-2 text-3xl font-bold">
-              {gradeLevels.length}
-            </div>
+            <div className="mt-2 text-3xl font-bold">{gradeLevels.length}</div>
           </div>
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div className="text-sm text-slate-500">Sections</div>
@@ -84,9 +98,14 @@ export default async function AcademicsPage() {
                 </div>
               </div>
             ))}
+            {sectionSubjects.length === 0 && academicYearId ? (
+              <div className="text-sm text-slate-500">
+                No teaching assignments found.
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
-    </AdminShell>
+    </SchoolPageShell>
   );
 }

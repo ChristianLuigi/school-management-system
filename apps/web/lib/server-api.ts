@@ -1,4 +1,4 @@
-import { getServerToken } from "@/lib/auth";
+import { getServerToken } from "@/lib/auth-server";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";

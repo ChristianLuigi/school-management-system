@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminShell } from "@/components/admin-shell";
-import { apiGet } from "@/lib/api";
+import { SchoolPageShell } from "@/components/school-page-shell";
+import {
+  getActiveAcademicContext,
+  getMeContext,
+  resolveCurrentSchoolId,
+} from "@/lib/server-context";
+import { serverApiGet } from "@/lib/server-api";
 
 type Student = {
   id: string;
@@ -79,10 +84,6 @@ type ReportCardPreview = {
   }[];
 };
 
-const SCHOOL_ID = "11111111-1111-4111-8111-111111111111";
-const ACADEMIC_YEAR_ID = "33333333-3333-4333-8333-333333333333";
-const GRADING_PERIOD_ID = "44444444-4444-4444-8444-444444444441";
-
 function money(value: number) {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
@@ -97,8 +98,13 @@ export default async function StudentDetailPage({
 }) {
   const { id } = await params;
 
-  const students = await apiGet<Student[]>(
-    `/students?schoolId=${SCHOOL_ID}`,
+  const context = await getMeContext();
+  const schoolId = resolveCurrentSchoolId(context);
+  const { academicYearId, gradingPeriodId } =
+    await getActiveAcademicContext(schoolId);
+
+  const students = await serverApiGet<Student[]>(
+    `/students?schoolId=${schoolId}`,
   );
 
   const student = students.find((item) => item.id === id);
@@ -109,19 +115,25 @@ export default async function StudentDetailPage({
 
   const [enrollmentsResult, previewResult, invoicesResult, discountsResult] =
     await Promise.allSettled([
-      apiGet<Enrollment[]>(
-        `/enrollments?academicYearId=${ACADEMIC_YEAR_ID}`,
-      ),
-      apiGet<ReportCardPreview>(
-        `/report-cards/preview?studentId=${id}&gradingPeriodId=${GRADING_PERIOD_ID}`,
-      ),
-      apiGet<Invoice[]>(`/invoices?studentId=${id}`),
-      apiGet<StudentDiscount[]>(`/student-discounts?studentId=${id}`),
+      academicYearId
+        ? serverApiGet<Enrollment[]>(
+            `/enrollments?academicYearId=${academicYearId}`,
+          )
+        : Promise.resolve<Enrollment[]>([]),
+      gradingPeriodId
+        ? serverApiGet<ReportCardPreview>(
+            `/report-cards/preview?studentId=${id}&gradingPeriodId=${gradingPeriodId}`,
+          )
+        : Promise.resolve(null),
+      serverApiGet<Invoice[]>(`/invoices?studentId=${id}`),
+      serverApiGet<StudentDiscount[]>(`/student-discounts?studentId=${id}`),
     ]);
 
   const enrollments =
     enrollmentsResult.status === "fulfilled"
-      ? enrollmentsResult.value.filter((item) => item.student_id === id)
+      ? (enrollmentsResult.value as Enrollment[]).filter(
+          (item) => item.student_id === id,
+        )
       : [];
 
   const preview =
@@ -139,13 +151,11 @@ export default async function StudentDetailPage({
   );
 
   return (
-    <AdminShell>
+    <SchoolPageShell>
       <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-sm text-slate-500">
-              Student Detail
-            </div>
+            <div className="text-sm text-slate-500">Student Detail</div>
             <h1 className="mt-1 text-3xl font-bold">
               {student.first_name} {student.last_name}
             </h1>
@@ -165,9 +175,7 @@ export default async function StudentDetailPage({
         <div className="grid gap-4 md:grid-cols-4">
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div className="text-sm text-slate-500">Outstanding Balance</div>
-            <div className="mt-2 text-2xl font-bold">
-              {money(outstanding)}
-            </div>
+            <div className="mt-2 text-2xl font-bold">{money(outstanding)}</div>
           </div>
 
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -183,7 +191,7 @@ export default async function StudentDetailPage({
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div className="text-sm text-slate-500">Overall Average</div>
             <div className="mt-2 text-2xl font-bold">
-              {preview?.summary.overallAverage ?? "-"}
+              {preview?.summary.overallAverage ?? "—"}
             </div>
           </div>
         </div>
@@ -206,15 +214,15 @@ export default async function StudentDetailPage({
               </div>
               <div>
                 <span className="font-medium">Date of Birth:</span>{" "}
-                {student.date_of_birth ?? "-"}
+                {student.date_of_birth ?? "—"}
               </div>
               <div>
                 <span className="font-medium">Gender:</span>{" "}
-                {student.gender ?? "-"}
+                {student.gender ?? "—"}
               </div>
               <div>
                 <span className="font-medium">Admission Date:</span>{" "}
-                {student.admission_date ?? "-"}
+                {student.admission_date ?? "—"}
               </div>
             </div>
           </div>
@@ -240,14 +248,16 @@ export default async function StudentDetailPage({
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
                     Start: {enrollment.start_date}
-                    {enrollment.end_date ? ` · End: ${enrollment.end_date}` : ""}
+                    {enrollment.end_date
+                      ? ` · End: ${enrollment.end_date}`
+                      : ""}
                   </div>
                 </div>
               ))}
 
               {enrollments.length === 0 ? (
                 <div className="text-sm text-slate-500">
-                  No enrollment found for the selected academic year.
+                  No enrollment found for the current academic year.
                 </div>
               ) : null}
             </div>
@@ -264,7 +274,7 @@ export default async function StudentDetailPage({
                   <div className="rounded-xl bg-slate-50 p-3">
                     <div className="text-slate-500">Rank</div>
                     <div className="mt-1 text-xl font-bold">
-                      {preview.summary.rankInSection ?? "-"}
+                      {preview.summary.rankInSection ?? "—"}
                     </div>
                   </div>
                   <div className="rounded-xl bg-slate-50 p-3">
@@ -373,13 +383,11 @@ export default async function StudentDetailPage({
             ))}
 
             {invoices.length === 0 ? (
-              <div className="text-sm text-slate-500">
-                No invoices found.
-              </div>
+              <div className="text-sm text-slate-500">No invoices found.</div>
             ) : null}
           </div>
         </div>
       </div>
-    </AdminShell>
+    </SchoolPageShell>
   );
 }

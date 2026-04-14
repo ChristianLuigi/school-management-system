@@ -1,191 +1,98 @@
-import { AdminShell } from "@/components/admin-shell";
-import { apiGet } from "@/lib/api";
+import Link from "next/link";
+import { SchoolPageShell } from "@/components/school-page-shell";
+import { getMeContext, resolveCurrentSchoolId } from "@/lib/server-context";
+import { serverApiGet } from "@/lib/server-api";
 
-type DashboardSummary = {
-  schoolId: string;
-  gradingPeriodId: string;
-  gradingPeriodNameI18n: Record<string, string>;
-  metrics: {
-    totalStudents: number;
-    activeTeachers: number;
-    totalInvoices: number;
-    totalOutstanding: number;
-    overdueInvoices: number;
-  };
-  gradebookCoverage: {
-    totalSectionSubjects: number;
-    approvedGradebooks: number;
-    coveragePercent: number;
-    isComplete: boolean;
-  };
-};
-
-type School = {
+type Student = {
   id: string;
-  code: string;
-  name: string;
-  default_locale: string;
-  currency_code: string;
-  country_code: string;
+  student_number: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string | null;
+  gender: string | null;
+  status: string;
 };
 
-const SCHOOL_ID = "11111111-1111-4111-8111-111111111111";
-const GRADING_PERIOD_ID = "44444444-4444-4444-8444-444444444441";
+export default async function StudentsPage() {
+  const context = await getMeContext();
+  const schoolId = resolveCurrentSchoolId(context);
 
-function money(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-export default async function DashboardPage() {
-  let schools: School[] = [];
-  let summary: DashboardSummary | null = null;
-  let apiError: string | null = null;
-
-  try {
-    const [schoolsResult, summaryResult] = await Promise.all([
-      apiGet<School[]>("/schools"),
-      apiGet<DashboardSummary>(
-        `/dashboard/summary?schoolId=${SCHOOL_ID}&gradingPeriodId=${GRADING_PERIOD_ID}`,
-      ),
-    ]);
-
-    schools = schoolsResult;
-    summary = summaryResult;
-  } catch (error) {
-    apiError =
-      error instanceof Error ? error.message : "Unknown API error";
-  }
+  const students = await serverApiGet<Student[]>(
+    `/students?schoolId=${schoolId}`,
+  );
 
   return (
-    <AdminShell>
+    <SchoolPageShell>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-bold">Students</h1>
           <p className="mt-1 text-slate-600">
-            Real-time operational overview for the school platform.
+            All enrolled students for this school.
           </p>
         </div>
 
-        {apiError ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-            {apiError}
-          </div>
-        ) : null}
+        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <div className="text-sm text-slate-500">Total Students</div>
+          <div className="mt-2 text-3xl font-bold">{students.length}</div>
+        </div>
 
-        {summary ? (
-          <>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div className="text-sm text-slate-500">Students</div>
-                <div className="mt-2 text-3xl font-bold">
-                  {summary.metrics.totalStudents}
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div className="text-sm text-slate-500">Teachers</div>
-                <div className="mt-2 text-3xl font-bold">
-                  {summary.metrics.activeTeachers}
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div className="text-sm text-slate-500">Invoices</div>
-                <div className="mt-2 text-3xl font-bold">
-                  {summary.metrics.totalInvoices}
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div className="text-sm text-slate-500">Outstanding</div>
-                <div className="mt-2 text-3xl font-bold">
-                  {money(summary.metrics.totalOutstanding)}
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div className="text-sm text-slate-500">Overdue</div>
-                <div className="mt-2 text-3xl font-bold">
-                  {summary.metrics.overdueInvoices}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-6 xl:grid-cols-2">
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <h2 className="text-lg font-semibold">Gradebook Coverage</h2>
-                <div className="mt-4 space-y-4">
-                  <div className="flex flex-wrap gap-3 text-sm">
-                    <div className="rounded-full bg-slate-100 px-3 py-2">
-                      Approved: {summary.gradebookCoverage.approvedGradebooks}
-                    </div>
-                    <div className="rounded-full bg-slate-100 px-3 py-2">
-                      Total: {summary.gradebookCoverage.totalSectionSubjects}
-                    </div>
-                    <div
-                      className={`rounded-full px-3 py-2 font-medium ${
-                        summary.gradebookCoverage.isComplete
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-100 text-left text-slate-600">
+              <tr>
+                <th className="px-4 py-3">Student #</th>
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Gender</th>
+                <th className="px-4 py-3">Date of Birth</th>
+                <th className="px-4 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student) => (
+                <tr
+                  key={student.id}
+                  className="border-t border-slate-200 hover:bg-slate-50"
+                >
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/students/${student.id}`}
+                      className="font-medium text-slate-900 hover:underline"
+                    >
+                      {student.student_number}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3">
+                    {student.first_name} {student.last_name}
+                  </td>
+                  <td className="px-4 py-3">{student.gender ?? "—"}</td>
+                  <td className="px-4 py-3">{student.date_of_birth ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${
+                        student.status === "ACTIVE"
                           ? "bg-green-100 text-green-700"
-                          : "bg-amber-100 text-amber-700"
+                          : "bg-slate-100 text-slate-600"
                       }`}
                     >
-                      {summary.gradebookCoverage.isComplete
-                        ? "Complete"
-                        : "Incomplete"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="mb-2 flex items-center justify-between text-sm text-slate-600">
-                      <span>
-                        {summary.gradingPeriodNameI18n?.fr ?? "Coverage"}
-                      </span>
-                      <span>{summary.gradebookCoverage.coveragePercent}%</span>
-                    </div>
-
-                    <div className="h-3 w-full overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className="h-full rounded-full bg-slate-900"
-                        style={{
-                          width: `${summary.gradebookCoverage.coveragePercent}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <h2 className="text-lg font-semibold">School Context</h2>
-                <div className="mt-4 grid gap-3">
-                  {schools.map((school) => (
-                    <div
-                      key={school.id}
-                      className="rounded-xl border border-slate-200 p-4"
-                    >
-                      <div className="font-semibold">{school.name}</div>
-                      <div className="mt-1 text-sm text-slate-600">
-                        Code: {school.code} · Locale: {school.default_locale} ·
-                        Currency: {school.currency_code} · Country:{" "}
-                        {school.country_code}
-                      </div>
-                    </div>
-                  ))}
-
-                  {schools.length === 0 && !apiError ? (
-                    <div className="text-sm text-slate-500">
-                      No schools found.
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </>
-        ) : null}
+                      {student.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {students.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-6 text-center text-slate-500"
+                  >
+                    No students found.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </AdminShell>
+    </SchoolPageShell>
   );
 }

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
+import { SchoolPageShell } from "@/components/school-page-shell";
 
 export default function ReportsPage() {
   return (
-    <AdminShell>
+    <SchoolPageShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Reports</h1>
@@ -31,6 +32,6 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
-    </AdminShell>
+    </SchoolPageShell>
   );
 }

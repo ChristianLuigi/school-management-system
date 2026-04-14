@@ -1,5 +1,24 @@
-import { AdminShell } from "@/components/admin-shell";
-import { apiGet } from "@/lib/api";
+import { SchoolPageShell } from "@/components/school-page-shell";
+import {
+  getActiveAcademicContext,
+  getMeContext,
+  resolveCurrentSchoolId,
+} from "@/lib/server-context";
+import { serverApiGet } from "@/lib/server-api";
+
+type Student = {
+  id: string;
+  student_number: string;
+  first_name: string;
+  last_name: string;
+};
+
+type GradingPeriod = {
+  id: string;
+  sequence_no: number;
+  name_i18n: Record<string, string>;
+  is_current: boolean;
+};
 
 type ReportCardPreview = {
   student: {
@@ -45,35 +64,114 @@ type ReportCardPreview = {
   }[];
 };
 
-const STUDENT_ID = "7bbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1";
-const GRADING_PERIOD_ID = "44444444-4444-4444-8444-444444444441";
+export default async function ReportCardsPreviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ studentId?: string; gradingPeriodId?: string }>;
+}) {
+  const params = await searchParams;
 
-export default async function ReportCardsPreviewPage() {
+  const context = await getMeContext();
+  const schoolId = resolveCurrentSchoolId(context);
+  const { academicYearId, gradingPeriodId: activePeriodId } =
+    await getActiveAcademicContext(schoolId);
+
+  const [students, periods] = await Promise.all([
+    serverApiGet<Student[]>(`/students?schoolId=${schoolId}`),
+    academicYearId
+      ? serverApiGet<GradingPeriod[]>(
+          `/academic/periods?academicYearId=${academicYearId}`,
+        )
+      : Promise.resolve<GradingPeriod[]>([]),
+  ]);
+
+  const selectedStudentId = params.studentId ?? students[0]?.id ?? null;
+  const selectedPeriodId =
+    params.gradingPeriodId ?? activePeriodId ?? periods[0]?.id ?? null;
+
   let preview: ReportCardPreview | null = null;
   let apiError: string | null = null;
 
-  try {
-    preview = await apiGet<ReportCardPreview>(
-      `/report-cards/preview?studentId=${STUDENT_ID}&gradingPeriodId=${GRADING_PERIOD_ID}`,
-    );
-  } catch (error) {
-    apiError =
-      error instanceof Error ? error.message : "Unknown API error";
+  if (selectedStudentId && selectedPeriodId) {
+    try {
+      preview = await serverApiGet<ReportCardPreview>(
+        `/report-cards/preview?studentId=${selectedStudentId}&gradingPeriodId=${selectedPeriodId}`,
+      );
+    } catch (error) {
+      apiError =
+        error instanceof Error ? error.message : "Unknown API error";
+    }
   }
 
   return (
-    <AdminShell>
+    <SchoolPageShell>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Report Card Preview</h1>
           <p className="mt-1 text-slate-600">
-            Preview weighted trimester results before draft generation or publishing.
+            Preview weighted trimester results before draft generation or
+            publishing.
           </p>
         </div>
+
+        {/* Student + Period selectors — GET form, no JS required */}
+        <form
+          method="GET"
+          className="flex flex-wrap gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+        >
+          <div className="flex-1 min-w-48">
+            <label className="mb-1 block text-sm font-medium">Student</label>
+            <select
+              name="studentId"
+              defaultValue={selectedStudentId ?? ""}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            >
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.first_name} {s.last_name} (#{s.student_number})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex-1 min-w-48">
+            <label className="mb-1 block text-sm font-medium">
+              Grading Period
+            </label>
+            <select
+              name="gradingPeriodId"
+              defaultValue={selectedPeriodId ?? ""}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            >
+              {periods.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name_i18n?.fr ?? `Period ${p.sequence_no}`}
+                  {p.is_current ? " (current)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              type="submit"
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Load Preview
+            </button>
+          </div>
+        </form>
 
         {apiError ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
             {apiError}
+          </div>
+        ) : null}
+
+        {!selectedStudentId || !selectedPeriodId ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
+            No active academic year or students found. Complete school setup
+            first.
           </div>
         ) : null}
 
@@ -93,14 +191,14 @@ export default async function ReportCardsPreviewPage() {
               <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                 <div className="text-sm text-slate-500">Overall Average</div>
                 <div className="mt-2 text-3xl font-bold">
-                  {preview.summary.overallAverage ?? "-"}
+                  {preview.summary.overallAverage ?? "—"}
                 </div>
               </div>
 
               <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                 <div className="text-sm text-slate-500">Rank in Section</div>
                 <div className="mt-2 text-3xl font-bold">
-                  {preview.summary.rankInSection ?? "-"}
+                  {preview.summary.rankInSection ?? "—"}
                 </div>
               </div>
             </div>
@@ -231,6 +329,6 @@ export default async function ReportCardsPreviewPage() {
           </>
         ) : null}
       </div>
-    </AdminShell>
+    </SchoolPageShell>
   );
 }

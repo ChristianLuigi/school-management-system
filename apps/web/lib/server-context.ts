@@ -1,5 +1,18 @@
-import { getServerSchoolId } from "@/lib/auth";
+import { getServerSchoolId } from "@/lib/auth-server";
 import { serverApiGet } from "@/lib/server-api";
+
+type AcademicYear = {
+  id: string;
+  name_i18n: Record<string, string>;
+  status: "PLANNED" | "ACTIVE" | "CLOSED";
+};
+
+type GradingPeriod = {
+  id: string;
+  name_i18n: Record<string, string>;
+  is_current: boolean;
+  sequence_no: number;
+};
 
 export type MeContext = {
   user: {
@@ -65,4 +78,31 @@ export function resolveCurrentSchoolId(context: MeContext) {
 
 export function hasSchoolRole(context: MeContext, role: string) {
   return context.currentRoles.includes(role);
+}
+
+export async function getActiveAcademicContext(schoolId: string) {
+  try {
+    const years = await serverApiGet<AcademicYear[]>(
+      `/academic/years?schoolId=${schoolId}`,
+    );
+    const activeYear =
+      years.find((y) => y.status === "ACTIVE") ?? years[0] ?? null;
+
+    if (!activeYear) {
+      return { academicYearId: null, gradingPeriodId: null };
+    }
+
+    const periods = await serverApiGet<GradingPeriod[]>(
+      `/academic/periods?academicYearId=${activeYear.id}`,
+    );
+    const currentPeriod =
+      periods.find((p) => p.is_current) ?? periods[0] ?? null;
+
+    return {
+      academicYearId: activeYear.id,
+      gradingPeriodId: currentPeriod?.id ?? null,
+    };
+  } catch {
+    return { academicYearId: null, gradingPeriodId: null };
+  }
 }

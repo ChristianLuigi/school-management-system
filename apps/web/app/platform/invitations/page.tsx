@@ -1,14 +1,20 @@
-import { PlatformShell } from "@/components/platform-shell";
+import { PlatformPageShell } from "@/components/platform-page-shell";
+import { PlatformInvitationsClient } from "@/components/platform-invitations-client";
+import { serverApiGet } from "@/lib/server-api";
 
-export default function PlatformInvitationsPage() {
+type School = {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+};
+
+export default async function PlatformInvitationsPage() {
+  const schools = await serverApiGet<School[]>("/platform/schools");
+
   return (
-    <PlatformShell>
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Invitations</h1>
-        <p className="text-slate-600">
-          Platform invitation management will go here next.
-        </p>
-      </div>
-    </PlatformShell>
+    <PlatformPageShell>
+      <PlatformInvitationsClient initialSchools={schools} />
+    </PlatformPageShell>
   );
 }

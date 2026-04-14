@@ -1,6 +1,10 @@
-import { AdminShell } from "@/components/admin-shell";
 import { SchoolSwitcher } from "@/components/school-switcher";
-import { getMeContext, resolveCurrentSchoolId } from "@/lib/server-context";
+import { SchoolPageShell } from "@/components/school-page-shell";
+import {
+  getActiveAcademicContext,
+  getMeContext,
+  resolveCurrentSchoolId,
+} from "@/lib/server-context";
 import { serverApiGet } from "@/lib/server-api";
 
 type DashboardSummary = {
@@ -22,9 +26,6 @@ type DashboardSummary = {
   };
 };
 
-const DEFAULT_GRADING_PERIOD_ID =
-  "44444444-4444-4444-8444-444444444441";
-
 function money(value: number) {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
@@ -39,13 +40,17 @@ export default async function SchoolDashboardPage() {
   let summary: DashboardSummary | null = null;
 
   if (currentSchoolId) {
-    summary = await serverApiGet<DashboardSummary>(
-      `/dashboard/summary?schoolId=${currentSchoolId}&gradingPeriodId=${DEFAULT_GRADING_PERIOD_ID}`,
-    );
+    const { gradingPeriodId } = await getActiveAcademicContext(currentSchoolId);
+
+    if (gradingPeriodId) {
+      summary = await serverApiGet<DashboardSummary>(
+        `/dashboard/summary?schoolId=${currentSchoolId}&gradingPeriodId=${gradingPeriodId}`,
+      );
+    }
   }
 
   return (
-    <AdminShell
+    <SchoolPageShell
       headerExtra={
         context.availableSchools?.length ? (
           <SchoolSwitcher
@@ -111,6 +116,6 @@ export default async function SchoolDashboardPage() {
           </>
         ) : null}
       </div>
-    </AdminShell>
+    </SchoolPageShell>
   );
 }
