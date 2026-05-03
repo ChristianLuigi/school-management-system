@@ -1,37 +1,98 @@
-import Link from "next/link";
-import { AdminShell } from "@/components/admin-shell";
+import { ReportCardBatchesClient } from "@/components/report-card-batches-client";
 import { SchoolPageShell } from "@/components/school-page-shell";
+import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
+import {
+  getMeContext,
+  resolveCurrentSchoolId,
+  resolveEffectiveRoles,
+} from "@/lib/server-context";
 
-export default function ReportsPage() {
+export default async function ReportsPage() {
+  const context = await getMeContext();
+  const effectiveRoles = resolveEffectiveRoles(context);
+  const currentSchoolId = resolveCurrentSchoolId(context);
+
+  const isSchoolAdmin = effectiveRoles.includes("SCHOOL_ADMIN");
+  const isFinanceAdmin = effectiveRoles.includes("FINANCE_ADMIN");
+
+  const quickActions = [
+    {
+      href: "/gradebooks",
+      title: "Gradebooks",
+      description: "Review academic readiness before report card publication.",
+    },
+    {
+      href: "/finance",
+      title: "Finance",
+      description: "Review financial summaries and operational billing context.",
+    },
+  ];
+
+  if (isSchoolAdmin) {
+    quickActions.push({
+      href: "/students",
+      title: "Students",
+      description: "Review student profiles and enrollment context.",
+    });
+  }
+
+  const attentionItems: Array<{
+    tone: "green" | "amber" | "red" | "blue" | "neutral";
+    title: string;
+    description: string;
+  }> = [
+    {
+      tone: "blue",
+      title: "Reports depend on validated operational data",
+      description:
+        "Academic reports should be generated only after gradebooks are approved and published.",
+    },
+  ];
+
+  if (isSchoolAdmin) {
+    attentionItems.push({
+      tone: "amber",
+      title: "School admin priority",
+      description:
+        "Use this workspace to review generated report card batches before publishing them.",
+    });
+  }
+
+  if (isFinanceAdmin) {
+    attentionItems.push({
+      tone: "green",
+      title: "Finance admin priority",
+      description:
+        "Finance reporting will be added here after invoice and payment workflows are hardened.",
+    });
+  }
+
   return (
-    <SchoolPageShell>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Reports</h1>
-          <p className="mt-1 text-slate-600">
-            Academic and finance reporting workspace.
-          </p>
+    <SchoolPageShell allowedRoles={["SCHOOL_ADMIN", "FINANCE_ADMIN"]}>
+      <SchoolModuleWorkspace
+        title="Reports Workspace"
+        description="Review generated academic reports and operational report outputs."
+        roles={effectiveRoles}
+        quickActions={quickActions}
+        attentionItems={attentionItems}
+        mainTitle="Report Operations"
+        mainSubtitle="Generated report card batches and report outputs appear below."
+      >
+        <div className="space-y-6">
+          {isSchoolAdmin ? (
+            <ReportCardBatchesClient schoolId={currentSchoolId} />
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="text-sm font-semibold text-slate-900">
+                Finance reporting placeholder
+              </div>
+              <p className="mt-1 text-sm text-slate-600">
+                Finance-specific reports will be added after invoice and payment workflows are hardened.
+              </p>
+            </div>
+          )}
         </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <Link
-            href="/reports/report-cards"
-            className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50"
-          >
-            <div className="text-lg font-semibold">Report Card Preview</div>
-            <p className="mt-2 text-sm text-slate-600">
-              Preview weighted trimester results and readiness before publishing.
-            </p>
-          </Link>
-
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-lg font-semibold">Finance Reports</div>
-            <p className="mt-2 text-sm text-slate-600">
-              Coming next: overdue balances, payment trends, and invoice summaries.
-            </p>
-          </div>
-        </div>
-      </div>
+      </SchoolModuleWorkspace>
     </SchoolPageShell>
   );
 }
