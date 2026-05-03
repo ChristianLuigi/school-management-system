@@ -4,6 +4,7 @@ import { useState } from "react";
 import { GradebookApprovalClient } from "@/components/gradebook-approval-client";
 import { GradebookOverviewClient } from "@/components/gradebook-overview-client";
 import { GradebooksPageClient } from "@/components/gradebooks-page-client";
+import { ReportCardGenerationClient } from "@/components/report-card-generation-client";
 import { ReportCardReadinessClient } from "@/components/report-card-readiness-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 
@@ -134,6 +135,10 @@ export function GradebooksWorkspaceClient({
           refreshKey={refreshKey}
           onChanged={() => setRefreshKey((value) => value + 1)}
         />
+
+        {isSchoolAdmin ? (
+          <ReportCardGenerationClient schoolId={schoolId} />
+        ) : null}
 
         <GradebooksPageClient
           userId={userId}
