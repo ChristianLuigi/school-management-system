@@ -306,6 +306,7 @@ export function ReportCardBatchesClient({
                   <th className="px-4 py-3">Student</th>
                   <th className="px-4 py-3">Average</th>
                   <th className="px-4 py-3">Subjects</th>
+                  <th className="px-4 py-3">Open</th>
                 </tr>
               </thead>
               <tbody>
@@ -340,13 +341,21 @@ export function ReportCardBatchesClient({
                         ) : null}
                       </div>
                     </td>
+                    <td className="px-4 py-3">
+                      <a
+                        href={`/reports/cards/${card.id}`}
+                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                      >
+                        Open
+                      </a>
+                    </td>
                   </tr>
                 ))}
 
                 {details.cards.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="px-4 py-8 text-center text-slate-500"
                     >
                       No report cards found in this batch.
