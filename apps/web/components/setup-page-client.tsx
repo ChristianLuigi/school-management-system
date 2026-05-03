@@ -2,11 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+const API_PROXY_PREFIX = "/api/proxy";
 
-const SCHOOL_COOKIE_NAME =
-  process.env.AUTH_SCHOOL_COOKIE_NAME ?? "school_current_id";
 
 type SetupStatus = {
   school: {
@@ -32,19 +29,10 @@ type SetupStatus = {
   isComplete: boolean;
 };
 
-function getSchoolIdFromCookie() {
-  if (typeof document === "undefined") return "";
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${SCHOOL_COOKIE_NAME}=`));
-  return match ? decodeURIComponent(match.split("=")[1]) : "";
-}
-
-export function SetupPageClient() {
-  const [schoolId, setSchoolId] = useState("");
+export function SetupPageClient({ schoolId }: { schoolId: string }) {
   const [status, setStatus] = useState<SetupStatus | null>(null);
 
-  const [academicYearFr, setAcademicYearFr] = useState("Année académique 2025-2026");
+  const [academicYearFr, setAcademicYearFr] = useState("Annee academique 2025-2026");
   const [academicYearEn, setAcademicYearEn] = useState("Academic Year 2025-2026");
   const [startDate, setStartDate] = useState("2025-09-01");
   const [endDate, setEndDate] = useState("2026-06-30");
@@ -54,12 +42,6 @@ export function SetupPageClient() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    const cookieSchoolId = getSchoolIdFromCookie();
-    if (cookieSchoolId) {
-      setSchoolId(cookieSchoolId);
-    }
-  }, []);
 
   useEffect(() => {
     async function loadStatus() {
@@ -70,7 +52,7 @@ export function SetupPageClient() {
 
       try {
         const res = await fetch(
-          `${API_BASE_URL}/school-setup/status?schoolId=${schoolId}`,
+          `${API_PROXY_PREFIX}/school-setup/status?schoolId=${schoolId}`,
           { cache: "no-store" },
         );
 
@@ -100,7 +82,7 @@ export function SetupPageClient() {
     setMessage("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/school-setup/bootstrap`, {
+      const res = await fetch(`${API_PROXY_PREFIX}/school-setup/bootstrap`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,7 +132,7 @@ export function SetupPageClient() {
               schoolLevelCode: "PRIM",
               code: "G1",
               nameI18n: {
-                fr: "1ère année",
+                fr: "1ere annee",
                 en: "Grade 1",
               },
               displayOrder: 1,
@@ -169,7 +151,7 @@ export function SetupPageClient() {
               schoolLevelCode: "SEC",
               code: "6EME",
               nameI18n: {
-                fr: "6ème",
+                fr: "6eme",
                 en: "Grade 6",
               },
               displayOrder: 1,
@@ -204,7 +186,7 @@ export function SetupPageClient() {
       setMessage("School setup completed successfully.");
 
       const refresh = await fetch(
-        `${API_BASE_URL}/school-setup/status?schoolId=${schoolId}`,
+        `${API_PROXY_PREFIX}/school-setup/status?schoolId=${schoolId}`,
         { cache: "no-store" },
       );
 
@@ -349,3 +331,5 @@ export function SetupPageClient() {
       </div>
   );
 }
+
+

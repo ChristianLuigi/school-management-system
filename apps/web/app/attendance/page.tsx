@@ -1,9 +1,10 @@
+import { AttendanceWorkspaceClient } from "@/components/attendance-workspace-client";
 import { SchoolPageShell } from "@/components/school-page-shell";
-import { AttendancePageClient } from "@/components/attendance-page-client";
 import {
   getActiveAcademicContext,
   getMeContext,
   resolveCurrentSchoolId,
+  resolveEffectiveRoles,
 } from "@/lib/server-context";
 import { serverApiGet } from "@/lib/server-api";
 
@@ -16,6 +17,7 @@ type Section = {
 export default async function AttendancePage() {
   const context = await getMeContext();
   const schoolId = resolveCurrentSchoolId(context);
+  const effectiveRoles = resolveEffectiveRoles(context);
   const { academicYearId } = await getActiveAcademicContext(schoolId);
 
   const sections = academicYearId
@@ -26,7 +28,14 @@ export default async function AttendancePage() {
 
   return (
     <SchoolPageShell allowedRoles={["SCHOOL_ADMIN", "TEACHER"]}>
-      <AttendancePageClient userId={context.user.id} sections={sections} />
+      <AttendanceWorkspaceClient
+        currentRoles={effectiveRoles}
+        schoolId={schoolId}
+        userId={context.user.id}
+        sections={sections}
+      />
     </SchoolPageShell>
   );
 }
+
+

@@ -1,8 +1,10 @@
+import { AcademicsWorkspace } from "@/components/academics-workspace";
 import { SchoolPageShell } from "@/components/school-page-shell";
 import {
   getActiveAcademicContext,
   getMeContext,
   resolveCurrentSchoolId,
+  resolveEffectiveRoles,
 } from "@/lib/server-context";
 import { serverApiGet } from "@/lib/server-api";
 
@@ -31,6 +33,7 @@ type SectionSubject = {
 export default async function AcademicsPage() {
   const context = await getMeContext();
   const schoolId = resolveCurrentSchoolId(context);
+  const effectiveRoles = resolveEffectiveRoles(context);
   const { academicYearId } = await getActiveAcademicContext(schoolId);
 
   const [gradeLevels, sections, sectionSubjects] = await Promise.all([
@@ -48,64 +51,59 @@ export default async function AcademicsPage() {
   ]);
 
   return (
-    <SchoolPageShell>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Academics</h1>
-          <p className="mt-1 text-slate-600">
-            Academic structure, sections, and teaching assignments.
-          </p>
-        </div>
+    <SchoolPageShell allowedRoles={["SCHOOL_ADMIN", "TEACHER"]}>
+      <AcademicsWorkspace currentRoles={effectiveRoles}>
+        <div className="space-y-6">
+          {!academicYearId ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
+              No active academic year found. Complete school setup first.
+            </div>
+          ) : null}
 
-        {!academicYearId ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
-            No active academic year found. Complete school setup first.
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div className="text-sm text-slate-500">Grade Levels</div>
+              <div className="mt-2 text-3xl font-bold">{gradeLevels.length}</div>
+            </div>
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div className="text-sm text-slate-500">Sections</div>
+              <div className="mt-2 text-3xl font-bold">{sections.length}</div>
+            </div>
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div className="text-sm text-slate-500">Section Subjects</div>
+              <div className="mt-2 text-3xl font-bold">
+                {sectionSubjects.length}
+              </div>
+            </div>
           </div>
-        ) : null}
 
-        <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">Grade Levels</div>
-            <div className="mt-2 text-3xl font-bold">{gradeLevels.length}</div>
-          </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">Sections</div>
-            <div className="mt-2 text-3xl font-bold">{sections.length}</div>
-          </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">Section Subjects</div>
-            <div className="mt-2 text-3xl font-bold">
-              {sectionSubjects.length}
+            <h2 className="text-lg font-semibold">Teaching Assignments</h2>
+            <div className="mt-4 space-y-3">
+              {sectionSubjects.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-xl border border-slate-200 p-4"
+                >
+                  <div className="font-semibold">
+                    {item.section_code} &middot; {item.subject_code}
+                  </div>
+                  <div className="mt-1 text-sm text-slate-600">
+                    {item.subject_name_i18n?.fr ?? item.subject_code} &middot; Teacher:{" "}
+                    {item.teacher_first_name} {item.teacher_last_name} &middot; Coef:{" "}
+                    {item.coefficient}
+                  </div>
+                </div>
+              ))}
+              {sectionSubjects.length === 0 && academicYearId ? (
+                <div className="text-sm text-slate-500">
+                  No teaching assignments found.
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
-
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Teaching Assignments</h2>
-          <div className="mt-4 space-y-3">
-            {sectionSubjects.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-xl border border-slate-200 p-4"
-              >
-                <div className="font-semibold">
-                  {item.section_code} · {item.subject_code}
-                </div>
-                <div className="mt-1 text-sm text-slate-600">
-                  {item.subject_name_i18n?.fr ?? item.subject_code} · Teacher:{" "}
-                  {item.teacher_first_name} {item.teacher_last_name} · Coef:{" "}
-                  {item.coefficient}
-                </div>
-              </div>
-            ))}
-            {sectionSubjects.length === 0 && academicYearId ? (
-              <div className="text-sm text-slate-500">
-                No teaching assignments found.
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
+      </AcademicsWorkspace>
     </SchoolPageShell>
   );
 }

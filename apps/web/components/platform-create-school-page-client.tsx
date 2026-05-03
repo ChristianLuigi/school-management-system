@@ -3,9 +3,6 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
-
 type CreateSchoolResponse = {
   school: {
     id: string;
@@ -18,21 +15,97 @@ type CreateSchoolResponse = {
     code: string;
     name_i18n: Record<string, string>;
   }>;
-  firstAdminInvitation: {
+  firstAdmin: {
     id: string;
     email: string;
     first_name: string | null;
     last_name: string | null;
-    invited_role: string;
-    invitation_status: string;
-    expires_at: string;
-    devToken: string;
   };
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function toStringValue(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function toNullableString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function normalizeCreateSchoolResponse(
+  payload: unknown,
+  tempPassword: string,
+): (CreateSchoolResponse & { tempPassword: string }) | null {
+  if (!isRecord(payload)) {
+    return null;
+  }
+
+  const schoolSource = isRecord(payload.school) ? payload.school : payload;
+
+  const school = {
+    id: toStringValue(schoolSource.id),
+    code: toStringValue(schoolSource.code),
+    name: toStringValue(schoolSource.name),
+    status: toStringValue(schoolSource.status),
+  };
+
+  if (!school.id || !school.code || !school.name || !school.status) {
+    return null;
+  }
+
+  const rawLevels = Array.isArray(payload.levels) ? payload.levels : [];
+  const levels = rawLevels
+    .map((item) => {
+      if (!isRecord(item)) {
+        return null;
+      }
+
+      return {
+        id: toStringValue(item.id),
+        code: toStringValue(item.code),
+        name_i18n: isRecord(item.name_i18n)
+          ? (item.name_i18n as Record<string, string>)
+          : {},
+      };
+    })
+    .filter((item): item is CreateSchoolResponse["levels"][number] =>
+      Boolean(item && item.id && item.code),
+    );
+
+  const firstAdminSource = isRecord(payload.firstAdmin)
+    ? payload.firstAdmin
+    : isRecord(payload.firstAdminInvitation)
+      ? payload.firstAdminInvitation
+      : null;
+
+  if (!firstAdminSource) {
+    return null;
+  }
+
+  const firstAdmin = {
+    id: toStringValue(firstAdminSource.id),
+    email: toStringValue(firstAdminSource.email),
+    first_name: toNullableString(firstAdminSource.first_name),
+    last_name: toNullableString(firstAdminSource.last_name),
+  };
+
+  if (!firstAdmin.email) {
+    return null;
+  }
+
+  return {
+    school,
+    levels,
+    firstAdmin,
+    tempPassword,
+  };
+}
+
 export function PlatformCreateSchoolPageClient() {
   const [form, setForm] = useState({
-    code: "",
     name: "",
     defaultLocale: "fr",
     timezone: "America/Port-au-Prince",
@@ -42,13 +115,16 @@ export function PlatformCreateSchoolPageClient() {
     includePRIM: true,
     includeSEC: true,
     adminEmail: "",
+    adminPassword: "",
     adminFirstName: "",
     adminLastName: "",
   });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<CreateSchoolResponse | null>(null);
+  const [result, setResult] = useState<
+    (CreateSchoolResponse & { tempPassword: string }) | null
+  >(null);
 
   function buildInitialLevels() {
     const levels: Array<"KG" | "PRIM" | "SEC"> = [];
@@ -71,13 +147,10 @@ export function PlatformCreateSchoolPageClient() {
         throw new Error("Select at least one school level.");
       }
 
-      const res = await fetch(`${API_BASE_URL}/platform/schools`, {
+      const res = await fetch(`/api/proxy/platform/schools`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: form.code.trim(),
           name: form.name.trim(),
           defaultLocale: form.defaultLocale,
           timezone: form.timezone.trim(),
@@ -86,8 +159,9 @@ export function PlatformCreateSchoolPageClient() {
           initialLevels,
           firstAdmin: {
             email: form.adminEmail.trim().toLowerCase(),
-            firstName: form.adminFirstName.trim(),
-            lastName: form.adminLastName.trim(),
+            temporaryPassword: form.adminPassword,
+            firstName: form.adminFirstName.trim() || undefined,
+            lastName: form.adminLastName.trim() || undefined,
           },
         }),
       });
@@ -98,21 +172,22 @@ export function PlatformCreateSchoolPageClient() {
         throw new Error(data?.message ?? "Failed to create school.");
       }
 
-      setResult(data);
-      setForm({
-        code: "",
+      const normalizedResult = normalizeCreateSchoolResponse(data, form.adminPassword);
+
+      if (!normalizedResult) {
+        throw new Error("Unexpected response from school creation endpoint.");
+      }
+
+      setResult(normalizedResult);
+
+      setForm((prev) => ({
+        ...prev,
         name: "",
-        defaultLocale: "fr",
-        timezone: "America/Port-au-Prince",
-        currencyCode: "HTG",
-        countryCode: "HT",
-        includeKG: false,
-        includePRIM: true,
-        includeSEC: true,
         adminEmail: "",
+        adminPassword: "",
         adminFirstName: "",
         adminLastName: "",
-      });
+      }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create school.");
     } finally {
@@ -126,7 +201,8 @@ export function PlatformCreateSchoolPageClient() {
         <div>
           <h1 className="text-3xl font-bold">Create School</h1>
           <p className="mt-1 text-slate-600">
-            Create a new tenant and generate the first school admin invitation.
+            Provision a new tenant and set the first admin&apos;s login
+            credentials.
           </p>
         </div>
 
@@ -147,38 +223,52 @@ export function PlatformCreateSchoolPageClient() {
       {result ? (
         <div className="space-y-4 rounded-2xl border border-green-200 bg-green-50 p-5">
           <div>
-            <div className="text-sm text-green-700">School created successfully</div>
-            <div className="mt-1 text-xl font-bold text-green-900">
-              {result.school.name} ({result.school.code})
+            <div className="text-sm font-medium text-green-700">
+              School created successfully
             </div>
-            <div className="mt-1 text-sm text-green-800">
-              Status: {result.school.status}
+            <div className="mt-1 text-xl font-bold text-green-900">
+              {result.school.name}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-3 text-sm">
+              <div className="rounded-lg bg-green-100 px-3 py-1 font-mono font-semibold text-green-800">
+                {result.school.code}
+              </div>
+              <div className="rounded-lg bg-green-100 px-3 py-1 text-green-800">
+                {result.school.status}
+              </div>
+              <div className="rounded-lg bg-green-100 px-3 py-1 text-green-800">
+                Levels: {result.levels.map((l) => l.code).join(", ")}
+              </div>
             </div>
           </div>
 
           <div className="rounded-xl bg-white p-4 ring-1 ring-green-200">
-            <div className="text-sm font-medium text-slate-700">
-              First Admin Invitation
+            <div className="text-sm font-semibold text-slate-700">
+              First Admin — Login Credentials
             </div>
-            <div className="mt-2 text-sm text-slate-700">
-              {result.firstAdminInvitation.first_name}{" "}
-              {result.firstAdminInvitation.last_name} &middot;{" "}
-              {result.firstAdminInvitation.email}
-            </div>
-            <div className="mt-1 text-sm text-slate-700">
-              Role: {result.firstAdminInvitation.invited_role}
-            </div>
-            <div className="mt-3 rounded-lg bg-slate-100 p-3">
-              <div className="text-xs uppercase tracking-wider text-slate-500">
-                Dev Token
+            <p className="mt-1 text-xs text-slate-500">
+              Share these with the school admin. They will use them to log in
+              and complete onboarding.
+            </p>
+
+            <div className="mt-3 grid gap-2 text-sm">
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <span className="text-slate-500">Email</span>
+                <span className="font-mono font-medium">
+                  {result.firstAdmin.email}
+                </span>
               </div>
-              <div className="mt-1 break-all font-mono text-sm text-slate-900">
-                {result.firstAdminInvitation.devToken}
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <span className="text-slate-500">Temporary Password</span>
+                <span className="font-mono font-medium">
+                  {result.tempPassword}
+                </span>
               </div>
             </div>
-            <div className="mt-2 text-xs text-slate-500">
-              Save this token now. It is used to resolve and accept the invitation.
-            </div>
+
+            <p className="mt-3 text-xs text-amber-700">
+              This password is shown once. Copy it now before leaving this page.
+            </p>
           </div>
         </div>
       ) : null}
@@ -188,24 +278,14 @@ export function PlatformCreateSchoolPageClient() {
         className="space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
       >
         <div className="grid gap-6 xl:grid-cols-2">
+          {/* School details */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">School Details</h2>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">School Code</label>
-              <input
-                required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="BETA-SCHOOL"
-                value={form.code}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, code: e.target.value }))
-                }
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">School Name</label>
+              <label className="mb-1 block text-sm font-medium">
+                School Name
+              </label>
               <input
                 required
                 className="w-full rounded-lg border border-slate-300 px-3 py-2"
@@ -238,7 +318,9 @@ export function PlatformCreateSchoolPageClient() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">Timezone</label>
+                <label className="mb-1 block text-sm font-medium">
+                  Timezone
+                </label>
                 <input
                   required
                   className="w-full rounded-lg border border-slate-300 px-3 py-2"
@@ -287,7 +369,9 @@ export function PlatformCreateSchoolPageClient() {
             </div>
 
             <div>
-              <div className="mb-2 block text-sm font-medium">Initial Levels</div>
+              <div className="mb-2 block text-sm font-medium">
+                Initial Levels
+              </div>
               <div className="flex flex-wrap gap-4 text-sm">
                 <label className="flex items-center gap-2">
                   <input
@@ -334,8 +418,13 @@ export function PlatformCreateSchoolPageClient() {
             </div>
           </div>
 
+          {/* First admin */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">First School Admin</h2>
+            <p className="text-sm text-slate-500">
+              This person will receive the credentials below and log in to
+              complete the school setup.
+            </p>
 
             <div>
               <label className="mb-1 block text-sm font-medium">Email</label>
@@ -343,7 +432,7 @@ export function PlatformCreateSchoolPageClient() {
                 type="email"
                 required
                 className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="director.beta@school.local"
+                placeholder="director@school.com"
                 value={form.adminEmail}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, adminEmail: e.target.value }))
@@ -352,35 +441,64 @@ export function PlatformCreateSchoolPageClient() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">First Name</label>
+              <label className="mb-1 block text-sm font-medium">
+                Temporary Password
+              </label>
               <input
+                type="text"
                 required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="Marie"
-                value={form.adminFirstName}
+                minLength={8}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
+                placeholder="At least 8 characters"
+                value={form.adminPassword}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
-                    adminFirstName: e.target.value,
+                    adminPassword: e.target.value,
                   }))
                 }
               />
+              <p className="mt-1 text-xs text-slate-500">
+                You set this. The admin uses it to log in for the first time.
+              </p>
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">Last Name</label>
-              <input
-                required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="Pierre"
-                value={form.adminLastName}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    adminLastName: e.target.value,
-                  }))
-                }
-              />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  First Name{" "}
+                  <span className="font-normal text-slate-400">(optional)</span>
+                </label>
+                <input
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  placeholder="Marie"
+                  value={form.adminFirstName}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      adminFirstName: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  Last Name{" "}
+                  <span className="font-normal text-slate-400">(optional)</span>
+                </label>
+                <input
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  placeholder="Pierre"
+                  value={form.adminLastName}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      adminLastName: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>

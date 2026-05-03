@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SchoolPageShell } from "@/components/school-page-shell";
+import { StudentsWorkspace } from "@/components/students-workspace";
 import {
   getActiveAcademicContext,
   getMeContext,
   resolveCurrentSchoolId,
+  resolveEffectiveRoles,
 } from "@/lib/server-context";
 import { serverApiGet } from "@/lib/server-api";
 
@@ -100,6 +102,7 @@ export default async function StudentDetailPage({
 
   const context = await getMeContext();
   const schoolId = resolveCurrentSchoolId(context);
+  const effectiveRoles = resolveEffectiveRoles(context);
   const { academicYearId, gradingPeriodId } =
     await getActiveAcademicContext(schoolId);
 
@@ -151,8 +154,9 @@ export default async function StudentDetailPage({
   );
 
   return (
-    <SchoolPageShell>
-      <div className="space-y-6">
+    <SchoolPageShell allowedRoles={["SCHOOL_ADMIN"]}>
+      <StudentsWorkspace currentRoles={effectiveRoles}>
+        <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-sm text-slate-500">Student Detail</div>
@@ -160,7 +164,7 @@ export default async function StudentDetailPage({
               {student.first_name} {student.last_name}
             </h1>
             <p className="mt-1 text-slate-600">
-              #{student.student_number} · Status: {student.status}
+              #{student.student_number} - Status: {student.status}
             </p>
           </div>
 
@@ -191,7 +195,7 @@ export default async function StudentDetailPage({
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div className="text-sm text-slate-500">Overall Average</div>
             <div className="mt-2 text-2xl font-bold">
-              {preview?.summary.overallAverage ?? "—"}
+              {preview?.summary.overallAverage ?? "-"}
             </div>
           </div>
         </div>
@@ -214,15 +218,15 @@ export default async function StudentDetailPage({
               </div>
               <div>
                 <span className="font-medium">Date of Birth:</span>{" "}
-                {student.date_of_birth ?? "—"}
+                {student.date_of_birth ?? "-"}
               </div>
               <div>
                 <span className="font-medium">Gender:</span>{" "}
-                {student.gender ?? "—"}
+                {student.gender ?? "-"}
               </div>
               <div>
                 <span className="font-medium">Admission Date:</span>{" "}
-                {student.admission_date ?? "—"}
+                {student.admission_date ?? "-"}
               </div>
             </div>
           </div>
@@ -243,13 +247,13 @@ export default async function StudentDetailPage({
                     Section:{" "}
                     {enrollment.section_name_i18n?.fr ??
                       enrollment.section_code}
-                    {" · "}
+                    {" - "}
                     Status: {enrollment.enrollment_status}
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
                     Start: {enrollment.start_date}
                     {enrollment.end_date
-                      ? ` · End: ${enrollment.end_date}`
+                      ? ` - End: ${enrollment.end_date}`
                       : ""}
                   </div>
                 </div>
@@ -274,7 +278,7 @@ export default async function StudentDetailPage({
                   <div className="rounded-xl bg-slate-50 p-3">
                     <div className="text-slate-500">Rank</div>
                     <div className="mt-1 text-xl font-bold">
-                      {preview.summary.rankInSection ?? "—"}
+                      {preview.summary.rankInSection ?? "-"}
                     </div>
                   </div>
                   <div className="rounded-xl bg-slate-50 p-3">
@@ -344,12 +348,12 @@ export default async function StudentDetailPage({
                     {discount.name_i18n?.fr ?? "Discount"}
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
-                    Type: {discount.discount_type} · Value: {discount.value} ·
+                    Type: {discount.discount_type} - Value: {discount.value} ·
                     Scope: {discount.scope}
                   </div>
                   <div className="mt-1 text-sm text-slate-600">
                     Start: {discount.start_date}
-                    {discount.end_date ? ` · End: ${discount.end_date}` : ""}
+                    {discount.end_date ? ` - End: ${discount.end_date}` : ""}
                   </div>
                 </div>
               ))}
@@ -373,11 +377,11 @@ export default async function StudentDetailPage({
               >
                 <div className="font-semibold">{invoice.invoice_number}</div>
                 <div className="mt-1 text-sm text-slate-600">
-                  Status: {invoice.status} · Total: {invoice.total_amount} ·
+                  Status: {invoice.status} - Total: {invoice.total_amount} ·
                   Balance: {invoice.balance_due}
                 </div>
                 <div className="mt-1 text-sm text-slate-600">
-                  Issue: {invoice.issue_date} · Due: {invoice.due_date}
+                  Issue: {invoice.issue_date} - Due: {invoice.due_date}
                 </div>
               </div>
             ))}
@@ -387,7 +391,11 @@ export default async function StudentDetailPage({
             ) : null}
           </div>
         </div>
-      </div>
+        </div>
+      </StudentsWorkspace>
     </SchoolPageShell>
   );
 }
+
+
+

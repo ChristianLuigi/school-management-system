@@ -1,111 +1,196 @@
-import Link from "next/link";
+﻿import { PlatformDashboardClient } from "@/components/platform-dashboard-client";
 import { PlatformPageShell } from "@/components/platform-page-shell";
+import {
+  EmptyState,
+  PlatformBadge,
+  PlatformPageHeader,
+  PlatformPanel,
+  PlatformPrimaryLinkButton,
+} from "@/components/platform-ui";
 import { getMeContext } from "@/lib/server-context";
 import { serverApiGet } from "@/lib/server-api";
+
+type PlatformDashboardData = {
+  kpis: {
+    totalSchools: number;
+    activeSchools: number;
+    setupSchools: number;
+    suspendedSchools: number;
+    archivedSchools: number;
+    totalStudents: number;
+    totalTeachers: number;
+    totalFinanceAdmins: number;
+  };
+  schoolsByStatus: Array<{
+    status: string;
+    count: number;
+  }>;
+  schoolsByManagementMode: Array<{
+    managementMode: string;
+    count: number;
+  }>;
+  onboardingReadiness: Array<{
+    schoolId: string;
+    schoolName: string;
+    completionPercent: number;
+    levels: number;
+    academicYears: number;
+    gradingPeriods: number;
+    gradeLevels: number;
+    sections: number;
+  }>;
+  staffDistribution: Array<{
+    schoolId: string;
+    schoolName: string;
+    schoolAdmins: number;
+    teachers: number;
+    financeAdmins: number;
+  }>;
+};
 
 type School = {
   id: string;
   code: string;
   name: string;
   status: string;
-  default_locale: string;
-  currency_code: string;
-  country_code: string;
+  management_mode?: "SELF_MANAGED" | "SUPERADMIN_MANAGED" | "HYBRID_MANAGED";
+};
+
+type ActivityRow = {
+  id: string;
+  event_type: string;
+  actor_type: string;
+  school_name: string | null;
+  summary: string;
+  created_at: string;
 };
 
 export default async function PlatformDashboardPage() {
   const context = await getMeContext();
-  const schools = await serverApiGet<School[]>("/platform/schools");
 
-  const activeCount = schools.filter((s) => s.status === "ACTIVE").length;
-  const setupCount = schools.filter((s) => s.status === "ACTIVE_SETUP").length;
-  const suspendedCount = schools.filter((s) => s.status === "SUSPENDED").length;
+  const [dashboard, schools, activity] = await Promise.all([
+    serverApiGet<PlatformDashboardData>("/platform/dashboard/summary"),
+    serverApiGet<School[]>("/platform/schools"),
+    serverApiGet<ActivityRow[]>("/platform/activity?limit=6"),
+  ]);
+
+  const attentionSchools = [...dashboard.onboardingReadiness]
+    .sort((a, b) => a.completionPercent - b.completionPercent)
+    .filter((row) => row.completionPercent < 100)
+    .slice(0, 5);
 
   return (
     <PlatformPageShell>
       <div className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Platform Dashboard</h1>
-            <p className="mt-1 text-slate-600">
-              Super admin view across all school tenants.
-            </p>
-          </div>
+        <PlatformPageHeader
+          title="Platform Dashboard"
+          description="Super admin command center across all school tenants."
+          action={
+            <PlatformPrimaryLinkButton href="/platform/schools/new">
+              Create School
+            </PlatformPrimaryLinkButton>
+          }
+        />
 
-          <Link
-            href="/platform/schools/new"
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
-          >
-            Create School
-          </Link>
-        </div>
-
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="text-sm text-slate-500">Logged-in User</div>
-          <div className="mt-2 text-xl font-bold">
+        <PlatformPanel title="Logged-in User">
+          <div className="text-xl font-bold text-slate-900">
             {context.user.firstName ?? ""} {context.user.lastName ?? ""}
           </div>
           <div className="mt-1 text-sm text-slate-600">{context.user.email}</div>
-          <div className="mt-1 text-sm text-slate-700">
-            Platform role: {context.user.platformRole ?? "-"}
+          <div className="mt-3">
+            <PlatformBadge tone="blue">
+              Platform role: {context.user.platformRole ?? "-"}
+            </PlatformBadge>
           </div>
-        </div>
+        </PlatformPanel>
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">Total Schools</div>
-            <div className="mt-2 text-3xl font-bold">{schools.length}</div>
-          </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">Active</div>
-            <div className="mt-2 text-3xl font-bold">{activeCount}</div>
-          </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">In Setup</div>
-            <div className="mt-2 text-3xl font-bold">{setupCount}</div>
-          </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">Suspended</div>
-            <div className="mt-2 text-3xl font-bold">{suspendedCount}</div>
-          </div>
-        </div>
+        <PlatformDashboardClient data={dashboard} schools={schools} />
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Recent Schools</h2>
-            <Link
-              href="/platform/schools"
-              className="text-sm text-slate-600 hover:text-slate-900 underline underline-offset-2"
-            >
-              View all
-            </Link>
-          </div>
-          <div className="mt-4 space-y-3">
-            {schools.slice(0, 5).map((school) => (
-              <div
-                key={school.id}
-                className="rounded-xl border border-slate-200 p-4"
-              >
-                <div className="font-semibold">{school.name}</div>
-                <div className="mt-1 text-sm text-slate-600">
-                  Code: {school.code} · Status: {school.status} · Locale:{" "}
-                  {school.default_locale} · Currency: {school.currency_code}
-                </div>
+        <div className="grid gap-6 xl:grid-cols-2">
+          <PlatformPanel
+            title="Schools Needing Attention"
+            subtitle="Tenants that are not yet fully operational."
+            action={
+              <PlatformPrimaryLinkButton href="/platform/onboarding">
+                Open Onboarding
+              </PlatformPrimaryLinkButton>
+            }
+          >
+            {attentionSchools.length === 0 ? (
+              <EmptyState
+                title="No schools need attention"
+                description="All tracked schools are currently complete."
+              />
+            ) : (
+              <div className="space-y-3">
+                {attentionSchools.map((school) => (
+                  <div
+                    key={school.schoolId}
+                    className="rounded-2xl border border-slate-200 p-4"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="font-medium text-slate-900">
+                        {school.schoolName}
+                      </div>
+                      <div className="text-sm font-semibold text-slate-700">
+                        {school.completionPercent}%
+                      </div>
+                    </div>
+
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className="h-full rounded-full bg-blue-600"
+                        style={{ width: `${school.completionPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+          </PlatformPanel>
 
-            {schools.length === 0 ? (
-              <div className="py-4 text-center text-sm text-slate-500">
-                No schools yet.{" "}
-                <Link
-                  href="/platform/schools/new"
-                  className="font-medium text-slate-900 underline underline-offset-2"
-                >
-                  Create the first one.
-                </Link>
+          <PlatformPanel
+            title="Recent Activity"
+            subtitle="Latest high-level actions across the platform."
+            action={
+              <PlatformPrimaryLinkButton href="/platform/activity">
+                Open Activity
+              </PlatformPrimaryLinkButton>
+            }
+          >
+            {activity.length === 0 ? (
+              <EmptyState
+                title="No recent activity"
+                description="Platform events will appear here as actions happen."
+              />
+            ) : (
+              <div className="space-y-3">
+                {activity.map((row) => (
+                  <div
+                    key={row.id}
+                    className="rounded-2xl border border-slate-200 p-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-slate-900">
+                        {row.summary}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {new Date(row.created_at).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <PlatformBadge>{row.event_type}</PlatformBadge>
+                      <PlatformBadge tone="neutral">{row.actor_type}</PlatformBadge>
+                      {row.school_name ? (
+                        <PlatformBadge tone="blue">{row.school_name}</PlatformBadge>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ) : null}
-          </div>
+            )}
+          </PlatformPanel>
         </div>
       </div>
     </PlatformPageShell>

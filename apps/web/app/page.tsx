@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation";
-import { getMeContext, hasSchoolRole, resolveCurrentSchoolId } from "@/lib/server-context";
+import {
+  getMeContext,
+  resolveCurrentSchoolId,
+  resolveEffectiveRoles,
+} from "@/lib/server-context";
 import { serverApiGet } from "@/lib/server-api";
 
 type SetupStatus = {
@@ -19,11 +23,17 @@ export default async function HomePage() {
     redirect("/login");
   }
 
+  const effectiveRoles = resolveEffectiveRoles(context);
+
+  if (!effectiveRoles.includes("SCHOOL_ADMIN")) {
+    redirect("/school");
+  }
+
   const setup = await serverApiGet<SetupStatus>(
     `/school-setup/status?schoolId=${schoolId}`,
-  );
+  ).catch(() => null);
 
-  if (hasSchoolRole(context, "SCHOOL_ADMIN") && !setup.isComplete) {
+  if (setup && !setup.isComplete) {
     redirect("/setup");
   }
 

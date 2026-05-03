@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -19,6 +19,8 @@ type SchoolShellProps = {
   children: ReactNode;
   headerExtra?: ReactNode;
   currentRoles: string[];
+  schoolName?: string;
+  schoolCode?: string;
 };
 
 const navItems = [
@@ -76,6 +78,8 @@ export function AdminShell({
   children,
   headerExtra,
   currentRoles,
+  schoolName,
+  schoolCode,
 }: SchoolShellProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -104,13 +108,18 @@ export function AdminShell({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="grid min-h-screen grid-cols-1 md:grid-cols-[260px_1fr]">
+      <div className="grid min-h-screen grid-cols-1 md:grid-cols-[280px_1fr]">
         <aside className="border-r border-slate-200 bg-white">
           <div className="border-b border-slate-200 px-6 py-5">
             <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              School Management
+              School Workspace
             </div>
-            <div className="mt-1 text-xl font-bold">School Workspace</div>
+            <div className="mt-1 text-xl font-bold text-slate-900">
+              {schoolName ?? "School"}
+            </div>
+            {schoolCode ? (
+              <div className="mt-1 text-sm text-slate-500">{schoolCode}</div>
+            ) : null}
           </div>
 
           <nav className="flex flex-col gap-1 p-4">

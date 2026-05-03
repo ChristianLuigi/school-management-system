@@ -1,5 +1,9 @@
-import Link from "next/link";
-import { PlatformPageShell } from "@/components/platform-page-shell";
+﻿import { PlatformPageShell } from "@/components/platform-page-shell";
+import { PlatformSchoolsClient } from "@/components/platform-schools-client";
+import {
+  PlatformPageHeader,
+  PlatformPrimaryLinkButton,
+} from "@/components/platform-ui";
 import { serverApiGet } from "@/lib/server-api";
 
 type School = {
@@ -7,27 +11,12 @@ type School = {
   code: string;
   name: string;
   status: string;
+  management_mode: "SELF_MANAGED" | "SUPERADMIN_MANAGED" | "HYBRID_MANAGED";
   default_locale: string;
   timezone: string;
   currency_code: string;
   country_code: string;
 };
-
-function statusBadge(status: string) {
-  if (status === "ACTIVE") {
-    return "bg-green-100 text-green-700";
-  }
-
-  if (status === "ACTIVE_SETUP") {
-    return "bg-amber-100 text-amber-700";
-  }
-
-  if (status === "SUSPENDED") {
-    return "bg-red-100 text-red-700";
-  }
-
-  return "bg-slate-100 text-slate-700";
-}
 
 export default async function PlatformSchoolsPage() {
   const schools = await serverApiGet<School[]>("/platform/schools");
@@ -35,94 +24,16 @@ export default async function PlatformSchoolsPage() {
   return (
     <PlatformPageShell>
       <div className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Schools</h1>
-            <p className="mt-1 text-slate-600">
-              Tenant list across the platform.
-            </p>
-          </div>
-
-          <Link
-            href="/platform/schools/new"
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
-          >
-            Create School
-          </Link>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">Total Schools</div>
-            <div className="mt-2 text-3xl font-bold">{schools.length}</div>
-          </div>
-
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">Active</div>
-            <div className="mt-2 text-3xl font-bold">
-              {schools.filter((s) => s.status === "ACTIVE").length}
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm text-slate-500">In Setup</div>
-            <div className="mt-2 text-3xl font-bold">
-              {schools.filter((s) => s.status === "ACTIVE_SETUP").length}
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left text-slate-600">
-              <tr>
-                <th className="px-4 py-3">Code</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Locale</th>
-                <th className="px-4 py-3">Timezone</th>
-                <th className="px-4 py-3">Currency</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schools.map((school) => (
-                <tr key={school.id} className="border-t border-slate-200">
-                  <td className="px-4 py-3 font-mono text-xs">{school.code}</td>
-                  <td className="px-4 py-3">{school.name}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${statusBadge(
-                        school.status,
-                      )}`}
-                    >
-                      {school.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{school.default_locale}</td>
-                  <td className="px-4 py-3 text-slate-600">{school.timezone}</td>
-                  <td className="px-4 py-3">{school.currency_code}</td>
-                </tr>
-              ))}
-
-              {schools.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    No schools yet.{" "}
-                    <Link
-                      href="/platform/schools/new"
-                      className="font-medium text-slate-900 underline underline-offset-2"
-                    >
-                      Create the first one.
-                    </Link>
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+        <PlatformPageHeader
+          title="Schools"
+          description="Manage school tenants across the platform."
+          action={
+            <PlatformPrimaryLinkButton href="/platform/schools/new">
+              Create School
+            </PlatformPrimaryLinkButton>
+          }
+        />
+        <PlatformSchoolsClient initialSchools={schools} />
       </div>
     </PlatformPageShell>
   );

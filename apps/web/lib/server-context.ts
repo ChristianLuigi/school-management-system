@@ -14,6 +14,11 @@ type GradingPeriod = {
   sequence_no: number;
 };
 
+type ManagementMode =
+  | "SELF_MANAGED"
+  | "SUPERADMIN_MANAGED"
+  | "HYBRID_MANAGED";
+
 export type MeContext = {
   user: {
     id: string;
@@ -28,6 +33,7 @@ export type MeContext = {
     school_name: string;
     school_code: string;
     school_status: string;
+    management_mode: ManagementMode;
     membership_id: string;
     membership_status: string;
     roles: string[];
@@ -38,6 +44,7 @@ export type MeContext = {
         school_name: string;
         school_code: string;
         school_status: string;
+        management_mode: ManagementMode;
         membership_id: string;
         membership_status: string;
         roles: string[];
@@ -47,6 +54,7 @@ export type MeContext = {
         name: string;
         code: string;
         status: string;
+        management_mode: ManagementMode;
       }
     | null;
   currentRoles: string[];
@@ -76,8 +84,55 @@ export function resolveCurrentSchoolId(context: MeContext) {
   return "";
 }
 
+function normalizeRoles(roles: unknown): string[] {
+  if (Array.isArray(roles)) {
+    return roles.filter((role): role is string => typeof role === "string");
+  }
+
+  if (typeof roles === "string") {
+    const raw = roles.trim();
+
+    if (!raw) {
+      return [];
+    }
+
+    if (raw.startsWith("{") && raw.endsWith("}")) {
+      const body = raw.slice(1, -1).trim();
+
+      if (!body) {
+        return [];
+      }
+
+      return body
+        .split(",")
+        .map((entry) => entry.trim().replace(/^"|"$/g, ""))
+        .filter(Boolean);
+    }
+
+    return [raw];
+  }
+
+  return [];
+}
+
 export function hasSchoolRole(context: MeContext, role: string) {
-  return context.currentRoles.includes(role);
+  return normalizeRoles(context.currentRoles).includes(role);
+}
+
+export function canSuperAdminManageSchool(context: MeContext) {
+  if (!context.isSuperAdmin || !context.currentSchool) {
+    return false;
+  }
+
+  return context.currentSchool.management_mode !== "SELF_MANAGED";
+}
+
+export function resolveEffectiveRoles(context: MeContext) {
+  if (canSuperAdminManageSchool(context)) {
+    return ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"];
+  }
+
+  return normalizeRoles(context.currentRoles);
 }
 
 export async function getActiveAcademicContext(schoolId: string) {

@@ -2,9 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
-
 type School = {
   id: string;
   code: string;
@@ -12,282 +9,411 @@ type School = {
   status: string;
 };
 
-type Invitation = {
-  id: string;
-  school_id: string;
-  school_name: string;
-  school_code: string;
+type StaffMember = {
+  user_id: string;
   email: string;
   first_name: string | null;
   last_name: string | null;
-  invited_role: string;
-  invitation_status: "PENDING" | "ACCEPTED" | "EXPIRED" | "REVOKED";
-  expires_at: string;
-  created_at: string;
+  user_status: string;
+  membership_status: string;
+  roles: string[];
 };
 
-const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  ACCEPTED: "bg-green-100 text-green-700",
-  EXPIRED: "bg-slate-100 text-slate-600",
-  REVOKED: "bg-red-100 text-red-700",
+type CreatedAccount = {
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  tempPassword: string;
+  role: string;
 };
 
-type PlatformInvitationsClientProps = {
-  initialSchools: School[];
+const ROLE_LABELS: Record<string, string> = {
+  SCHOOL_ADMIN: "School Admin",
+  TEACHER: "Teacher",
+  FINANCE_ADMIN: "Finance Admin",
 };
+
+function normalizeRoles(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((entry): entry is string => typeof entry === "string");
+  }
+
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  const raw = value.trim();
+
+  if (!raw) {
+    return [];
+  }
+
+  if (raw.startsWith("{") && raw.endsWith("}")) {
+    const body = raw.slice(1, -1).trim();
+
+    if (!body) {
+      return [];
+    }
+
+    return body
+      .split(",")
+      .map((entry) => entry.trim().replace(/^"|"$/g, ""))
+      .filter(Boolean);
+  }
+
+  return [raw];
+}
+
+function normalizeStaff(data: unknown): StaffMember[] {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+
+      const row = entry as Record<string, unknown>;
+
+      if (typeof row.user_id !== "string" || typeof row.email !== "string") {
+        return null;
+      }
+
+      return {
+        user_id: row.user_id,
+        email: row.email,
+        first_name: typeof row.first_name === "string" ? row.first_name : null,
+        last_name: typeof row.last_name === "string" ? row.last_name : null,
+        user_status: typeof row.user_status === "string" ? row.user_status : "",
+        membership_status:
+          typeof row.membership_status === "string" ? row.membership_status : "",
+        roles: normalizeRoles(row.roles),
+      };
+    })
+    .filter((entry): entry is StaffMember => Boolean(entry));
+}
 
 export function PlatformInvitationsClient({
   initialSchools,
-}: PlatformInvitationsClientProps) {
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+}: {
+  initialSchools: School[];
+}) {
+  const [selectedSchoolId, setSelectedSchoolId] = useState(
+    initialSchools[0]?.id ?? ""
+  );
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
 
   const [form, setForm] = useState({
-    schoolId: initialSchools[0]?.id ?? "",
     email: "",
     firstName: "",
     lastName: "",
-    role: "SCHOOL_ADMIN" as "SCHOOL_ADMIN" | "TEACHER" | "FINANCE_ADMIN",
+    temporaryPassword: "",
+    role: "TEACHER" as "SCHOOL_ADMIN" | "TEACHER" | "FINANCE_ADMIN",
   });
-
-  async function fetchInvitations() {
-    const res = await fetch(`${API_BASE_URL}/platform/invitations`, {
-      cache: "no-store",
-    });
-    const data = await res.json();
-    setInvitations(Array.isArray(data) ? data : []);
-  }
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [created, setCreated] = useState<CreatedAccount | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    fetchInvitations()
-      .catch(() => setError("Failed to load invitations."))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!selectedSchoolId) return;
+
+    setLoadingStaff(true);
+    setStaff([]);
+
+    fetch(`/api/proxy/platform/schools/${selectedSchoolId}/staff`)
+      .then((r) => r.json())
+      .then((data) => setStaff(normalizeStaff(data)))
+      .catch(() => setStaff([]))
+      .finally(() => setLoadingStaff(false));
+  }, [selectedSchoolId]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setError("");
-    setSuccessMsg("");
+    setCreated(null);
+    setSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/platform/invitations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schoolId: form.schoolId,
-          email: form.email,
-          firstName: form.firstName || undefined,
-          lastName: form.lastName || undefined,
-          role: form.role,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data?.message ?? "Failed to create invitation.");
-      }
-
-      setSuccessMsg(
-        `Invitation sent to ${form.email}${data.devToken ? ` (dev token: ${data.devToken})` : ""}.`,
+      const res = await fetch(
+        `/api/proxy/platform/schools/${selectedSchoolId}/staff`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: form.email.trim().toLowerCase(),
+            firstName: form.firstName.trim() || undefined,
+            lastName: form.lastName.trim() || undefined,
+            temporaryPassword: form.temporaryPassword,
+            role: form.role,
+          }),
+        }
       );
 
-      setForm((prev) => ({ ...prev, email: "", firstName: "", lastName: "" }));
-      await fetchInvitations();
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.message ?? "Failed to create account.");
+      }
+
+      setCreated({
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        tempPassword: form.temporaryPassword,
+        role: form.role,
+      });
+
+      const refreshed = await fetch(
+        `/api/proxy/platform/schools/${selectedSchoolId}/staff`
+      ).then((r) => r.json());
+      setStaff(normalizeStaff(refreshed));
+
+      setForm((prev) => ({
+        ...prev,
+        email: "",
+        firstName: "",
+        lastName: "",
+        temporaryPassword: "",
+      }));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create invitation.",
+        err instanceof Error ? err.message : "Failed to create account."
       );
     } finally {
       setSubmitting(false);
     }
   }
 
+  const selectedSchool = initialSchools.find((s) => s.id === selectedSchoolId);
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Invitations</h1>
+        <h1 className="text-3xl font-bold">Staff Management</h1>
         <p className="mt-1 text-slate-600">
-          Send school staff invitations and track their status.
+          Create accounts for school admins, teachers, and finance admins.
+          Credentials are set once and shared directly with the user.
         </p>
       </div>
 
-      {/* Create invitation form */}
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
-      >
-        <h2 className="mb-4 text-lg font-semibold">Send New Invitation</h2>
+      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+        <label className="mb-2 block text-sm font-medium text-slate-700">
+          Select School
+        </label>
+        {initialSchools.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            No schools yet. Create one first.
+          </p>
+        ) : (
+          <select
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            value={selectedSchoolId}
+            onChange={(e) => {
+              setSelectedSchoolId(e.target.value);
+              setCreated(null);
+              setError("");
+            }}
+          >
+            {initialSchools.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} ({s.code}) - {s.status}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium">School</label>
-            <select
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              value={form.schoolId}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, schoolId: e.target.value }))
-              }
-              required
-            >
-              {initialSchools.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} ({s.code})
-                </option>
-              ))}
-            </select>
+      {created && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 space-y-3">
+          <div className="text-sm font-semibold text-green-700">
+            Account created - share these credentials with the user
           </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">Email</label>
-            <input
-              type="email"
-              required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              placeholder="staff@school.com"
-              value={form.email}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, email: e.target.value }))
-              }
-            />
+          <div className="rounded-xl bg-white ring-1 ring-green-200 p-4 grid gap-2 text-sm">
+            <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <span className="text-slate-500">Role</span>
+              <span className="font-medium">
+                {ROLE_LABELS[created.role] ?? created.role}
+              </span>
+            </div>
+            <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <span className="text-slate-500">Email</span>
+              <span className="font-mono font-medium">{created.email}</span>
+            </div>
+            <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <span className="text-slate-500">Temporary Password</span>
+              <span className="font-mono font-medium">
+                {created.tempPassword}
+              </span>
+            </div>
           </div>
+          <p className="text-xs text-amber-700">
+            This password is shown once. Copy it now before creating another
+            account.
+          </p>
+        </div>
+      )}
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">Role</label>
-            <select
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              value={form.role}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  role: e.target.value as typeof form.role,
-                }))
-              }
-            >
-              <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
-              <option value="TEACHER">TEACHER</option>
-              <option value="FINANCE_ADMIN">FINANCE_ADMIN</option>
-            </select>
-          </div>
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              First Name <span className="text-slate-400">(optional)</span>
-            </label>
-            <input
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              value={form.firstName}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, firstName: e.target.value }))
-              }
-            />
-          </div>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h2 className="mb-4 text-lg font-semibold">Create Account</h2>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Last Name <span className="text-slate-400">(optional)</span>
-            </label>
-            <input
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              value={form.lastName}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, lastName: e.target.value }))
-              }
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Role</label>
+              <select
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                value={form.role}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    role: e.target.value as typeof form.role,
+                  }))
+                }
+              >
+                <option value="TEACHER">Teacher</option>
+                <option value="FINANCE_ADMIN">Finance Admin</option>
+                <option value="SCHOOL_ADMIN">School Admin</option>
+              </select>
+            </div>
 
-          <div className="flex items-end">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Email</label>
+              <input
+                type="email"
+                required
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                placeholder="teacher@school.com"
+                value={form.email}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, email: e.target.value }))
+                }
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  First Name{" "}
+                  <span className="font-normal text-slate-400">(optional)</span>
+                </label>
+                <input
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  placeholder="Marie"
+                  value={form.firstName}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      firstName: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  Last Name{" "}
+                  <span className="font-normal text-slate-400">(optional)</span>
+                </label>
+                <input
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  placeholder="Pierre"
+                  value={form.lastName}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      lastName: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium">
+                Temporary Password
+              </label>
+              <input
+                type="text"
+                required
+                minLength={8}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+                placeholder="At least 8 characters"
+                value={form.temporaryPassword}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    temporaryPassword: e.target.value,
+                  }))
+                }
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                The user logs in with this on first access.
+              </p>
+            </div>
+
             <button
               type="submit"
-              disabled={submitting || initialSchools.length === 0}
-              className="w-full rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+              disabled={submitting || !selectedSchoolId}
+              className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
             >
-              {submitting ? "Sending..." : "Send Invitation"}
+              {submitting ? "Creating..." : "Create Account"}
             </button>
-          </div>
+          </form>
         </div>
 
-        {error ? (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        ) : null}
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h2 className="mb-4 text-lg font-semibold">
+            {selectedSchool ? `${selectedSchool.name} - Staff` : "Staff"}
+          </h2>
 
-        {successMsg ? (
-          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-            {successMsg}
-          </div>
-        ) : null}
-      </form>
-
-      {/* Invitation list */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-semibold">All Invitations</h2>
-        </div>
-
-        {loading ? (
-          <div className="px-5 py-6 text-sm text-slate-500">Loading...</div>
-        ) : (
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left text-slate-600">
-              <tr>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">School</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Expires</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invitations.map((inv) => (
-                <tr key={inv.id} className="border-t border-slate-200">
-                  <td className="px-4 py-3">{inv.email}</td>
-                  <td className="px-4 py-3">
-                    {inv.first_name || inv.last_name
-                      ? `${inv.first_name ?? ""} ${inv.last_name ?? ""}`.trim()
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {inv.school_name} ({inv.school_code})
-                  </td>
-                  <td className="px-4 py-3">{inv.invited_role}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${
-                        STATUS_STYLES[inv.invitation_status] ??
-                        "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {inv.invitation_status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {new Date(inv.expires_at).toLocaleDateString()}
-                  </td>
-                </tr>
+          {loadingStaff ? (
+            <p className="text-sm text-slate-500">Loading staff...</p>
+          ) : staff.length === 0 ? (
+            <p className="text-sm text-slate-500">
+              No staff accounts yet for this school.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {staff.map((member) => (
+                <div
+                  key={member.user_id}
+                  className="rounded-xl border border-slate-200 px-4 py-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="text-sm font-medium">
+                        {member.first_name || member.last_name
+                          ? `${member.first_name ?? ""} ${member.last_name ?? ""}`.trim()
+                          : "-"}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {member.email}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {member.roles.map((role) => (
+                        <span
+                          key={role}
+                          className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
+                        >
+                          {ROLE_LABELS[role] ?? role}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               ))}
-
-              {invitations.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-6 text-center text-slate-500"
-                  >
-                    No invitations yet.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

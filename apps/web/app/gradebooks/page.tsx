@@ -1,9 +1,10 @@
+import { GradebooksWorkspaceClient } from "@/components/gradebooks-workspace-client";
 import { SchoolPageShell } from "@/components/school-page-shell";
-import { GradebooksPageClient } from "@/components/gradebooks-page-client";
 import {
   getActiveAcademicContext,
   getMeContext,
   resolveCurrentSchoolId,
+  resolveEffectiveRoles,
 } from "@/lib/server-context";
 import { serverApiGet } from "@/lib/server-api";
 
@@ -26,6 +27,7 @@ type GradingPeriod = {
 export default async function GradebooksPage() {
   const context = await getMeContext();
   const schoolId = resolveCurrentSchoolId(context);
+  const effectiveRoles = resolveEffectiveRoles(context);
   const { academicYearId } = await getActiveAcademicContext(schoolId);
 
   const [sectionSubjects, gradingPeriods] = academicYearId
@@ -41,7 +43,9 @@ export default async function GradebooksPage() {
 
   return (
     <SchoolPageShell allowedRoles={["SCHOOL_ADMIN", "TEACHER"]}>
-      <GradebooksPageClient
+      <GradebooksWorkspaceClient
+        currentRoles={effectiveRoles}
+        schoolId={schoolId}
         userId={context.user.id}
         sectionSubjects={sectionSubjects}
         gradingPeriods={gradingPeriods}

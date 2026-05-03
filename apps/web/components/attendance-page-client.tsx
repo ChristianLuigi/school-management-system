@@ -1,9 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  type AttendanceSubmissionPayload,
+  upsertQueuedAttendanceSubmission,
+} from "@/lib/attendance-offline-queue";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+const API_PROXY_PREFIX = "/api/proxy";
 
 type Section = {
   id: string;
@@ -26,7 +29,7 @@ type AttendanceSession = {
   section_id: string;
   attendance_date: string;
   slot: Slot;
-  status: "DRAFT" | "SUBMITTED";
+  status: "DRAFT" | "SUBMITTED" | "LOCKED";
 };
 
 type AttendanceRecord = {
@@ -38,8 +41,20 @@ type AttendanceRecord = {
   student_last_name: string;
 };
 
-type SubmitResponse = {
-  session: AttendanceSession;
+type SubmitResult = {
+  attendanceSessionId: string;
+  sessionStatus: string;
+  recordsSubmitted: number;
+  counts: {
+    present: number;
+    absent: number;
+    late: number;
+    excused: number;
+  };
+};
+
+type SubmitResponse = SubmitResult & {
+  session?: AttendanceSession;
   summary: {
     total: number;
     present: number;
@@ -56,11 +71,18 @@ function todayLocalDate() {
 }
 
 type AttendancePageClientProps = {
+  schoolId: string;
   userId: string;
   sections: Section[];
+  onSubmitted?: () => void;
 };
 
-export function AttendancePageClient({ userId, sections }: AttendancePageClientProps) {
+export function AttendancePageClient({
+  schoolId,
+  userId,
+  sections,
+  onSubmitted,
+}: AttendancePageClientProps) {
   const [sectionId, setSectionId] = useState<string>(sections[0]?.id ?? "");
   const [attendanceDate, setAttendanceDate] = useState<string>(todayLocalDate());
   const [slot, setSlot] = useState<Slot>("MORNING");
@@ -74,6 +96,10 @@ export function AttendancePageClient({ userId, sections }: AttendancePageClientP
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [lastSubmitResult, setLastSubmitResult] =
+    useState<SubmitResult | null>(null);
 
   const summary = useMemo(() => {
     const values = Object.values(statuses);
@@ -87,7 +113,7 @@ export function AttendancePageClient({ userId, sections }: AttendancePageClientP
   }, [statuses]);
 
   async function apiGet<T>(path: string): Promise<T> {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const res = await fetch(`${API_PROXY_PREFIX}${path}`, {
       cache: "no-store",
     });
 
@@ -100,7 +126,7 @@ export function AttendancePageClient({ userId, sections }: AttendancePageClientP
   }
 
   async function apiPost<T>(path: string, body: unknown): Promise<T> {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const res = await fetch(`${API_PROXY_PREFIX}${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -108,12 +134,17 @@ export function AttendancePageClient({ userId, sections }: AttendancePageClientP
       body: JSON.stringify(body),
     });
 
+    const responseBody = await res.json().catch(() => null);
+
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`POST failed: ${res.status} ${text}`);
+      throw new Error(
+        responseBody?.message ??
+          responseBody?.error ??
+          `POST failed: ${res.status}`,
+      );
     }
 
-    return res.json();
+    return responseBody as T;
   }
 
   function initializeStatuses(students: RosterStudent[]) {
@@ -205,50 +236,119 @@ export function AttendancePageClient({ userId, sections }: AttendancePageClientP
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+
+    if (submitting) {
+      return;
+    }
+
+    if (!schoolId) {
+      setSubmitError("Missing school context.");
+      return;
+    }
+
+    const records = roster.map((student) => ({
+      studentId: student.student_id,
+      status: statuses[student.student_id] ?? "PRESENT",
+      ...(notes[student.student_id]?.trim()
+        ? { note: notes[student.student_id].trim() }
+        : {}),
+    }));
+
+    const payload: AttendanceSubmissionPayload = {
+      schoolId,
+      sectionId,
+      attendanceDate,
+      slot,
+      takenByUserId: userId,
+      records,
+    };
+
     setSubmitting(true);
     setError("");
     setMessage("");
+    setSubmitMessage("");
+    setSubmitError("");
+    setLastSubmitResult(null);
 
     try {
-      const records = roster.map((student) => ({
-        studentId: student.student_id,
-        status: statuses[student.student_id] ?? "PRESENT",
-        ...(notes[student.student_id]?.trim()
-          ? { note: notes[student.student_id].trim() }
-          : {}),
-      }));
-
-      const result = await apiPost<SubmitResponse>(
-        "/attendance/sessions/submit",
-        {
-          sectionId,
-          attendanceDate,
-          slot,
-          takenByUserId: userId,
-          records,
+      const res = await fetch(`/api/attendance/sessions/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(payload),
+      });
 
-      setSessionId(result.session.id);
-      setMessage(
-        `Attendance submitted. Present: ${result.summary.present}, Absent: ${result.summary.absent}, Late: ${result.summary.late}, Excused: ${result.summary.excused}.`,
-      );
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        const error = new Error(
+          body?.message ?? body?.error ?? "Attendance submission failed.",
+        );
+
+        if ([502, 503, 504].includes(res.status)) {
+          (error as Error & { shouldQueue?: boolean }).shouldQueue = true;
+        }
+
+        throw error;
+      }
+
+      const result = body as SubmitResponse;
+      const normalizedResult: SubmitResult = {
+        attendanceSessionId:
+          result.attendanceSessionId ?? result.session?.id ?? "",
+        sessionStatus: result.sessionStatus ?? result.session?.status ?? "SUBMITTED",
+        recordsSubmitted: result.recordsSubmitted ?? result.summary.total,
+        counts: result.counts ?? {
+          present: result.summary.present,
+          absent: result.summary.absent,
+          late: result.summary.late,
+          excused: result.summary.excused,
+        },
+      };
+
+      setSessionId(normalizedResult.attendanceSessionId);
+      setLastSubmitResult(normalizedResult);
+      setSubmitMessage("Attendance submitted successfully.");
+      onSubmitted?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit attendance.");
+      const shouldQueue =
+        typeof navigator !== "undefined" &&
+        (!navigator.onLine ||
+          err instanceof TypeError ||
+          Boolean((err as { shouldQueue?: boolean })?.shouldQueue));
+
+      if (shouldQueue) {
+        const queued = upsertQueuedAttendanceSubmission(payload);
+
+        setSessionId(queued.id);
+        setSubmitMessage(
+          "Connection problem detected. Attendance was saved locally and will sync later.",
+        );
+        setLastSubmitResult({
+          attendanceSessionId: queued.id,
+          sessionStatus: "PENDING_LOCAL",
+          recordsSubmitted: payload.records.length,
+          counts: {
+            present: payload.records.filter((record) => record.status === "PRESENT").length,
+            absent: payload.records.filter((record) => record.status === "ABSENT").length,
+            late: payload.records.filter((record) => record.status === "LATE").length,
+            excused: payload.records.filter((record) => record.status === "EXCUSED").length,
+          },
+        });
+
+        return;
+      }
+
+      setSubmitError(
+        err instanceof Error ? err.message : "Attendance submission failed.",
+      );
     } finally {
       setSubmitting(false);
     }
   }
-
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Attendance</h1>
-          <p className="mt-1 text-slate-600">
-            Load a section roster, mark statuses, and submit morning or afternoon attendance.
-          </p>
-        </div>
-
         <div className="grid gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 md:grid-cols-4">
           <div>
             <label className="mb-1 block text-sm font-medium">Section</label>
@@ -317,6 +417,34 @@ export function AttendancePageClient({ userId, sections }: AttendancePageClientP
           </div>
         ) : null}
 
+        {submitError ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {submitError}
+          </div>
+        ) : null}
+
+        {submitMessage ? (
+          <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+            {submitMessage}
+
+            {lastSubmitResult ? (
+              <div className="mt-2 text-xs text-green-800">
+                Session: {lastSubmitResult.attendanceSessionId} | Records:{" "}
+                {lastSubmitResult.recordsSubmitted} | Present:{" "}
+                {lastSubmitResult.counts.present} | Absent:{" "}
+                {lastSubmitResult.counts.absent} | Late:{" "}
+                {lastSubmitResult.counts.late} | Excused:{" "}
+                {lastSubmitResult.counts.excused}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <p className="text-xs text-slate-500">
+          In weak internet conditions, failed network submissions are saved
+          locally and can be synced later. Backend protection prevents duplicate
+          attendance sessions.
+        </p>
         <div className="grid gap-4 md:grid-cols-5">
           <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div className="text-sm text-slate-500">Total</div>
@@ -409,7 +537,12 @@ export function AttendancePageClient({ userId, sections }: AttendancePageClientP
             </table>
           </div>
 
-          <div className="border-t border-slate-200 px-5 py-4">
+          <div className="space-y-3 border-t border-slate-200 px-5 py-4">
+            <p className="text-xs text-slate-500">
+              Submissions are retry-safe. If the same section/date/slot is
+              submitted again, the existing attendance session will be updated
+              instead of duplicated.
+            </p>
             <button
               type="submit"
               disabled={submitting || roster.length === 0}
@@ -422,3 +555,7 @@ export function AttendancePageClient({ userId, sections }: AttendancePageClientP
       </div>
   );
 }
+
+
+
+

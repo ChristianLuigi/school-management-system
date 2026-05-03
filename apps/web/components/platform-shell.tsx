@@ -1,13 +1,15 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  Activity,
   Building2,
+  FileSpreadsheet,
   LayoutDashboard,
   LogOut,
-  Mail,
   Settings2,
+  Users,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 
@@ -18,8 +20,10 @@ type PlatformShellProps = {
 const navItems = [
   { href: "/platform", label: "Dashboard", icon: LayoutDashboard },
   { href: "/platform/schools", label: "Schools", icon: Building2 },
-  { href: "/platform/invitations", label: "Invitations", icon: Mail },
+  { href: "/platform/staff", label: "Staff", icon: Users },
   { href: "/platform/onboarding", label: "Onboarding", icon: Settings2 },
+  { href: "/platform/activity", label: "Activity", icon: Activity },
+  { href: "/platform/reports", label: "Reports", icon: FileSpreadsheet },
 ];
 
 export function PlatformShell({ children }: PlatformShellProps) {

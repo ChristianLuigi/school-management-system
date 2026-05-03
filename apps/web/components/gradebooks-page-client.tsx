@@ -2,8 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+const API_PROXY_PREFIX = "/api/proxy";
 
 type SectionSubject = {
   id: string;
@@ -132,7 +131,7 @@ export function GradebooksPageClient({
   );
 
   async function apiGet<T>(path: string): Promise<T> {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const res = await fetch(`${API_PROXY_PREFIX}${path}`, {
       cache: "no-store",
     });
 
@@ -145,7 +144,7 @@ export function GradebooksPageClient({
   }
 
   async function apiPost<T>(path: string, body: unknown): Promise<T> {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const res = await fetch(`${API_PROXY_PREFIX}${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -379,13 +378,6 @@ export function GradebooksPageClient({
 
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Gradebooks</h1>
-          <p className="mt-1 text-slate-600">
-            Manage assessments, enter scores, and control gradebook workflow.
-          </p>
-        </div>
-
         <div className="grid gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 md:grid-cols-3">
           <div>
             <label className="mb-1 block text-sm font-medium">
@@ -680,9 +672,9 @@ export function GradebooksPageClient({
                   {assessment.title_i18n?.fr ?? assessment.id}
                 </div>
                 <div className="mt-1 text-sm text-slate-600">
-                  {assessment.assessment_type} · Date: {assessment.assessment_date}
-                  {" · "}Max: {assessment.max_points_possible}
-                  {" · "}Weight: {assessment.weight_percent}%
+                  {assessment.assessment_type} | Date: {assessment.assessment_date}
+                  {" | "}Max: {assessment.max_points_possible}
+                  {" | "}Weight: {assessment.weight_percent}%
                 </div>
               </button>
             ))}
@@ -766,3 +758,4 @@ export function GradebooksPageClient({
       </div>
   );
 }
+
