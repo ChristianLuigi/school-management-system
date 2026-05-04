@@ -254,6 +254,12 @@ export function ReportCardBatchesClient({
                     >
                       Open
                     </button>
+                    <a
+                      href={`/reports/batches/${row.id}/print`}
+                      className="rounded-lg border border-slate-300 px-3 py-2 text-xs hover:bg-slate-50"
+                    >
+                      Print Batch
+                    </a>
                     {row.batchStatus === "GENERATED" ? (
                       <button
                         type="button"
@@ -293,9 +299,17 @@ export function ReportCardBatchesClient({
                   details.batch.gradingPeriodId}
               </p>
             </div>
-            <SchoolBadge tone={batchStatusTone(details.batch.batchStatus)}>
-              {details.batch.batchStatus}
-            </SchoolBadge>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`/reports/batches/${details.batch.id}/print`}
+                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Print Batch
+              </a>
+              <SchoolBadge tone={batchStatusTone(details.batch.batchStatus)}>
+                {details.batch.batchStatus}
+              </SchoolBadge>
+            </div>
           </div>
 
           <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">

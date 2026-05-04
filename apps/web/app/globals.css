@@ -66,3 +66,13 @@ body {
     background: white !important;
   }
 }
+@media print {
+  .print-page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .print\:space-y-0 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0 !important;
+  }
+}
