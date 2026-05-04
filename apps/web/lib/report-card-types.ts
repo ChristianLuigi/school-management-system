@@ -6,6 +6,18 @@ export type SubjectResult = {
   average: number;
 };
 
+export type ReportCardAttendanceSummary = {
+  present?: number;
+  absent?: number;
+  late?: number;
+  excused?: number;
+  totalRecords?: number;
+  attended?: number;
+  attendanceRate?: number | null;
+  periodStartDate?: string | null;
+  periodEndDate?: string | null;
+};
+
 export type ReportCardDetails = {
   id: string;
   batchId: string;
@@ -34,7 +46,12 @@ export type ReportCardDetails = {
   averageScore: number | null;
   rankInSection: number | null;
   conductNote: string | null;
-  attendanceSummary: Record<string, unknown>;
+  teacherComment: string | null;
+  directorComment: string | null;
+  finalDecisionOverride: string | null;
+  finalRemarks: string | null;
+  commentsUpdatedAt: string | null;
+  attendanceSummary: ReportCardAttendanceSummary;
   subjectResults: SubjectResult[];
   snapshot: Record<string, unknown>;
   batchStatus: string;

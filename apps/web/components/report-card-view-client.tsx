@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ReportCardCommentsEditor } from "@/components/report-card-comments-editor";
 import { ReportCardPrintTemplate } from "@/components/report-card-print-template";
 import {
   ReportCardDetails,
@@ -80,7 +81,7 @@ export function ReportCardViewClient({
             value={language}
             onChange={(e) => setLanguage(e.target.value as ReportCardLanguage)}
           >
-            <option value="fr">Francais</option>
+            <option value="fr">Français</option>
             <option value="en">English</option>
           </select>
 
@@ -106,7 +107,16 @@ export function ReportCardViewClient({
         </div>
       ) : null}
 
-      {data ? <ReportCardPrintTemplate data={data} language={language} /> : null}
+      {data ? (
+        <div className="space-y-6">
+          <ReportCardCommentsEditor
+            reportCard={data}
+            onUpdated={loadReportCard}
+          />
+
+          <ReportCardPrintTemplate data={data} language={language} />
+        </div>
+      ) : null}
     </div>
   );
 }

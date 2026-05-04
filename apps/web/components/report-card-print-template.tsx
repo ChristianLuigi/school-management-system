@@ -143,7 +143,8 @@ export function ReportCardPrintTemplate({
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 print:bg-white">
           <div className="text-sm text-slate-500">{labels.decision}</div>
           <div className="mt-2 text-3xl font-bold text-slate-900">
-            {decisionFromAverage(data.averageScore, language)}
+            {data.finalDecisionOverride ??
+              decisionFromAverage(data.averageScore, language)}
           </div>
         </div>
       </div>
@@ -203,6 +204,35 @@ export function ReportCardPrintTemplate({
           </div>
           <p className="mt-2 text-sm text-slate-600">
             {data.conductNote ?? labels.noConduct}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 border-t border-slate-200 py-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 p-5">
+          <div className="text-sm font-semibold text-slate-900">
+            {labels.teacherComment}
+          </div>
+          <p className="mt-2 min-h-16 text-sm text-slate-600">
+            {data.teacherComment ?? "-"}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 p-5">
+          <div className="text-sm font-semibold text-slate-900">
+            {labels.directorComment}
+          </div>
+          <p className="mt-2 min-h-16 text-sm text-slate-600">
+            {data.directorComment ?? "-"}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 p-5 md:col-span-2">
+          <div className="text-sm font-semibold text-slate-900">
+            {labels.finalRemarks}
+          </div>
+          <p className="mt-2 min-h-16 text-sm text-slate-600">
+            {data.finalRemarks ?? "-"}
           </p>
         </div>
       </div>
