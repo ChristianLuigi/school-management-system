@@ -49,15 +49,20 @@ export function ReportCardPrintTemplate({
     <div className="mx-auto max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
       <div className="border-b border-slate-200 pb-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
-              {labels.reportTitle}
+          <div className="flex items-start gap-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-slate-50 text-xs font-semibold uppercase text-slate-500 print:bg-white">
+              Logo
             </div>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900">
-              {data.school.name}
-            </h1>
-            <div className="mt-1 text-sm text-slate-500">
-              {labels.schoolCode}: {data.school.code}
+            <div>
+              <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                {labels.reportTitle}
+              </div>
+              <h1 className="mt-2 text-3xl font-bold text-slate-900">
+                {data.school.name}
+              </h1>
+              <div className="mt-1 text-sm text-slate-500">
+                {labels.schoolCode}: {data.school.code}
+              </div>
             </div>
           </div>
 
@@ -216,3 +221,4 @@ export function ReportCardPrintTemplate({
     </div>
   );
 }
+
