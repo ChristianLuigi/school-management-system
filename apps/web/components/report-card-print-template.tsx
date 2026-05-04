@@ -50,18 +50,59 @@ export function ReportCardPrintTemplate({
       <div className="border-b border-slate-200 pb-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-slate-300 bg-slate-50 text-xs font-semibold uppercase text-slate-500 print:bg-white">
-              Logo
-            </div>
+            {data.school.branding?.logoUrl ? (
+              <img
+                src={data.school.branding.logoUrl}
+                alt={data.school.name}
+                className="h-20 w-20 rounded-2xl object-contain"
+              />
+            ) : (
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-xl font-bold text-slate-400 print:bg-white">
+                {data.school.name.slice(0, 2).toUpperCase()}
+              </div>
+            )}
+
             <div>
               <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                {labels.reportTitle}
+                {data.school.branding?.reportCardTitleI18n?.[language] ??
+                  data.school.branding?.reportCardTitleI18n?.fr ??
+                  labels.reportTitle}
               </div>
+
               <h1 className="mt-2 text-3xl font-bold text-slate-900">
                 {data.school.name}
               </h1>
+
               <div className="mt-1 text-sm text-slate-500">
                 {labels.schoolCode}: {data.school.code}
+              </div>
+
+              <div className="mt-2 space-y-0.5 text-sm text-slate-500">
+                {data.school.branding?.addressLine1 ? (
+                  <div>{data.school.branding.addressLine1}</div>
+                ) : null}
+
+                {data.school.branding?.addressLine2 ? (
+                  <div>{data.school.branding.addressLine2}</div>
+                ) : null}
+
+                {data.school.branding?.city ? (
+                  <div>{data.school.branding.city}</div>
+                ) : null}
+
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {data.school.branding?.phone ? (
+                    <span>{data.school.branding.phone}</span>
+                  ) : null}
+
+                  {data.school.branding?.email ? (
+                    <span>{data.school.branding.email}</span>
+                  ) : null}
+
+                  {data.school.branding?.website ? (
+                    <span>{data.school.branding.website}</span>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
@@ -242,12 +283,21 @@ export function ReportCardPrintTemplate({
           {labels.teacher}
         </div>
         <div className="h-24 border-t border-slate-300 pt-2 text-center text-sm text-slate-500">
-          {labels.direction}
+          {data.school.branding?.directorName
+            ? `${labels.direction} - ${data.school.branding.directorName}`
+            : labels.direction}
         </div>
         <div className="h-24 border-t border-slate-300 pt-2 text-center text-sm text-slate-500">
           {labels.parent}
         </div>
       </div>
+      {data.school.branding?.reportCardFooterI18n?.[language] ||
+      data.school.branding?.reportCardFooterI18n?.fr ? (
+        <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
+          {data.school.branding.reportCardFooterI18n?.[language] ??
+            data.school.branding.reportCardFooterI18n?.fr}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -25,6 +25,18 @@ export type ReportCardDetails = {
     id: string;
     name: string;
     code: string;
+    branding?: {
+      logoUrl: string | null;
+      addressLine1: string | null;
+      addressLine2: string | null;
+      city: string | null;
+      phone: string | null;
+      email: string | null;
+      website: string | null;
+      directorName: string | null;
+      reportCardTitleI18n: Record<string, string>;
+      reportCardFooterI18n: Record<string, string>;
+    };
   };
   gradingPeriod: {
     id: string;

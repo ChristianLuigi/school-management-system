@@ -1,4 +1,5 @@
 import { ReportCardBatchesClient } from "@/components/report-card-batches-client";
+import { SchoolBrandingClient } from "@/components/school-branding-client";
 import { SchoolPageShell } from "@/components/school-page-shell";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
@@ -80,7 +81,10 @@ export default async function ReportsPage() {
       >
         <div className="space-y-6">
           {isSchoolAdmin ? (
-            <ReportCardBatchesClient schoolId={currentSchoolId} />
+            <div className="space-y-6">
+              <SchoolBrandingClient schoolId={currentSchoolId} />
+              <ReportCardBatchesClient schoolId={currentSchoolId} />
+            </div>
           ) : (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <div className="text-sm font-semibold text-slate-900">
