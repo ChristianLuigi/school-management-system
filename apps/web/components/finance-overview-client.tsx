@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+import { FinancePaymentRecorderClient } from "@/components/finance-payment-recorder-client";
 import { SchoolBadge } from "@/components/school-ui";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
@@ -315,7 +316,7 @@ export function FinanceOverviewClient({
                 <th className="px-4 py-3">Due Date</th>
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Paid</th>
-                <th className="px-4 py-3">Balance</th>
+                <th className="px-4 py-3">Balance</th>`r`n                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -376,7 +377,7 @@ export function FinanceOverviewClient({
               {invoices.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     No invoices loaded yet.
