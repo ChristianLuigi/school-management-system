@@ -236,9 +236,12 @@ export function StudentFinanceProfileClient({
                   {profile.invoices.map((invoice) => (
                     <tr key={invoice.id} className="border-t border-slate-200">
                       <td className="px-4 py-3">
-                        <div className="font-medium text-slate-900">
+                        <a
+                          href={`/finance/invoices/${invoice.id}`}
+                          className="font-medium text-slate-900 underline-offset-4 hover:underline"
+                        >
                           {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
-                        </div>
+                        </a>
                         <div className="text-xs text-slate-500">
                           Issued: {invoice.issueDate}
                         </div>

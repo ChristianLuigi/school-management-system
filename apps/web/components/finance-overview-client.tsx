@@ -380,11 +380,20 @@ export function FinanceOverviewClient({
                   </td>
 
                   <td className="px-4 py-3 align-top">
-                    <FinancePaymentRecorderClient
-                      schoolId={schoolId}
-                      invoice={invoice}
-                      onPaymentRecorded={refreshAll}
-                    />
+                    <div className="space-y-2">
+                      <a
+                        href={`/finance/invoices/${invoice.id}`}
+                        className="inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                      >
+                        Open Invoice
+                      </a>
+
+                      <FinancePaymentRecorderClient
+                        schoolId={schoolId}
+                        invoice={invoice}
+                        onPaymentRecorded={refreshAll}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}
