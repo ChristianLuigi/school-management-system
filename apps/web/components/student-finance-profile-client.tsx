@@ -157,12 +157,23 @@ export function StudentFinanceProfileClient({
       {profile ? (
         <div className="mt-6 space-y-6">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <div className="text-sm text-slate-500">Student</div>
-            <div className="mt-1 text-2xl font-bold text-slate-900">
-              {profile.student.firstName ?? ""} {profile.student.lastName ?? ""}
-            </div>
-            <div className="mt-1 text-sm text-slate-500">
-              {profile.student.code ?? profile.student.id}
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="text-sm text-slate-500">Student</div>
+                <div className="mt-1 text-2xl font-bold text-slate-900">
+                  {profile.student.firstName ?? ""} {profile.student.lastName ?? ""}
+                </div>
+                <div className="mt-1 text-sm text-slate-500">
+                  {profile.student.code ?? profile.student.id}
+                </div>
+              </div>
+
+              <a
+                href={`/finance/students/${profile.student.id}/statement`}
+                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              >
+                Print Statement
+              </a>
             </div>
           </div>
 
@@ -339,3 +350,4 @@ export function StudentFinanceProfileClient({
     </div>
   );
 }
+
