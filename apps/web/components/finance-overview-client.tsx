@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FinanceInvoiceCreateClient } from "@/components/finance-invoice-create-client";
 import { FinancePaymentRecorderClient } from "@/components/finance-payment-recorder-client";
 import { SchoolBadge } from "@/components/school-ui";
+import { StudentFinanceProfileClient } from "@/components/student-finance-profile-client";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
 
@@ -186,6 +188,10 @@ export function FinanceOverviewClient({
         </div>
       ) : null}
 
+      <FinanceInvoiceCreateClient schoolId={schoolId} onCreated={refreshAll} />
+
+      <StudentFinanceProfileClient schoolId={schoolId} />
+
       {overview ? (
         <>
           <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
@@ -316,7 +322,8 @@ export function FinanceOverviewClient({
                 <th className="px-4 py-3">Due Date</th>
                 <th className="px-4 py-3">Total</th>
                 <th className="px-4 py-3">Paid</th>
-                <th className="px-4 py-3">Balance</th>`r`n                <th className="px-4 py-3">Actions</th>
+                <th className="px-4 py-3">Balance</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -370,6 +377,14 @@ export function FinanceOverviewClient({
 
                   <td className="px-4 py-3 font-semibold">
                     {money(invoice.balanceDue, invoice.currencyCode)}
+                  </td>
+
+                  <td className="px-4 py-3 align-top">
+                    <FinancePaymentRecorderClient
+                      schoolId={schoolId}
+                      invoice={invoice}
+                      onPaymentRecorded={refreshAll}
+                    />
                   </td>
                 </tr>
               ))}
