@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { FinanceInvoiceStatusActionsClient } from "@/components/finance-invoice-status-actions-client";
 import { SchoolBadge } from "@/components/school-ui";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
@@ -149,8 +150,17 @@ export function FinanceInvoiceDetailClient({
       ) : null}
 
       {invoice ? (
-        <div className="mx-auto max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
-          <div className="border-b border-slate-200 pb-6">
+        <div className="space-y-6">
+          <FinanceInvoiceStatusActionsClient
+            schoolId={schoolId}
+            invoiceId={invoice.id}
+            invoiceStatus={invoice.invoiceStatus}
+            amountPaid={invoice.amountPaid}
+            onChanged={loadInvoice}
+          />
+
+          <div className="mx-auto max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+            <div className="border-b border-slate-200 pb-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
@@ -404,6 +414,7 @@ export function FinanceInvoiceDetailClient({
             <div className="h-24 border-t border-slate-300 pt-2 text-center text-sm text-slate-500">
               Parent / Guardian
             </div>
+          </div>
           </div>
         </div>
       ) : null}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
@@ -55,6 +55,10 @@ export function FinancePaymentRecorderClient({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const paymentBlocked =
+    invoice.invoiceStatus === "PAID" ||
+    invoice.invoiceStatus === "VOID" ||
+    invoice.invoiceStatus === "DRAFT";
 
   async function loadPayments() {
     setLoadingPayments(true);
@@ -174,7 +178,7 @@ export function FinancePaymentRecorderClient({
             </div>
           ) : null}
 
-          {invoice.invoiceStatus === "PAID" || invoice.invoiceStatus === "VOID" ? (
+          {paymentBlocked ? (
             <div className="mt-4 rounded-xl bg-white p-3 text-sm text-slate-600">
               Payments cannot be recorded because this invoice is {invoice.invoiceStatus}.
             </div>
