@@ -98,8 +98,10 @@ export function StudentSelectorClient({
           </div>
 
           <div className="mt-1 text-xs text-slate-500">
-            {selectedStudent.studentCode ?? "No student code"} -{" "}
-            {studentClassLabel(selectedStudent)}
+            <span className="font-medium text-slate-700">
+              {selectedStudent.studentCode ?? "Code pending"}
+            </span>{" "}
+            · {studentClassLabel(selectedStudent)}
           </div>
 
           <button
@@ -148,8 +150,10 @@ export function StudentSelectorClient({
                 </div>
 
                 <div className="mt-1 text-xs text-slate-500">
-                  {student.studentCode ?? "No student code"} -{" "}
-                  {studentClassLabel(student)}
+                  <span className="font-medium text-slate-700">
+                    {student.studentCode ?? "Code pending"}
+                  </span>{" "}
+                  · {studentClassLabel(student)}
                 </div>
               </button>
             ))}

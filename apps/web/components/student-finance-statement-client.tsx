@@ -204,7 +204,7 @@ export function StudentFinanceStatementClient({
               </div>
 
               <div className="mt-1 text-sm text-slate-500">
-                Code: {profile.student.code ?? "No student code"}
+                Code: {profile.student.code ?? "Code pending"}
               </div>
             </div>
 

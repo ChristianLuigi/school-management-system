@@ -246,7 +246,7 @@ export function FinanceInvoiceDetailClient({
 
               {invoice.student ? (
                 <div className="mt-1 text-sm text-slate-500">
-                  {invoice.student.code ?? "No student code"}
+                  {invoice.student.code ?? "Code pending"}
                 </div>
               ) : null}
             </div>

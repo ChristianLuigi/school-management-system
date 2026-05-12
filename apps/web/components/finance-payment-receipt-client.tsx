@@ -242,7 +242,7 @@ export function FinancePaymentReceiptClient({
 
               {receipt.student ? (
                 <div className="mt-1 text-sm text-slate-500">
-                  {receipt.student.code ?? "No student code"}
+                  {receipt.student.code ?? "Code pending"}
                 </div>
               ) : null}
             </div>

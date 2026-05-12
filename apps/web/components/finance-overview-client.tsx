@@ -349,7 +349,7 @@ export function FinanceOverviewClient({
                           {invoice.student.lastName ?? ""}
                         </div>
                         <div className="text-xs text-slate-500">
-                          {invoice.student.code ?? "No student code"}
+                          {invoice.student.code ?? "Code pending"}
                         </div>
                       </>
                     ) : (

@@ -133,7 +133,7 @@ export function ReportCardPrintTemplate({
             {data.student.firstName ?? ""} {data.student.lastName ?? ""}
           </div>
           <div className="mt-1 text-sm text-slate-500">
-            {labels.studentCode}: {data.student.code ?? "No student code"}
+            {labels.studentCode}: {data.student.code ?? "Code pending"}
           </div>
         </div>
 
