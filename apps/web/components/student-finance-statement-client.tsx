@@ -357,6 +357,7 @@ export function StudentFinanceStatementClient({
                     <th className="px-4 py-3">Method</th>
                     <th className="px-4 py-3">Reference</th>
                     <th className="px-4 py-3">Amount</th>
+                    <th className="px-4 py-3">Receipt</th>
                   </tr>
                 </thead>
 
@@ -381,13 +382,21 @@ export function StudentFinanceStatementClient({
                       <td className="px-4 py-3 font-semibold">
                         {money(payment.amount)}
                       </td>
+                      <td className="px-4 py-3 print:hidden">
+                        <a
+                          href={`/finance/payments/${payment.id}/receipt`}
+                          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                        >
+                          Receipt
+                        </a>
+                      </td>
                     </tr>
                   ))}
 
                   {profile.payments.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-4 py-8 text-center text-slate-500"
                       >
                         No payments found.

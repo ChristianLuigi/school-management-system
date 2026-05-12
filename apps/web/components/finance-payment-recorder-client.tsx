@@ -272,6 +272,13 @@ export function FinancePaymentRecorderClient({
                     {payment.reference ? ` · Ref: ${payment.reference}` : ""}
                   </div>
 
+                  <a
+                    href={`/finance/payments/${payment.id}/receipt`}
+                    className="mt-2 inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                  >
+                    Open Receipt
+                  </a>
+
                   {payment.notes ? (
                     <div className="mt-1 text-xs text-slate-600">
                       {payment.notes}

@@ -364,6 +364,7 @@ export function FinanceInvoiceDetailClient({
                     <th className="px-4 py-3">Method</th>
                     <th className="px-4 py-3">Reference</th>
                     <th className="px-4 py-3">Amount</th>
+                    <th className="px-4 py-3">Receipt</th>
                   </tr>
                 </thead>
 
@@ -381,13 +382,21 @@ export function FinanceInvoiceDetailClient({
                       <td className="px-4 py-3 font-semibold">
                         {money(payment.amount, invoice.currencyCode)}
                       </td>
+                      <td className="px-4 py-3">
+                        <a
+                          href={`/finance/payments/${payment.id}/receipt`}
+                          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                        >
+                          Receipt
+                        </a>
+                      </td>
                     </tr>
                   ))}
 
                   {invoice.payments.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-8 text-center text-slate-500"
                       >
                         No payments recorded for this invoice.
