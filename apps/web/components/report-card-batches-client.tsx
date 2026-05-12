@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
+import { ReportCardAcademicSelectorsClient } from "@/components/report-card-academic-selectors-client";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
 
@@ -178,21 +179,22 @@ export function ReportCardBatchesClient({
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <input
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Filter by grading period ID optional"
-          value={gradingPeriodId}
-          onChange={(e) => setGradingPeriodId(e.target.value)}
-        />
-
-        <input
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Filter by section ID optional"
-          value={sectionId}
-          onChange={(e) => setSectionId(e.target.value)}
-        />
-      </div>
+      <ReportCardAcademicSelectorsClient
+        schoolId={schoolId}
+        gradingPeriodId={gradingPeriodId}
+        sectionId={sectionId}
+        onGradingPeriodIdChange={(value) => {
+          setGradingPeriodId(value);
+          setRows([]);
+          setDetails(null);
+        }}
+        onSectionIdChange={(value) => {
+          setSectionId(value);
+          setRows([]);
+          setDetails(null);
+        }}
+        mode="filter"
+      />
 
       <button
         type="button"

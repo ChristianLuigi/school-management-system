@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
+import { ReportCardAcademicSelectorsClient } from "@/components/report-card-academic-selectors-client";
 
 type Readiness = {
   schoolId: string;
@@ -135,23 +136,24 @@ export function ReportCardGenerationClient({
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <input
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Grading Period ID"
-          value={gradingPeriodId}
-          onChange={(e) => setGradingPeriodId(e.target.value)}
-        />
-
-        <input
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Section ID"
-          value={sectionId}
-          onChange={(e) => setSectionId(e.target.value)}
+      <div className="space-y-4">
+        <ReportCardAcademicSelectorsClient
+          schoolId={schoolId}
+          gradingPeriodId={gradingPeriodId}
+          sectionId={sectionId}
+          onGradingPeriodIdChange={(value) => {
+            setGradingPeriodId(value);
+            setReadiness(null);
+          }}
+          onSectionIdChange={(value) => {
+            setSectionId(value);
+            setReadiness(null);
+          }}
+          mode="required"
         />
 
         <textarea
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+          className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
           placeholder="Notes optional"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
