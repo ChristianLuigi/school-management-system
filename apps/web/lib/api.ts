@@ -1,8 +1,11 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+const API_PROXY_PREFIX = "/api/proxy";
+
+function proxyPath(path: string) {
+  return `${API_PROXY_PREFIX}${path.startsWith("/") ? path : `/${path}`}`;
+}
 
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(proxyPath(path), {
     cache: "no-store",
   });
 
@@ -18,7 +21,7 @@ export async function apiPost<T>(
   path: string,
   body: unknown,
 ): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(proxyPath(path), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

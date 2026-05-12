@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
+import { StudentSelectorClient } from "@/components/student-selector-client";
+import type { SelectedStudent } from "@/components/student-selector-client";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
 
@@ -76,7 +78,7 @@ export function StudentFinanceProfileClient({
 }: {
   schoolId: string;
 }) {
-  const [studentId, setStudentId] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<SelectedStudent | null>(null);
   const [profile, setProfile] = useState<StudentFinanceProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -86,14 +88,14 @@ export function StudentFinanceProfileClient({
     setError("");
 
     try {
-      if (!studentId.trim()) {
-        throw new Error("Student ID is required.");
+      if (!selectedStudent) {
+        throw new Error("Please select a student.");
       }
 
       const params = new URLSearchParams({ schoolId });
 
       const res = await fetch(
-        `/api/finance/students/${studentId.trim()}/profile?${params.toString()}`,
+        `/api/finance/students/${selectedStudent!.id}/profile?${params.toString()}`,
         { cache: "no-store" },
       );
 
@@ -130,17 +132,20 @@ export function StudentFinanceProfileClient({
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-3">
-        <input
-          className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm sm:min-w-[320px]"
-          placeholder="Student ID"
-          value={studentId}
-          onChange={(e) => setStudentId(e.target.value)}
+      <div className="mt-5 space-y-3">
+        <StudentSelectorClient
+          schoolId={schoolId}
+          selectedStudent={selectedStudent}
+          onSelect={(student) => {
+            setSelectedStudent(student);
+            setProfile(null);
+          }}
+          label="Select Student"
         />
 
         <button
           type="button"
-          disabled={loading}
+          disabled={loading || !selectedStudent}
           onClick={loadProfile}
           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
         >

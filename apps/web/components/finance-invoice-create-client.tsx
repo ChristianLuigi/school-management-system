@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
+import { StudentSelectorClient } from "@/components/student-selector-client";
+import type { SelectedStudent } from "@/components/student-selector-client";
 
 type InvoiceItem = {
   description: string;
@@ -47,7 +49,7 @@ export function FinanceInvoiceCreateClient({
   onCreated: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [studentId, setStudentId] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<SelectedStudent | null>(null);
   const [invoiceStatus, setInvoiceStatus] = useState<"DRAFT" | "ISSUED">(
     "ISSUED",
   );
@@ -119,8 +121,8 @@ export function FinanceInvoiceCreateClient({
   }
 
   function validateInvoiceDraft() {
-    if (!studentId.trim()) {
-      throw new Error("Student ID is required.");
+    if (!selectedStudent) {
+      throw new Error("Please select a student.");
     }
 
     if (cleanItems.length === 0) {
@@ -208,7 +210,7 @@ export function FinanceInvoiceCreateClient({
         },
         body: JSON.stringify({
           schoolId,
-          studentId: studentId.trim(),
+          studentId: selectedStudent!.id,
           invoiceStatus,
           issueDate: effectiveIssueDate,
           dueDate: effectiveDueDate,
@@ -230,7 +232,7 @@ export function FinanceInvoiceCreateClient({
       }
 
       setMessage(`Invoice created successfully: ${body.invoiceNumber}`);
-      setStudentId("");
+      setSelectedStudent(null);
       setInvoiceStatus("ISSUED");
       setIssueDate("");
       setDueDate("");
@@ -293,15 +295,17 @@ export function FinanceInvoiceCreateClient({
       {open ? (
         <div className="mt-5 space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
-            <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
-              placeholder="Student ID"
-              value={studentId}
-              onChange={(e) => {
-                setStudentId(e.target.value);
-                setPreviewVisible(false);
-              }}
-            />
+            <div className="md:col-span-2">
+              <StudentSelectorClient
+                schoolId={schoolId}
+                selectedStudent={selectedStudent}
+                onSelect={(student) => {
+                  setSelectedStudent(student);
+                  setPreviewVisible(false);
+                }}
+                label="Select Student"
+              />
+            </div>
 
             <select
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
@@ -518,10 +522,17 @@ export function FinanceInvoiceCreateClient({
               <div className="grid gap-6 border-b border-slate-200 py-5 md:grid-cols-3">
                 <div>
                   <div className="text-xs uppercase tracking-wider text-slate-500">
-                    Student ID
+                    Student
                   </div>
                   <div className="mt-1 break-all font-semibold text-slate-900">
-                    {studentId}
+                    {selectedStudent
+                      ? `${selectedStudent.firstName ?? ""} ${selectedStudent.lastName ?? ""}`.trim() ||
+                        selectedStudent.studentCode ||
+                        selectedStudent.id
+                      : "-"}
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    {selectedStudent?.studentCode ?? ""}
                   </div>
                 </div>
 
