@@ -7,22 +7,14 @@ import { AttendanceOverviewClient } from "@/components/attendance-overview-clien
 import { AttendancePageClient } from "@/components/attendance-page-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 
-type Section = {
-  id: string;
-  code: string;
-  name_i18n: Record<string, string>;
-};
-
 export function AttendanceWorkspaceClient({
   currentRoles,
   schoolId,
   userId,
-  sections,
 }: {
   currentRoles: string[];
   schoolId: string;
   userId: string;
-  sections: Section[];
 }) {
   const [overviewRefreshKey, setOverviewRefreshKey] = useState(0);
 
@@ -122,7 +114,6 @@ export function AttendanceWorkspaceClient({
         <AttendancePageClient
           schoolId={schoolId}
           userId={userId}
-          sections={sections}
           onSubmitted={() => setOverviewRefreshKey((value) => value + 1)}
         />
       </div>

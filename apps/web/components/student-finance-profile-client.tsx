@@ -169,7 +169,7 @@ export function StudentFinanceProfileClient({
                   {profile.student.firstName ?? ""} {profile.student.lastName ?? ""}
                 </div>
                 <div className="mt-1 text-sm text-slate-500">
-                  {profile.student.code ?? profile.student.id}
+                  {profile.student.code ?? "No student code"}
                 </div>
               </div>
 

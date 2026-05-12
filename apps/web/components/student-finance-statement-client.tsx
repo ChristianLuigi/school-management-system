@@ -193,7 +193,7 @@ export function StudentFinanceStatementClient({
             </div>
           </div>
 
-          <div className="grid gap-6 border-b border-slate-200 py-6 md:grid-cols-3">
+          <div className="grid gap-6 border-b border-slate-200 py-6 md:grid-cols-2">
             <div>
               <div className="text-xs uppercase tracking-wider text-slate-500">
                 Student
@@ -204,19 +204,10 @@ export function StudentFinanceStatementClient({
               </div>
 
               <div className="mt-1 text-sm text-slate-500">
-                Code: {profile.student.code ?? profile.student.id}
+                Code: {profile.student.code ?? "No student code"}
               </div>
             </div>
 
-            <div>
-              <div className="text-xs uppercase tracking-wider text-slate-500">
-                Student ID
-              </div>
-
-              <div className="mt-1 break-all text-sm font-medium text-slate-900">
-                {profile.student.id}
-              </div>
-            </div>
 
             <div>
               <div className="text-xs uppercase tracking-wider text-slate-500">

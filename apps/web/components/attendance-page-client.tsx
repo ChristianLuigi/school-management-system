@@ -1,18 +1,13 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { SectionSelectorClient } from "@/components/section-selector-client";
 import {
   type AttendanceSubmissionPayload,
   upsertQueuedAttendanceSubmission,
 } from "@/lib/attendance-offline-queue";
 
 const API_PROXY_PREFIX = "/api/proxy";
-
-type Section = {
-  id: string;
-  code: string;
-  name_i18n: Record<string, string>;
-};
 
 type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
 type Slot = "MORNING" | "AFTERNOON";
@@ -73,17 +68,15 @@ function todayLocalDate() {
 type AttendancePageClientProps = {
   schoolId: string;
   userId: string;
-  sections: Section[];
   onSubmitted?: () => void;
 };
 
 export function AttendancePageClient({
   schoolId,
   userId,
-  sections,
   onSubmitted,
 }: AttendancePageClientProps) {
-  const [sectionId, setSectionId] = useState<string>(sections[0]?.id ?? "");
+  const [sectionId, setSectionId] = useState<string>("");
   const [attendanceDate, setAttendanceDate] = useState<string>(todayLocalDate());
   const [slot, setSlot] = useState<Slot>("MORNING");
 
@@ -350,20 +343,12 @@ export function AttendancePageClient({
   return (
     <div className="space-y-6">
         <div className="grid gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 md:grid-cols-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Section</label>
-            <select
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
-              value={sectionId}
-              onChange={(e) => setSectionId(e.target.value)}
-            >
-              {sections.map((section) => (
-                <option key={section.id} value={section.id}>
-                  {section.name_i18n.fr ?? section.name_i18n.en ?? section.code}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SectionSelectorClient
+            schoolId={schoolId}
+            sectionId={sectionId}
+            onSectionIdChange={setSectionId}
+            label="Section"
+          />
 
           <div>
             <label className="mb-1 block text-sm font-medium">Date</label>
