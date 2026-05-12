@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FinanceInvoiceCreateClient } from "@/components/finance-invoice-create-client";
+import { FinanceSettingsClient } from "@/components/finance-settings-client";
 import { FinancePaymentRecorderClient } from "@/components/finance-payment-recorder-client";
 import { SchoolBadge } from "@/components/school-ui";
 import { StudentFinanceProfileClient } from "@/components/student-finance-profile-client";
@@ -187,6 +188,8 @@ export function FinanceOverviewClient({
           Loading finance overview...
         </div>
       ) : null}
+
+      <FinanceSettingsClient schoolId={schoolId} />
 
       <FinanceInvoiceCreateClient schoolId={schoolId} onCreated={refreshAll} />
 

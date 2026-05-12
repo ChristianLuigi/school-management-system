@@ -13,6 +13,19 @@ type InvoiceDetails = {
     id: string;
     name: string;
     code: string;
+    logoUrl?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    website?: string | null;
+    financeSettings?: {
+      financeContactName: string | null;
+      financeContactEmail: string | null;
+      financeContactPhone: string | null;
+      invoiceFooterI18n: Record<string, string>;
+    };
   };
   student: {
     id: string;
@@ -173,6 +186,33 @@ export function FinanceInvoiceDetailClient({
 
                 <div className="mt-1 text-sm text-slate-500">
                   {invoice.school.name} - {invoice.school.code}
+                </div>
+
+                <div className="mt-2 space-y-0.5 text-sm text-slate-500">
+                  {invoice.school.addressLine1 ? <div>{invoice.school.addressLine1}</div> : null}
+                  {invoice.school.addressLine2 ? <div>{invoice.school.addressLine2}</div> : null}
+                  {invoice.school.city ? <div>{invoice.school.city}</div> : null}
+
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    {invoice.school.phone ? <span>{invoice.school.phone}</span> : null}
+                    {invoice.school.email ? <span>{invoice.school.email}</span> : null}
+                    {invoice.school.website ? <span>{invoice.school.website}</span> : null}
+                  </div>
+
+                  {invoice.school.financeSettings?.financeContactName ||
+                  invoice.school.financeSettings?.financeContactEmail ||
+                  invoice.school.financeSettings?.financeContactPhone ? (
+                    <div className="pt-2">
+                      Finance contact:{" "}
+                      {invoice.school.financeSettings.financeContactName ?? ""}
+                      {invoice.school.financeSettings.financeContactPhone
+                        ? ` - ${invoice.school.financeSettings.financeContactPhone}`
+                        : ""}
+                      {invoice.school.financeSettings.financeContactEmail
+                        ? ` - ${invoice.school.financeSettings.financeContactEmail}`
+                        : ""}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -424,6 +464,13 @@ export function FinanceInvoiceDetailClient({
               Parent / Guardian
             </div>
           </div>
+          {invoice.school.financeSettings?.invoiceFooterI18n?.en ||
+          invoice.school.financeSettings?.invoiceFooterI18n?.fr ? (
+            <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
+              {invoice.school.financeSettings.invoiceFooterI18n.en ??
+                invoice.school.financeSettings.invoiceFooterI18n.fr}
+            </div>
+          ) : null}
           </div>
         </div>
       ) : null}

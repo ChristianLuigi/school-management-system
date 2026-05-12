@@ -26,6 +26,12 @@ type PaymentReceipt = {
     phone: string | null;
     email: string | null;
     website: string | null;
+    financeSettings?: {
+      financeContactName: string | null;
+      financeContactEmail: string | null;
+      financeContactPhone: string | null;
+      receiptFooterI18n: Record<string, string>;
+    };
   };
   invoice: {
     id: string;
@@ -188,6 +194,20 @@ export function FinancePaymentReceiptClient({
                       {receipt.school.email ? <span>{receipt.school.email}</span> : null}
                       {receipt.school.website ? <span>{receipt.school.website}</span> : null}
                     </div>
+                    {receipt.school.financeSettings?.financeContactName ||
+                    receipt.school.financeSettings?.financeContactEmail ||
+                    receipt.school.financeSettings?.financeContactPhone ? (
+                      <div className="mt-2 text-sm text-slate-500">
+                        Finance contact:{" "}
+                        {receipt.school.financeSettings.financeContactName ?? ""}
+                        {receipt.school.financeSettings.financeContactPhone
+                          ? ` - ${receipt.school.financeSettings.financeContactPhone}`
+                          : ""}
+                        {receipt.school.financeSettings.financeContactEmail
+                          ? ` - ${receipt.school.financeSettings.financeContactEmail}`
+                          : ""}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -308,7 +328,9 @@ export function FinancePaymentReceiptClient({
           </div>
 
           <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
-            This receipt confirms the payment recorded in the school management system.
+            {receipt.school.financeSettings?.receiptFooterI18n?.en ??
+              receipt.school.financeSettings?.receiptFooterI18n?.fr ??
+              "This receipt confirms the payment recorded in the school management system."}
           </div>
         </div>
       ) : null}
