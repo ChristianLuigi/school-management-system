@@ -21,6 +21,9 @@ type FinanceSettings = {
   financeContactPhone: string | null;
   invoiceFooterI18n: Record<string, string>;
   receiptFooterI18n: Record<string, string>;
+  defaultReceiptPrintFormat: "A4" | "THERMAL_80MM";
+  defaultInvoicePrintFormat: "A4" | "THERMAL_80MM";
+  autoOpenReceiptAfterPayment: boolean;
 };
 
 export function FinanceSettingsClient({
@@ -40,6 +43,9 @@ export function FinanceSettingsClient({
     invoiceFooterEn: "",
     receiptFooterFr: "",
     receiptFooterEn: "",
+    defaultReceiptPrintFormat: "THERMAL_80MM" as "A4" | "THERMAL_80MM",
+    defaultInvoicePrintFormat: "A4" as "A4" | "THERMAL_80MM",
+    autoOpenReceiptAfterPayment: false,
   });
 
   const [loading, setLoading] = useState(false);
@@ -77,6 +83,12 @@ export function FinanceSettingsClient({
         invoiceFooterEn: settings.invoiceFooterI18n?.en ?? "",
         receiptFooterFr: settings.receiptFooterI18n?.fr ?? "",
         receiptFooterEn: settings.receiptFooterI18n?.en ?? "",
+        defaultReceiptPrintFormat:
+          settings.defaultReceiptPrintFormat ?? "THERMAL_80MM",
+        defaultInvoicePrintFormat:
+          settings.defaultInvoicePrintFormat ?? "A4",
+        autoOpenReceiptAfterPayment:
+          settings.autoOpenReceiptAfterPayment ?? false,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load finance settings.");
@@ -118,6 +130,9 @@ export function FinanceSettingsClient({
             fr: form.receiptFooterFr,
             en: form.receiptFooterEn,
           },
+          defaultReceiptPrintFormat: form.defaultReceiptPrintFormat,
+          defaultInvoicePrintFormat: form.defaultInvoicePrintFormat,
+          autoOpenReceiptAfterPayment: form.autoOpenReceiptAfterPayment,
         }),
       });
 
@@ -221,6 +236,70 @@ export function FinanceSettingsClient({
               }
             />
 
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+              <div className="font-semibold text-slate-900">Print Preferences</div>
+              <p className="mt-1 text-sm text-slate-600">
+                Configure the preferred print formats for cashier and finance workflows.
+              </p>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Default receipt print
+                  </span>
+                  <select
+                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                    value={form.defaultReceiptPrintFormat}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        defaultReceiptPrintFormat: event.target.value as
+                          | "A4"
+                          | "THERMAL_80MM",
+                      }))
+                    }
+                  >
+                    <option value="THERMAL_80MM">Thermal 80mm</option>
+                    <option value="A4">A4 / PDF</option>
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Default invoice print
+                  </span>
+                  <select
+                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                    value={form.defaultInvoicePrintFormat}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        defaultInvoicePrintFormat: event.target.value as
+                          | "A4"
+                          | "THERMAL_80MM",
+                      }))
+                    }
+                  >
+                    <option value="A4">A4 / PDF</option>
+                    <option value="THERMAL_80MM">Thermal 80mm</option>
+                  </select>
+                </label>
+              </div>
+
+              <label className="mt-4 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.autoOpenReceiptAfterPayment}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      autoOpenReceiptAfterPayment: event.target.checked,
+                    }))
+                  }
+                />
+                Automatically open receipt print view after payment
+              </label>
+            </div>
             <input
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
               placeholder="Finance contact name"

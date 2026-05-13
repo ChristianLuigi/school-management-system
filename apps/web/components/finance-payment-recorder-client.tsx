@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 
 type InvoiceRow = {
@@ -15,6 +15,11 @@ type InvoiceRow = {
     firstName: string | null;
     lastName: string | null;
   } | null;
+};
+
+type FinancePrintSettings = {
+  defaultReceiptPrintFormat: "A4" | "THERMAL_80MM";
+  autoOpenReceiptAfterPayment: boolean;
 };
 
 type PaymentRow = {
@@ -46,6 +51,10 @@ export function FinancePaymentRecorderClient({
 }) {
   const [open, setOpen] = useState(false);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [printSettings, setPrintSettings] = useState<FinancePrintSettings>({
+    defaultReceiptPrintFormat: "THERMAL_80MM",
+    autoOpenReceiptAfterPayment: false,
+  });
   const [amount, setAmount] = useState(invoice.balanceDue.toString());
   const [paymentDate, setPaymentDate] = useState("");
   const [method, setMethod] = useState("");
@@ -61,6 +70,31 @@ export function FinancePaymentRecorderClient({
     invoice.invoiceStatus === "VOID" ||
     invoice.invoiceStatus === "DRAFT";
 
+  async function loadPrintSettings() {
+    try {
+      const res = await fetch(`/api/finance/settings?schoolId=${schoolId}`, {
+        cache: "no-store",
+      });
+
+      const body = await res.json().catch(() => null);
+
+      if (res.ok && body) {
+        setPrintSettings({
+          defaultReceiptPrintFormat:
+            body.defaultReceiptPrintFormat ?? "THERMAL_80MM",
+          autoOpenReceiptAfterPayment:
+            body.autoOpenReceiptAfterPayment ?? false,
+        });
+      }
+    } catch {
+      // Keep defaults.
+    }
+  }
+
+  useEffect(() => {
+    loadPrintSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schoolId]);
   async function loadPayments() {
     setLoadingPayments(true);
     setError("");
@@ -130,6 +164,18 @@ export function FinancePaymentRecorderClient({
 
       setMessage("Payment recorded successfully.");
       setLastPaymentId(body.paymentId ?? "");
+
+      const paymentId = body.paymentId ?? "";
+
+      if (paymentId && printSettings.autoOpenReceiptAfterPayment) {
+        const receiptPath =
+          printSettings.defaultReceiptPrintFormat === "THERMAL_80MM"
+            ? `/finance/payments/${paymentId}/receipt/thermal?autoprint=1`
+            : `/finance/payments/${paymentId}/receipt`;
+
+        window.open(receiptPath, "_blank", "noopener,noreferrer");
+      }
+
       setAmount("");
       setReference("");
       setNotes("");
@@ -174,6 +220,17 @@ export function FinancePaymentRecorderClient({
 
               {lastPaymentId ? (
                 <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={
+                      printSettings.defaultReceiptPrintFormat === "THERMAL_80MM"
+                        ? `/finance/payments/${lastPaymentId}/receipt/thermal?autoprint=1`
+                        : `/finance/payments/${lastPaymentId}/receipt`
+                    }
+                    className="rounded-lg bg-green-700 px-3 py-2 text-xs font-medium text-white hover:bg-green-800"
+                  >
+                    Print Preferred Receipt
+                  </a>
+
                   <a
                     href={`/finance/payments/${lastPaymentId}/receipt`}
                     className="rounded-lg border border-green-300 bg-white px-3 py-2 text-xs font-medium text-green-800 hover:bg-green-50"
