@@ -20,6 +20,7 @@ type InvoiceRow = {
 type FinancePrintSettings = {
   defaultReceiptPrintFormat: "A4" | "THERMAL_80MM";
   autoOpenReceiptAfterPayment: boolean;
+  enabledPaymentMethods: string[];
 };
 
 type PaymentRow = {
@@ -33,6 +34,18 @@ type PaymentRow = {
   createdAt: string;
 };
 
+function paymentMethodLabel(method: string) {
+  const labels: Record<string, string> = {
+    CASH: "Cash",
+    BANK_TRANSFER: "Bank Transfer",
+    CHECK: "Check",
+    MOBILE_MONEY: "Mobile Money",
+    CARD: "Card",
+    OTHER: "Other",
+  };
+
+  return labels[method] ?? method;
+}
 function money(value: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -54,6 +67,14 @@ export function FinancePaymentRecorderClient({
   const [printSettings, setPrintSettings] = useState<FinancePrintSettings>({
     defaultReceiptPrintFormat: "THERMAL_80MM",
     autoOpenReceiptAfterPayment: false,
+    enabledPaymentMethods: [
+      "CASH",
+      "BANK_TRANSFER",
+      "CHECK",
+      "MOBILE_MONEY",
+      "CARD",
+      "OTHER",
+    ],
   });
   const [amount, setAmount] = useState(invoice.balanceDue.toString());
   const [paymentDate, setPaymentDate] = useState("");
@@ -84,6 +105,18 @@ export function FinancePaymentRecorderClient({
             body.defaultReceiptPrintFormat ?? "THERMAL_80MM",
           autoOpenReceiptAfterPayment:
             body.autoOpenReceiptAfterPayment ?? false,
+          enabledPaymentMethods:
+            Array.isArray(body.enabledPaymentMethods) &&
+            body.enabledPaymentMethods.length > 0
+              ? body.enabledPaymentMethods
+              : [
+                  "CASH",
+                  "BANK_TRANSFER",
+                  "CHECK",
+                  "MOBILE_MONEY",
+                  "CARD",
+                  "OTHER",
+                ],
         });
       }
     } catch {
@@ -95,6 +128,13 @@ export function FinancePaymentRecorderClient({
     loadPrintSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
+  useEffect(() => {
+    if (!method) return;
+
+    if (!printSettings.enabledPaymentMethods.includes(method)) {
+      setMethod("");
+    }
+  }, [method, printSettings.enabledPaymentMethods]);
   async function loadPayments() {
     setLoadingPayments(true);
     setError("");
@@ -274,6 +314,15 @@ export function FinancePaymentRecorderClient({
                 value={paymentDate}
                 onChange={(e) => setPaymentDate(e.target.value)}
               />
+              <div className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 md:col-span-2">
+                Receipt default:{" "}
+                {printSettings.defaultReceiptPrintFormat === "THERMAL_80MM"
+                  ? "Thermal 80mm"
+                  : "A4 / PDF"}
+                {printSettings.autoOpenReceiptAfterPayment
+                  ? " - Auto-open after payment enabled"
+                  : ""}
+              </div>
 
               <select
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
@@ -281,12 +330,12 @@ export function FinancePaymentRecorderClient({
                 onChange={(e) => setMethod(e.target.value)}
               >
                 <option value="">Payment method</option>
-                <option value="CASH">Cash</option>
-                <option value="BANK_TRANSFER">Bank Transfer</option>
-                <option value="CHECK">Check</option>
-                <option value="MOBILE_MONEY">Mobile Money</option>
-                <option value="CARD">Card</option>
-                <option value="OTHER">Other</option>
+
+                {printSettings.enabledPaymentMethods.map((paymentMethod) => (
+                  <option key={paymentMethod} value={paymentMethod}>
+                    {paymentMethodLabel(paymentMethod)}
+                  </option>
+                ))}
               </select>
 
               <input

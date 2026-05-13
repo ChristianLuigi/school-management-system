@@ -25,6 +25,7 @@ type InvoiceDetails = {
       financeContactEmail: string | null;
       financeContactPhone: string | null;
       invoiceFooterI18n: Record<string, string>;
+      defaultInvoicePrintFormat?: "A4" | "THERMAL_80MM";
     };
   };
   student: {
@@ -132,12 +133,30 @@ export function FinanceInvoiceDetailClient({
             Back to Finance
           </Link>
 
+          {invoice?.school.financeSettings?.defaultInvoicePrintFormat ===
+          "THERMAL_80MM" ? (
+            <Link
+              href={`/finance/invoices/${invoiceId}/thermal?autoprint=1`}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Print Preferred
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              Print Preferred
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => window.print()}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
           >
-            Print / Save as PDF
+            A4 / PDF
           </button>
 
           <Link
