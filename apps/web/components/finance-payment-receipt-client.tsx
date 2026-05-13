@@ -127,6 +127,20 @@ export function FinancePaymentReceiptClient({
           >
             Print / Save as PDF
           </button>
+
+          <Link
+            href={`/finance/payments/${paymentId}/receipt/thermal`}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Thermal 80mm
+          </Link>
+
+          <Link
+            href={`/finance/payments/${paymentId}/receipt/thermal?autoprint=1`}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Quick 80mm Print
+          </Link>
         </div>
 
         <button

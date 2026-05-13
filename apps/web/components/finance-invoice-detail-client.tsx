@@ -139,6 +139,20 @@ export function FinanceInvoiceDetailClient({
           >
             Print / Save as PDF
           </button>
+
+          <Link
+            href={`/finance/invoices/${invoiceId}/thermal`}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Thermal 80mm
+          </Link>
+
+          <Link
+            href={`/finance/invoices/${invoiceId}/thermal?autoprint=1`}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Quick 80mm Print
+          </Link>
         </div>
 
         <button
@@ -428,6 +442,13 @@ export function FinanceInvoiceDetailClient({
                           className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
                         >
                           Receipt
+                        </a>
+
+                        <a
+                          href={`/finance/payments/${payment.id}/receipt/thermal`}
+                          className="ml-2 rounded-lg border border-slate-300 px-3 py-2 text-xs hover:bg-slate-50 print:hidden"
+                        >
+                          80mm
                         </a>
                       </td>
                     </tr>

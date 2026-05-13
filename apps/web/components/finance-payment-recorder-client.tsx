@@ -54,6 +54,7 @@ export function FinancePaymentRecorderClient({
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [lastPaymentId, setLastPaymentId] = useState("");
   const [error, setError] = useState("");
   const paymentBlocked =
     invoice.invoiceStatus === "PAID" ||
@@ -128,6 +129,7 @@ export function FinancePaymentRecorderClient({
       }
 
       setMessage("Payment recorded successfully.");
+      setLastPaymentId(body.paymentId ?? "");
       setAmount("");
       setReference("");
       setNotes("");
@@ -168,7 +170,25 @@ export function FinancePaymentRecorderClient({
 
           {message ? (
             <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-              {message}
+              <div>{message}</div>
+
+              {lastPaymentId ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={`/finance/payments/${lastPaymentId}/receipt`}
+                    className="rounded-lg border border-green-300 bg-white px-3 py-2 text-xs font-medium text-green-800 hover:bg-green-50"
+                  >
+                    Open Receipt
+                  </a>
+
+                  <a
+                    href={`/finance/payments/${lastPaymentId}/receipt/thermal?autoprint=1`}
+                    className="rounded-lg bg-green-700 px-3 py-2 text-xs font-medium text-white hover:bg-green-800"
+                  >
+                    Print 80mm Receipt
+                  </a>
+                </div>
+              ) : null}
             </div>
           ) : null}
 
