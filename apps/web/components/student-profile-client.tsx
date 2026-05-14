@@ -214,17 +214,31 @@ export function StudentProfileClient({
         <>
           <div className="rounded-3xl border border-slate-200 bg-white p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                  Student Profile
-                </div>
+              <div className="flex flex-wrap items-start gap-5">
+                {profile.student.photoUrl ? (
+                  <img
+                    src={profile.student.photoUrl}
+                    alt={studentName(profile)}
+                    className="h-28 w-28 rounded-2xl border border-slate-200 object-cover"
+                  />
+                ) : (
+                  <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-3xl font-bold text-slate-400">
+                    {studentName(profile).slice(0, 2).toUpperCase()}
+                  </div>
+                )}
 
-                <h2 className="mt-2 text-3xl font-bold text-slate-900">
-                  {studentName(profile)}
-                </h2>
+                <div>
+                  <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                    Student Profile
+                  </div>
 
-                <div className="mt-1 text-sm text-slate-500">
-                  {profile.student.studentCode ?? "Code pending"}
+                  <h2 className="mt-2 text-3xl font-bold text-slate-900">
+                    {studentName(profile)}
+                  </h2>
+
+                  <div className="mt-1 text-sm text-slate-500">
+                    {profile.student.studentCode ?? "Code pending"}
+                  </div>
                 </div>
               </div>
 

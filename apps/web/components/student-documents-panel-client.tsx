@@ -57,6 +57,7 @@ export function StudentDocumentsPanelClient({
   const [editingId, setEditingId] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -133,6 +134,46 @@ export function StudentDocumentsPanelClient({
     }
   }
 
+  async function uploadDocumentFile(file: File) {
+    setUploading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("schoolId", schoolId);
+      formData.append("studentId", studentId);
+      formData.append("category", form.documentType.toLowerCase());
+
+      const res = await fetch("/api/uploads/student-files", {
+        method: "POST",
+        body: formData,
+      });
+
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(body?.message ?? "Failed to upload document.");
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        fileName: body.fileName ?? file.name,
+        fileUrl: body.fileUrl,
+        receivedAt: prev.receivedAt || new Date().toISOString().slice(0, 10),
+      }));
+
+      setMessage("Document uploaded. Save the document record to keep it.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to upload document.",
+      );
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -141,7 +182,7 @@ export function StudentDocumentsPanelClient({
             Document Records
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            Track documents received for the student file. File upload will come later.
+            Track documents received for the student file.
           </p>
         </div>
 
@@ -198,6 +239,31 @@ export function StudentDocumentsPanelClient({
               <option value="VERIFIED">Verified</option>
               <option value="REJECTED">Rejected</option>
             </select>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 md:col-span-2">
+              <div className="font-semibold text-slate-900">Upload File</div>
+              <p className="mt-1 text-sm text-slate-600">
+                Upload JPG, PNG, WEBP, or PDF. Maximum size: 10 MB.
+              </p>
+
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                className="mt-3 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) {
+                    uploadDocumentFile(file);
+                  }
+                }}
+              />
+
+              {uploading ? (
+                <div className="mt-2 text-sm text-slate-500">
+                  Uploading document...
+                </div>
+              ) : null}
+            </div>
 
             <input
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
@@ -295,14 +361,27 @@ export function StudentDocumentsPanelClient({
             </div>
 
             {document.fileUrl ? (
-              <a
-                href={document.fileUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
-              >
-                Open File
-              </a>
+              <div className="mt-3 space-y-3">
+                {document.fileUrl.match(/\.(jpg|jpeg|png|webp)$/i) ? (
+                  <img
+                    src={document.fileUrl}
+                    alt={
+                      document.fileName ??
+                      documentTypeLabel(document.documentType)
+                    }
+                    className="max-h-48 rounded-xl border border-slate-200 object-contain"
+                  />
+                ) : null}
+
+                <a
+                  href={document.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
+                >
+                  Open File
+                </a>
+              </div>
             ) : null}
 
             {document.notes ? (

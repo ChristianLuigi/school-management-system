@@ -70,6 +70,7 @@ export function StudentProfileEditClient({
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -183,6 +184,39 @@ export function StudentProfileEditClient({
     }
   }
 
+  async function uploadStudentPhoto(file: File) {
+    setUploadingPhoto(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("schoolId", schoolId);
+      formData.append("studentId", studentId);
+      formData.append("category", "photo");
+
+      const res = await fetch("/api/uploads/student-files", {
+        method: "POST",
+        body: formData,
+      });
+
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(body?.message ?? "Failed to upload photo.");
+      }
+
+      setPhotoUrl(body.fileUrl);
+      setPhotoReceived(true);
+      setMessage("Photo uploaded. Save the profile to keep the change.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload photo.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
   useEffect(() => {
     loadProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,12 +313,56 @@ export function StudentProfileEditClient({
                 onChange={(event) => setPlaceOfBirth(event.target.value)}
               />
 
-              <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
-                placeholder="Photo URL"
-                value={photoUrl}
-                onChange={(event) => setPhotoUrl(event.target.value)}
-              />
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+                <div className="font-semibold text-slate-900">
+                  Student Photo
+                </div>
+                <p className="mt-1 text-sm text-slate-600">
+                  Upload a student photo from this device or paste an existing
+                  photo URL.
+                </p>
+
+                <div className="mt-4 grid gap-4 md:grid-cols-[120px_1fr]">
+                  {photoUrl ? (
+                    <img
+                      src={photoUrl}
+                      alt="Student photo preview"
+                      className="h-28 w-28 rounded-2xl border border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-400">
+                      No photo
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          uploadStudentPhoto(file);
+                        }
+                      }}
+                    />
+
+                    <input
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                      placeholder="Photo URL"
+                      value={photoUrl}
+                      onChange={(event) => setPhotoUrl(event.target.value)}
+                    />
+
+                    {uploadingPhoto ? (
+                      <div className="text-sm text-slate-500">
+                        Uploading photo...
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
 
               <input
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
