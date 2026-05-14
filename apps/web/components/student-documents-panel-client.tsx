@@ -182,7 +182,8 @@ export function StudentDocumentsPanelClient({
             Document Records
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            Track documents received for the student file.
+            Track uploaded documents for the student file. Access is restricted
+            to authorized school users.
           </p>
         </div>
 
@@ -362,7 +363,7 @@ export function StudentDocumentsPanelClient({
 
             {document.fileUrl ? (
               <div className="mt-3 space-y-3">
-                {document.fileUrl.match(/\.(jpg|jpeg|png|webp)$/i) ? (
+                {document.fileUrl.match(/(jpg|jpeg|png|webp)(\?|$)/i) ? (
                   <img
                     src={document.fileUrl}
                     alt={

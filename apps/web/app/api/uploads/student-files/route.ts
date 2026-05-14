@@ -1,8 +1,15 @@
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import path from "path";
+import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+
+const AUTH_COOKIE_NAME =
+  process.env.AUTH_COOKIE_NAME ?? "school_admin_session";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -12,6 +19,12 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/webp",
   "application/pdf",
 ]);
+
+const STORAGE_ROOT = path.join(
+  process.cwd(),
+  ".private_uploads",
+  "student-files",
+);
 
 function sanitize(value: string) {
   return value
@@ -28,8 +41,56 @@ function extensionFromMime(mimeType: string) {
   return "bin";
 }
 
+function mimeFromExtension(fileKey: string) {
+  const lower = fileKey.toLowerCase();
+
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".pdf")) return "application/pdf";
+
+  return "application/octet-stream";
+}
+
+function safeResolveFilePath(fileKey: string) {
+  if (!fileKey || fileKey.includes("..") || fileKey.startsWith("/")) {
+    throw new Error("Invalid file key.");
+  }
+
+  const resolved = path.join(STORAGE_ROOT, fileKey);
+
+  if (!resolved.startsWith(STORAGE_ROOT)) {
+    throw new Error("Invalid file path.");
+  }
+
+  return resolved;
+}
+
+async function verifyStudentAccess(input: {
+  token: string;
+  schoolId: string;
+  studentId: string;
+}) {
+  const url = new URL(`${API_BASE_URL}/school-students/${input.studentId}`);
+
+  url.searchParams.set("schoolId", input.schoolId);
+
+  const upstream = await fetch(url.toString(), {
+    headers: {
+      Authorization: `Bearer ${input.token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!upstream.ok) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get("school_admin_session")?.value;
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
 
   if (!token) {
     return NextResponse.json(
@@ -56,6 +117,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const hasAccess = await verifyStudentAccess({
+    token,
+    schoolId,
+    studentId,
+  });
+
+  if (!hasAccess) {
+    return NextResponse.json(
+      { message: "You do not have access to this student file." },
+      { status: 403 },
+    );
+  }
+
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return NextResponse.json(
       { message: "Only JPG, PNG, WEBP, and PDF files are allowed." },
@@ -76,25 +150,88 @@ export async function POST(request: NextRequest) {
   const safeSchoolId = sanitize(schoolId);
   const safeStudentId = sanitize(studentId);
   const safeCategory = sanitize(category);
-  const originalName = sanitize(file.name || "upload");
+  const originalBaseName = sanitize(
+    file.name.replace(/\.[^/.]+$/, "") || "upload",
+  );
   const extension = extensionFromMime(file.type);
 
-  const fileName = `${Date.now()}-${crypto.randomUUID()}-${originalName}.${extension}`;
+  const storedFileName = `${Date.now()}-${randomUUID()}-${originalBaseName}.${extension}`;
 
-  const relativeFolder = `/uploads/student-files/${safeSchoolId}/${safeStudentId}/${safeCategory}`;
-  const publicFolder = path.join(process.cwd(), "public", relativeFolder);
+  const fileKey = path
+    .join(safeSchoolId, safeStudentId, safeCategory, storedFileName)
+    .replaceAll("\\", "/");
 
-  await mkdir(publicFolder, { recursive: true });
+  const filePath = safeResolveFilePath(fileKey);
 
-  const filePath = path.join(publicFolder, fileName);
-
+  await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, buffer);
+
+  const fileUrl =
+    `/api/uploads/student-files?schoolId=${encodeURIComponent(schoolId)}` +
+    `&studentId=${encodeURIComponent(studentId)}` +
+    `&fileKey=${encodeURIComponent(fileKey)}`;
 
   return NextResponse.json({
     fileName: file.name,
-    storedFileName: fileName,
+    storedFileName,
+    fileKey,
+    fileUrl,
     mimeType: file.type,
     sizeBytes: file.size,
-    fileUrl: `${relativeFolder}/${fileName}`,
+  });
+}
+
+export async function GET(request: NextRequest) {
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+
+  if (!token) {
+    return NextResponse.json(
+      { message: "Missing session token." },
+      { status: 401 },
+    );
+  }
+
+  const schoolId = request.nextUrl.searchParams.get("schoolId") ?? "";
+  const studentId = request.nextUrl.searchParams.get("studentId") ?? "";
+  const fileKey = request.nextUrl.searchParams.get("fileKey") ?? "";
+
+  if (!schoolId || !studentId || !fileKey) {
+    return NextResponse.json(
+      { message: "Missing schoolId, studentId, or fileKey." },
+      { status: 400 },
+    );
+  }
+
+  const hasAccess = await verifyStudentAccess({
+    token,
+    schoolId,
+    studentId,
+  });
+
+  if (!hasAccess) {
+    return NextResponse.json(
+      { message: "You do not have access to this student file." },
+      { status: 403 },
+    );
+  }
+
+  let filePath: string;
+
+  try {
+    filePath = safeResolveFilePath(fileKey);
+    await stat(filePath);
+  } catch {
+    return NextResponse.json({ message: "File not found." }, { status: 404 });
+  }
+
+  const fileBuffer = await readFile(filePath);
+  const mimeType = mimeFromExtension(fileKey);
+
+  return new NextResponse(new Uint8Array(fileBuffer), {
+    headers: {
+      "Content-Type": mimeType,
+      "Cache-Control": "private, max-age=300",
+      "Content-Disposition": "inline",
+    },
   });
 }

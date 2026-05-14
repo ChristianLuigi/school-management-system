@@ -4,3 +4,5 @@ dist
 .env
 coverage
 .vscode/settings.json
+apps/web/.private_uploads/
+.private_uploads/
