@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { StudentEditPanelClient } from "@/components/student-edit-panel-client";
 import { SchoolBadge } from "@/components/school-ui";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
@@ -216,6 +217,12 @@ export function StudentProfileClient({
               </div>
             </div>
           </div>
+
+          <StudentEditPanelClient
+            schoolId={schoolId}
+            profile={profile}
+            onUpdated={loadProfile}
+          />
 
           <div className="grid gap-4 md:grid-cols-5">
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
