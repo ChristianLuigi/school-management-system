@@ -173,12 +173,21 @@ export function StudentProfileClient({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href="/students"
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-        >
-          Back to Students
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/students"
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Back to Students
+          </Link>
+
+          <Link
+            href={`/students/${studentId}/edit`}
+            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Edit Profile
+          </Link>
+        </div>
 
         <button
           type="button"
@@ -393,11 +402,6 @@ export function StudentProfileClient({
             guardians={profile.guardians}
             onChanged={loadProfile}
           />
-          <StudentEditPanelClient
-            schoolId={schoolId}
-            profile={profile}
-            onUpdated={loadProfile}
-          />
 
           <div className="grid gap-4 md:grid-cols-5">
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -564,6 +568,7 @@ export function StudentProfileClient({
     </div>
   );
 }
+
 
 
 

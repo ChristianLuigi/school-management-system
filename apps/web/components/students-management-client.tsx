@@ -292,12 +292,23 @@ export function StudentsManagementClient({
                   </td>
 
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/students/${student.id}`}
-                      className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
-                    >
-                      Open Profile
-                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/students/${student.id}`}
+                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                      >
+                        Open Profile
+                      </Link>
+
+                      {canCreate ? (
+                        <Link
+                          href={`/students/${student.id}/edit`}
+                          className="rounded-lg border border-slate-300 px-3 py-2 text-xs hover:bg-slate-50"
+                        >
+                          Edit
+                        </Link>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -319,4 +330,5 @@ export function StudentsManagementClient({
     </div>
   );
 }
+
 
