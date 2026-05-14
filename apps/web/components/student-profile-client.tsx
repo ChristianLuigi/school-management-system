@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  StudentDocumentRecord,
+  StudentDocumentsPanelClient,
+} from "@/components/student-documents-panel-client";
 import { StudentEditPanelClient } from "@/components/student-edit-panel-client";
 import {
   StudentGuardianRow,
@@ -45,6 +49,7 @@ type StudentProfile = {
     medicalNotes: string | null;
     specialNeeds: string | null;
   };
+  documentRecords: StudentDocumentRecord[];
   guardians: StudentGuardianRow[];
   finance: {
     invoiceCount: number;
@@ -376,6 +381,12 @@ export function StudentProfileClient({
             </div>
           </div>
 
+          <StudentDocumentsPanelClient
+            schoolId={schoolId}
+            studentId={profile.student.id}
+            documents={profile.documentRecords}
+            onChanged={loadProfile}
+          />
           <StudentGuardiansPanelClient
             schoolId={schoolId}
             studentId={profile.student.id}
@@ -553,3 +564,6 @@ export function StudentProfileClient({
     </div>
   );
 }
+
+
+
