@@ -9,9 +9,27 @@ type StudentProfileForEdit = {
     studentCode: string | null;
     firstName: string | null;
     lastName: string | null;
+    gender?: string | null;
+    dateOfBirth?: string | null;
+    placeOfBirth?: string | null;
+    photoUrl?: string | null;
+    previousSchoolName?: string | null;
+    previousSchoolAddress?: string | null;
   };
   currentEnrollment: {
     sectionId: string | null;
+  };
+  documents?: {
+    photoReceived: boolean;
+    birthCertificateReceived: boolean;
+    vaccinationCardReceived: boolean;
+    previousSchoolRecordReceived: boolean;
+  };
+  health?: {
+    vaccinationStatus: string | null;
+    allergies: string | null;
+    medicalNotes: string | null;
+    specialNeeds: string | null;
   };
 };
 
@@ -30,6 +48,43 @@ export function StudentEditPanelClient({
   const [studentCode, setStudentCode] = useState(
     profile.student.studentCode ?? "",
   );
+  const [gender, setGender] = useState(profile.student.gender ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState(
+    profile.student.dateOfBirth ?? "",
+  );
+  const [placeOfBirth, setPlaceOfBirth] = useState(
+    profile.student.placeOfBirth ?? "",
+  );
+  const [photoUrl, setPhotoUrl] = useState(profile.student.photoUrl ?? "");
+  const [previousSchoolName, setPreviousSchoolName] = useState(
+    profile.student.previousSchoolName ?? "",
+  );
+  const [previousSchoolAddress, setPreviousSchoolAddress] = useState(
+    profile.student.previousSchoolAddress ?? "",
+  );
+  const [photoReceived, setPhotoReceived] = useState(
+    profile.documents?.photoReceived ?? false,
+  );
+  const [birthCertificateReceived, setBirthCertificateReceived] = useState(
+    profile.documents?.birthCertificateReceived ?? false,
+  );
+  const [vaccinationCardReceived, setVaccinationCardReceived] = useState(
+    profile.documents?.vaccinationCardReceived ?? false,
+  );
+  const [previousSchoolRecordReceived, setPreviousSchoolRecordReceived] =
+    useState(profile.documents?.previousSchoolRecordReceived ?? false);
+  const [vaccinationStatus, setVaccinationStatus] = useState(
+    profile.health?.vaccinationStatus ?? "",
+  );
+  const [allergies, setAllergies] = useState(
+    profile.health?.allergies ?? "",
+  );
+  const [medicalNotes, setMedicalNotes] = useState(
+    profile.health?.medicalNotes ?? "",
+  );
+  const [specialNeeds, setSpecialNeeds] = useState(
+    profile.health?.specialNeeds ?? "",
+  );
   const [sectionId, setSectionId] = useState(
     profile.currentEnrollment.sectionId ?? "",
   );
@@ -42,6 +97,26 @@ export function StudentEditPanelClient({
     setFirstName(profile.student.firstName ?? "");
     setLastName(profile.student.lastName ?? "");
     setStudentCode(profile.student.studentCode ?? "");
+    setGender(profile.student.gender ?? "");
+    setDateOfBirth(profile.student.dateOfBirth ?? "");
+    setPlaceOfBirth(profile.student.placeOfBirth ?? "");
+    setPhotoUrl(profile.student.photoUrl ?? "");
+    setPreviousSchoolName(profile.student.previousSchoolName ?? "");
+    setPreviousSchoolAddress(profile.student.previousSchoolAddress ?? "");
+    setPhotoReceived(profile.documents?.photoReceived ?? false);
+    setBirthCertificateReceived(
+      profile.documents?.birthCertificateReceived ?? false,
+    );
+    setVaccinationCardReceived(
+      profile.documents?.vaccinationCardReceived ?? false,
+    );
+    setPreviousSchoolRecordReceived(
+      profile.documents?.previousSchoolRecordReceived ?? false,
+    );
+    setVaccinationStatus(profile.health?.vaccinationStatus ?? "");
+    setAllergies(profile.health?.allergies ?? "");
+    setMedicalNotes(profile.health?.medicalNotes ?? "");
+    setSpecialNeeds(profile.health?.specialNeeds ?? "");
     setSectionId(profile.currentEnrollment.sectionId ?? "");
     setClearSection(false);
   }, [profile]);
@@ -66,6 +141,20 @@ export function StudentEditPanelClient({
           firstName,
           lastName,
           studentCode,
+          gender: gender || undefined,
+          dateOfBirth: dateOfBirth || undefined,
+          placeOfBirth,
+          photoUrl,
+          previousSchoolName,
+          previousSchoolAddress,
+          photoReceived,
+          birthCertificateReceived,
+          vaccinationCardReceived,
+          previousSchoolRecordReceived,
+          vaccinationStatus,
+          allergies,
+          medicalNotes,
+          specialNeeds,
           sectionId: clearSection ? undefined : sectionId || undefined,
           clearSection,
         }),
@@ -144,6 +233,51 @@ export function StudentEditPanelClient({
               onChange={(event) => setStudentCode(event.target.value)}
             />
 
+            <select
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              value={gender}
+              onChange={(event) => setGender(event.target.value)}
+            >
+              <option value="">Gender</option>
+              <option value="MALE">Boy / Garcon</option>
+              <option value="FEMALE">Girl / Fille</option>
+            </select>
+
+            <input
+              type="date"
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              value={dateOfBirth}
+              onChange={(event) => setDateOfBirth(event.target.value)}
+            />
+
+            <input
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              placeholder="Place of birth"
+              value={placeOfBirth}
+              onChange={(event) => setPlaceOfBirth(event.target.value)}
+            />
+
+            <input
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              placeholder="Photo URL"
+              value={photoUrl}
+              onChange={(event) => setPhotoUrl(event.target.value)}
+            />
+
+            <input
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              placeholder="Previous school name"
+              value={previousSchoolName}
+              onChange={(event) => setPreviousSchoolName(event.target.value)}
+            />
+
+            <textarea
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              placeholder="Previous school address"
+              value={previousSchoolAddress}
+              onChange={(event) => setPreviousSchoolAddress(event.target.value)}
+            />
+
             <div className="md:col-span-2">
               <SectionSelectorClient
                 schoolId={schoolId}
@@ -155,6 +289,92 @@ export function StudentEditPanelClient({
                 label="Current section"
                 allowEmpty
               />
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 md:col-span-2">
+              <div className="font-semibold text-slate-900">
+                Document Checklist
+              </div>
+
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={photoReceived}
+                    onChange={(event) => setPhotoReceived(event.target.checked)}
+                  />
+                  Photo received
+                </label>
+
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={birthCertificateReceived}
+                    onChange={(event) =>
+                      setBirthCertificateReceived(event.target.checked)
+                    }
+                  />
+                  Birth certificate received
+                </label>
+
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={vaccinationCardReceived}
+                    onChange={(event) =>
+                      setVaccinationCardReceived(event.target.checked)
+                    }
+                  />
+                  Vaccination card received
+                </label>
+
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={previousSchoolRecordReceived}
+                    onChange={(event) =>
+                      setPreviousSchoolRecordReceived(event.target.checked)
+                    }
+                  />
+                  Previous school record received
+                </label>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 md:col-span-2">
+              <div className="font-semibold text-slate-900">
+                Health Information
+              </div>
+
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <input
+                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                  placeholder="Vaccination status"
+                  value={vaccinationStatus}
+                  onChange={(event) => setVaccinationStatus(event.target.value)}
+                />
+
+                <input
+                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                  placeholder="Allergies"
+                  value={allergies}
+                  onChange={(event) => setAllergies(event.target.value)}
+                />
+
+                <textarea
+                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                  placeholder="Medical notes"
+                  value={medicalNotes}
+                  onChange={(event) => setMedicalNotes(event.target.value)}
+                />
+
+                <textarea
+                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                  placeholder="Special needs"
+                  value={specialNeeds}
+                  onChange={(event) => setSpecialNeeds(event.target.value)}
+                />
+              </div>
             </div>
 
             <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm md:col-span-2">
