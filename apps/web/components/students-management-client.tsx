@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { SectionSelectorClient } from "@/components/section-selector-client";
 import { SchoolBadge } from "@/components/school-ui";
 
@@ -267,6 +268,7 @@ export function StudentsManagementClient({
                 <th className="px-4 py-3">Code</th>
                 <th className="px-4 py-3">Class</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
 
@@ -288,13 +290,22 @@ export function StudentsManagementClient({
                   <td className="px-4 py-3">
                     <SchoolBadge tone="green">Active</SchoolBadge>
                   </td>
+
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/students/${student.id}`}
+                      className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                    >
+                      Open Profile
+                    </Link>
+                  </td>
                 </tr>
               ))}
 
               {rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     No students found.
@@ -308,3 +319,4 @@ export function StudentsManagementClient({
     </div>
   );
 }
+
