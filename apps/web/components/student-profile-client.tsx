@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { StudentEditPanelClient } from "@/components/student-edit-panel-client";
+import {
+  StudentGuardianRow,
+  StudentGuardiansPanelClient,
+} from "@/components/student-guardians-panel-client";
 import { SchoolBadge } from "@/components/school-ui";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
@@ -41,6 +45,7 @@ type StudentProfile = {
     medicalNotes: string | null;
     specialNeeds: string | null;
   };
+  guardians: StudentGuardianRow[];
   finance: {
     invoiceCount: number;
     overdueCount: number;
@@ -371,6 +376,12 @@ export function StudentProfileClient({
             </div>
           </div>
 
+          <StudentGuardiansPanelClient
+            schoolId={schoolId}
+            studentId={profile.student.id}
+            guardians={profile.guardians}
+            onChanged={loadProfile}
+          />
           <StudentEditPanelClient
             schoolId={schoolId}
             profile={profile}
