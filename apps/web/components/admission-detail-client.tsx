@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AdmissionConvertPanelClient } from "@/components/admission-convert-panel-client";
 import { AdmissionEditPanelClient } from "@/components/admission-edit-panel-client";
 import { AdmissionReadinessPanelClient } from "@/components/admission-readiness-panel-client";
 import { SchoolBadge } from "@/components/school-ui";
@@ -227,28 +228,14 @@ export function AdmissionDetailClient({
             </div>
           </div>
 
-          {application.convertedStudent ? (
-            <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
-              <div className="font-semibold text-green-900">
-                Converted to student file
-              </div>
-
-              <div className="mt-1 text-sm text-green-800">
-                {application.convertedStudent.firstName}{" "}
-                {application.convertedStudent.lastName} -{" "}
-                {application.convertedStudent.studentCode ?? "Code pending"}
-              </div>
-
-              <Link
-                href={`/students/${application.convertedStudent.id}`}
-                className="mt-3 inline-flex rounded-xl bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800"
-              >
-                Open Student Profile
-              </Link>
-            </div>
-          ) : null}
 
           <AdmissionReadinessPanelClient application={application} />
+
+          <AdmissionConvertPanelClient
+            schoolId={schoolId}
+            application={application}
+            onConverted={loadApplication}
+          />
 
           <AdmissionEditPanelClient
             schoolId={schoolId}
