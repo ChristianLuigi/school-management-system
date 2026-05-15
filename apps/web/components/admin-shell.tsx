@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   CreditCard,
+  FileText,
   GraduationCap,
   Home,
   LogOut,
@@ -41,6 +42,12 @@ const navItems = [
     label: "Students",
     icon: Users,
     roles: ["SCHOOL_ADMIN"],
+  },
+  {
+    href: "/admissions",
+    label: "Admissions",
+    icon: FileText,
+    roles: ["SCHOOL_ADMIN", "FINANCE_ADMIN", "TEACHER"],
   },
   {
     href: "/academics",
