@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AdmissionEditPanelClient } from "@/components/admission-edit-panel-client";
+import { AdmissionReadinessPanelClient } from "@/components/admission-readiness-panel-client";
 import { SchoolBadge } from "@/components/school-ui";
 import {
   AdmissionStatusHistoryRow,
@@ -245,6 +247,14 @@ export function AdmissionDetailClient({
               </Link>
             </div>
           ) : null}
+
+          <AdmissionReadinessPanelClient application={application} />
+
+          <AdmissionEditPanelClient
+            schoolId={schoolId}
+            application={application}
+            onUpdated={loadApplication}
+          />
 
           <div className="grid gap-6 xl:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
