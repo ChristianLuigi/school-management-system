@@ -564,6 +564,7 @@ export function AdmissionsClient({
                 <th className="px-4 py-3">Desired Class</th>
                 <th className="px-4 py-3">Parent</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
 
@@ -606,13 +607,22 @@ export function AdmissionsClient({
                       {admissionStatusLabel(row.admissionStatus)}
                     </SchoolBadge>
                   </td>
+
+                  <td className="px-4 py-3">
+                    <a
+                      href={`/admissions/${row.id}`}
+                      className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                    >
+                      Open
+                    </a>
+                  </td>
                 </tr>
               ))}
 
               {rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-8 text-center text-slate-500"
                   >
                     No admission applications found.
