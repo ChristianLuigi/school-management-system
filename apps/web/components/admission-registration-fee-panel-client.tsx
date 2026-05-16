@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { SchoolBadge } from "@/components/school-ui";
 
 type RegistrationFee = {
@@ -171,8 +172,28 @@ export function AdmissionRegistrationFeePanelClient({
 
       {fee.receiptNumber ? (
         <div className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-800">
-          Receipt: <span className="font-semibold">{fee.receiptNumber}</span>
-          {fee.paidAt ? ` - Paid at ${new Date(fee.paidAt).toLocaleString()}` : ""}
+          <div>
+            Receipt: <span className="font-semibold">{fee.receiptNumber}</span>
+            {fee.paidAt
+              ? ` - Paid at ${new Date(fee.paidAt).toLocaleString()}`
+              : ""}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={`/admissions/${admissionApplicationId}/registration-receipt`}
+              className="rounded-lg border border-green-300 bg-white px-3 py-2 text-xs font-medium text-green-800 hover:bg-green-50"
+            >
+              Open Receipt
+            </Link>
+
+            <Link
+              href={`/admissions/${admissionApplicationId}/registration-receipt/thermal?autoprint=1`}
+              className="rounded-lg bg-green-700 px-3 py-2 text-xs font-medium text-white hover:bg-green-800"
+            >
+              Print 80mm
+            </Link>
+          </div>
         </div>
       ) : null}
 
