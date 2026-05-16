@@ -165,8 +165,8 @@ export function AdmissionDecisionLetterClient({
     : "-";
 
   return (
-    <div className="space-y-6">
-      <div className="print:hidden flex flex-wrap items-center justify-between gap-3">
+    <div className="admission-letter-print-page space-y-6">
+      <div className="admission-letter-no-print flex flex-wrap items-center justify-between gap-3">
         <Link
           href={`/admissions/${admissionApplicationId}`}
           className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
@@ -187,19 +187,19 @@ export function AdmissionDecisionLetterClient({
       </div>
 
       {loading ? (
-        <div className="print:hidden rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="admission-letter-no-print rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
           Loading admission letter...
         </div>
       ) : null}
 
       {error ? (
-        <div className="print:hidden rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="admission-letter-no-print rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
       {application && !isPrintableDecision(application.admissionStatus) ? (
-        <div className="print:hidden rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <div className="admission-letter-no-print rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           Cette demande n'est pas encore admise ou confirmee. Le bordereau
           d'admission devrait etre imprime uniquement apres une decision
           positive.
@@ -207,15 +207,15 @@ export function AdmissionDecisionLetterClient({
       ) : null}
 
       {application ? (
-        <div className="mx-auto max-w-4xl rounded-3xl border border-slate-200 bg-white p-10 shadow-sm print:border-0 print:shadow-none">
-          <div className="border-b border-slate-200 pb-6">
+        <div className="admission-letter-sheet rounded-3xl border border-slate-200 shadow-sm print:rounded-none">
+          <div className="admission-letter-section border-b border-slate-200 pb-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
                   Bordereau d'admission
                 </div>
 
-                <h1 className="mt-2 text-3xl font-bold text-slate-900">
+                <h1 className="mt-2 text-2xl font-bold text-slate-900">
                   {application.school.name}
                 </h1>
 
@@ -234,9 +234,9 @@ export function AdmissionDecisionLetterClient({
           </div>
 
           <div className="py-6">
-            <p className="text-sm leading-7 text-slate-700">Madame, Monsieur,</p>
+            <p className="text-sm leading-6 text-slate-700">Madame, Monsieur,</p>
 
-            <p className="mt-4 text-sm leading-7 text-slate-700">
+            <p className="mt-4 text-sm leading-6 text-slate-700">
               Nous vous informons que la demande d'admission de l'eleve{" "}
               <span className="font-semibold text-slate-900">
                 {application.candidate.firstName} {application.candidate.lastName}
@@ -244,7 +244,7 @@ export function AdmissionDecisionLetterClient({
               a ete traitee par l'administration de l'etablissement.
             </p>
 
-            <p className="mt-4 text-sm leading-7 text-slate-700">
+            <p className="mt-4 text-sm leading-6 text-slate-700">
               Decision administrative :{" "}
               <span className="font-semibold text-slate-900">
                 {admissionStatusLabel(application.admissionStatus)}
@@ -253,7 +253,7 @@ export function AdmissionDecisionLetterClient({
             </p>
           </div>
 
-          <div className="grid gap-6 border-y border-slate-200 py-6 md:grid-cols-2">
+          <div className="admission-letter-section grid gap-6 border-y border-slate-200 py-6 md:grid-cols-2">
             <div>
               <h2 className="font-semibold text-slate-900">
                 Informations de l'eleve
@@ -324,7 +324,7 @@ export function AdmissionDecisionLetterClient({
             </div>
           </div>
 
-          <div className="grid gap-6 border-b border-slate-200 py-6 md:grid-cols-2">
+          <div className="admission-letter-section grid gap-6 border-b border-slate-200 py-6 md:grid-cols-2">
             <div>
               <h2 className="font-semibold text-slate-900">
                 Documents du dossier
@@ -400,10 +400,10 @@ export function AdmissionDecisionLetterClient({
             </div>
           </div>
 
-          <div className="py-6">
+          <div className="admission-letter-section py-6">
             <h2 className="font-semibold text-slate-900">Prochaines etapes</h2>
 
-            <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-700">
+            <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-700">
               <li>Finaliser les documents manquants, le cas echeant.</li>
               <li>Respecter les modalites financieres communiquees par l'ecole.</li>
               <li>Signer les engagements et reglements internes requis.</li>
@@ -418,13 +418,13 @@ export function AdmissionDecisionLetterClient({
           {application.notes ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <h2 className="font-semibold text-slate-900">Notes</h2>
-              <p className="mt-2 text-sm leading-7 text-slate-700">
+              <p className="mt-2 text-sm leading-6 text-slate-700">
                 {application.notes}
               </p>
             </div>
           ) : null}
 
-          <div className="mt-12 grid gap-10 md:grid-cols-2">
+          <div className="admission-letter-section mt-12 grid gap-10 md:grid-cols-2">
             <div>
               <div className="border-t border-slate-400 pt-2 text-sm text-slate-600">
                 Signature parent / tuteur

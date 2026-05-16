@@ -27,7 +27,7 @@ body {
 
 @media print {
   @page {
-    size: A4;
+    size: auto;
     margin: 12mm;
   }
 
@@ -169,5 +169,64 @@ body {
 
   .thermal-no-print {
     display: none !important;
+  }
+}
+
+/* Letter-size printable documents */
+.admission-letter-print-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 24px;
+}
+
+.admission-letter-sheet {
+  width: 8.5in;
+  min-height: 11in;
+  margin: 0 auto;
+  background: white;
+  padding: 0.55in;
+  color: #0f172a;
+}
+
+.admission-letter-section {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+@media print {
+  @page {
+    size: Letter;
+    margin: 0;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  .admission-letter-print-page {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0;
+    margin: 0 auto;
+    background: white !important;
+  }
+
+  .admission-letter-sheet {
+    width: 8.5in;
+    min-height: 11in;
+    margin: 0;
+    padding: 0.55in;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .admission-letter-no-print {
+    display: none !important;
+  }
+
+  .admission-letter-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
