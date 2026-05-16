@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AdmissionConvertPanelClient } from "@/components/admission-convert-panel-client";
 import { AdmissionEditPanelClient } from "@/components/admission-edit-panel-client";
 import { AdmissionReadinessPanelClient } from "@/components/admission-readiness-panel-client";
+import { AdmissionRegistrationFeePanelClient } from "@/components/admission-registration-fee-panel-client";
 import { SchoolBadge } from "@/components/school-ui";
 import {
   AdmissionStatusHistoryRow,
@@ -61,6 +62,17 @@ type AdmissionApplicationDetails = {
     conductCertificateReceived: boolean;
   };
   notes: string | null;
+  registrationFee: {
+    required: boolean;
+    amount: number;
+    currencyCode: string;
+    status: string;
+    paymentMethod: string | null;
+    paymentReference: string | null;
+    paidAt: string | null;
+    receiptNumber: string | null;
+    notes: string | null;
+  };
   convertedStudent: {
     id: string;
     studentCode: string | null;
@@ -231,6 +243,13 @@ export function AdmissionDetailClient({
 
           <AdmissionReadinessPanelClient application={application} />
 
+          <AdmissionRegistrationFeePanelClient
+            schoolId={schoolId}
+            admissionApplicationId={application.id}
+            fee={application.registrationFee}
+            convertedStudentId={application.convertedStudent?.id ?? null}
+            onUpdated={loadApplication}
+          />
           <AdmissionConvertPanelClient
             schoolId={schoolId}
             application={application}

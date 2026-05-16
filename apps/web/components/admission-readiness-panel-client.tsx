@@ -20,6 +20,10 @@ type AdmissionReadinessInput = {
     parentIdDocumentReceived: boolean;
     conductCertificateReceived: boolean;
   };
+  registrationFee?: {
+    required: boolean;
+    status: string;
+  };
 };
 
 export function AdmissionReadinessPanelClient({
@@ -61,6 +65,12 @@ export function AdmissionReadinessPanelClient({
     {
       label: "Previous school record received",
       ok: application.documents.previousSchoolRecordReceived,
+    },
+    {
+      label: "Registration fee settled",
+      ok:
+        !application.registrationFee?.required ||
+        ["PAID", "WAIVED"].includes(application.registrationFee.status),
     },
   ];
 
