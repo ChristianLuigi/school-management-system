@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SectionSelectorClient } from "@/components/section-selector-client";
 
 type AdmissionApplicationForEdit = {
   id: string;
   admissionStatus: string;
   convertedStudent: {
     id: string;
+  } | null;
+  desiredSection: {
+    id: string;
+    code: string | null;
+    nameI18n: Record<string, string> | null;
   } | null;
   candidate: {
     firstName: string;
@@ -65,6 +71,9 @@ export function AdmissionEditPanelClient({
   const [previousSchoolAddress, setPreviousSchoolAddress] = useState(
     application.candidate.previousSchoolAddress ?? "",
   );
+  const [desiredSectionId, setDesiredSectionId] = useState(
+    application.desiredSection?.id ?? "",
+  );
 
   const [parentFullName, setParentFullName] = useState(
     application.parent.fullName ?? "",
@@ -117,6 +126,7 @@ export function AdmissionEditPanelClient({
     setPlaceOfBirth(application.candidate.placeOfBirth ?? "");
     setPreviousSchoolName(application.candidate.previousSchoolName ?? "");
     setPreviousSchoolAddress(application.candidate.previousSchoolAddress ?? "");
+    setDesiredSectionId(application.desiredSection?.id ?? "");
 
     setParentFullName(application.parent.fullName ?? "");
     setParentPhone(application.parent.phone ?? "");
@@ -163,6 +173,7 @@ export function AdmissionEditPanelClient({
           placeOfBirth,
           previousSchoolName,
           previousSchoolAddress,
+          desiredSectionId: desiredSectionId || null,
           parentFullName,
           parentPhone,
           parentEmail: parentEmail || undefined,
@@ -301,6 +312,20 @@ export function AdmissionEditPanelClient({
                 onChange={(event) =>
                   setPreviousSchoolAddress(event.target.value)
                 }
+              />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-slate-900">Academic Request</h4>
+
+            <div className="mt-3">
+              <SectionSelectorClient
+                schoolId={schoolId}
+                sectionId={desiredSectionId}
+                onSectionIdChange={setDesiredSectionId}
+                label="Desired class / section"
+                allowEmpty
               />
             </div>
           </div>

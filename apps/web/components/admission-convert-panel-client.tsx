@@ -24,6 +24,10 @@ type AdmissionForConversion = {
   } | null;
 };
 
+function i18nName(value: Record<string, string> | null | undefined, fallback: string) {
+  return value?.fr ?? value?.en ?? fallback;
+}
+
 function canConvert(status: string) {
   return ["ADMITTED", "CONDITIONALLY_ADMITTED", "CONFIRMED"].includes(status);
 }
@@ -214,11 +218,27 @@ export function AdmissionConvertPanelClient({
             </select>
           </label>
 
+          {application.desiredSection ? (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+              Requested class:{" "}
+              <span className="font-semibold">
+                {i18nName(
+                  application.desiredSection.nameI18n,
+                  application.desiredSection.code ?? "-",
+                )}
+              </span>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              No requested class was selected for this admission application.
+            </div>
+          )}
+
           <SectionSelectorClient
             schoolId={schoolId}
             sectionId={sectionId}
             onSectionIdChange={setSectionId}
-            label="Assign section/class"
+            label="Final section/class assignment"
             allowEmpty
           />
 
