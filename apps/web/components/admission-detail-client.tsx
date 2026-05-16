@@ -18,6 +18,10 @@ import {
 type AdmissionApplicationDetails = {
   id: string;
   schoolId: string;
+  school: {
+    name: string;
+    code: string | null;
+  };
   applicationNumber: string;
   admissionStatus: string;
   academicYear: {
@@ -90,7 +94,8 @@ type AdmissionApplicationDetails = {
     decisionStatus: string | null;
     notes: string | null;
     updatedAt: string;
-  } | null;  convertedStudent: {
+  } | null;
+  convertedStudent: {
     id: string;
     studentCode: string | null;
     firstName: string | null;
@@ -176,13 +181,27 @@ export function AdmissionDetailClient({
           Back to Admissions
         </Link>
 
-        <button
-          type="button"
-          onClick={loadApplication}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-        >
-          Refresh
-        </button>
+        <div className="flex flex-wrap gap-2">
+          {application &&
+          ["ADMITTED", "CONDITIONALLY_ADMITTED", "CONFIRMED"].includes(
+            application.admissionStatus,
+          ) ? (
+            <Link
+              href={`/admissions/${admissionApplicationId}/decision-letter`}
+              className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            >
+              Bordereau admission
+            </Link>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={loadApplication}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {loading ? (

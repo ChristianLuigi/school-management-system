@@ -156,6 +156,16 @@ export function AdmissionConvertPanelClient({
         )}
       </div>
 
+      {canConvert(application.admissionStatus) ? (
+        <div className="mt-4">
+          <Link
+            href={`/admissions/${application.id}/decision-letter`}
+            className="inline-flex rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Print admission letter
+          </Link>
+        </div>
+      ) : null}
       {!canConvert(application.admissionStatus) ? (
         <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
           Application must be admitted, conditionally admitted, or confirmed before conversion.
