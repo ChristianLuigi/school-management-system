@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdmissionConvertPanelClient } from "@/components/admission-convert-panel-client";
+import { AdmissionExamPanelClient } from "@/components/admission-exam-panel-client";
 import { AdmissionEditPanelClient } from "@/components/admission-edit-panel-client";
 import { AdmissionReadinessPanelClient } from "@/components/admission-readiness-panel-client";
 import { AdmissionRegistrationFeePanelClient } from "@/components/admission-registration-fee-panel-client";
@@ -73,7 +74,23 @@ type AdmissionApplicationDetails = {
     receiptNumber: string | null;
     notes: string | null;
   };
-  convertedStudent: {
+  exam: {
+    id: string;
+    examStatus: string;
+    scheduledAt: string | null;
+    location: string | null;
+    supervisorName: string | null;
+    frenchScore: number | null;
+    mathScore: number | null;
+    englishScore: number | null;
+    generalScore: number | null;
+    interviewScore: number | null;
+    totalScore: number | null;
+    maxScore: number;
+    decisionStatus: string | null;
+    notes: string | null;
+    updatedAt: string;
+  } | null;  convertedStudent: {
     id: string;
     studentCode: string | null;
     firstName: string | null;
@@ -250,6 +267,15 @@ export function AdmissionDetailClient({
             convertedStudentId={application.convertedStudent?.id ?? null}
             onUpdated={loadApplication}
           />
+
+          <AdmissionExamPanelClient
+            schoolId={schoolId}
+            admissionApplicationId={application.id}
+            exam={application.exam}
+            convertedStudentId={application.convertedStudent?.id ?? null}
+            onUpdated={loadApplication}
+          />
+
           <AdmissionConvertPanelClient
             schoolId={schoolId}
             application={application}
