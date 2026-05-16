@@ -238,7 +238,7 @@ export function AdmissionConvertPanelClient({
             schoolId={schoolId}
             sectionId={sectionId}
             onSectionIdChange={setSectionId}
-            label="Final section/class assignment"
+            label="Affectation finale classe / section"
             allowEmpty
           />
 

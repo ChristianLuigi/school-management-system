@@ -367,7 +367,7 @@ export function AdmissionsClient({
                     schoolId={schoolId}
                     sectionId={desiredSectionId}
                     onSectionIdChange={setDesiredSectionId}
-                    label="Desired class / section"
+                    label="Classe / niveau souhaite"
                     allowEmpty
                   />
                 </div>
