@@ -1,4 +1,5 @@
 import { AdmissionsClient } from "@/components/admissions-client";
+import { AdmissionsSummaryClient } from "@/components/admissions-summary-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import { SchoolPageShell } from "@/components/school-page-shell";
 import {
@@ -48,6 +49,10 @@ export default async function AdmissionsPage() {
         mainTitle="Admissions"
         mainSubtitle="Create, search, and follow admission applications."
       >
+        <div className="mb-6">
+          <AdmissionsSummaryClient schoolId={currentSchoolId} />
+        </div>
+
         <AdmissionsClient schoolId={currentSchoolId} canCreate={isSchoolAdmin} />
       </SchoolModuleWorkspace>
     </SchoolPageShell>
