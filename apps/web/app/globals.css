@@ -171,13 +171,12 @@ body {
     display: none !important;
   }
 }
-
-/* Letter-size printable documents */
+/* One-page Letter admission decision letter */
 .admission-letter-print-page {
   width: 100%;
   min-height: 100vh;
   background: #f8fafc;
-  padding: 24px;
+  padding: 16px;
 }
 
 .admission-letter-sheet {
@@ -185,13 +184,74 @@ body {
   min-height: 11in;
   margin: 0 auto;
   background: white;
-  padding: 0.55in;
+  padding: 0.35in;
   color: #0f172a;
+  font-size: 11px;
+  line-height: 1.25;
 }
 
 .admission-letter-section {
   break-inside: avoid;
   page-break-inside: avoid;
+}
+
+.admission-letter-title {
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.admission-letter-subtitle {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.admission-letter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 18px;
+}
+
+.admission-letter-box {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.admission-letter-box-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.admission-letter-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px dotted #cbd5e1;
+  padding: 2px 0;
+}
+
+.admission-letter-line span:first-child {
+  color: #64748b;
+}
+
+.admission-letter-line span:last-child {
+  font-weight: 600;
+  text-align: right;
+}
+
+.admission-letter-signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 20px;
+}
+
+.admission-letter-signature-line {
+  border-top: 1px solid #64748b;
+  padding-top: 4px;
+  font-size: 10px;
+  color: #475569;
 }
 
 @media print {
@@ -200,25 +260,35 @@ body {
     margin: 0;
   }
 
+  html,
   body {
+    width: 8.5in;
+    height: 11in;
     background: white !important;
   }
 
   .admission-letter-print-page {
     width: 8.5in;
     min-height: 11in;
+    max-height: 11in;
     padding: 0;
-    margin: 0 auto;
+    margin: 0;
     background: white !important;
+    overflow: hidden;
   }
 
   .admission-letter-sheet {
     width: 8.5in;
     min-height: 11in;
+    max-height: 11in;
     margin: 0;
-    padding: 0.55in;
-    box-shadow: none !important;
+    padding: 0.32in;
     border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden;
+    font-size: 10.5px;
+    line-height: 1.22;
   }
 
   .admission-letter-no-print {

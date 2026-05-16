@@ -207,22 +207,22 @@ export function AdmissionDecisionLetterClient({
       ) : null}
 
       {application ? (
-        <div className="admission-letter-sheet rounded-3xl border border-slate-200 shadow-sm print:rounded-none">
-          <div className="admission-letter-section border-b border-slate-200 pb-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="admission-letter-sheet rounded-2xl border border-slate-200 shadow-sm">
+          <div className="admission-letter-section border-b border-slate-200 pb-3">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                <div className="admission-letter-subtitle uppercase text-slate-500">
                   Bordereau d'admission
                 </div>
 
-                <h1 className="mt-2 text-2xl font-bold text-slate-900">
+                <h1 className="admission-letter-title mt-1 font-bold text-slate-900">
                   {application.school.name}
                 </h1>
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Reference dossier : {application.applicationNumber}
+                <div className="mt-1 text-[10px] text-slate-500">
+                  Dossier : {application.applicationNumber}
                   {application.school.code ? ` - ${application.school.code}` : ""}
-                </p>
+                </div>
               </div>
 
               <SchoolBadge
@@ -233,212 +233,180 @@ export function AdmissionDecisionLetterClient({
             </div>
           </div>
 
-          <div className="py-6">
-            <p className="text-sm leading-6 text-slate-700">Madame, Monsieur,</p>
-
-            <p className="mt-4 text-sm leading-6 text-slate-700">
-              Nous vous informons que la demande d'admission de l'eleve{" "}
-              <span className="font-semibold text-slate-900">
-                {application.candidate.firstName} {application.candidate.lastName}
-              </span>{" "}
-              a ete traitee par l'administration de l'etablissement.
-            </p>
-
-            <p className="mt-4 text-sm leading-6 text-slate-700">
-              Decision administrative :{" "}
-              <span className="font-semibold text-slate-900">
-                {admissionStatusLabel(application.admissionStatus)}
-              </span>
-              .
-            </p>
+          <div className="admission-letter-section py-3 text-[11px] leading-5 text-slate-700">
+            La presente atteste que la demande d'admission de{" "}
+            <span className="font-bold text-slate-900">
+              {application.candidate.firstName} {application.candidate.lastName}
+            </span>{" "}
+            a ete etudiee par l'administration. Decision :{" "}
+            <span className="font-bold text-slate-900">
+              {admissionStatusLabel(application.admissionStatus)}
+            </span>
+            .
           </div>
 
-          <div className="admission-letter-section grid gap-6 border-y border-slate-200 py-6 md:grid-cols-2">
-            <div>
-              <h2 className="font-semibold text-slate-900">
-                Informations de l'eleve
-              </h2>
+          <div className="admission-letter-grid admission-letter-section">
+            <div className="admission-letter-box">
+              <div className="admission-letter-box-title">Eleve</div>
 
-              <div className="mt-3 space-y-2 text-sm text-slate-600">
-                <div>
-                  <span className="font-medium text-slate-900">Nom :</span>{" "}
-                  {application.candidate.lastName}
-                </div>
+              <div className="admission-letter-line">
+                <span>Nom</span>
+                <span>{application.candidate.lastName}</span>
+              </div>
 
-                <div>
-                  <span className="font-medium text-slate-900">Prenom :</span>{" "}
-                  {application.candidate.firstName}
-                </div>
+              <div className="admission-letter-line">
+                <span>Prenom</span>
+                <span>{application.candidate.firstName}</span>
+              </div>
 
-                <div>
-                  <span className="font-medium text-slate-900">
-                    Date de naissance :
-                  </span>{" "}
-                  {application.candidate.dateOfBirth ?? "-"}
-                </div>
+              <div className="admission-letter-line">
+                <span>Date naissance</span>
+                <span>{application.candidate.dateOfBirth ?? "-"}</span>
+              </div>
 
-                <div>
-                  <span className="font-medium text-slate-900">
-                    Lieu de naissance :
-                  </span>{" "}
-                  {application.candidate.placeOfBirth ?? "-"}
-                </div>
+              <div className="admission-letter-line">
+                <span>Lieu naissance</span>
+                <span>{application.candidate.placeOfBirth ?? "-"}</span>
+              </div>
 
-                <div>
-                  <span className="font-medium text-slate-900">
-                    Ecole precedente :
-                  </span>{" "}
-                  {application.candidate.previousSchoolName ?? "-"}
-                </div>
+              <div className="admission-letter-line">
+                <span>Ecole precedente</span>
+                <span>{application.candidate.previousSchoolName ?? "-"}</span>
               </div>
             </div>
 
-            <div>
-              <h2 className="font-semibold text-slate-900">
-                Informations parent / tuteur
-              </h2>
+            <div className="admission-letter-box">
+              <div className="admission-letter-box-title">Parent / Tuteur</div>
 
-              <div className="mt-3 space-y-2 text-sm text-slate-600">
-                <div>
-                  <span className="font-medium text-slate-900">Nom :</span>{" "}
-                  {application.parent.fullName ?? "-"}
-                </div>
-
-                <div>
-                  <span className="font-medium text-slate-900">Telephone :</span>{" "}
-                  {application.parent.phone ?? "-"}
-                </div>
-
-                <div>
-                  <span className="font-medium text-slate-900">Email :</span>{" "}
-                  {application.parent.email ?? "-"}
-                </div>
-
-                <div>
-                  <span className="font-medium text-slate-900">
-                    Classe / niveau souhaite :
-                  </span>{" "}
-                  {desiredClass}
-                </div>
+              <div className="admission-letter-line">
+                <span>Nom</span>
+                <span>{application.parent.fullName ?? "-"}</span>
               </div>
-            </div>
-          </div>
 
-          <div className="admission-letter-section grid gap-6 border-b border-slate-200 py-6 md:grid-cols-2">
-            <div>
-              <h2 className="font-semibold text-slate-900">
-                Documents du dossier
-              </h2>
+              <div className="admission-letter-line">
+                <span>Telephone</span>
+                <span>{application.parent.phone ?? "-"}</span>
+              </div>
 
-              <div className="mt-3 space-y-2 text-sm text-slate-600">
-                <div>Photo : {documentStatus(application.documents.photoReceived)}</div>
-                <div>
-                  Acte de naissance :{" "}
-                  {documentStatus(application.documents.birthCertificateReceived)}
-                </div>
-                <div>
-                  Carnet de vaccination :{" "}
-                  {documentStatus(application.documents.vaccinationCardReceived)}
-                </div>
-                <div>
-                  Releve / dossier ecole precedente :{" "}
-                  {documentStatus(application.documents.previousSchoolRecordReceived)}
-                </div>
-                <div>
-                  Piece d'identite parent :{" "}
-                  {documentStatus(application.documents.parentIdDocumentReceived)}
-                </div>
-                <div>
-                  Certificat de bonne conduite :{" "}
-                  {documentStatus(application.documents.conductCertificateReceived)}
-                </div>
+              <div className="admission-letter-line">
+                <span>Email</span>
+                <span>{application.parent.email ?? "-"}</span>
+              </div>
+
+              <div className="admission-letter-line">
+                <span>Classe souhaitee</span>
+                <span>{desiredClass}</span>
+              </div>
+
+              <div className="admission-letter-line">
+                <span>Date dossier</span>
+                <span>{new Date(application.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
 
-            <div>
-              <h2 className="font-semibold text-slate-900">
-                Frais d'inscription
-              </h2>
+            <div className="admission-letter-box">
+              <div className="admission-letter-box-title">Documents</div>
 
-              <div className="mt-3 space-y-2 text-sm text-slate-600">
-                <div>
-                  <span className="font-medium text-slate-900">Statut :</span>{" "}
-                  {feeStatusLabel(application.registrationFee.status)}
-                </div>
+              <div className="admission-letter-line">
+                <span>Photo</span>
+                <span>{documentStatus(application.documents.photoReceived)}</span>
+              </div>
 
-                <div>
-                  <span className="font-medium text-slate-900">Montant :</span>{" "}
+              <div className="admission-letter-line">
+                <span>Acte naissance</span>
+                <span>{documentStatus(application.documents.birthCertificateReceived)}</span>
+              </div>
+
+              <div className="admission-letter-line">
+                <span>Carnet vaccination</span>
+                <span>{documentStatus(application.documents.vaccinationCardReceived)}</span>
+              </div>
+
+              <div className="admission-letter-line">
+                <span>Dossier ancienne ecole</span>
+                <span>{documentStatus(application.documents.previousSchoolRecordReceived)}</span>
+              </div>
+
+              <div className="admission-letter-line">
+                <span>Piece identite parent</span>
+                <span>{documentStatus(application.documents.parentIdDocumentReceived)}</span>
+              </div>
+            </div>
+
+            <div className="admission-letter-box">
+              <div className="admission-letter-box-title">Frais / Examen</div>
+
+              <div className="admission-letter-line">
+                <span>Frais inscription</span>
+                <span>{feeStatusLabel(application.registrationFee.status)}</span>
+              </div>
+
+              <div className="admission-letter-line">
+                <span>Montant</span>
+                <span>
                   {application.registrationFee.required
                     ? money(
                         application.registrationFee.amount,
                         application.registrationFee.currencyCode,
                       )
                     : "Non requis"}
-                </div>
+                </span>
+              </div>
 
-                <div>
-                  <span className="font-medium text-slate-900">Recu :</span>{" "}
-                  {application.registrationFee.receiptNumber ?? "-"}
-                </div>
+              <div className="admission-letter-line">
+                <span>Recu</span>
+                <span>{application.registrationFee.receiptNumber ?? "-"}</span>
+              </div>
 
-                <div>
-                  <span className="font-medium text-slate-900">
-                    Examen d'admission :
-                  </span>{" "}
-                  {application.exam?.examStatus ?? "Non planifie"}
-                </div>
+              <div className="admission-letter-line">
+                <span>Examen</span>
+                <span>{application.exam?.examStatus ?? "Non planifie"}</span>
+              </div>
 
-                <div>
-                  <span className="font-medium text-slate-900">
-                    Resultat examen :
-                  </span>{" "}
+              <div className="admission-letter-line">
+                <span>Resultat</span>
+                <span>
                   {application.exam?.totalScore != null
                     ? `${application.exam.totalScore} / ${application.exam.maxScore}`
                     : "-"}
-                </div>
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="admission-letter-section py-6">
-            <h2 className="font-semibold text-slate-900">Prochaines etapes</h2>
+          <div className="admission-letter-section mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="text-[12px] font-bold text-slate-900">
+              Prochaines etapes
+            </div>
 
-            <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-700">
-              <li>Finaliser les documents manquants, le cas echeant.</li>
-              <li>Respecter les modalites financieres communiquees par l'ecole.</li>
-              <li>Signer les engagements et reglements internes requis.</li>
-              <li>Proceder a la confirmation finale de l'inscription.</li>
-              <li>
-                Se presenter a l'administration pour toute information
-                complementaire.
-              </li>
-            </ol>
+            <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-[10.5px] leading-4 text-slate-700">
+              <div>1. Finaliser les documents manquants.</div>
+              <div>2. Respecter les modalites financieres.</div>
+              <div>3. Signer les engagements requis.</div>
+              <div>4. Confirmer l'inscription aupres de l'administration.</div>
+            </div>
           </div>
 
           {application.notes ? (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <h2 className="font-semibold text-slate-900">Notes</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
+            <div className="admission-letter-section mt-3 rounded-xl border border-slate-200 p-3">
+              <div className="text-[12px] font-bold text-slate-900">Notes</div>
+              <p className="mt-1 line-clamp-3 text-[10.5px] leading-4 text-slate-700">
                 {application.notes}
               </p>
             </div>
           ) : null}
 
-          <div className="admission-letter-section mt-12 grid gap-10 md:grid-cols-2">
-            <div>
-              <div className="border-t border-slate-400 pt-2 text-sm text-slate-600">
-                Signature parent / tuteur
-              </div>
+          <div className="admission-letter-signatures admission-letter-section">
+            <div className="admission-letter-signature-line">
+              Signature parent / tuteur
             </div>
 
-            <div>
-              <div className="border-t border-slate-400 pt-2 text-sm text-slate-600">
-                Signature administration
-              </div>
+            <div className="admission-letter-signature-line">
+              Signature administration
             </div>
           </div>
 
-          <div className="mt-8 text-center text-xs text-slate-500">
+          <div className="mt-4 text-center text-[9px] text-slate-500">
             Document genere le {new Date().toLocaleDateString()}.
           </div>
         </div>
