@@ -13,9 +13,9 @@ export function AcademicsWorkspace({
 
   const quickActions = [
     {
-      href: "/academics",
+      href: "/academic-structure",
       title: "Academic Structure",
-      description: "Review school levels, grade levels, sections, and subjects.",
+      description: "Choose offered divisions and review grade levels and sections.",
     },
     {
       href: "/attendance",
@@ -46,7 +46,7 @@ export function AcademicsWorkspace({
       tone: "blue" as const,
       title: "Academic structure drives the whole school workflow",
       description:
-        "Sections, subjects, grade levels, and grading periods must be correct before attendance and gradebook operations become reliable.",
+        "Each school can choose its own structure: Maternelle only, Primaire only, Secondaire only, or a combination.",
     },
     {
       tone: "amber" as const,
@@ -82,7 +82,7 @@ export function AcademicsWorkspace({
       quickActions={quickActions}
       attentionItems={attentionItems}
       mainTitle="Academic Operations"
-      mainSubtitle="Use the area below to review levels, grade levels, sections, subjects, and academic organization."
+      mainSubtitle="Choose the divisions offered by this school, then add extra sections when needed."
     >
       {children}
     </SchoolModuleWorkspace>

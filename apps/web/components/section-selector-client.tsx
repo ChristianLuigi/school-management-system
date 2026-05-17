@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type SectionOption = {
@@ -86,9 +87,7 @@ export function SectionSelectorClient({
 }) {
   const [sections, setSections] = useState<SectionOption[]>([]);
   const [loading, setLoading] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState("");
-  const [seedMessage, setSeedMessage] = useState("");
 
   async function loadSections() {
     setLoading(true);
@@ -119,38 +118,6 @@ export function SectionSelectorClient({
     }
   }
 
-  async function createDefaultHaitianStructure() {
-    setSeeding(true);
-    setSeedMessage("");
-    setError("");
-
-    try {
-      const res = await fetch("/api/academic/haitian-structure", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ schoolId }),
-      });
-
-      const body = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to create academic structure.");
-      }
-
-      setSeedMessage("Default Haitian academic structure created.");
-      await loadSections();
-    } catch (err) {
-      setSeedMessage(
-        err instanceof Error
-          ? err.message
-          : "Failed to create academic structure.",
-      );
-    } finally {
-      setSeeding(false);
-    }
-  }
 
   useEffect(() => {
     loadSections();
@@ -196,20 +163,16 @@ export function SectionSelectorClient({
       {sections.length === 0 && !loading ? (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           <div>
-            No class/section found for this school. Create the default Haitian
-            academic structure to continue.
+            No class/section found for this school. Configure the academic
+            structure before selecting a class.
           </div>
 
-          <button
-            type="button"
-            disabled={seeding}
-            onClick={createDefaultHaitianStructure}
-            className="mt-3 rounded-lg bg-amber-700 px-3 py-2 text-xs font-medium text-white hover:bg-amber-800 disabled:opacity-60"
+          <Link
+            href="/academic-structure"
+            className="mt-3 inline-flex rounded-lg bg-amber-700 px-3 py-2 text-xs font-medium text-white hover:bg-amber-800"
           >
-            {seeding ? "Creating..." : "Create default Haitian structure"}
-          </button>
-
-          {seedMessage ? <div className="mt-2 text-xs">{seedMessage}</div> : null}
+            Configure academic structure
+          </Link>
         </div>
       ) : null}
     </div>

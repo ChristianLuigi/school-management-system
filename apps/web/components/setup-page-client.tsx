@@ -127,54 +127,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
               displayOrder: 3,
             },
           ],
-          gradeLevels: [
-            {
-              schoolLevelCode: "PRIM",
-              code: "G1",
-              nameI18n: {
-                fr: "1ere annee",
-                en: "Grade 1",
-              },
-              displayOrder: 1,
-              sections: [
-                {
-                  code: "A",
-                  nameI18n: {
-                    fr: "Section A",
-                    en: "Section A",
-                  },
-                  displayOrder: 1,
-                },
-              ],
-            },
-            {
-              schoolLevelCode: "SEC",
-              code: "6EME",
-              nameI18n: {
-                fr: "6eme",
-                en: "Grade 6",
-              },
-              displayOrder: 1,
-              sections: [
-                {
-                  code: "A",
-                  nameI18n: {
-                    fr: "Section A",
-                    en: "Section A",
-                  },
-                  displayOrder: 1,
-                },
-                {
-                  code: "B",
-                  nameI18n: {
-                    fr: "Section B",
-                    en: "Section B",
-                  },
-                  displayOrder: 2,
-                },
-              ],
-            },
-          ],
+
         }),
       });
 
@@ -206,7 +159,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
         <div>
           <h1 className="text-3xl font-bold">School Setup Wizard</h1>
           <p className="mt-1 text-slate-600">
-            Initialize the academic structure for a newly onboarded school.
+            Set up the academic year. Academic structure can be configured afterward.
           </p>
         </div>
 
@@ -253,6 +206,12 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
                 <div className="mt-1 text-2xl font-bold">{status.counts.sections}</div>
               </div>
             </div>
+
+            {status.counts.gradeLevels === 0 || status.counts.sections === 0 ? (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                Academic structure not configured yet.
+              </div>
+            ) : null}
 
             <div className="mt-4">
               <span
