@@ -1,11 +1,11 @@
-import { FinanceInvoiceThermalClient } from "@/components/finance-invoice-thermal-client";
+import { StudentInvoiceThermalClient } from "@/components/student-invoice-thermal-client";
 import { SchoolPageShell } from "@/components/school-page-shell";
 import {
   getMeContext,
   resolveCurrentSchoolId,
 } from "@/lib/server-context";
 
-export default async function FinanceInvoiceThermalPage({
+export default async function StudentInvoiceThermalPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -17,7 +17,7 @@ export default async function FinanceInvoiceThermalPage({
 
   return (
     <SchoolPageShell allowedRoles={["SCHOOL_ADMIN", "FINANCE_ADMIN"]}>
-      <FinanceInvoiceThermalClient
+      <StudentInvoiceThermalClient
         schoolId={currentSchoolId}
         invoiceId={id}
       />
