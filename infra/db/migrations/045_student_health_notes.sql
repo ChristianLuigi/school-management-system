@@ -1,0 +1,8 @@
+ALTER TABLE students
+ADD COLUMN IF NOT EXISTS health_notes TEXT;
+
+ALTER TABLE students
+ADD COLUMN IF NOT EXISTS allergy_notes TEXT;
+
+ALTER TABLE students
+ADD COLUMN IF NOT EXISTS medical_notes TEXT;

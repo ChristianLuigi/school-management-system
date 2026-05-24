@@ -10,7 +10,7 @@ import {
   StudentDocumentRecord,
   StudentDocumentsPanelClient,
 } from "@/components/student-documents-panel-client";
-import { StudentEditPanelClient } from "@/components/student-edit-panel-client";
+import { StudentProfileEditPanelClient } from "@/components/student-profile-edit-panel-client";
 import { StudentSectionAssignmentPanelClient } from "@/components/student-section-assignment-panel-client";
 import { StudentGuardiansManagementPanelClient } from "@/components/student-guardians-management-panel-client";
 import { StudentGuardianRow } from "@/components/student-guardians-panel-client";
@@ -32,6 +32,13 @@ type StudentProfile = {
     photoUrl: string | null;
     previousSchoolName: string | null;
     previousSchoolAddress: string | null;
+    photoReceived: boolean;
+    birthCertificateReceived: boolean;
+    vaccinationCardReceived: boolean;
+    previousSchoolRecordReceived: boolean;
+    healthNotes: string | null;
+    allergyNotes: string | null;
+    medicalNotes: string | null;
     createdAt: string;
   };
   admissionSource: {
@@ -342,6 +349,47 @@ export function StudentProfileClient({
                 <div className="text-sm text-slate-500">Student Code</div>
                 <div className="mt-2 text-xl font-bold text-slate-900">
                   {profile.student.studentCode ?? "Code pending"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <StudentProfileEditPanelClient
+            schoolId={schoolId}
+            profile={profile}
+            onUpdated={loadProfile}
+          />
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-lg font-semibold text-slate-900">
+              Health / Medical
+            </h3>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <div className="text-sm font-medium text-slate-700">
+                  Health notes
+                </div>
+                <div className="mt-2 text-sm text-slate-600">
+                  {profile.student.healthNotes ?? "No health notes."}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <div className="text-sm font-medium text-slate-700">
+                  Allergies
+                </div>
+                <div className="mt-2 text-sm text-slate-600">
+                  {profile.student.allergyNotes ?? "No allergy notes."}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <div className="text-sm font-medium text-slate-700">
+                  Medical notes
+                </div>
+                <div className="mt-2 text-sm text-slate-600">
+                  {profile.student.medicalNotes ?? "No medical notes."}
                 </div>
               </div>
             </div>
@@ -706,6 +754,7 @@ export function StudentProfileClient({
               </div>
             </div>
           </div>
+
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <h3 className="text-lg font-semibold text-slate-900">
