@@ -64,12 +64,12 @@ function invoiceTone(status: string): BadgeTone {
 function invoiceLabel(status: string) {
   const labels: Record<string, string> = {
     DRAFT: "Brouillon",
-    ISSUED: "ÃƒÆ’Ã¢â‚¬Â°mise",
-    PARTIALLY_PAID: "Partiellement payÃƒÆ’Ã‚Â©e",
-    PAID: "PayÃƒÆ’Ã‚Â©e",
+    ISSUED: "ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°mise",
+    PARTIALLY_PAID: "Partiellement payÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e",
+    PAID: "PayÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e",
     OVERDUE: "En retard",
-    VOID: "AnnulÃƒÆ’Ã‚Â©e",
-    CANCELLED: "AnnulÃƒÆ’Ã‚Â©e",
+    VOID: "AnnulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e",
+    CANCELLED: "AnnulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e",
   };
 
   return labels[status] ?? status;
@@ -305,6 +305,21 @@ export function StudentFinanceSummaryPanelClient({
                       <span>
                         {money(invoice.balanceDue, invoice.currencyCode)}
                       </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/finance/invoices/${invoice.id}`}
+                        className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                      >
+                        Open Invoice
+                      </Link>
+
+                      <Link
+                        href={`/finance/invoices/${invoice.id}/thermal?autoprint=1`}
+                        className="inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                      >
+                        Print 80mm
+                      </Link>
                     </div>
                     {invoice.balanceDue > 0 &&
                     !["VOID", "CANCELLED"].includes(invoice.invoiceStatus) ? (

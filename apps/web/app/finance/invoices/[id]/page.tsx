@@ -1,4 +1,4 @@
-import { FinanceInvoiceDetailClient } from "@/components/finance-invoice-detail-client";
+import { StudentInvoicePrintClient } from "@/components/student-invoice-print-client";
 import { SchoolPageShell } from "@/components/school-page-shell";
 import { SchoolPageHeader } from "@/components/school-ui";
 import { getMeContext, resolveCurrentSchoolId } from "@/lib/server-context";
@@ -18,12 +18,12 @@ export default async function FinanceInvoiceDetailPage({
       <div className="space-y-6">
         <div className="print:hidden">
           <SchoolPageHeader
-            title="Invoice Detail"
-            description="Review, print, and manage an invoice."
+            title="Student Invoice"
+            description="Print or save the student invoice."
           />
         </div>
 
-        <FinanceInvoiceDetailClient schoolId={currentSchoolId} invoiceId={id} />
+        <StudentInvoicePrintClient schoolId={currentSchoolId} invoiceId={id} />
       </div>
     </SchoolPageShell>
   );

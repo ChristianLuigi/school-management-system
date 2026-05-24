@@ -35,6 +35,7 @@ type InvoiceDetails = {
     lastName: string | null;
   } | null;
   invoiceNumber: string | null;
+  invoiceTitle?: string | null;
   invoiceStatus: string;
   issueDate: string;
   dueDate: string | null;
@@ -55,6 +56,7 @@ type InvoiceDetails = {
   }>;
   payments: Array<{
     id: string;
+    paymentNumber?: string | null;
     paymentStatus: string;
     paymentDate: string;
     amount: number;
@@ -432,6 +434,7 @@ export function FinanceInvoiceDetailClient({
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-100 text-left text-slate-600 print:bg-white">
                   <tr>
+                    <th className="px-4 py-3">Payment</th>
                     <th className="px-4 py-3">Date</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Method</th>
@@ -444,6 +447,9 @@ export function FinanceInvoiceDetailClient({
                 <tbody>
                   {invoice.payments.map((payment) => (
                     <tr key={payment.id} className="border-t border-slate-200">
+                      <td className="px-4 py-3 font-medium">
+                        {payment.paymentNumber ?? payment.id.slice(0, 8)}
+                      </td>
                       <td className="px-4 py-3">{payment.paymentDate}</td>
                       <td className="px-4 py-3">
                         <SchoolBadge tone={statusTone(payment.paymentStatus)}>
@@ -476,7 +482,7 @@ export function FinanceInvoiceDetailClient({
                   {invoice.payments.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-4 py-8 text-center text-slate-500"
                       >
                         No payments recorded for this invoice.
