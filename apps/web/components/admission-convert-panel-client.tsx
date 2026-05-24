@@ -14,14 +14,32 @@ type AdmissionForConversion = {
     firstName: string | null;
     lastName: string | null;
   } | null;
+  candidate: {
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string | null;
+  };
   parent: {
     fullName: string | null;
+    phone?: string | null;
   };
   desiredSection: {
     id: string;
     code: string | null;
     nameI18n: Record<string, string> | null;
   } | null;
+  documents: {
+    photoReceived: boolean;
+    birthCertificateReceived: boolean;
+    vaccinationCardReceived: boolean;
+    previousSchoolRecordReceived: boolean;
+    parentIdDocumentReceived: boolean;
+    conductCertificateReceived: boolean;
+  };
+  registrationFee?: {
+    required: boolean;
+    status: string;
+  };
 };
 
 function i18nName(value: Record<string, string> | null | undefined, fallback: string) {
@@ -30,6 +48,46 @@ function i18nName(value: Record<string, string> | null | undefined, fallback: st
 
 function canConvert(status: string) {
   return ["ADMITTED", "CONDITIONALLY_ADMITTED", "CONFIRMED"].includes(status);
+}
+
+function getConversionChecks(
+  application: AdmissionForConversion,
+  sectionId: string,
+) {
+  return [
+    {
+      label: "Admission decision is positive",
+      ok: canConvert(application.admissionStatus),
+    },
+    {
+      label: "Student identity is completed",
+      ok:
+        Boolean(application.candidate.firstName) &&
+        Boolean(application.candidate.lastName),
+    },
+    {
+      label: "Date of birth is provided",
+      ok: Boolean(application.candidate.dateOfBirth),
+    },
+    {
+      label: "Parent/guardian is identified",
+      ok: Boolean(application.parent.fullName),
+    },
+    {
+      label: "Final class/section is selected",
+      ok: Boolean(sectionId),
+    },
+    {
+      label: "Registration fee is settled",
+      ok:
+        !application.registrationFee?.required ||
+        ["PAID", "WAIVED"].includes(application.registrationFee.status),
+    },
+  ];
+}
+
+function allChecksPassed(checks: Array<{ ok: boolean }>) {
+  return checks.every((check) => check.ok);
 }
 
 export function AdmissionConvertPanelClient({
@@ -56,14 +114,17 @@ export function AdmissionConvertPanelClient({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const conversionChecks = getConversionChecks(application, sectionId);
+  const readyToConvert = allChecksPassed(conversionChecks);
+
   async function convertApplication() {
     setSaving(true);
     setMessage("");
     setError("");
 
     try {
-      if (targetStudentStatus === "ACTIVE" && !sectionId) {
-        throw new Error("A section is required to create an active student.");
+      if (!readyToConvert) {
+        throw new Error("Complete the conversion readiness checklist first.");
       }
 
       const res = await fetch(`/api/admissions/${application.id}/convert`, {
@@ -170,6 +231,28 @@ export function AdmissionConvertPanelClient({
           </Link>
         </div>
       ) : null}
+
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="font-semibold text-slate-900">
+          Conversion readiness
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {conversionChecks.map((check) => (
+            <div
+              key={check.label}
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+            >
+              <span>{check.label}</span>
+
+              <SchoolBadge tone={check.ok ? "green" : "amber"}>
+                {check.ok ? "OK" : "Missing"}
+              </SchoolBadge>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {!canConvert(application.admissionStatus) ? (
         <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
           Application must be admitted, conditionally admitted, or confirmed before conversion.
@@ -285,11 +368,15 @@ export function AdmissionConvertPanelClient({
 
           <button
             type="button"
-            disabled={saving}
+            disabled={saving || !readyToConvert}
             onClick={convertApplication}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? "Converting..." : "Convert to Student"}
+            {saving
+              ? "Converting..."
+              : readyToConvert
+                ? "Convert to Student"
+                : "Complete dossier before conversion"}
           </button>
         </div>
       ) : null}
