@@ -11,6 +11,7 @@ import {
   StudentDocumentsPanelClient,
 } from "@/components/student-documents-panel-client";
 import { StudentEditPanelClient } from "@/components/student-edit-panel-client";
+import { StudentSectionAssignmentPanelClient } from "@/components/student-section-assignment-panel-client";
 import {
   StudentGuardianRow,
   StudentGuardiansPanelClient,
@@ -348,6 +349,12 @@ export function StudentProfileClient({
             </div>
           </div>
 
+          <StudentSectionAssignmentPanelClient
+            schoolId={schoolId}
+            studentId={profile.student.id}
+            currentSectionId={profile.currentEnrollment?.section.id ?? null}
+            onUpdated={loadProfile}
+          />
           {profile.admissionSource ? (
             <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
