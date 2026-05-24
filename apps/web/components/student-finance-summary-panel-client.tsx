@@ -64,12 +64,12 @@ function invoiceTone(status: string): BadgeTone {
 function invoiceLabel(status: string) {
   const labels: Record<string, string> = {
     DRAFT: "Brouillon",
-    ISSUED: "Émise",
-    PARTIALLY_PAID: "Partiellement payée",
-    PAID: "Payée",
+    ISSUED: "Ã‰mise",
+    PARTIALLY_PAID: "Partiellement payÃ©e",
+    PAID: "PayÃ©e",
     OVERDUE: "En retard",
-    VOID: "Annulée",
-    CANCELLED: "Annulée",
+    VOID: "AnnulÃ©e",
+    CANCELLED: "AnnulÃ©e",
   };
 
   return labels[status] ?? status;
@@ -96,6 +96,14 @@ export function StudentFinanceSummaryPanelClient({
   const [summary, setSummary] = useState<StudentFinanceSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [paymentInvoiceId, setPaymentInvoiceId] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("CASH");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [recordingPayment, setRecordingPayment] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState("");
+  const [paymentError, setPaymentError] = useState("");
 
   async function loadSummary() {
     setLoading(true);
@@ -122,6 +130,57 @@ export function StudentFinanceSummaryPanelClient({
       );
     } finally {
       setLoading(false);
+    }
+  }
+  async function recordPayment(invoice: StudentFinanceSummary["invoices"][number]) {
+    setRecordingPayment(true);
+    setPaymentMessage("");
+    setPaymentError("");
+
+    try {
+      const amount = Number(paymentAmount);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error("Payment amount must be greater than zero.");
+      }
+
+      const res = await fetch("/api/finance/payments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          schoolId,
+          studentId,
+          invoiceId: invoice.id,
+          amount,
+          currencyCode: invoice.currencyCode,
+          paymentMethod,
+          paymentReference,
+          notes: paymentNotes,
+        }),
+      });
+
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(body?.message ?? "Failed to record payment.");
+      }
+
+      setPaymentMessage(`Payment ${body.paymentNumber ?? ""} recorded successfully.`);
+      setPaymentInvoiceId("");
+      setPaymentAmount("");
+      setPaymentMethod("CASH");
+      setPaymentReference("");
+      setPaymentNotes("");
+
+      await loadSummary();
+    } catch (err) {
+      setPaymentError(
+        err instanceof Error ? err.message : "Failed to record payment.",
+      );
+    } finally {
+      setRecordingPayment(false);
     }
   }
 
@@ -247,6 +306,99 @@ export function StudentFinanceSummaryPanelClient({
                         {money(invoice.balanceDue, invoice.currencyCode)}
                       </span>
                     </div>
+                    {invoice.balanceDue > 0 &&
+                    !["VOID", "CANCELLED"].includes(invoice.invoiceStatus) ? (
+                      <div className="mt-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPaymentInvoiceId(
+                              paymentInvoiceId === invoice.id ? "" : invoice.id,
+                            );
+                            setPaymentAmount(String(invoice.balanceDue));
+                            setPaymentMethod("CASH");
+                            setPaymentReference("");
+                            setPaymentNotes("");
+                            setPaymentMessage("");
+                            setPaymentError("");
+                          }}
+                          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                        >
+                          {paymentInvoiceId === invoice.id
+                            ? "Close"
+                            : "Record Payment"}
+                        </button>
+
+                        {paymentInvoiceId === invoice.id ? (
+                          <div className="mt-3 space-y-3 rounded-xl border border-slate-200 bg-white p-3">
+                            {paymentMessage ? (
+                              <div className="rounded-lg bg-green-50 p-2 text-xs text-green-700">
+                                {paymentMessage}
+                              </div>
+                            ) : null}
+
+                            {paymentError ? (
+                              <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700">
+                                {paymentError}
+                              </div>
+                            ) : null}
+
+                            <div className="grid gap-2 md:grid-cols-2">
+                              <input
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                placeholder="Amount"
+                                value={paymentAmount}
+                                onChange={(event) =>
+                                  setPaymentAmount(event.target.value)
+                                }
+                              />
+
+                              <select
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                value={paymentMethod}
+                                onChange={(event) =>
+                                  setPaymentMethod(event.target.value)
+                                }
+                              >
+                                <option value="CASH">Cash</option>
+                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                                <option value="CHECK">Check</option>
+                                <option value="MOBILE_MONEY">Mobile Money</option>
+                                <option value="CARD">Card</option>
+                                <option value="OTHER">Other</option>
+                              </select>
+
+                              <input
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                                placeholder="Payment reference"
+                                value={paymentReference}
+                                onChange={(event) =>
+                                  setPaymentReference(event.target.value)
+                                }
+                              />
+                            </div>
+
+                            <textarea
+                              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                              placeholder="Payment notes"
+                              value={paymentNotes}
+                              onChange={(event) =>
+                                setPaymentNotes(event.target.value)
+                              }
+                            />
+
+                            <button
+                              type="button"
+                              disabled={recordingPayment}
+                              onClick={() => recordPayment(invoice)}
+                              className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {recordingPayment ? "Saving..." : "Save Payment"}
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                 ))}
 
