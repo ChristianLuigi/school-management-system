@@ -87,9 +87,11 @@ function paymentTone(status: string): BadgeTone {
 export function StudentFinanceSummaryPanelClient({
   schoolId,
   studentId,
+  refreshKey = 0,
 }: {
   schoolId: string;
   studentId: string;
+  refreshKey?: number;
 }) {
   const [summary, setSummary] = useState<StudentFinanceSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -126,7 +128,7 @@ export function StudentFinanceSummaryPanelClient({
   useEffect(() => {
     loadSummary();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolId, studentId]);
+  }, [schoolId, studentId, refreshKey]);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">

@@ -10,6 +10,7 @@ import {
   StudentDocumentRecord,
   StudentDocumentsPanelClient,
 } from "@/components/student-documents-panel-client";
+import { StudentCreateInvoicePanelClient } from "@/components/student-create-invoice-panel-client";
 import { StudentFinanceSummaryPanelClient } from "@/components/student-finance-summary-panel-client";
 import { StudentProfileEditPanelClient } from "@/components/student-profile-edit-panel-client";
 import { StudentStatusPanelClient } from "@/components/student-status-panel-client";
@@ -216,6 +217,7 @@ export function StudentProfileClient({
   studentId: string;
 }) {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [financeRefreshKey, setFinanceRefreshKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -726,9 +728,19 @@ export function StudentProfileClient({
             onUpdated={loadProfile}
           />
 
+          <StudentCreateInvoicePanelClient
+            schoolId={schoolId}
+            studentId={profile.student.id}
+            onCreated={() => {
+              setFinanceRefreshKey((value) => value + 1);
+              loadProfile();
+            }}
+          />
+
           <StudentFinanceSummaryPanelClient
             schoolId={schoolId}
             studentId={profile.student.id}
+            refreshKey={financeRefreshKey}
           />
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
