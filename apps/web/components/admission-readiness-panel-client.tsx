@@ -3,6 +3,9 @@
 import { SchoolBadge } from "@/components/school-ui";
 
 type AdmissionReadinessInput = {
+  desiredSection?: {
+    id: string;
+  } | null;
   candidate: {
     firstName: string;
     lastName: string;
@@ -32,6 +35,10 @@ export function AdmissionReadinessPanelClient({
   application: AdmissionReadinessInput;
 }) {
   const checks = [
+    {
+      label: "Desired class / section selected",
+      ok: Boolean(application.desiredSection?.id),
+    },
     {
       label: "Student identity completed",
       ok:

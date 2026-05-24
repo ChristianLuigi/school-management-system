@@ -129,8 +129,55 @@ export function AdmissionsClient({
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [structureReady, setStructureReady] = useState(false);
+  const [structureLoading, setStructureLoading] = useState(false);
+  const [structureMessage, setStructureMessage] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  async function loadAcademicStructureStatus() {
+    setStructureLoading(true);
+    setStructureMessage("");
+
+    try {
+      const params = new URLSearchParams({ schoolId });
+
+      const res = await fetch(`/api/academic/structure?${params.toString()}`, {
+        cache: "no-store",
+      });
+
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(body?.message ?? "Failed to load academic structure.");
+      }
+
+      const totalSections = Array.isArray(body)
+        ? body.reduce(
+            (total: number, level: { sections?: unknown[] }) =>
+              total + (level.sections?.length ?? 0),
+            0,
+          )
+        : 0;
+
+      setStructureReady(totalSections > 0);
+
+      if (totalSections === 0) {
+        setStructureMessage(
+          "Academic structure is not configured yet. Please configure classes and sections before creating admissions.",
+        );
+      }
+    } catch (err) {
+      setStructureReady(false);
+      setStructureMessage(
+        err instanceof Error
+          ? err.message
+          : "Failed to verify academic structure.",
+      );
+    } finally {
+      setStructureLoading(false);
+    }
+  }
 
   async function loadApplications() {
     setLoading(true);
@@ -173,6 +220,10 @@ export function AdmissionsClient({
     try {
       if (!firstName.trim() || !lastName.trim()) {
         throw new Error("First name and last name are required.");
+      }
+
+      if (!desiredSectionId) {
+        throw new Error("Desired class / section is required.");
       }
 
       const res = await fetch("/api/admissions", {
@@ -252,6 +303,7 @@ export function AdmissionsClient({
   }
 
   useEffect(() => {
+    loadAcademicStructureStatus();
     loadApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
@@ -272,10 +324,15 @@ export function AdmissionsClient({
           {canCreate ? (
             <button
               type="button"
+              disabled={!structureReady || structureLoading}
               onClick={() => setOpenCreate((value) => !value)}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {openCreate ? "Close" : "New Admission"}
+              {structureLoading
+                ? "Checking structure..."
+                : openCreate
+                  ? "Close"
+                  : "New Admission"}
             </button>
           ) : null}
         </div>
@@ -289,6 +346,20 @@ export function AdmissionsClient({
         {error ? (
           <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {error}
+          </div>
+        ) : null}
+
+        {!structureReady && structureMessage ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <div className="font-semibold">Academic structure required</div>
+            <div className="mt-1">{structureMessage}</div>
+
+            <a
+              href="/academic-structure"
+              className="mt-3 inline-flex rounded-lg bg-amber-700 px-3 py-2 text-xs font-medium text-white hover:bg-amber-800"
+            >
+              Configure academic structure
+            </a>
           </div>
         ) : null}
 
@@ -367,7 +438,7 @@ export function AdmissionsClient({
                     schoolId={schoolId}
                     sectionId={desiredSectionId}
                     onSectionIdChange={setDesiredSectionId}
-                    label="Classe / niveau souhaite"
+                    label="Classe / niveau souhaité"
                     allowEmpty
                   />
                 </div>
