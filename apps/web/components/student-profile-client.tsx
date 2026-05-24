@@ -11,6 +11,7 @@ import {
   StudentDocumentsPanelClient,
 } from "@/components/student-documents-panel-client";
 import { StudentProfileEditPanelClient } from "@/components/student-profile-edit-panel-client";
+import { StudentStatusPanelClient } from "@/components/student-status-panel-client";
 import { StudentSectionAssignmentPanelClient } from "@/components/student-section-assignment-panel-client";
 import { StudentGuardiansManagementPanelClient } from "@/components/student-guardians-management-panel-client";
 import { StudentGuardianRow } from "@/components/student-guardians-panel-client";
@@ -82,6 +83,14 @@ type StudentProfile = {
     updatedAt: string | null;
     endedAt: string | null;
   }>;
+  statusHistory: Array<{
+    id: string;
+    previousStatus: string | null;
+    newStatus: string;
+    reason: string | null;
+    changedByUserId: string | null;
+    changedAt: string;
+  }>;
   documents: {
     photoReceived: boolean;
     birthCertificateReceived: boolean;
@@ -151,22 +160,26 @@ function statusTone(status: string): BadgeTone {
 
 function studentStatusLabel(status: string | null) {
   const labels: Record<string, string> = {
-    PRE_REGISTERED: "Pre-registered",
-    REGISTERED: "Registered",
-    ACTIVE: "Active",
-    INACTIVE: "Inactive",
-    TRANSFERRED: "Transferred",
-    GRADUATED: "Graduated",
-    WITHDRAWN: "Withdrawn",
+    PRE_REGISTERED: "Préinscrit",
+    REGISTERED: "Inscrit",
+    ACTIVE: "Actif",
+    SUSPENDED: "Suspendu",
+    WITHDRAWN: "Retiré",
+    TRANSFERRED: "Transféré",
+    GRADUATED: "Diplômé",
+    ARCHIVED: "Archivé",
   };
 
   return status ? labels[status] ?? status : "Status pending";
 }
 
 function studentStatusTone(status: string | null): BadgeTone {
-  if (status === "ACTIVE") return "green";
+  if (status === "ACTIVE" || status === "GRADUATED") return "green";
   if (status === "REGISTERED" || status === "PRE_REGISTERED") return "blue";
-  if (status === "INACTIVE" || status === "WITHDRAWN") return "amber";
+  if (status === "SUSPENDED") return "amber";
+  if (status && ["WITHDRAWN", "TRANSFERRED", "ARCHIVED"].includes(status)) {
+    return "red";
+  }
   return "neutral";
 }
 
@@ -507,6 +520,15 @@ export function StudentProfileClient({
               ) : null}
             </div>
           </div>
+
+          <StudentStatusPanelClient
+            schoolId={schoolId}
+            studentId={profile.student.id}
+            currentStatus={profile.student.studentStatus ?? "PRE_REGISTERED"}
+            hasCurrentEnrollment={Boolean(profile.currentEnrollment)}
+            statusHistory={profile.statusHistory}
+            onUpdated={loadProfile}
+          />
 
           {profile.admissionSource ? (
             <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
