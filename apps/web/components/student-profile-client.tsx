@@ -10,6 +10,7 @@ import {
   StudentDocumentRecord,
   StudentDocumentsPanelClient,
 } from "@/components/student-documents-panel-client";
+import { StudentFinanceSummaryPanelClient } from "@/components/student-finance-summary-panel-client";
 import { StudentProfileEditPanelClient } from "@/components/student-profile-edit-panel-client";
 import { StudentStatusPanelClient } from "@/components/student-status-panel-client";
 import { StudentSectionAssignmentPanelClient } from "@/components/student-section-assignment-panel-client";
@@ -141,21 +142,6 @@ function i18nName(
   fallback: string,
 ) {
   return value?.fr ?? value?.en ?? fallback;
-}
-
-function money(value: number, currency = "USD") {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(value);
-}
-
-function statusTone(status: string): BadgeTone {
-  if (status === "PAID" || status === "CONFIRMED") return "green";
-  if (status === "OVERDUE") return "red";
-  if (status === "PARTIALLY_PAID") return "amber";
-  if (status === "VOID" || status === "CANCELLED") return "neutral";
-  return "blue";
 }
 
 function studentStatusLabel(status: string | null) {
@@ -740,43 +726,10 @@ export function StudentProfileClient({
             onUpdated={loadProfile}
           />
 
-          <div className="grid gap-4 md:grid-cols-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Invoices</div>
-              <div className="mt-2 text-2xl font-bold">
-                {profile.finance.invoiceCount}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-              <div className="text-sm text-red-700">Overdue</div>
-              <div className="mt-2 text-2xl font-bold text-red-900">
-                {profile.finance.overdueCount}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Billed</div>
-              <div className="mt-2 text-2xl font-bold">
-                {money(profile.finance.totalBilled)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-              <div className="text-sm text-green-700">Paid</div>
-              <div className="mt-2 text-2xl font-bold text-green-900">
-                {money(profile.finance.totalPaid)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <div className="text-sm text-amber-700">Outstanding</div>
-              <div className="mt-2 text-2xl font-bold text-amber-900">
-                {money(profile.finance.totalOutstanding)}
-              </div>
-            </div>
-          </div>
-
+          <StudentFinanceSummaryPanelClient
+            schoolId={schoolId}
+            studentId={profile.student.id}
+          />
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <h3 className="text-lg font-semibold text-slate-900">
@@ -784,20 +737,6 @@ export function StudentProfileClient({
             </h3>
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href={`/finance/students/${profile.student.id}/statement`}
-                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-              >
-                Print Finance Statement
-              </Link>
-
-              <Link
-                href="/finance"
-                className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-              >
-                Open Finance
-              </Link>
-
               <Link
                 href="/attendance"
                 className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
@@ -811,94 +750,6 @@ export function StudentProfileClient({
               >
                 Open Gradebooks
               </Link>
-            </div>
-          </div>
-
-          <div className="grid gap-6 xl:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-lg font-semibold text-slate-900">
-                Recent Invoices
-              </h3>
-
-              <div className="mt-4 space-y-3">
-                {profile.recentInvoices.map((invoice) => (
-                  <div
-                    key={invoice.id}
-                    className="rounded-xl border border-slate-200 p-3"
-                  >
-                    <div className="flex flex-wrap justify-between gap-2">
-                      <Link
-                        href={`/finance/invoices/${invoice.id}`}
-                        className="font-medium text-slate-900 underline-offset-4 hover:underline"
-                      >
-                        {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
-                      </Link>
-
-                      <SchoolBadge tone={statusTone(invoice.invoiceStatus)}>
-                        {invoice.invoiceStatus}
-                      </SchoolBadge>
-                    </div>
-
-                    <div className="mt-2 grid gap-2 text-sm text-slate-600 md:grid-cols-3">
-                      <div>
-                        Total: {money(invoice.totalAmount, invoice.currencyCode)}
-                      </div>
-                      <div>
-                        Paid: {money(invoice.amountPaid, invoice.currencyCode)}
-                      </div>
-                      <div>
-                        Balance: {money(invoice.balanceDue, invoice.currencyCode)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {profile.recentInvoices.length === 0 ? (
-                  <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
-                    No invoices found for this student.
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-lg font-semibold text-slate-900">
-                Recent Payments
-              </h3>
-
-              <div className="mt-4 space-y-3">
-                {profile.recentPayments.map((payment) => (
-                  <div
-                    key={payment.id}
-                    className="rounded-xl border border-slate-200 p-3"
-                  >
-                    <div className="flex flex-wrap justify-between gap-2">
-                      <Link
-                        href={`/finance/payments/${payment.id}/receipt`}
-                        className="font-medium text-slate-900 underline-offset-4 hover:underline"
-                      >
-                        {payment.receiptNumber ?? payment.id.slice(0, 8)}
-                      </Link>
-
-                      <SchoolBadge tone={statusTone(payment.paymentStatus)}>
-                        {payment.paymentStatus}
-                      </SchoolBadge>
-                    </div>
-
-                    <div className="mt-2 text-sm text-slate-600">
-                      {payment.paymentDate} - {money(payment.amount)}
-                      {payment.method ? ` - ${payment.method}` : ""}
-                      {payment.reference ? ` - Ref: ${payment.reference}` : ""}
-                    </div>
-                  </div>
-                ))}
-
-                {profile.recentPayments.length === 0 ? (
-                  <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
-                    No payments found for this student.
-                  </div>
-                ) : null}
-              </div>
             </div>
           </div>
         </>
