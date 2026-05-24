@@ -26,6 +26,7 @@ type StudentProfile = {
     studentCode: string | null;
     firstName: string | null;
     lastName: string | null;
+    studentStatus: string | null;
     gender: string | null;
     dateOfBirth: string | null;
     placeOfBirth: string | null;
@@ -43,12 +44,20 @@ type StudentProfile = {
     createdAt: string;
   } | null;
   currentEnrollment: {
-    sectionId: string | null;
-    sectionCode: string | null;
-    sectionNameI18n: Record<string, string> | null;
-    gradeLevelCode: string | null;
-    gradeLevelNameI18n: Record<string, string> | null;
-  };
+    enrollmentId: string;
+    enrollmentStatus: string;
+    section: {
+      id: string;
+      code: string | null;
+      nameI18n: Record<string, string> | null;
+    };
+    gradeLevel: {
+      id: string;
+      code: string | null;
+      nameI18n: Record<string, string> | null;
+      academicDivision: string | null;
+    };
+  } | null;
   documents: {
     photoReceived: boolean;
     birthCertificateReceived: boolean;
@@ -116,6 +125,27 @@ function statusTone(status: string): BadgeTone {
   return "blue";
 }
 
+function studentStatusLabel(status: string | null) {
+  const labels: Record<string, string> = {
+    PRE_REGISTERED: "Pre-registered",
+    REGISTERED: "Registered",
+    ACTIVE: "Active",
+    INACTIVE: "Inactive",
+    TRANSFERRED: "Transferred",
+    GRADUATED: "Graduated",
+    WITHDRAWN: "Withdrawn",
+  };
+
+  return status ? labels[status] ?? status : "Status pending";
+}
+
+function studentStatusTone(status: string | null): BadgeTone {
+  if (status === "ACTIVE") return "green";
+  if (status === "REGISTERED" || status === "PRE_REGISTERED") return "blue";
+  if (status === "INACTIVE" || status === "WITHDRAWN") return "amber";
+  return "neutral";
+}
+
 function studentName(profile: StudentProfile) {
   const name = `${profile.student.firstName ?? ""} ${
     profile.student.lastName ?? ""
@@ -123,19 +153,24 @@ function studentName(profile: StudentProfile) {
   return name || profile.student.studentCode || "Student";
 }
 
-function classLabel(profile: StudentProfile) {
+function currentEnrollmentLabel(profile: StudentProfile) {
+  if (!profile.currentEnrollment) return "No class assigned";
+
   const grade = i18nName(
-    profile.currentEnrollment.gradeLevelNameI18n,
-    profile.currentEnrollment.gradeLevelCode ?? "",
+    profile.currentEnrollment.gradeLevel.nameI18n,
+    profile.currentEnrollment.gradeLevel.code ?? "",
   );
 
   const section = i18nName(
-    profile.currentEnrollment.sectionNameI18n,
-    profile.currentEnrollment.sectionCode ?? "",
+    profile.currentEnrollment.section.nameI18n,
+    profile.currentEnrollment.section.code ?? "",
   );
 
-  const value = [grade, section].filter(Boolean).join(" - ");
-  return value || "No active class";
+  if (section.toLowerCase().includes(grade.toLowerCase())) {
+    return section;
+  }
+
+  return [grade, section].filter(Boolean).join(" - ") || "No class assigned";
 }
 
 export function StudentProfileClient({
@@ -254,14 +289,16 @@ export function StudentProfileClient({
                 </div>
               </div>
 
-              <SchoolBadge tone="green">Active</SchoolBadge>
+              <SchoolBadge tone={studentStatusTone(profile.student.studentStatus)}>
+                {studentStatusLabel(profile.student.studentStatus)}
+              </SchoolBadge>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-sm text-slate-500">Current Class</div>
                 <div className="mt-2 text-xl font-bold text-slate-900">
-                  {classLabel(profile)}
+                  {currentEnrollmentLabel(profile)}
                 </div>
               </div>
 
@@ -281,6 +318,35 @@ export function StudentProfileClient({
             </div>
           </div>
 
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Current Class / Section
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-600">
+                  Active academic placement for this student.
+                </p>
+
+                <div className="mt-4 text-2xl font-bold text-slate-900">
+                  {currentEnrollmentLabel(profile)}
+                </div>
+
+                {profile.currentEnrollment?.gradeLevel.academicDivision ? (
+                  <div className="mt-1 text-sm text-slate-500">
+                    {profile.currentEnrollment.gradeLevel.academicDivision}
+                  </div>
+                ) : null}
+              </div>
+
+              {profile.currentEnrollment ? (
+                <SchoolBadge tone="green">Assigned</SchoolBadge>
+              ) : (
+                <SchoolBadge tone="amber">Not assigned</SchoolBadge>
+              )}
+            </div>
+          </div>
 
           {profile.admissionSource ? (
             <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">

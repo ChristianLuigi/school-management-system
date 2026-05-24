@@ -5,15 +5,31 @@ import Link from "next/link";
 import { SectionSelectorClient } from "@/components/section-selector-client";
 import { SchoolBadge } from "@/components/school-ui";
 
+type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
+
 type StudentRow = {
   id: string;
   studentCode: string | null;
+  studentStatus: string | null;
   firstName: string | null;
   lastName: string | null;
   gradeLevelCode: string | null;
   gradeLevelNameI18n: Record<string, string> | null;
   sectionCode: string | null;
   sectionNameI18n: Record<string, string> | null;
+  currentEnrollment: {
+    section: {
+      id: string;
+      code: string | null;
+      nameI18n: Record<string, string> | null;
+    };
+    gradeLevel: {
+      id: string | null;
+      code: string | null;
+      nameI18n: Record<string, string> | null;
+      academicDivision: string | null;
+    };
+  } | null;
   createdAt: string;
 };
 
@@ -24,16 +40,45 @@ function i18nName(
   return value?.fr ?? value?.en ?? fallback;
 }
 
-function classLabel(student: StudentRow) {
+function currentClassLabel(student: StudentRow) {
+  if (!student.currentEnrollment) return "No class assigned";
+
   const grade = i18nName(
-    student.gradeLevelNameI18n,
-    student.gradeLevelCode ?? "",
+    student.currentEnrollment.gradeLevel.nameI18n,
+    student.currentEnrollment.gradeLevel.code ?? "",
   );
 
-  const section = i18nName(student.sectionNameI18n, student.sectionCode ?? "");
-  const value = [grade, section].filter(Boolean).join(" - ");
+  const section = i18nName(
+    student.currentEnrollment.section.nameI18n,
+    student.currentEnrollment.section.code ?? "",
+  );
 
-  return value || "No active class";
+  if (section.toLowerCase().includes(grade.toLowerCase())) {
+    return section;
+  }
+
+  return [grade, section].filter(Boolean).join(" - ") || "No class assigned";
+}
+
+function studentStatusLabel(status: string | null) {
+  const labels: Record<string, string> = {
+    PRE_REGISTERED: "Pre-registered",
+    REGISTERED: "Registered",
+    ACTIVE: "Active",
+    INACTIVE: "Inactive",
+    TRANSFERRED: "Transferred",
+    GRADUATED: "Graduated",
+    WITHDRAWN: "Withdrawn",
+  };
+
+  return status ? labels[status] ?? status : "Status pending";
+}
+
+function studentStatusTone(status: string | null): BadgeTone {
+  if (status === "ACTIVE") return "green";
+  if (status === "REGISTERED" || status === "PRE_REGISTERED") return "blue";
+  if (status === "INACTIVE" || status === "WITHDRAWN") return "amber";
+  return "neutral";
 }
 
 function studentName(student: StudentRow) {
@@ -266,7 +311,7 @@ export function StudentsManagementClient({
               <tr>
                 <th className="px-4 py-3">Student</th>
                 <th className="px-4 py-3">Code</th>
-                <th className="px-4 py-3">Class</th>
+                <th className="px-4 py-3">Class / Section</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
@@ -285,10 +330,22 @@ export function StudentsManagementClient({
                     {student.studentCode ?? "Code pending"}
                   </td>
 
-                  <td className="px-4 py-3">{classLabel(student)}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-slate-900">
+                      {currentClassLabel(student)}
+                    </div>
+
+                    {student.currentEnrollment?.gradeLevel.academicDivision ? (
+                      <div className="text-xs text-slate-500">
+                        {student.currentEnrollment.gradeLevel.academicDivision}
+                      </div>
+                    ) : null}
+                  </td>
 
                   <td className="px-4 py-3">
-                    <SchoolBadge tone="green">Active</SchoolBadge>
+                    <SchoolBadge tone={studentStatusTone(student.studentStatus)}>
+                      {studentStatusLabel(student.studentStatus)}
+                    </SchoolBadge>
                   </td>
 
                   <td className="px-4 py-3">
