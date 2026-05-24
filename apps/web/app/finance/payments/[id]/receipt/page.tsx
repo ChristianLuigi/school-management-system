@@ -1,4 +1,4 @@
-import { FinancePaymentReceiptClient } from "@/components/finance-payment-receipt-client";
+import { StudentPaymentReceiptClient } from "@/components/student-payment-receipt-client";
 import { SchoolPageShell } from "@/components/school-page-shell";
 import { SchoolPageHeader } from "@/components/school-ui";
 import {
@@ -26,7 +26,7 @@ export default async function FinancePaymentReceiptPage({
           />
         </div>
 
-        <FinancePaymentReceiptClient
+        <StudentPaymentReceiptClient
           schoolId={currentSchoolId}
           paymentId={id}
         />

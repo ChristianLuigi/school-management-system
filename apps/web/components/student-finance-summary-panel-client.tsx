@@ -64,12 +64,12 @@ function invoiceTone(status: string): BadgeTone {
 function invoiceLabel(status: string) {
   const labels: Record<string, string> = {
     DRAFT: "Brouillon",
-    ISSUED: "Ã‰mise",
-    PARTIALLY_PAID: "Partiellement payÃ©e",
-    PAID: "PayÃ©e",
+    ISSUED: "Ãƒâ€°mise",
+    PARTIALLY_PAID: "Partiellement payÃƒÂ©e",
+    PAID: "PayÃƒÂ©e",
     OVERDUE: "En retard",
-    VOID: "AnnulÃ©e",
-    CANCELLED: "AnnulÃ©e",
+    VOID: "AnnulÃƒÂ©e",
+    CANCELLED: "AnnulÃƒÂ©e",
   };
 
   return labels[status] ?? status;
@@ -452,6 +452,13 @@ export function StudentFinanceSummaryPanelClient({
                         ? ` - Ref: ${payment.paymentReference}`
                         : ""}
                     </div>
+
+                    <Link
+                      href={`/finance/payments/${payment.id}/receipt`}
+                      className="mt-3 inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                    >
+                      Open Receipt
+                    </Link>
                   </div>
                 ))}
 
