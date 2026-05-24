@@ -64,12 +64,12 @@ function invoiceTone(status: string): BadgeTone {
 function invoiceLabel(status: string) {
   const labels: Record<string, string> = {
     DRAFT: "Brouillon",
-    ISSUED: "Ãƒâ€°mise",
-    PARTIALLY_PAID: "Partiellement payÃƒÂ©e",
-    PAID: "PayÃƒÂ©e",
+    ISSUED: "ÃƒÆ’Ã¢â‚¬Â°mise",
+    PARTIALLY_PAID: "Partiellement payÃƒÆ’Ã‚Â©e",
+    PAID: "PayÃƒÆ’Ã‚Â©e",
     OVERDUE: "En retard",
-    VOID: "AnnulÃƒÂ©e",
-    CANCELLED: "AnnulÃƒÂ©e",
+    VOID: "AnnulÃƒÆ’Ã‚Â©e",
+    CANCELLED: "AnnulÃƒÆ’Ã‚Â©e",
   };
 
   return labels[status] ?? status;
@@ -458,6 +458,13 @@ export function StudentFinanceSummaryPanelClient({
                       className="mt-3 inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
                     >
                       Open Receipt
+                    </Link>
+
+                    <Link
+                      href={`/finance/payments/${payment.id}/receipt/thermal?autoprint=1`}
+                      className="mt-3 ml-2 inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                    >
+                      Print 80mm
                     </Link>
                   </div>
                 ))}
