@@ -65,10 +65,12 @@ function studentStatusLabel(status: string | null) {
     PRE_REGISTERED: "Pre-registered",
     REGISTERED: "Registered",
     ACTIVE: "Active",
+    SUSPENDED: "Suspended",
     INACTIVE: "Inactive",
     TRANSFERRED: "Transferred",
     GRADUATED: "Graduated",
     WITHDRAWN: "Withdrawn",
+    ARCHIVED: "Archived",
   };
 
   return status ? labels[status] ?? status : "Status pending";
@@ -77,7 +79,9 @@ function studentStatusLabel(status: string | null) {
 function studentStatusTone(status: string | null): BadgeTone {
   if (status === "ACTIVE") return "green";
   if (status === "REGISTERED" || status === "PRE_REGISTERED") return "blue";
-  if (status === "INACTIVE" || status === "WITHDRAWN") return "amber";
+  if (status === "INACTIVE" || status === "WITHDRAWN" || status === "SUSPENDED") {
+    return "amber";
+  }
   return "neutral";
 }
 
@@ -95,6 +99,8 @@ export function StudentsManagementClient({
 }) {
   const [rows, setRows] = useState<StudentRow[]>([]);
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [filterSectionId, setFilterSectionId] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -114,6 +120,14 @@ export function StudentsManagementClient({
 
       if (search.trim()) {
         params.set("search", search.trim());
+      }
+
+      if (status) {
+        params.set("status", status);
+      }
+
+      if (filterSectionId) {
+        params.set("sectionId", filterSectionId);
       }
 
       const res = await fetch(`/api/school-students?${params.toString()}`, {
@@ -184,7 +198,7 @@ export function StudentsManagementClient({
   useEffect(() => {
     loadStudents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolId]);
+  }, [schoolId, status, filterSectionId]);
 
   return (
     <div className="space-y-6">
@@ -288,7 +302,7 @@ export function StudentsManagementClient({
           </button>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-3">
+        <div className="mb-4 flex flex-wrap items-end gap-3">
           <input
             className="min-w-[280px] rounded-xl border border-slate-300 px-3 py-2 text-sm"
             placeholder="Search students..."
@@ -296,12 +310,50 @@ export function StudentsManagementClient({
             onChange={(event) => setSearch(event.target.value)}
           />
 
+          <select
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+          >
+            <option value="">All statuses</option>
+            <option value="PRE_REGISTERED">Pre-registered</option>
+            <option value="REGISTERED">Registered</option>
+            <option value="ACTIVE">Active</option>
+            <option value="SUSPENDED">Suspended</option>
+            <option value="WITHDRAWN">Withdrawn</option>
+            <option value="TRANSFERRED">Transferred</option>
+            <option value="GRADUATED">Graduated</option>
+            <option value="ARCHIVED">Archived</option>
+          </select>
+
+          <div className="min-w-[280px]">
+            <SectionSelectorClient
+              schoolId={schoolId}
+              sectionId={filterSectionId}
+              onSectionIdChange={setFilterSectionId}
+              label="Filter by class / section"
+              allowEmpty
+            />
+          </div>
+
           <button
             type="button"
             onClick={loadStudents}
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
             Search
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSearch("");
+              setStatus("");
+              setFilterSectionId("");
+            }}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Clear filters
           </button>
         </div>
 
