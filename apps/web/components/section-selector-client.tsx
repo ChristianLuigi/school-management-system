@@ -14,12 +14,10 @@ type SectionOption = {
   sectionDisplayOrder?: number;
 };
 
-type AcademicOptions = {
-  schoolId: string;
-  sections: SectionOption[];
-};
-
-function i18nName(value: Record<string, string> | null | undefined, fallback: string) {
+function i18nName(
+  value: Record<string, string> | null | undefined,
+  fallback: string,
+) {
   return value?.fr ?? value?.en ?? fallback;
 }
 
@@ -41,7 +39,7 @@ function sectionLabel(section: SectionOption) {
 
   const sectionName = i18nName(section.nameI18n, section.code);
 
-  if (grade && sectionName.includes(grade)) {
+  if (grade && sectionName.toLowerCase().includes(grade.toLowerCase())) {
     return sectionName;
   }
 
@@ -68,7 +66,20 @@ function groupSections(sections: SectionOption[]) {
     .map((key) => ({
       key,
       label: divisionLabel(key === "OTHER" ? null : key),
-      sections: groups[key],
+      sections: groups[key].sort((a, b) => {
+        const gradeOrder =
+          (a.gradeLevelDisplayOrder ?? 9999) -
+          (b.gradeLevelDisplayOrder ?? 9999);
+
+        if (gradeOrder !== 0) return gradeOrder;
+
+        const sectionOrder =
+          (a.sectionDisplayOrder ?? 9999) - (b.sectionDisplayOrder ?? 9999);
+
+        if (sectionOrder !== 0) return sectionOrder;
+
+        return a.code.localeCompare(b.code);
+      }),
     }));
 }
 
@@ -76,7 +87,7 @@ export function SectionSelectorClient({
   schoolId,
   sectionId,
   onSectionIdChange,
-  label = "Section",
+  label = "Classe / section",
   allowEmpty = false,
 }: {
   schoolId: string;
@@ -96,28 +107,23 @@ export function SectionSelectorClient({
     try {
       const params = new URLSearchParams({ schoolId });
 
-      const res = await fetch(`/api/report-cards/options?${params.toString()}`, {
+      const res = await fetch(`/api/academic/section-options?${params}`, {
         cache: "no-store",
       });
 
-      const body: AcademicOptions | { message?: string } = await res
-        .json()
-        .catch(() => ({}));
+      const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(
-          "message" in body ? body.message : "Failed to load sections.",
-        );
+        throw new Error(body?.message ?? "Failed to load sections.");
       }
 
-      setSections((body as AcademicOptions).sections ?? []);
+      setSections(body);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load sections.");
     } finally {
       setLoading(false);
     }
   }
-
 
   useEffect(() => {
     loadSections();
@@ -126,41 +132,40 @@ export function SectionSelectorClient({
 
   return (
     <div>
-      <label className="block">
-        <span className="text-sm font-medium text-slate-700">{label}</span>
-
-        <select
-          className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-          value={sectionId}
-          onChange={(event) => onSectionIdChange(event.target.value)}
-        >
-          {allowEmpty ? <option value="">No section selected</option> : null}
-
-          {!allowEmpty ? <option value="">Select section</option> : null}
-
-          {groupSections(sections).map((group) => (
-            <optgroup key={group.key} label={group.label}>
-              {group.sections.map((section) => (
-                <option key={section.id} value={section.id}>
-                  {sectionLabel(section)}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+      <label className="block text-sm font-medium text-slate-700">
+        {label}
       </label>
+
+      <select
+        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+        value={sectionId}
+        onChange={(event) => onSectionIdChange(event.target.value)}
+        disabled={loading || sections.length === 0}
+      >
+        {allowEmpty ? <option value="">No section selected</option> : null}
+
+        {groupSections(sections).map((group) => (
+          <optgroup key={group.key} label={group.label}>
+            {group.sections.map((section) => (
+              <option key={section.id} value={section.id}>
+                {sectionLabel(section)}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
 
       {loading ? (
         <div className="mt-2 text-xs text-slate-500">Loading sections...</div>
       ) : null}
 
       {error ? (
-        <div className="mt-2 rounded-xl border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+        <div className="mt-2 rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700">
           {error}
         </div>
       ) : null}
 
-      {sections.length === 0 && !loading ? (
+      {!loading && sections.length === 0 ? (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           <div>
             No class/section found for this school. Configure the academic
@@ -178,3 +183,4 @@ export function SectionSelectorClient({
     </div>
   );
 }
+

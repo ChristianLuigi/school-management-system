@@ -17,14 +17,16 @@ type SectionOption = {
   gradeLevelCode: string | null;
   gradeLevelNameI18n: Record<string, string> | null;
   academicDivision: "KINDERGARTEN" | "PRIMARY" | "SECONDARY" | null;
+  gradeLevelDisplayOrder?: number;
+  sectionDisplayOrder?: number;
+  capacity?: number | null;
+  roomLabel?: string | null;
 };
 
-type AcademicOptions = {
-  sections: SectionOption[];
-  message?: string;
-};
-
-function i18nName(value: Record<string, string> | null | undefined, fallback: string) {
+function i18nName(
+  value: Record<string, string> | null | undefined,
+  fallback: string,
+) {
   return value?.fr ?? value?.en ?? fallback;
 }
 
@@ -46,6 +48,14 @@ function sortGradeLevels(items: GradeLevel[]) {
   );
 }
 
+function sortSections(items: SectionOption[]) {
+  return [...items].sort(
+    (a, b) =>
+      (a.sectionDisplayOrder ?? 9999) - (b.sectionDisplayOrder ?? 9999) ||
+      a.code.localeCompare(b.code),
+  );
+}
+
 export function AcademicStructureClient({
   schoolId,
   initialGradeLevels,
@@ -60,7 +70,11 @@ export function AcademicStructureClient({
   const [includeKindergarten, setIncludeKindergarten] = useState(true);
   const [includePrimary, setIncludePrimary] = useState(true);
   const [includeSecondary, setIncludeSecondary] = useState(false);
+  const [configureGradeLevelId, setConfigureGradeLevelId] = useState("");
+  const [numberOfSections, setNumberOfSections] = useState("1");
+  const [defaultCapacity, setDefaultCapacity] = useState("");
   const [seeding, setSeeding] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -69,15 +83,14 @@ export function AcademicStructureClient({
       fetch(`/api/proxy/academic/grade-levels?schoolId=${schoolId}`, {
         cache: "no-store",
       }),
-      fetch(`/api/report-cards/options?schoolId=${schoolId}`, {
+      fetch(`/api/academic/section-options?schoolId=${schoolId}`, {
         cache: "no-store",
       }),
     ]);
 
     const gradeLevelBody = await gradeLevelRes.json().catch(() => null);
-    const optionsBody: AcademicOptions | null = await optionsRes
-      .json()
-      .catch(() => null);
+    const optionsBody: SectionOption[] | { message?: string } | null =
+      await optionsRes.json().catch(() => null);
 
     if (!gradeLevelRes.ok) {
       throw new Error(
@@ -86,11 +99,15 @@ export function AcademicStructureClient({
     }
 
     if (!optionsRes.ok) {
-      throw new Error(optionsBody?.message ?? "Failed to load sections.");
+      throw new Error(
+        optionsBody && "message" in optionsBody
+          ? optionsBody.message
+          : "Failed to load sections.",
+      );
     }
 
     setGradeLevels(Array.isArray(gradeLevelBody) ? gradeLevelBody : []);
-    setSections(optionsBody?.sections ?? []);
+    setSections(Array.isArray(optionsBody) ? optionsBody : []);
   }
 
   async function createSelectedStructure() {
@@ -135,6 +152,64 @@ export function AcademicStructureClient({
     }
   }
 
+  async function configureSections(gradeLevelId: string) {
+    setSaving(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const count = Number(numberOfSections);
+      const capacity = defaultCapacity.trim()
+        ? Number(defaultCapacity)
+        : undefined;
+
+      if (!Number.isInteger(count) || count < 1) {
+        throw new Error("Number of classrooms/sections must be at least 1.");
+      }
+
+      if (
+        capacity !== undefined &&
+        (!Number.isInteger(capacity) || capacity < 1)
+      ) {
+        throw new Error("Capacity must be a positive number.");
+      }
+
+      const res = await fetch(
+        `/api/academic/grade-levels/${gradeLevelId}/sections/configure`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            schoolId,
+            numberOfSections: count,
+            defaultCapacity: capacity,
+          }),
+        },
+      );
+
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(body?.message ?? "Failed to configure sections.");
+      }
+
+      setMessage("Classrooms/sections configured successfully.");
+      setConfigureGradeLevelId("");
+      setNumberOfSections("1");
+      setDefaultCapacity("");
+
+      await loadStructure();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to configure sections.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const groupedGradeLevels = sortGradeLevels(gradeLevels).reduce<
     Record<string, GradeLevel[]>
   >((groups, gradeLevel) => {
@@ -143,6 +218,12 @@ export function AcademicStructureClient({
     groups[key].push(gradeLevel);
     return groups;
   }, {});
+
+  function sectionsForGradeLevel(level: GradeLevel) {
+    return sortSections(
+      sections.filter((section) => section.gradeLevelCode === level.code),
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -206,61 +287,134 @@ export function AcademicStructureClient({
         ) : null}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Grade levels</h2>
-          <div className="mt-4 space-y-4">
-            {["KINDERGARTEN", "PRIMARY", "SECONDARY", "OTHER"].map((key) =>
-              groupedGradeLevels[key]?.length ? (
-                <div key={key}>
-                  <div className="text-xs font-semibold uppercase text-slate-500">
-                    {divisionLabel(key === "OTHER" ? null : key)}
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {groupedGradeLevels[key].map((gradeLevel) => (
-                      <span
-                        key={gradeLevel.id}
-                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+        <h2 className="text-lg font-semibold">Grade levels and sections</h2>
+        <div className="mt-4 space-y-5">
+          {["KINDERGARTEN", "PRIMARY", "SECONDARY", "OTHER"].map((key) =>
+            groupedGradeLevels[key]?.length ? (
+              <div key={key}>
+                <div className="text-xs font-semibold uppercase text-slate-500">
+                  {divisionLabel(key === "OTHER" ? null : key)}
+                </div>
+
+                <div className="mt-2 grid gap-3">
+                  {groupedGradeLevels[key].map((level) => {
+                    const levelSections = sectionsForGradeLevel(level);
+
+                    return (
+                      <div
+                        key={level.id}
+                        className="rounded-xl border border-slate-200 p-4"
                       >
-                        {i18nName(gradeLevel.name_i18n, gradeLevel.code)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null,
-            )}
+                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <div className="font-semibold text-slate-900">
+                              {i18nName(level.name_i18n, level.code)}
+                            </div>
+                            <div className="mt-1 text-xs text-slate-500">
+                              {levelSections.length} section
+                              {levelSections.length === 1 ? "" : "s"}
+                            </div>
+                          </div>
 
-            {gradeLevels.length === 0 ? (
-              <div className="text-sm text-slate-500">
-                Academic structure not configured yet.
-              </div>
-            ) : null}
-          </div>
-        </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setConfigureGradeLevelId(
+                                configureGradeLevelId === level.id
+                                  ? ""
+                                  : level.id,
+                              );
+                              setNumberOfSections(
+                                String(Math.max(levelSections.length, 1)),
+                              );
+                              setDefaultCapacity("");
+                            }}
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
+                          >
+                            {configureGradeLevelId === level.id
+                              ? "Close"
+                              : "Configure salles"}
+                          </button>
+                        </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Sections</h2>
-          <div className="mt-4 space-y-2">
-            {sections.map((section) => (
-              <div
-                key={section.id}
-                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              >
-                <div className="font-medium">
-                  {i18nName(section.nameI18n, section.code)}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {divisionLabel(section.academicDivision)}
-                </div>
-              </div>
-            ))}
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {levelSections.length ? (
+                            levelSections.map((section) => (
+                              <span
+                                key={section.id}
+                                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                              >
+                                {i18nName(section.nameI18n, section.code)}
+                                {section.capacity ? (
+                                  <span className="ml-2 text-xs text-slate-500">
+                                    Cap. {section.capacity}
+                                  </span>
+                                ) : null}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-slate-500">
+                              No sections configured yet.
+                            </span>
+                          )}
+                        </div>
 
-            {sections.length === 0 ? (
-              <div className="text-sm text-slate-500">
-                Academic structure not configured yet.
+                        {configureGradeLevelId === level.id ? (
+                          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                            <div className="font-semibold text-blue-900">
+                              Configure salles / sections
+                            </div>
+
+                            <p className="mt-1 text-sm text-blue-800">
+                              Enter how many parallel classrooms this level
+                              should have. The system will generate Section A,
+                              B, C, etc.
+                            </p>
+
+                            <div className="mt-3 grid gap-3 md:grid-cols-2">
+                              <input
+                                className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
+                                placeholder="Number of salles/classes"
+                                value={numberOfSections}
+                                onChange={(event) =>
+                                  setNumberOfSections(event.target.value)
+                                }
+                              />
+
+                              <input
+                                className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
+                                placeholder="Capacity per section optional"
+                                value={defaultCapacity}
+                                onChange={(event) =>
+                                  setDefaultCapacity(event.target.value)
+                                }
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              disabled={saving}
+                              onClick={() => configureSections(level.id)}
+                              className="mt-3 rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60"
+                            >
+                              {saving ? "Saving..." : "Generate sections"}
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            ) : null}
-          </div>
+            ) : null,
+          )}
+
+          {gradeLevels.length === 0 ? (
+            <div className="text-sm text-slate-500">
+              Academic structure not configured yet.
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

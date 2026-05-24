@@ -25,10 +25,6 @@ type SectionOption = {
   academicDivision: "KINDERGARTEN" | "PRIMARY" | "SECONDARY" | null;
 };
 
-type AcademicOptions = {
-  sections: SectionOption[];
-};
-
 export default async function AcademicStructurePage() {
   const context = await getMeContext();
   const schoolId = resolveCurrentSchoolId(context);
@@ -36,7 +32,9 @@ export default async function AcademicStructurePage() {
 
   const [gradeLevels, options] = await Promise.all([
     serverApiGet<GradeLevel[]>(`/academic/grade-levels?schoolId=${schoolId}`),
-    serverApiGet<AcademicOptions>(`/report-cards/options?schoolId=${schoolId}`),
+    serverApiGet<SectionOption[]>(
+      `/academic/section-options?schoolId=${schoolId}`,
+    ),
   ]);
 
   return (
@@ -45,9 +43,11 @@ export default async function AcademicStructurePage() {
         <AcademicStructureClient
           schoolId={schoolId}
           initialGradeLevels={gradeLevels}
-          initialSections={options.sections ?? []}
+          initialSections={options ?? []}
         />
       </AcademicsWorkspace>
     </SchoolPageShell>
   );
 }
+
+
