@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  admissionStatusLabel,
+  admissionStatusTone,
+} from "@/components/admission-status-panel-client";
+import {
   StudentDocumentRecord,
   StudentDocumentsPanelClient,
 } from "@/components/student-documents-panel-client";
@@ -30,6 +34,14 @@ type StudentProfile = {
     previousSchoolAddress: string | null;
     createdAt: string;
   };
+  admissionSource: {
+    id: string;
+    applicationNumber: string;
+    admissionStatus: string;
+    firstName: string;
+    lastName: string;
+    createdAt: string;
+  } | null;
   currentEnrollment: {
     sectionId: string | null;
     sectionCode: string | null;
@@ -269,6 +281,69 @@ export function StudentProfileClient({
             </div>
           </div>
 
+
+          {profile.admissionSource ? (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-950">
+                    Admission Source
+                  </h3>
+
+                  <p className="mt-1 text-sm text-blue-800">
+                    This student file was created from an admission application.
+                  </p>
+
+                  <div className="mt-3 text-sm text-blue-900">
+                    <div>
+                      Application:{" "}
+                      <span className="font-semibold">
+                        {profile.admissionSource.applicationNumber}
+                      </span>
+                    </div>
+
+                    <div>
+                      Candidate:{" "}
+                      <span className="font-semibold">
+                        {profile.admissionSource.firstName}{" "}
+                        {profile.admissionSource.lastName}
+                      </span>
+                    </div>
+
+                    <div>
+                      Created:{" "}
+                      <span className="font-semibold">
+                        {new Date(
+                          profile.admissionSource.createdAt,
+                        ).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <SchoolBadge
+                    tone={
+                      admissionStatusTone(
+                        profile.admissionSource.admissionStatus,
+                      ) as any
+                    }
+                  >
+                    {admissionStatusLabel(
+                      profile.admissionSource.admissionStatus,
+                    )}
+                  </SchoolBadge>
+
+                  <a
+                    href={`/admissions/${profile.admissionSource.id}`}
+                    className="rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
+                  >
+                    Open Admission
+                  </a>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <div className="grid gap-6 xl:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
