@@ -12,10 +12,8 @@ import {
 } from "@/components/student-documents-panel-client";
 import { StudentEditPanelClient } from "@/components/student-edit-panel-client";
 import { StudentSectionAssignmentPanelClient } from "@/components/student-section-assignment-panel-client";
-import {
-  StudentGuardianRow,
-  StudentGuardiansPanelClient,
-} from "@/components/student-guardians-panel-client";
+import { StudentGuardiansManagementPanelClient } from "@/components/student-guardians-management-panel-client";
+import { StudentGuardianRow } from "@/components/student-guardians-panel-client";
 import { SchoolBadge } from "@/components/school-ui";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
@@ -665,11 +663,11 @@ export function StudentProfileClient({
             documents={profile.documentRecords}
             onChanged={loadProfile}
           />
-          <StudentGuardiansPanelClient
+          <StudentGuardiansManagementPanelClient
             schoolId={schoolId}
             studentId={profile.student.id}
             guardians={profile.guardians}
-            onChanged={loadProfile}
+            onUpdated={loadProfile}
           />
 
           <div className="grid gap-4 md:grid-cols-5">
