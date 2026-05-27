@@ -321,6 +321,14 @@ export function PayrollRunDetailClient({
                     </div>
                   ) : null}
 
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link
+                      href={`/finance/payroll/items/${item.id}/payslip`}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                    >
+                      Payslip
+                    </Link>
+                  </div>
                   {item.paymentStatus !== "PAID" ? (
                     <div className="mt-4">
                       <button
