@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AttendanceDashboardOverviewClient } from "@/components/attendance-dashboard-overview-client";
 import { SectionSelectorClient } from "@/components/section-selector-client";
 import { SchoolBadge } from "@/components/school-ui";
 
@@ -76,6 +77,7 @@ export function AttendanceSessionClient({ schoolId }: { schoolId: string }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
 
   async function loadSession() {
     setMessage("");
@@ -171,6 +173,7 @@ export function AttendanceSessionClient({ schoolId }: { schoolId: string }) {
       }
 
       setMessage("Attendance submitted successfully.");
+      setDashboardRefreshKey((value) => value + 1);
       await loadSession();
     } catch (err) {
       setError(
@@ -455,6 +458,12 @@ export function AttendanceSessionClient({ schoolId }: { schoolId: string }) {
           </div>
         </>
       ) : null}
+
+      <AttendanceDashboardOverviewClient
+        key={dashboardRefreshKey}
+        schoolId={schoolId}
+        attendanceDate={attendanceDate}
+      />
     </div>
   );
 }
