@@ -10,6 +10,7 @@ import {
   StudentDocumentRecord,
   StudentDocumentsPanelClient,
 } from "@/components/student-documents-panel-client";
+import { StudentAttendanceHistoryPanelClient } from "@/components/student-attendance-history-panel-client";
 import { StudentCreateInvoicePanelClient } from "@/components/student-create-invoice-panel-client";
 import { StudentFinanceSummaryPanelClient } from "@/components/student-finance-summary-panel-client";
 import { StudentProfileEditPanelClient } from "@/components/student-profile-edit-panel-client";
@@ -743,6 +744,11 @@ export function StudentProfileClient({
             refreshKey={financeRefreshKey}
           />
 
+          <StudentAttendanceHistoryPanelClient
+            schoolId={schoolId}
+            studentId={profile.student.id}
+          />
+
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <h3 className="text-lg font-semibold text-slate-900">
               Quick Actions
@@ -769,6 +775,7 @@ export function StudentProfileClient({
     </div>
   );
 }
+
 
 
 
