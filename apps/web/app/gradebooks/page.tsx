@@ -1,55 +1,48 @@
-import { GradebooksWorkspaceClient } from "@/components/gradebooks-workspace-client";
+﻿import { GradebookMvpClient } from "@/components/gradebook-mvp-client";
+import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import { SchoolPageShell } from "@/components/school-page-shell";
 import {
-  getActiveAcademicContext,
   getMeContext,
   resolveCurrentSchoolId,
   resolveEffectiveRoles,
 } from "@/lib/server-context";
-import { serverApiGet } from "@/lib/server-api";
-
-type SectionSubject = {
-  id: string;
-  section_id: string;
-  section_code: string;
-  section_name_i18n: Record<string, string>;
-  subject_code: string;
-  subject_name_i18n: Record<string, string>;
-};
-
-type GradingPeriod = {
-  id: string;
-  name_i18n: Record<string, string>;
-  sequence_no: number;
-  is_current: boolean;
-};
 
 export default async function GradebooksPage() {
   const context = await getMeContext();
-  const schoolId = resolveCurrentSchoolId(context);
   const effectiveRoles = resolveEffectiveRoles(context);
-  const { academicYearId } = await getActiveAcademicContext(schoolId);
-
-  const [sectionSubjects, gradingPeriods] = academicYearId
-    ? await Promise.all([
-        serverApiGet<SectionSubject[]>(
-          `/section-subjects?academicYearId=${academicYearId}`,
-        ).catch(() => [] as SectionSubject[]),
-        serverApiGet<GradingPeriod[]>(
-          `/academic/periods?academicYearId=${academicYearId}`,
-        ).catch(() => [] as GradingPeriod[]),
-      ])
-    : [[], []];
+  const currentSchoolId = resolveCurrentSchoolId(context);
 
   return (
     <SchoolPageShell allowedRoles={["SCHOOL_ADMIN", "TEACHER"]}>
-      <GradebooksWorkspaceClient
-        currentRoles={effectiveRoles}
-        schoolId={schoolId}
-        userId={context.user.id}
-        sectionSubjects={sectionSubjects}
-        gradingPeriods={gradingPeriods}
-      />
+      <SchoolModuleWorkspace
+        title="Gradebooks"
+        description="Create assessments and enter student scores."
+        roles={effectiveRoles}
+        quickActions={[
+          {
+            href: "/academic-structure",
+            title: "Classes & Sections",
+            description: "Configure academic sections.",
+          },
+          {
+            href: "/students",
+            title: "Students",
+            description: "Review student academic records.",
+          },
+        ]}
+        attentionItems={[
+          {
+            tone: "blue",
+            title: "Gradebook MVP",
+            description:
+              "This version supports simple assessment creation and score entry by class/section.",
+          },
+        ]}
+        mainTitle="Gradebook"
+        mainSubtitle="Select a class, create assessments, and enter scores."
+      >
+        <GradebookMvpClient schoolId={currentSchoolId} />
+      </SchoolModuleWorkspace>
     </SchoolPageShell>
   );
 }
