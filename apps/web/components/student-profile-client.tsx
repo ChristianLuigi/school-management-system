@@ -148,14 +148,14 @@ function i18nName(
 
 function studentStatusLabel(status: string | null) {
   const labels: Record<string, string> = {
-    PRE_REGISTERED: "Préinscrit",
+    PRE_REGISTERED: "PrÃ©inscrit",
     REGISTERED: "Inscrit",
     ACTIVE: "Actif",
     SUSPENDED: "Suspendu",
-    WITHDRAWN: "Retiré",
-    TRANSFERRED: "Transféré",
-    GRADUATED: "Diplômé",
-    ARCHIVED: "Archivé",
+    WITHDRAWN: "RetirÃ©",
+    TRANSFERRED: "TransfÃ©rÃ©",
+    GRADUATED: "DiplÃ´mÃ©",
+    ARCHIVED: "ArchivÃ©",
   };
 
   return status ? labels[status] ?? status : "Status pending";
@@ -361,41 +361,6 @@ export function StudentProfileClient({
             profile={profile}
             onUpdated={loadProfile}
           />
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Health / Medical
-            </h3>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm font-medium text-slate-700">
-                  Health notes
-                </div>
-                <div className="mt-2 text-sm text-slate-600">
-                  {profile.student.healthNotes ?? "No health notes."}
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm font-medium text-slate-700">
-                  Allergies
-                </div>
-                <div className="mt-2 text-sm text-slate-600">
-                  {profile.student.allergyNotes ?? "No allergy notes."}
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm font-medium text-slate-700">
-                  Medical notes
-                </div>
-                <div className="mt-2 text-sm text-slate-600">
-                  {profile.student.medicalNotes ?? "No medical notes."}
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -751,6 +716,42 @@ export function StudentProfileClient({
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <h3 className="text-lg font-semibold text-slate-900">
+              Health / Medical
+            </h3>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <div className="text-sm font-medium text-slate-700">
+                  Health notes
+                </div>
+                <div className="mt-2 text-sm text-slate-600">
+                  {profile.student.healthNotes ?? "No health notes."}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <div className="text-sm font-medium text-slate-700">
+                  Allergies
+                </div>
+                <div className="mt-2 text-sm text-slate-600">
+                  {profile.student.allergyNotes ?? "No allergy notes."}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-4">
+                <div className="text-sm font-medium text-slate-700">
+                  Medical notes
+                </div>
+                <div className="mt-2 text-sm text-slate-600">
+                  {profile.student.medicalNotes ?? "No medical notes."}
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-lg font-semibold text-slate-900">
               Quick Actions
             </h3>
 
@@ -775,6 +776,7 @@ export function StudentProfileClient({
     </div>
   );
 }
+
 
 
 
