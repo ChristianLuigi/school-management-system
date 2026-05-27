@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { SchoolBadge } from "@/components/school-ui";
 
 type PayrollProfile = {
@@ -406,6 +407,14 @@ export function PayrollLiteClient({ schoolId }: { schoolId: string }) {
                     {money(run.totalNet, run.currencyCode)}
                   </div>
                 </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  href={`/finance/payroll/runs/${run.id}`}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                >
+                  Open Run
+                </Link>
               </div>
             </div>
           ))}
