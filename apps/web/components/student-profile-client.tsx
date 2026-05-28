@@ -148,14 +148,14 @@ function i18nName(
 
 function studentStatusLabel(status: string | null) {
   const labels: Record<string, string> = {
-    PRE_REGISTERED: "PrÃ©inscrit",
+    PRE_REGISTERED: "PrÃƒÂ©inscrit",
     REGISTERED: "Inscrit",
     ACTIVE: "Actif",
     SUSPENDED: "Suspendu",
-    WITHDRAWN: "RetirÃ©",
-    TRANSFERRED: "TransfÃ©rÃ©",
-    GRADUATED: "DiplÃ´mÃ©",
-    ARCHIVED: "ArchivÃ©",
+    WITHDRAWN: "RetirÃƒÂ©",
+    TRANSFERRED: "TransfÃƒÂ©rÃƒÂ©",
+    GRADUATED: "DiplÃƒÂ´mÃƒÂ©",
+    ARCHIVED: "ArchivÃƒÂ©",
   };
 
   return status ? labels[status] ?? status : "Status pending";
@@ -271,6 +271,13 @@ export function StudentProfileClient({
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
             Edit Profile
+          </Link>
+
+          <Link
+            href={`/students/${studentId}/report-card`}
+            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Report Card
           </Link>
         </div>
 
