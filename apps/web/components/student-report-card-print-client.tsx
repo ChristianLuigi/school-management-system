@@ -24,9 +24,12 @@ type ReportCard = {
     gradeLevelNameI18n: Record<string, string> | null;
   } | null;
   subjects: Array<{
+    subjectId: string | null;
     subjectName: string;
+    coefficient: number;
     averagePercent: number | null;
     averageOn20: number | null;
+    weightedPoints: number | null;
     assessments: Array<{
       assessmentId: string;
       title: string;
@@ -37,6 +40,7 @@ type ReportCard = {
       score: number | null;
       note: string | null;
       percentage: number | null;
+      scoreOn20: number | null;
     }>;
   }>;
   attendanceTotals: {
@@ -48,6 +52,8 @@ type ReportCard = {
   summary: {
     generalAverageOn20: number | null;
     subjectCount: number;
+    totalCoefficient: number;
+    totalWeightedPoints: number;
   };
 };
 
@@ -247,10 +253,13 @@ export function StudentReportCardPrintClient({
                       Assessments
                     </th>
                     <th className="border border-slate-200 px-3 py-2 text-right">
-                      Average / 20
+                      Coef.
                     </th>
                     <th className="border border-slate-200 px-3 py-2 text-right">
-                      %
+                      Moy. / 20
+                    </th>
+                    <th className="border border-slate-200 px-3 py-2 text-right">
+                      Points ponderes
                     </th>
                   </tr>
                 </thead>
@@ -271,13 +280,18 @@ export function StudentReportCardPrintClient({
                           </div>
                         ))}
                       </td>
+                      <td className="border border-slate-200 px-3 py-2 text-right">
+                        {subject.coefficient}
+                      </td>
+
                       <td className="border border-slate-200 px-3 py-2 text-right font-semibold">
                         {formatAverage(subject.averageOn20)}
                       </td>
+
                       <td className="border border-slate-200 px-3 py-2 text-right">
-                        {subject.averagePercent === null
+                        {subject.weightedPoints === null
                           ? "-"
-                          : `${subject.averagePercent.toFixed(1)}%`}
+                          : subject.weightedPoints.toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -285,7 +299,7 @@ export function StudentReportCardPrintClient({
                   {report.subjects.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={5}
                         className="border border-slate-200 px-3 py-6 text-center text-slate-500"
                       >
                         No gradebook results found.
@@ -337,6 +351,20 @@ export function StudentReportCardPrintClient({
                   <span>General average</span>
                   <span className="font-bold">
                     {formatAverage(report.summary.generalAverageOn20)} / 20
+                  </span>
+                </div>
+
+                <div className="mt-2 flex justify-between text-sm">
+                  <span>Total coefficients</span>
+                  <span className="font-bold">
+                    {report.summary.totalCoefficient}
+                  </span>
+                </div>
+
+                <div className="mt-2 flex justify-between text-sm">
+                  <span>Total weighted points</span>
+                  <span className="font-bold">
+                    {report.summary.totalWeightedPoints.toFixed(2)}
                   </span>
                 </div>
 

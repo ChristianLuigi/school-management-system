@@ -40,5 +40,10 @@ CREATE INDEX IF NOT EXISTS idx_grade_level_subjects_grade
   ON grade_level_subjects(school_id, grade_level_id)
   WHERE deleted_at IS NULL;
 
-ALTER TABLE gradebook_assessments
-ADD COLUMN IF NOT EXISTS subject_id UUID REFERENCES school_subjects(id);
+DO $$
+BEGIN
+  IF to_regclass('public.gradebook_assessments') IS NOT NULL THEN
+    ALTER TABLE gradebook_assessments
+    ADD COLUMN IF NOT EXISTS subject_id UUID REFERENCES school_subjects(id);
+  END IF;
+END $$;
