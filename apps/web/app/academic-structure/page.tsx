@@ -1,5 +1,4 @@
-﻿import { AcademicStructureClient } from "@/components/academic-structure-client";
-import { SubjectSetupClient } from "@/components/subject-setup-client";
+import { AcademicStructureClient } from "@/components/academic-structure-client";
 import { AcademicsWorkspace } from "@/components/academics-workspace";
 import { SchoolPageShell } from "@/components/school-page-shell";
 import {
@@ -46,8 +45,6 @@ export default async function AcademicStructurePage() {
           initialGradeLevels={gradeLevels}
           initialSections={options ?? []}
         />
-
-        <SubjectSetupClient schoolId={schoolId} gradeLevels={gradeLevels} />
       </AcademicsWorkspace>
     </SchoolPageShell>
   );

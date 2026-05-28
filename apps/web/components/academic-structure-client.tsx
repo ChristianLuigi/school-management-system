@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AcademicSubjectSetupClient } from "@/components/academic-subject-setup-client";
 
 type GradeLevel = {
   id: string;
@@ -417,6 +418,7 @@ export function AcademicStructureClient({
           ) : null}
         </div>
       </div>
+      <AcademicSubjectSetupClient schoolId={schoolId} gradeLevels={gradeLevels} />
     </div>
   );
 }
