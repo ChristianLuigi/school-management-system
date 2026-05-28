@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { SectionSelectorClient } from "@/components/section-selector-client";
@@ -14,6 +14,16 @@ type Assessment = {
   weightPercent: number;
   scoreCount: number;
   averageScore: number | null;
+};
+
+type GradeLevelSubject = {
+  id: string;
+  subjectId: string;
+  code: string;
+  nameI18n: Record<string, string> | null;
+  coefficient: number;
+  displayOrder: number;
+  isRequired: boolean;
 };
 
 type ScoreStudent = {
@@ -42,9 +52,17 @@ function studentName(student: ScoreStudent) {
   return `${student.lastName ?? ""} ${student.firstName ?? ""}`.trim() || "Student";
 }
 
+function i18nName(
+  value: Record<string, string> | null | undefined,
+  fallback: string,
+) {
+  return value?.fr ?? value?.en ?? fallback;
+}
+
 export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
   const [sectionId, setSectionId] = useState("");
-  const [subjectName, setSubjectName] = useState("Mathematics");
+  const [subjects, setSubjects] = useState<GradeLevelSubject[]>([]);
+  const [subjectId, setSubjectId] = useState("");
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
 
@@ -79,10 +97,42 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
     return total / numericScores.length;
   }, [scores]);
 
-  async function loadAssessments() {
+  async function loadSubjectsForSection() {
     setMessage("");
 
     if (!sectionId) {
+      setSubjects([]);
+      setSubjectId("");
+      setAssessments([]);
+      setSelectedAssessmentId("");
+      setStudents([]);
+      setScores({});
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({ schoolId });
+      const res = await fetch(
+        `/api/academic/sections/${sectionId}/subjects?${params.toString()}`,
+        { cache: "no-store" },
+      );
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(body?.message ?? "Failed to load subjects.");
+      }
+
+      setSubjects(body);
+      setSubjectId(body[0]?.subjectId ?? "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load subjects.");
+    }
+  }
+
+  async function loadAssessments() {
+    setMessage("");
+
+    if (!sectionId || !subjectId) {
       setAssessments([]);
       setSelectedAssessmentId("");
       setStudents([]);
@@ -96,13 +146,12 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
       const params = new URLSearchParams({
         schoolId,
         sectionId,
-        subjectName,
+        subjectId,
       });
 
       const res = await fetch(`/api/gradebooks/assessments?${params.toString()}`, {
         cache: "no-store",
       });
-
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
@@ -128,6 +177,11 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
       return;
     }
 
+    if (!subjectId) {
+      setError("Please select a subject configured for this class.");
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -139,7 +193,7 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
         body: JSON.stringify({
           schoolId,
           sectionId,
-          subjectName,
+          subjectId,
           title,
           assessmentType,
           assessmentDate: assessmentDate || undefined,
@@ -147,7 +201,6 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
           weightPercent: Number(weightPercent),
         }),
       });
-
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
@@ -174,12 +227,10 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
 
     try {
       const params = new URLSearchParams({ schoolId });
-
       const res = await fetch(
         `/api/gradebooks/assessments/${assessmentId}/scores?${params.toString()}`,
         { cache: "no-store" },
       );
-
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
@@ -232,7 +283,6 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
           scores: payloadScores,
         }),
       });
-
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
@@ -250,9 +300,14 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
   }
 
   useEffect(() => {
+    loadSubjectsForSection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionId]);
+
+  useEffect(() => {
     loadAssessments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sectionId, subjectName]);
+  }, [sectionId, subjectId]);
 
   return (
     <div className="space-y-6">
@@ -272,14 +327,26 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
             <label className="block text-sm font-medium text-slate-700">
               Subject
             </label>
-            <input
+            <select
               className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              placeholder="Subject, example: Mathematics"
-              value={subjectName}
-              onChange={(event) => setSubjectName(event.target.value)}
-            />
+              value={subjectId}
+              onChange={(event) => setSubjectId(event.target.value)}
+            >
+              <option value="">Select subject</option>
+              {subjects.map((subject) => (
+                <option key={subject.id} value={subject.subjectId}>
+                  {i18nName(subject.nameI18n, subject.code)} - Coef {subject.coefficient}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
+
+        {sectionId && subjects.length === 0 ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            No subjects are configured for this class yet. Configure subjects in Academic Structure.
+          </div>
+        ) : null}
 
         {message ? (
           <div className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-700">
@@ -342,7 +409,7 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
             <button
               type="button"
               onClick={createAssessment}
-              disabled={saving}
+              disabled={saving || !subjectId}
               className="rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60"
             >
               {saving ? "Saving..." : "Create"}
@@ -358,7 +425,7 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
             <button
               type="button"
               onClick={loadAssessments}
-              disabled={loadingAssessments || !sectionId}
+              disabled={loadingAssessments || !sectionId || !subjectId}
               className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
             >
               {loadingAssessments ? "Loading..." : "Refresh"}
@@ -375,20 +442,14 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
                   <div>
                     <div className="font-semibold">{assessment.title}</div>
                     <div className="text-sm text-slate-500">
-                      {assessment.subjectName} - {assessment.assessmentType} - /
-                      {assessment.maxPoints}
+                      {assessment.subjectName} - {assessment.assessmentType} - /{assessment.maxPoints}
                     </div>
                     <div className="text-xs text-slate-500">
-                      Avg:{" "}
-                      {assessment.averageScore === null
-                        ? "-"
-                        : assessment.averageScore.toFixed(2)}
+                      Avg: {assessment.averageScore === null ? "-" : assessment.averageScore.toFixed(2)}
                     </div>
                   </div>
 
-                  <SchoolBadge tone="blue">
-                    {assessment.scoreCount} score(s)
-                  </SchoolBadge>
+                  <SchoolBadge tone="blue">{assessment.scoreCount} score(s)</SchoolBadge>
                 </div>
 
                 <button
@@ -435,9 +496,7 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
                   >
                     <div>
                       <div className="font-medium">{studentName(student)}</div>
-                      <div className="text-xs text-slate-500">
-                        {student.studentCode ?? "-"}
-                      </div>
+                      <div className="text-xs text-slate-500">{student.studentCode ?? "-"}</div>
                     </div>
 
                     <input
