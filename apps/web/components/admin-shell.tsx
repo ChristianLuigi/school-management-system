@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Home,
   LogOut,
+  Presentation,
   Settings,
   Users,
 } from "lucide-react";
@@ -29,6 +30,12 @@ const navItems = [
     href: "/school",
     label: "Dashboard",
     icon: Home,
+    roles: ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"],
+  },
+  {
+    href: "/demo",
+    label: "Final Demo",
+    icon: Presentation,
     roles: ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"],
   },
   {

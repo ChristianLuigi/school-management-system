@@ -22,6 +22,11 @@ export default async function SchoolDashboardPage() {
         roles={effectiveRoles}
         quickActions={[
           {
+            href: "/demo",
+            title: "Final Demo",
+            description: "Open the guided client presentation roadmap.",
+          },
+          {
             href: "/admissions",
             title: "Admissions",
             description: "Manage applications and convert admitted students.",
