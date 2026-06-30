@@ -84,6 +84,72 @@ const DEMO_TALKING_POINTS = [
   "Payroll Lite provides a foundation for staff salary tracking.",
 ];
 
+const DEMO_DATA_CHECKLIST = [
+  {
+    title: "Academic structure",
+    items: [
+      "Maternelle division exists",
+      "Primaire division exists",
+      "1re Ann\u00e9e - Section A exists",
+      "Subjects assigned to 1re Ann\u00e9e with coefficients",
+    ],
+  },
+  {
+    title: "Student file",
+    items: [
+      "Student Marc Jean Baptiste exists",
+      "Student has guardian Marie Baptiste",
+      "Student assigned to 1re Ann\u00e9e - A",
+      "Student status is Active",
+    ],
+  },
+  {
+    title: "Finance",
+    items: [
+      "Invoice created for the student",
+      "Partial payment recorded",
+      "A4 invoice opens",
+      "80mm receipt opens",
+    ],
+  },
+  {
+    title: "Attendance",
+    items: [
+      "Morning attendance submitted for 1re Ann\u00e9e - A",
+      "Student attendance history is visible",
+      "Attendance dashboard shows the submitted session",
+    ],
+  },
+  {
+    title: "Gradebook",
+    items: [
+      "Math\u00e9matiques assessment created",
+      "Student score entered",
+      "Report card shows the weighted average",
+    ],
+  },
+  {
+    title: "Payroll",
+    items: [
+      "Payroll staff profile created",
+      "Payroll run generated",
+      "Salary marked paid",
+      "Payslip is printable",
+    ],
+  },
+];
+
+const EMERGENCY_DEMO_LINKS = [
+  ["/school", "Dashboard"],
+  ["/academic-structure", "Setup"],
+  ["/admissions", "Admissions"],
+  ["/students", "Students"],
+  ["/finance", "Finance"],
+  ["/finance/payroll", "Payroll"],
+  ["/attendance", "Attendance"],
+  ["/gradebooks", "Gradebook"],
+];
+
 export default async function DemoPage() {
   const context = await getMeContext();
   const effectiveRoles = resolveEffectiveRoles(context);
@@ -172,6 +238,61 @@ export default async function DemoPage() {
             </div>
           </div>
 
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-lg font-semibold text-slate-950">
+              Demo Data Checklist
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              Check this scenario before presenting to make sure every demo flow
+              has connected data.
+            </p>
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {DEMO_DATA_CHECKLIST.map((group) => (
+                <div
+                  key={group.title}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <h4 className="font-semibold text-slate-950">
+                    {group.title}
+                  </h4>
+                  <div className="mt-3 space-y-2">
+                    {group.items.map((item) => (
+                      <label
+                        key={item}
+                        className="flex items-start gap-2 text-sm leading-6 text-slate-700"
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-1.5 h-4 w-4 rounded border-slate-300"
+                        />
+                        <span>{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-lg font-semibold text-slate-950">
+              Emergency Demo Links
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              Jump directly to any core module during the presentation.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+              {EMERGENCY_DEMO_LINKS.map(([href, label]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 transition hover:border-slate-300 hover:bg-slate-100"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
             <h3 className="text-lg font-semibold text-amber-950">Demo Rule</h3>
             <p className="mt-2 text-sm leading-6 text-amber-900">
