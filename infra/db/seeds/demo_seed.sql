@@ -508,24 +508,43 @@ INSERT INTO students (
   vaccination_status,
   medical_notes
 )
-VALUES (
-  'a1800000-0000-4000-8000-000000000001',
-  'a1000000-0000-4000-8000-000000000001',
-  'ALMAC-2026-001',
-  'ALMAC-2026-001',
-  'Marc',
-  'Jean Baptiste',
-  '2018-04-12',
-  'MALE',
-  '2025-09-01',
-  'ACTIVE',
-  'Port-au-Prince',
-  TRUE,
-  TRUE,
-  TRUE,
-  'UP_TO_DATE',
-  U&'Aucune note m\00E9dicale particuli\00E8re.'
-)
+VALUES
+  (
+    'a1800000-0000-4000-8000-000000000001',
+    'a1000000-0000-4000-8000-000000000001',
+    'ALMAC-2026-001',
+    'ALMAC-2026-001',
+    'Marc',
+    'Jean Baptiste',
+    '2018-04-12',
+    'MALE',
+    '2025-09-01',
+    'ACTIVE',
+    'Port-au-Prince',
+    TRUE,
+    TRUE,
+    TRUE,
+    'UP_TO_DATE',
+    U&'Aucune note m\00E9dicale particuli\00E8re.'
+  ),
+  (
+    'a1800000-0000-4000-8000-000000000002',
+    'a1000000-0000-4000-8000-000000000001',
+    'ALMAC-2026-002',
+    'ALMAC-2026-002',
+    'Sarah',
+    'Louis',
+    '2018-07-20',
+    'FEMALE',
+    '2025-09-01',
+    'ACTIVE',
+    'Delmas',
+    TRUE,
+    TRUE,
+    TRUE,
+    'UP_TO_DATE',
+    U&'Aucune note m\00E9dicale particuli\00E8re.'
+  )
 ON CONFLICT (id) DO UPDATE SET
   student_number = EXCLUDED.student_number,
   student_code = EXCLUDED.student_code,
@@ -690,15 +709,25 @@ INSERT INTO enrollments (
   enrollment_status,
   start_date
 )
-VALUES (
-  'a1830000-0000-4000-8000-000000000001',
-  'a1800000-0000-4000-8000-000000000001',
-  'a1300000-0000-4000-8000-000000000001',
-  'a1400000-0000-4000-8000-000000000002',
-  'a1500000-0000-4000-8000-000000000002',
-  'ACTIVE',
-  '2025-09-01'
-)
+VALUES
+  (
+    'a1830000-0000-4000-8000-000000000001',
+    'a1800000-0000-4000-8000-000000000001',
+    'a1300000-0000-4000-8000-000000000001',
+    'a1400000-0000-4000-8000-000000000002',
+    'a1500000-0000-4000-8000-000000000002',
+    'ACTIVE',
+    '2025-09-01'
+  ),
+  (
+    'a1830000-0000-4000-8000-000000000002',
+    'a1800000-0000-4000-8000-000000000002',
+    'a1300000-0000-4000-8000-000000000001',
+    'a1400000-0000-4000-8000-000000000002',
+    'a1500000-0000-4000-8000-000000000002',
+    'ACTIVE',
+    '2025-09-01'
+  )
 ON CONFLICT (id) DO UPDATE SET
   grade_level_id = EXCLUDED.grade_level_id,
   section_id = EXCLUDED.section_id,

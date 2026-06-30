@@ -9,7 +9,8 @@
     "dev:web": "pnpm --dir apps/web dev",
     "dev:api": "pnpm --dir apps/api start:dev",
     "build:web": "pnpm --dir apps/web build",
-    "build:api": "pnpm --dir apps/api build"
+    "build:api": "pnpm --dir apps/api build",
+    "db:seed:demo": "docker exec -i school_mgmt_pg psql -v ON_ERROR_STOP=1 -U school_admin -d school_mgmt < infra/db/seeds/demo_seed.sql"
   },
   "keywords": [],
   "author": "",
