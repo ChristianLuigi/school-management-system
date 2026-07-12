@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AcademicQuickSetupClient } from "@/components/academic-quick-setup-client";
 import { AcademicSubjectSetupClient } from "@/components/academic-subject-setup-client";
+import { GradeLevelSectionsManagerClient } from "@/components/grade-level-sections-manager-client";
 
 type GradeLevel = {
   id: string;
@@ -226,10 +227,30 @@ export function AcademicStructureClient({
       sections.filter((section) => section.gradeLevelCode === level.code),
     );
   }
+  const sectionManagerLevels = useMemo(
+    () =>
+      sortGradeLevels(gradeLevels).map((level) => ({
+        id: level.id,
+        code: level.code,
+        nameI18n: level.name_i18n,
+        academicDivision: level.academic_division ?? null,
+        sections: sectionsForGradeLevel(level).map((section) => ({
+          id: section.id,
+          code: section.code,
+          nameI18n: section.nameI18n,
+        })),
+      })),
+    [gradeLevels, sections],
+  );
 
   return (
     <div className="space-y-6">
       <AcademicQuickSetupClient schoolId={schoolId} onApplied={loadStructure} />
+      <GradeLevelSectionsManagerClient
+        schoolId={schoolId}
+        levels={sectionManagerLevels}
+        onUpdated={loadStructure}
+      />
 
       <AcademicSubjectSetupClient schoolId={schoolId} gradeLevels={gradeLevels} />
 
@@ -305,7 +326,7 @@ export function AcademicStructureClient({
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Grade levels and sections</h2>
+          <h2 className="text-lg font-semibold">Manual grade levels and sections</h2>
           <div className="mt-4 space-y-5">
             {["KINDERGARTEN", "PRIMARY", "SECONDARY", "OTHER"].map((key) =>
               groupedGradeLevels[key]?.length ? (

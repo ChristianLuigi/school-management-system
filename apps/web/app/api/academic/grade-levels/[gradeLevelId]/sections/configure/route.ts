@@ -45,3 +45,42 @@ export async function POST(
     },
   });
 }
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ gradeLevelId: string }> },
+) {
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+
+  if (!token) {
+    return NextResponse.json(
+      { message: "Missing session token." },
+      { status: 401 },
+    );
+  }
+
+  const { gradeLevelId } = await params;
+  const body = await request.text();
+
+  const upstream = await fetch(
+    `${API_BASE_URL}/academic/grade-levels/${gradeLevelId}/sections/configure`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body,
+      cache: "no-store",
+    },
+  );
+
+  const text = await upstream.text();
+
+  return new NextResponse(text, {
+    status: upstream.status,
+    headers: {
+      "Content-Type":
+        upstream.headers.get("content-type") ?? "application/json",
+    },
+  });
+}
