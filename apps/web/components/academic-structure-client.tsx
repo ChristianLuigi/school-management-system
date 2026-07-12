@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AcademicQuickSetupClient } from "@/components/academic-quick-setup-client";
 import { AcademicSubjectSetupClient } from "@/components/academic-subject-setup-client";
 
 type GradeLevel = {
@@ -228,197 +229,212 @@ export function AcademicStructureClient({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="font-semibold text-slate-900">
-          Configure academic divisions
+      <AcademicQuickSetupClient schoolId={schoolId} onApplied={loadStructure} />
+
+      <AcademicSubjectSetupClient schoolId={schoolId} gradeLevels={gradeLevels} />
+
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Advanced manual configuration
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Use these controls when you need to adjust generated classes,
+            sections, or capacities by hand.
+          </p>
         </div>
 
-        <p className="mt-1 text-sm text-slate-600">
-          Select only the levels offered by this school.
-        </p>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="font-semibold text-slate-900">
+            Configure academic divisions
+          </div>
 
-        <div className="mt-3 grid gap-2 md:grid-cols-3">
-          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
-            <input
-              type="checkbox"
-              checked={includeKindergarten}
-              onChange={(event) => setIncludeKindergarten(event.target.checked)}
-            />
-            Maternelle
-          </label>
+          <p className="mt-1 text-sm text-slate-600">
+            Select only the levels offered by this school.
+          </p>
 
-          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
-            <input
-              type="checkbox"
-              checked={includePrimary}
-              onChange={(event) => setIncludePrimary(event.target.checked)}
-            />
-            Primaire
-          </label>
+          <div className="mt-3 grid gap-2 md:grid-cols-3">
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={includeKindergarten}
+                onChange={(event) => setIncludeKindergarten(event.target.checked)}
+              />
+              Maternelle
+            </label>
 
-          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
-            <input
-              type="checkbox"
-              checked={includeSecondary}
-              onChange={(event) => setIncludeSecondary(event.target.checked)}
-            />
-            Secondaire
-          </label>
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={includePrimary}
+                onChange={(event) => setIncludePrimary(event.target.checked)}
+              />
+              Primaire
+            </label>
+
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={includeSecondary}
+                onChange={(event) => setIncludeSecondary(event.target.checked)}
+              />
+              Secondaire
+            </label>
+          </div>
+
+          <button
+            type="button"
+            onClick={createSelectedStructure}
+            disabled={seeding}
+            className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          >
+            {seeding ? "Creating..." : "Create selected structure"}
+          </button>
+
+          {message ? (
+            <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+              {message}
+            </div>
+          ) : null}
+
+          {error ? (
+            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          ) : null}
         </div>
 
-        <button
-          type="button"
-          onClick={createSelectedStructure}
-          disabled={seeding}
-          className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
-        >
-          {seeding ? "Creating..." : "Create selected structure"}
-        </button>
+        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <h2 className="text-lg font-semibold">Grade levels and sections</h2>
+          <div className="mt-4 space-y-5">
+            {["KINDERGARTEN", "PRIMARY", "SECONDARY", "OTHER"].map((key) =>
+              groupedGradeLevels[key]?.length ? (
+                <div key={key}>
+                  <div className="text-xs font-semibold uppercase text-slate-500">
+                    {divisionLabel(key === "OTHER" ? null : key)}
+                  </div>
 
-        {message ? (
-          <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-            {message}
-          </div>
-        ) : null}
+                  <div className="mt-2 grid gap-3">
+                    {groupedGradeLevels[key].map((level) => {
+                      const levelSections = sectionsForGradeLevel(level);
 
-        {error ? (
-          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <h2 className="text-lg font-semibold">Grade levels and sections</h2>
-        <div className="mt-4 space-y-5">
-          {["KINDERGARTEN", "PRIMARY", "SECONDARY", "OTHER"].map((key) =>
-            groupedGradeLevels[key]?.length ? (
-              <div key={key}>
-                <div className="text-xs font-semibold uppercase text-slate-500">
-                  {divisionLabel(key === "OTHER" ? null : key)}
-                </div>
-
-                <div className="mt-2 grid gap-3">
-                  {groupedGradeLevels[key].map((level) => {
-                    const levelSections = sectionsForGradeLevel(level);
-
-                    return (
-                      <div
-                        key={level.id}
-                        className="rounded-xl border border-slate-200 p-4"
-                      >
-                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                          <div>
-                            <div className="font-semibold text-slate-900">
-                              {i18nName(level.name_i18n, level.code)}
-                            </div>
-                            <div className="mt-1 text-xs text-slate-500">
-                              {levelSections.length} section
-                              {levelSections.length === 1 ? "" : "s"}
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setConfigureGradeLevelId(
-                                configureGradeLevelId === level.id
-                                  ? ""
-                                  : level.id,
-                              );
-                              setNumberOfSections(
-                                String(Math.max(levelSections.length, 1)),
-                              );
-                              setDefaultCapacity("");
-                            }}
-                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
-                          >
-                            {configureGradeLevelId === level.id
-                              ? "Close"
-                              : "Configure salles"}
-                          </button>
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {levelSections.length ? (
-                            levelSections.map((section) => (
-                              <span
-                                key={section.id}
-                                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
-                              >
-                                {i18nName(section.nameI18n, section.code)}
-                                {section.capacity ? (
-                                  <span className="ml-2 text-xs text-slate-500">
-                                    Cap. {section.capacity}
-                                  </span>
-                                ) : null}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-sm text-slate-500">
-                              No sections configured yet.
-                            </span>
-                          )}
-                        </div>
-
-                        {configureGradeLevelId === level.id ? (
-                          <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
-                            <div className="font-semibold text-blue-900">
-                              Configure salles / sections
-                            </div>
-
-                            <p className="mt-1 text-sm text-blue-800">
-                              Enter how many parallel classrooms this level
-                              should have. The system will generate Section A,
-                              B, C, etc.
-                            </p>
-
-                            <div className="mt-3 grid gap-3 md:grid-cols-2">
-                              <input
-                                className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
-                                placeholder="Number of salles/classes"
-                                value={numberOfSections}
-                                onChange={(event) =>
-                                  setNumberOfSections(event.target.value)
-                                }
-                              />
-
-                              <input
-                                className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
-                                placeholder="Capacity per section optional"
-                                value={defaultCapacity}
-                                onChange={(event) =>
-                                  setDefaultCapacity(event.target.value)
-                                }
-                              />
+                      return (
+                        <div
+                          key={level.id}
+                          className="rounded-xl border border-slate-200 p-4"
+                        >
+                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                            <div>
+                              <div className="font-semibold text-slate-900">
+                                {i18nName(level.name_i18n, level.code)}
+                              </div>
+                              <div className="mt-1 text-xs text-slate-500">
+                                {levelSections.length} section
+                                {levelSections.length === 1 ? "" : "s"}
+                              </div>
                             </div>
 
                             <button
                               type="button"
-                              disabled={saving}
-                              onClick={() => configureSections(level.id)}
-                              className="mt-3 rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60"
+                              onClick={() => {
+                                setConfigureGradeLevelId(
+                                  configureGradeLevelId === level.id
+                                    ? ""
+                                    : level.id,
+                                );
+                                setNumberOfSections(
+                                  String(Math.max(levelSections.length, 1)),
+                                );
+                                setDefaultCapacity("");
+                              }}
+                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
                             >
-                              {saving ? "Saving..." : "Generate sections"}
+                              {configureGradeLevelId === level.id
+                                ? "Close"
+                                : "Configure salles"}
                             </button>
                           </div>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null,
-          )}
 
-          {gradeLevels.length === 0 ? (
-            <div className="text-sm text-slate-500">
-              Academic structure not configured yet.
-            </div>
-          ) : null}
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {levelSections.length ? (
+                              levelSections.map((section) => (
+                                <span
+                                  key={section.id}
+                                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                                >
+                                  {i18nName(section.nameI18n, section.code)}
+                                  {section.capacity ? (
+                                    <span className="ml-2 text-xs text-slate-500">
+                                      Cap. {section.capacity}
+                                    </span>
+                                  ) : null}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-sm text-slate-500">
+                                No sections configured yet.
+                              </span>
+                            )}
+                          </div>
+
+                          {configureGradeLevelId === level.id ? (
+                            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                              <div className="font-semibold text-blue-900">
+                                Configure salles / sections
+                              </div>
+
+                              <p className="mt-1 text-sm text-blue-800">
+                                Enter how many parallel classrooms this level
+                                should have. The system will generate Section A,
+                                B, C, etc.
+                              </p>
+
+                              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                                <input
+                                  className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
+                                  placeholder="Number of salles/classes"
+                                  value={numberOfSections}
+                                  onChange={(event) =>
+                                    setNumberOfSections(event.target.value)
+                                  }
+                                />
+
+                                <input
+                                  className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
+                                  placeholder="Capacity per section optional"
+                                  value={defaultCapacity}
+                                  onChange={(event) =>
+                                    setDefaultCapacity(event.target.value)
+                                  }
+                                />
+                              </div>
+
+                              <button
+                                type="button"
+                                disabled={saving}
+                                onClick={() => configureSections(level.id)}
+                                className="mt-3 rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60"
+                              >
+                                {saving ? "Saving..." : "Generate sections"}
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null,
+            )}
+
+            {gradeLevels.length === 0 ? (
+              <div className="text-sm text-slate-500">
+                Academic structure not configured yet.
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
-      <AcademicSubjectSetupClient schoolId={schoolId} gradeLevels={gradeLevels} />
     </div>
   );
 }
