@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 import { SchoolBadge } from "@/components/school-ui";
+import type { Locale } from "@/lib/i18n/messages";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
 
@@ -22,15 +24,16 @@ type AcademicStructureLevel = {
 function i18nName(
   value: Record<string, string> | null | undefined,
   fallback: string,
+  locale: Locale,
 ) {
-  return value?.fr ?? value?.en ?? fallback;
+  return value?.[locale] ?? value?.fr ?? value?.en ?? fallback;
 }
 
-function divisionLabel(value: string | null) {
-  if (value === "KINDERGARTEN") return "Maternelle";
-  if (value === "PRIMARY") return "Primaire / Fondamental";
-  if (value === "SECONDARY") return "Secondaire";
-  return "Autres";
+function divisionLabel(value: string | null, t: (key: string) => string) {
+  if (value === "KINDERGARTEN") return t("academic.kindergarten");
+  if (value === "PRIMARY") return t("academic.primary");
+  if (value === "SECONDARY") return t("academic.secondary");
+  return t("academic.other");
 }
 
 function divisionTone(value: string | null): BadgeTone {
@@ -56,6 +59,7 @@ export function GradeLevelSectionsManagerClient({
   levels: AcademicStructureLevel[];
   onUpdated: () => Promise<void> | void;
 }) {
+  const { locale, t } = useI18n();
   const [sectionCounts, setSectionCounts] = useState<Record<string, number>>({});
   const [savingId, setSavingId] = useState("");
   const [message, setMessage] = useState("");
@@ -120,10 +124,14 @@ export function GradeLevelSectionsManagerClient({
 
       if (Array.isArray(body.blocked) && body.blocked.length > 0) {
         setMessage(
-          `Saved, but ${body.blocked.length} section(s) could not be archived because they still have active students.`,
+          t("academic.blockedArchive", { count: body.blocked.length }),
         );
       } else {
-        setMessage(`${i18nName(level.nameI18n, level.code)} sections updated.`);
+        setMessage(
+          `${i18nName(level.nameI18n, level.code, locale)} ${t(
+            "academic.sectionsUpdated",
+          )}`,
+        );
       }
 
       await onUpdated();
@@ -140,10 +148,10 @@ export function GradeLevelSectionsManagerClient({
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
       <div>
         <h2 className="text-lg font-semibold text-slate-900">
-          Classes et sections
+          {t("academic.classesAndSections")}
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          Ajustez le nombre de sections ou salles pour chaque classe.
+          {t("academic.classesAndSectionsDescription")}
         </p>
       </div>
 
@@ -174,11 +182,11 @@ export function GradeLevelSectionsManagerClient({
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="font-semibold text-slate-900">
-                  {divisionLabel(division === "OTHER" ? null : division)}
+                  {divisionLabel(division === "OTHER" ? null : division, t)}
                 </h3>
 
                 <SchoolBadge tone={divisionTone(division)}>
-                  {divisionLevels.length} classe(s)
+                  {t("academic.classCount", { count: divisionLevels.length })}
                 </SchoolBadge>
               </div>
 
@@ -195,7 +203,7 @@ export function GradeLevelSectionsManagerClient({
                       <div className="grid gap-4 lg:grid-cols-[1fr_150px_120px] lg:items-center">
                         <div>
                           <div className="font-semibold text-slate-900">
-                            {i18nName(level.nameI18n, level.code)}
+                            {i18nName(level.nameI18n, level.code, locale)}
                           </div>
 
                           <div className="mt-3 flex flex-wrap gap-2">
@@ -208,19 +216,19 @@ export function GradeLevelSectionsManagerClient({
                                   <span className="font-semibold">
                                     {sectionLetter(section)}
                                   </span>{" "}
-                                  - {i18nName(section.nameI18n, section.code)}
+                                  - {i18nName(section.nameI18n, section.code, locale)}
                                 </span>
                               ))
                             ) : (
                               <span className="text-sm text-slate-500">
-                                No section yet.
+                                {t("academic.noSectionYet")}
                               </span>
                             )}
                           </div>
                         </div>
 
                         <label className="grid gap-1 text-xs font-medium text-slate-500">
-                          Nombre de sections
+                          {t("academic.numberOfSections")}
                           <input
                             type="number"
                             min={0}
@@ -239,7 +247,7 @@ export function GradeLevelSectionsManagerClient({
                           onClick={() => saveLevel(level)}
                           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
                         >
-                          {savingId === level.id ? "Saving..." : "Save"}
+                          {savingId === level.id ? t("common.saving") : t("common.save")}
                         </button>
                       </div>
                     </div>
@@ -252,8 +260,7 @@ export function GradeLevelSectionsManagerClient({
 
         {levels.length === 0 ? (
           <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-            No grade levels yet. Use the quick setup above to create the school
-            structure.
+            {t("common.noRecords")}
           </div>
         ) : null}
       </div>

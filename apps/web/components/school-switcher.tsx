@@ -44,7 +44,8 @@ export function SchoolSwitcher({
 
   return (
     <select
-      className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+      aria-label="Switch school"
+      className="min-h-10 rounded-md border border-input bg-surface px-3 text-sm text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60"
       value={currentSchoolId}
       disabled={loading || schools.length === 0}
       onChange={(e) => handleChange(e.target.value)}

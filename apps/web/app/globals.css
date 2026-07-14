@@ -1,287 +1,259 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Almac design foundation
+ * Tailwind v4 reads its configuration from this file. Components should use
+ * semantic utilities (bg-background, text-muted-foreground, border-border,
+ * bg-primary, etc.) rather than tying product meaning to a raw color scale.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #f6f8fb;
+  --foreground: #172033;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-muted: #eef2f7;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --muted: #e7ecf3;
+  --muted-foreground: #596579;
+  --border: #d9e0e9;
+  --border-strong: #bcc7d6;
+  --input: #c8d2df;
+  --ring: #2563eb;
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --primary-foreground: #ffffff;
+  --secondary: #e8eef8;
+  --secondary-hover: #dce6f4;
+  --secondary-foreground: #23314d;
+  --accent: #0f766e;
+  --accent-subtle: #ccfbf1;
+  --accent-foreground: #ffffff;
+  --success: #15803d;
+  --success-subtle: #dcfce7;
+  --success-foreground: #ffffff;
+  --warning: #a16207;
+  --warning-subtle: #fef3c7;
+  --warning-foreground: #ffffff;
+  --danger: #b91c1c;
+  --danger-subtle: #fee2e2;
+  --danger-foreground: #ffffff;
+  --destructive: var(--danger);
+  --destructive-subtle: var(--danger-subtle);
+  --destructive-foreground: var(--danger-foreground);
+  --info: #0369a1;
+  --info-subtle: #e0f2fe;
+  --info-foreground: #ffffff;
+  --chart-1: #2563eb;
+  --chart-2: #0f766e;
+  --chart-3: #7c3aed;
+  --chart-4: #ca8a04;
+  --chart-5: #db2777;
+  --sidebar: #101a2e;
+  --sidebar-foreground: #e8eef8;
+  --sidebar-muted: #97a6bd;
+  --sidebar-accent: #1d2b47;
+  --sidebar-border: #2a3957;
+  --sidebar-ring: #60a5fa;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0b1120;
+  --foreground: #e7edf7;
+  --surface: #111a2d;
+  --surface-raised: #162137;
+  --surface-muted: #1a263c;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --muted: #202d45;
+  --muted-foreground: #9aa9bd;
+  --border: #2b3951;
+  --border-strong: #40506a;
+  --input: #40506a;
+  --ring: #60a5fa;
+  --primary: #60a5fa;
+  --primary-hover: #93c5fd;
+  --primary-foreground: #07111f;
+  --secondary: #24324a;
+  --secondary-hover: #2d3d58;
+  --secondary-foreground: #e7edf7;
+  --accent: #2dd4bf;
+  --accent-subtle: #123f3d;
+  --accent-foreground: #062523;
+  --success: #4ade80;
+  --success-subtle: #12351f;
+  --success-foreground: #07170d;
+  --warning: #facc15;
+  --warning-subtle: #453613;
+  --warning-foreground: #211800;
+  --danger: #f87171;
+  --danger-subtle: #481e24;
+  --danger-foreground: #2a080b;
+  --destructive: var(--danger);
+  --destructive-subtle: var(--danger-subtle);
+  --destructive-foreground: var(--danger-foreground);
+  --info: #38bdf8;
+  --info-subtle: #123449;
+  --info-foreground: #061b25;
+  --chart-1: #60a5fa;
+  --chart-2: #2dd4bf;
+  --chart-3: #a78bfa;
+  --chart-4: #facc15;
+  --chart-5: #f472b6;
+  --sidebar: #070c16;
+  --sidebar-foreground: #e7edf7;
+  --sidebar-muted: #91a0b5;
+  --sidebar-accent: #18243a;
+  --sidebar-border: #26344b;
+  --sidebar-ring: #60a5fa;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-subtle: var(--destructive-subtle);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-foreground: var(--info-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --shadow-xs: 0 1px 2px rgb(15 23 42 / 0.04);
+  --shadow-sm: 0 1px 3px rgb(15 23 42 / 0.08),
+    0 1px 2px rgb(15 23 42 / 0.04);
+  --shadow-md: 0 8px 24px -12px rgb(15 23 42 / 0.22);
+  --shadow-lg: 0 18px 48px -20px rgb(15 23 42 / 0.3);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@media print {
-  @page {
-    size: auto;
-    margin: 12mm;
+  html {
+    min-width: 320px;
+    background: var(--background);
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
   }
 
   body {
-    background: white !important;
-  }
-
-  aside,
-  header,
-  nav,
-  .print\:hidden {
-    display: none !important;
-  }
-
-  main {
-    padding: 0 !important;
-  }
-
-  .print\:p-0 {
-    padding: 0 !important;
-  }
-
-  .print\:border-0 {
-    border: 0 !important;
-  }
-
-  .print\:shadow-none {
-    box-shadow: none !important;
-  }
-
-  .print\:rounded-none {
-    border-radius: 0 !important;
-  }
-
-  .print\:bg-white {
-    background: white !important;
-  }
-}
-@media print {
-  .print-page-break {
-    page-break-before: always;
-    break-before: page;
-  }
-
-  .print\:space-y-0 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0 !important;
-  }
-}
-/* 80mm thermal receipt printing */
-.thermal-print-page {
-  background: white;
-  min-height: 100vh;
-}
-
-.thermal-receipt {
-  width: 80mm;
-  margin: 0 auto;
-  padding: 4mm;
-  background: white;
-  color: #000;
-  font-family: Arial, sans-serif;
-  font-size: 11px;
-  line-height: 1.25;
-}
-
-.thermal-center {
-  text-align: center;
-}
-
-.thermal-bold {
-  font-weight: 700;
-}
-
-.thermal-small {
-  font-size: 10px;
-}
-
-.thermal-divider {
-  border-top: 1px dashed #000;
-  margin: 6px 0;
-}
-
-.thermal-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.thermal-row span:first-child {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.thermal-row span:last-child {
-  text-align: right;
-  font-weight: 600;
-}
-
-.thermal-total {
-  font-size: 13px;
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-@media print {
-  @page thermal {
-    size: 80mm auto;
+    min-height: 100dvh;
     margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  .thermal-no-print {
-    display: none !important;
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
   }
 
-  .thermal-print-page {
-    page: thermal;
-    width: 80mm;
-    margin: 0;
-    padding: 0;
-    background: white !important;
+  p {
+    text-wrap: pretty;
   }
 
-  .thermal-receipt {
-    width: 80mm;
-    margin: 0;
-    padding: 4mm;
-    box-shadow: none !important;
-  }
-}/* One-page Letter admission decision letter */
-.admission-letter-print-page {
-  width: 100%;
-  min-height: 100vh;
-  background: #f8fafc;
-  padding: 16px;
-}
-
-.admission-letter-sheet {
-  width: 8.5in;
-  min-height: 11in;
-  margin: 0 auto;
-  background: white;
-  padding: 0.35in;
-  color: #0f172a;
-  font-size: 11px;
-  line-height: 1.25;
-}
-
-.admission-letter-section {
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-.admission-letter-title {
-  font-size: 20px;
-  line-height: 1.15;
-}
-
-.admission-letter-subtitle {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-}
-
-.admission-letter-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 18px;
-}
-
-.admission-letter-box {
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 8px;
-}
-
-.admission-letter-box-title {
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.admission-letter-line {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px dotted #cbd5e1;
-  padding: 2px 0;
-}
-
-.admission-letter-line span:first-child {
-  color: #64748b;
-}
-
-.admission-letter-line span:last-child {
-  font-weight: 600;
-  text-align: right;
-}
-
-.admission-letter-signatures {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  margin-top: 20px;
-}
-
-.admission-letter-signature-line {
-  border-top: 1px solid #64748b;
-  padding-top: 4px;
-  font-size: 10px;
-  color: #475569;
-}
-
-@media print {
-  @page {
-    size: Letter;
-    margin: 0;
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
   }
 
-  html,
-  body {
-    width: 8.5in;
-    height: 11in;
-    background: white !important;
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
   }
 
-  .admission-letter-print-page {
-    width: 8.5in;
-    min-height: 11in;
-    max-height: 11in;
-    padding: 0;
-    margin: 0;
-    background: white !important;
-    overflow: hidden;
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
   }
 
-  .admission-letter-sheet {
-    width: 8.5in;
-    min-height: 11in;
-    max-height: 11in;
-    margin: 0;
-    padding: 0.32in;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    overflow: hidden;
-    font-size: 10.5px;
-    line-height: 1.22;
+  :focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--ring) 55%, transparent);
+    outline-offset: 2px;
   }
 
-  .admission-letter-no-print {
-    display: none !important;
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 22%, transparent);
+    color: var(--foreground);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 
-  .admission-letter-section {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

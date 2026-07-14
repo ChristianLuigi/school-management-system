@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
+import type { Locale } from "@/lib/i18n/messages";
 
 type Overview = {
   date: string;
@@ -33,8 +35,12 @@ type Overview = {
   };
 };
 
-function money(value: number, currencyCode: string) {
-  return new Intl.NumberFormat("en-US", {
+function localeTag(locale: Locale) {
+  return locale === "fr" ? "fr-HT" : "en-US";
+}
+
+function money(value: number, currencyCode: string, locale: Locale) {
+  return new Intl.NumberFormat(localeTag(locale), {
     style: "currency",
     currency: currencyCode,
   }).format(value);
@@ -45,12 +51,14 @@ function KpiCard({
   value,
   subtitle,
   href,
+  openLabel,
   tone = "slate",
 }: {
   title: string;
   value: string | number;
   subtitle: string;
   href: string;
+  openLabel: string;
   tone?: "slate" | "blue" | "green" | "amber" | "red";
 }) {
   const accent = {
@@ -73,7 +81,8 @@ function KpiCard({
       </div>
       <div className="mt-1 text-sm text-slate-600">{subtitle}</div>
       <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400 transition group-hover:text-slate-700">
-        Open workspace</div>
+        {openLabel}
+      </div>
     </Link>
   );
 }
@@ -83,6 +92,7 @@ export function SchoolDashboardOverviewClient({
 }: {
   schoolId: string;
 }) {
+  const { locale, t } = useI18n();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -121,21 +131,22 @@ export function SchoolDashboardOverviewClient({
   }, [schoolId]);
 
   const formattedDate = overview
-    ? new Intl.DateTimeFormat("en-US", {
+    ? new Intl.DateTimeFormat(localeTag(locale), {
         dateStyle: "long",
         timeZone: "UTC",
       }).format(new Date(`${overview.date}T00:00:00Z`))
     : null;
+  const openLabel = t("common.openWorkspace");
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-slate-950">
-            School Overview
+            {t("dashboard.schoolOverview")}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            {formattedDate ?? "Today's operational summary"}
+            {formattedDate ?? t("dashboard.operationalSummary")}
           </p>
         </div>
 
@@ -145,7 +156,7 @@ export function SchoolDashboardOverviewClient({
           disabled={loading}
           className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
         >
-          {loading ? "Refreshing..." : "Refresh"}
+          {loading ? t("common.refreshing") : t("common.refresh")}
         </button>
       </div>
 
@@ -157,7 +168,7 @@ export function SchoolDashboardOverviewClient({
 
       {!overview && !error ? (
         <div className="rounded-xl bg-slate-50 p-5 text-sm text-slate-500">
-          Loading the latest school activity...
+          {t("common.loading")}
         </div>
       ) : null}
 
@@ -165,86 +176,113 @@ export function SchoolDashboardOverviewClient({
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <KpiCard
-              title="Active students"
+              title={t("dashboard.activeStudents")}
               value={overview.students.active}
-              subtitle={`${overview.students.registered} registered`}
+              subtitle={`${overview.students.registered} ${t(
+                "dashboard.registeredStudents",
+              )}`}
               href="/students"
               tone="blue"
+              openLabel={openLabel}
             />
             <KpiCard
-              title="Pending admissions"
+              title={t("dashboard.pendingAdmissions")}
               value={overview.admissions.pending}
-              subtitle={`${overview.admissions.admitted} admitted or confirmed`}
+              subtitle={`${overview.admissions.admitted} ${t(
+                "dashboard.admittedApplications",
+              )}`}
               href="/admissions"
               tone="amber"
+              openLabel={openLabel}
             />
             <KpiCard
-              title="Attendance today"
+              title={t("dashboard.attendanceToday")}
               value={overview.attendance.sessionsToday}
-              subtitle={`${overview.attendance.presentToday} present / ${overview.attendance.absentToday} absent`}
+              subtitle={`${overview.attendance.presentToday} ${t(
+                "dashboard.present",
+              )} / ${overview.attendance.absentToday} ${t("dashboard.absent")}`}
               href="/attendance"
               tone={overview.attendance.absentToday > 0 ? "red" : "green"}
+              openLabel={openLabel}
             />
             <KpiCard
-              title="Unpaid invoices"
+              title={t("dashboard.unpaidInvoices")}
               value={overview.finance.unpaidInvoices}
-              subtitle={`${money(overview.finance.totalBalanceDue, overview.currencyCode)} due`}
+              subtitle={`${money(
+                overview.finance.totalBalanceDue,
+                overview.currencyCode,
+                locale,
+              )} ${t("dashboard.due")}`}
               href="/finance"
               tone={overview.finance.unpaidInvoices > 0 ? "red" : "green"}
+              openLabel={openLabel}
             />
             <KpiCard
-              title="Payments today"
+              title={t("dashboard.paymentsToday")}
               value={money(
                 overview.finance.paymentsToday,
                 overview.currencyCode,
+                locale,
               )}
-              subtitle={`${money(overview.finance.paymentsMonth, overview.currencyCode)} this month`}
+              subtitle={`${money(
+                overview.finance.paymentsMonth,
+                overview.currencyCode,
+                locale,
+              )} ${t("dashboard.thisMonth")}`}
               href="/finance"
               tone="green"
+              openLabel={openLabel}
             />
             <KpiCard
-              title="Assessments"
+              title={t("dashboard.assessments")}
               value={overview.gradebooks.assessmentsCount}
-              subtitle="Gradebook activity"
+              subtitle={t("dashboard.gradebookRecords")}
               href="/gradebooks"
               tone="blue"
+              openLabel={openLabel}
             />
             <KpiCard
-              title="Payroll pending"
+              title={t("dashboard.payrollPending")}
               value={overview.payroll.pendingItems}
-              subtitle="Salary items awaiting payment"
+              subtitle={t("dashboard.salaryItemsPending")}
               href="/finance/payroll"
               tone={overview.payroll.pendingItems > 0 ? "amber" : "green"}
+              openLabel={openLabel}
             />
             <KpiCard
-              title="Academic setup"
-              value="Ready"
-              subtitle="Structure, sections, and subjects"
+              title={t("dashboard.setup")}
+              value={t("common.ready")}
+              subtitle={t("dashboard.structureSectionsSubjects")}
               href="/academic-structure"
+              openLabel={openLabel}
             />
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <h3 className="font-semibold text-slate-950">Core demo flows</h3>
+            <h3 className="font-semibold text-slate-950">
+              {t("dashboard.demoFlows")}
+            </h3>
             <p className="mt-1 text-sm text-slate-600">
-              Every major workflow is one click away from this dashboard.
+              {t("dashboard.demoFlowsDescription")}
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {[
-                ["Setup", "/academic-structure"],
-                ["Admissions", "/admissions"],
-                ["Student files", "/students"],
-                ["Finance & receipts", "/finance"],
-                ["Attendance", "/attendance"],
-                ["Gradebooks & reports", "/gradebooks"],
-                ["Payroll & payslips", "/finance/payroll"],
+                [t("dashboard.setup"), "/academic-structure"],
+                [t("nav.admissions"), "/admissions"],
+                [t("dashboard.studentFiles"), "/students"],
+                [t("dashboard.financeReceipts"), "/finance"],
+                [t("nav.attendance"), "/attendance"],
+                [t("dashboard.gradebooksReports"), "/gradebooks"],
+                [t("dashboard.payrollPayslips"), "/finance/payroll"],
               ].map(([label, href]) => (
                 <Link
                   key={href}
                   href={href}
                   className="rounded-xl border border-slate-200 bg-white p-3 text-sm font-medium text-slate-700 hover:border-slate-300 hover:text-slate-950"
                 >
-                  <span className="mr-2 text-emerald-600">Ready</span>
+                  <span className="mr-2 text-emerald-600">
+                    {t("common.ready")}
+                  </span>
                   {label}
                 </Link>
               ))}

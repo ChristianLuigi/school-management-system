@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getServerSchoolId } from "@/lib/auth-server";
 import { serverApiGet } from "@/lib/server-api";
 
@@ -60,7 +61,7 @@ export type MeContext = {
   currentRoles: string[];
 };
 
-export async function getMeContext() {
+export const getMeContext = cache(async function getMeContext() {
   const schoolIdFromCookie = await getServerSchoolId();
 
   const contextPath = schoolIdFromCookie
@@ -68,7 +69,7 @@ export async function getMeContext() {
     : "/me/context";
 
   return serverApiGet<MeContext>(contextPath);
-}
+});
 
 export function resolveCurrentSchoolId(context: MeContext) {
   if (!context.currentSchool) return "";

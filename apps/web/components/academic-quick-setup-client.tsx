@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 
 type QuickGrade = {
   enabled: boolean;
@@ -165,11 +166,14 @@ const DIVISIONS: QuickGrade["academicDivision"][] = [
   "SECONDARY",
 ];
 
-function divisionLabel(value: QuickGrade["academicDivision"]) {
+function divisionLabel(
+  value: QuickGrade["academicDivision"],
+  t: (key: string) => string,
+) {
   const labels = {
-    KINDERGARTEN: "Maternelle",
-    PRIMARY: "Primaire / Fondamental 1er et 2e cycles",
-    SECONDARY: "Secondaire / Fondamental 3e cycle + NS",
+    KINDERGARTEN: t("academic.kindergarten"),
+    PRIMARY: t("academic.primary"),
+    SECONDARY: t("academic.secondary"),
   };
 
   return labels[value];
@@ -182,6 +186,7 @@ export function AcademicQuickSetupClient({
   schoolId: string;
   onApplied?: () => Promise<void> | void;
 }) {
+  const { t } = useI18n();
   const [grades, setGrades] = useState<QuickGrade[]>(DEFAULT_GRADES);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -215,7 +220,7 @@ export function AcademicQuickSetupClient({
       const enabledCount = grades.filter((grade) => grade.enabled).length;
 
       if (enabledCount === 0) {
-        throw new Error("Select at least one class.");
+        throw new Error(t("academic.selectAtLeastOneClass"));
       }
 
       const res = await fetch("/api/academic/quick-setup", {
@@ -236,7 +241,10 @@ export function AcademicQuickSetupClient({
       }
 
       setMessage(
-        `Structure saved: ${body.gradeCount} classes and ${body.sectionCount} sections.`,
+        t("academic.structureSaved", {
+          gradeCount: body.gradeCount,
+          sectionCount: body.sectionCount,
+        }),
       );
 
       await onApplied?.();
@@ -254,11 +262,10 @@ export function AcademicQuickSetupClient({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-blue-950">
-            Configuration rapide de la structure scolaire
+            {t("academic.quickSetupTitle")}
           </h2>
           <p className="mt-1 text-sm text-blue-900">
-            Choisissez les classes offertes par l'ecole et le nombre de
-            salles/sections pour chaque classe.
+            {t("academic.quickSetupDescription")}
           </p>
         </div>
 
@@ -268,7 +275,7 @@ export function AcademicQuickSetupClient({
           disabled={saving}
           className="rounded-xl bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-60"
         >
-          {saving ? "Saving..." : "Save structure"}
+          {saving ? t("common.saving") : t("academic.saveStructure")}
         </button>
       </div>
 
@@ -298,7 +305,7 @@ export function AcademicQuickSetupClient({
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="font-semibold text-slate-900">
-                  {divisionLabel(division)}
+                  {divisionLabel(division, t)}
                 </h3>
 
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
@@ -309,7 +316,7 @@ export function AcademicQuickSetupClient({
                       enableDivision(division, event.target.checked)
                     }
                   />
-                  Activer tout
+                  {t("academic.enableAll")}
                 </label>
               </div>
 
@@ -343,7 +350,7 @@ export function AcademicQuickSetupClient({
                     />
 
                     <label className="grid gap-1 text-xs font-medium text-slate-500">
-                      Sections
+                      {t("academic.sections")}
                       <input
                         type="number"
                         min={0}
@@ -366,8 +373,7 @@ export function AcademicQuickSetupClient({
       </div>
 
       <div className="mt-5 rounded-xl border border-blue-100 bg-white p-4 text-sm text-slate-600">
-        This quick setup creates or updates classes and sections. It does not
-        delete existing students, invoices, attendance, or grades.
+        {t("academic.quickSetupNotice")}
       </div>
     </div>
   );

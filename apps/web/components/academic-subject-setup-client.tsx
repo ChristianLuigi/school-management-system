@@ -1,7 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 import { SchoolBadge } from "@/components/school-ui";
+import type { Locale } from "@/lib/i18n/messages";
 
 type GradeLevel = {
   id: string;
@@ -30,8 +32,9 @@ type GradeLevelSubject = {
 function i18nName(
   value: Record<string, string> | null | undefined,
   fallback: string,
+  locale: Locale,
 ) {
-  return value?.fr ?? value?.en ?? fallback;
+  return value?.[locale] ?? value?.fr ?? value?.en ?? fallback;
 }
 
 export function AcademicSubjectSetupClient({
@@ -41,6 +44,7 @@ export function AcademicSubjectSetupClient({
   schoolId: string;
   gradeLevels: GradeLevel[];
 }) {
+  const { locale, t } = useI18n();
   const [subjects, setSubjects] = useState<SchoolSubject[]>([]);
   const [assignedSubjects, setAssignedSubjects] = useState<
     GradeLevelSubject[]
@@ -148,7 +152,7 @@ export function AcademicSubjectSetupClient({
         throw new Error(body?.message ?? "Failed to create subject.");
       }
 
-      setMessage("Subject saved successfully.");
+      setMessage(t("academic.subjectSaved"));
       setCode("");
       setNameFr("");
       setNameEn("");
@@ -206,7 +210,7 @@ export function AcademicSubjectSetupClient({
         throw new Error(body?.message ?? "Failed to assign subject.");
       }
 
-      setMessage("Subject assigned successfully.");
+      setMessage(t("academic.subjectAssigned"));
       setSubjectId("");
       setCoefficient("1");
       setDisplayOrder("100");
@@ -247,10 +251,10 @@ export function AcademicSubjectSetupClient({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
-            Subject Setup
+            {t("academic.subjectSetup")}
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            Create school subjects and assign them to each class/grade level.
+            {t("academic.subjectSetupDescription")}
           </p>
         </div>
 
@@ -260,7 +264,7 @@ export function AcademicSubjectSetupClient({
           disabled={loading}
           className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
         >
-          {loading ? "Loading..." : "Refresh"}
+          {loading ? t("common.loading") : t("common.refresh")}
         </button>
       </div>
 
@@ -278,33 +282,35 @@ export function AcademicSubjectSetupClient({
 
       <div className="mt-5 grid gap-5 xl:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="font-semibold text-slate-900">Create Subject</h4>
+          <h4 className="font-semibold text-slate-900">
+            {t("academic.createSubject")}
+          </h4>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <input
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-              placeholder="Code, example: MATH"
+              placeholder={t("academic.subjectCodePlaceholder")}
               value={code}
               onChange={(event) => setCode(event.target.value)}
             />
 
             <input
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-              placeholder="Nom francais"
+              placeholder={t("academic.frenchName")}
               value={nameFr}
               onChange={(event) => setNameFr(event.target.value)}
             />
 
             <input
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
-              placeholder="English name optional"
+              placeholder={t("academic.englishNameOptional")}
               value={nameEn}
               onChange={(event) => setNameEn(event.target.value)}
             />
 
             <textarea
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
-              placeholder="Description optional"
+              placeholder={t("academic.descriptionOptional")}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
@@ -316,7 +322,7 @@ export function AcademicSubjectSetupClient({
             onClick={createSubject}
             className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
           >
-            {savingSubject ? "Saving..." : "Save Subject"}
+            {savingSubject ? t("common.saving") : t("academic.saveSubject")}
           </button>
 
           <div className="mt-5 space-y-2">
@@ -328,13 +334,15 @@ export function AcademicSubjectSetupClient({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <div className="font-medium text-slate-900">
-                      {i18nName(subject.nameI18n, subject.code)}
+                      {i18nName(subject.nameI18n, subject.code, locale)}
                     </div>
                     <div className="text-xs text-slate-500">{subject.code}</div>
                   </div>
 
                   <SchoolBadge tone={subject.subjectActive ? "green" : "red"}>
-                    {subject.subjectActive ? "Active" : "Inactive"}
+                    {subject.subjectActive
+                      ? t("common.active")
+                      : t("common.inactive")}
                   </SchoolBadge>
                 </div>
               </div>
@@ -342,7 +350,7 @@ export function AcademicSubjectSetupClient({
 
             {subjects.length === 0 ? (
               <div className="rounded-xl bg-white p-3 text-sm text-slate-500">
-                No subjects created yet.
+                {t("academic.noSubjectsYet")}
               </div>
             ) : null}
           </div>
@@ -350,7 +358,7 @@ export function AcademicSubjectSetupClient({
 
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <h4 className="font-semibold text-slate-900">
-            Assign Subject to Class / Grade Level
+            {t("academic.assignSubjectToClass")}
           </h4>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -359,10 +367,10 @@ export function AcademicSubjectSetupClient({
               value={gradeLevelId}
               onChange={(event) => setGradeLevelId(event.target.value)}
             >
-              <option value="">Select grade level</option>
+              <option value="">{t("academic.selectGradeLevel")}</option>
               {gradeLevels.map((level) => (
                 <option key={level.id} value={level.id}>
-                  {i18nName(level.name_i18n, level.code)}
+                  {i18nName(level.name_i18n, level.code, locale)}
                 </option>
               ))}
             </select>
@@ -372,24 +380,24 @@ export function AcademicSubjectSetupClient({
               value={subjectId}
               onChange={(event) => setSubjectId(event.target.value)}
             >
-              <option value="">Select subject</option>
+              <option value="">{t("academic.selectSubject")}</option>
               {subjects.map((subject) => (
                 <option key={subject.id} value={subject.id}>
-                  {i18nName(subject.nameI18n, subject.code)}
+                  {i18nName(subject.nameI18n, subject.code, locale)}
                 </option>
               ))}
             </select>
 
             <input
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-              placeholder="Coefficient"
+              placeholder={t("academic.coefficient")}
               value={coefficient}
               onChange={(event) => setCoefficient(event.target.value)}
             />
 
             <input
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-              placeholder="Display order"
+              placeholder={t("academic.displayOrder")}
               value={displayOrder}
               onChange={(event) => setDisplayOrder(event.target.value)}
             />
@@ -401,7 +409,7 @@ export function AcademicSubjectSetupClient({
               checked={isRequired}
               onChange={(event) => setIsRequired(event.target.checked)}
             />
-            Required subject
+            {t("academic.requiredSubject")}
           </label>
 
           <button
@@ -410,7 +418,7 @@ export function AcademicSubjectSetupClient({
             onClick={assignSubject}
             className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
           >
-            {assigning ? "Assigning..." : "Assign Subject"}
+            {assigning ? t("academic.assigning") : t("academic.assignSubject")}
           </button>
 
           <div className="mt-5 space-y-2">
@@ -422,20 +430,22 @@ export function AcademicSubjectSetupClient({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <div className="font-medium text-slate-900">
-                      {i18nName(subject.nameI18n, subject.code)}
+                      {i18nName(subject.nameI18n, subject.code, locale)}
                     </div>
                     <div className="text-xs text-slate-500">
-                      {subject.code} - Order {subject.displayOrder}
+                      {subject.code} - {t("academic.order")} {subject.displayOrder}
                     </div>
                   </div>
 
                   <div className="flex gap-2">
                     <SchoolBadge tone="blue">
-                      Coef {subject.coefficient}
+                      {t("academic.coefficient")} {subject.coefficient}
                     </SchoolBadge>
 
                     <SchoolBadge tone={subject.isRequired ? "green" : "amber"}>
-                      {subject.isRequired ? "Required" : "Optional"}
+                      {subject.isRequired
+                        ? t("common.required")
+                        : t("common.optional")}
                     </SchoolBadge>
                   </div>
                 </div>
@@ -444,7 +454,7 @@ export function AcademicSubjectSetupClient({
 
             {assignedSubjects.length === 0 ? (
               <div className="rounded-xl bg-white p-3 text-sm text-slate-500">
-                No subjects assigned to this grade level yet.
+                {t("academic.noAssignedSubjects")}
               </div>
             ) : null}
           </div>

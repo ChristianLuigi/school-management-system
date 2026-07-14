@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { AcademicQuickSetupClient } from "@/components/academic-quick-setup-client";
+import { useI18n } from "@/components/i18n-provider";
 import { AcademicSubjectSetupClient } from "@/components/academic-subject-setup-client";
 import { GradeLevelSectionsManagerClient } from "@/components/grade-level-sections-manager-client";
+import type { Locale } from "@/lib/i18n/messages";
 
 type GradeLevel = {
   id: string;
@@ -29,18 +31,19 @@ type SectionOption = {
 function i18nName(
   value: Record<string, string> | null | undefined,
   fallback: string,
+  locale: Locale,
 ) {
-  return value?.fr ?? value?.en ?? fallback;
+  return value?.[locale] ?? value?.fr ?? value?.en ?? fallback;
 }
 
-function divisionLabel(value: string | null | undefined) {
+function divisionLabel(value: string | null | undefined, t: (key: string) => string) {
   const labels: Record<string, string> = {
-    KINDERGARTEN: "Maternelle",
-    PRIMARY: "Primaire",
-    SECONDARY: "Secondaire",
+    KINDERGARTEN: t("academic.kindergarten"),
+    PRIMARY: t("academic.primary"),
+    SECONDARY: t("academic.secondary"),
   };
 
-  return value ? labels[value] ?? value : "Other";
+  return value ? labels[value] ?? value : t("academic.other");
 }
 
 function sortGradeLevels(items: GradeLevel[]) {
@@ -68,6 +71,7 @@ export function AcademicStructureClient({
   initialGradeLevels: GradeLevel[];
   initialSections: SectionOption[];
 }) {
+  const { locale, t } = useI18n();
   const [gradeLevels, setGradeLevels] = useState(initialGradeLevels);
   const [sections, setSections] = useState(initialSections);
   const [includeKindergarten, setIncludeKindergarten] = useState(true);
@@ -120,7 +124,7 @@ export function AcademicStructureClient({
 
     try {
       if (!includeKindergarten && !includePrimary && !includeSecondary) {
-        throw new Error("Select at least one academic division.");
+        throw new Error(t("academic.selectAtLeastOneClass"));
       }
 
       const res = await fetch("/api/academic/haitian-structure", {
@@ -142,7 +146,7 @@ export function AcademicStructureClient({
         throw new Error(body?.message ?? "Failed to create academic structure.");
       }
 
-      setMessage("Selected academic structure created or updated.");
+      setMessage(t("common.savedSuccessfully"));
       await loadStructure();
     } catch (err) {
       setError(
@@ -257,7 +261,7 @@ export function AcademicStructureClient({
       <div className="space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            Advanced manual configuration
+            {t("academic.advancedManualConfiguration")}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
             Use these controls when you need to adjust generated classes,
@@ -267,11 +271,11 @@ export function AcademicStructureClient({
 
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <div className="font-semibold text-slate-900">
-            Configure academic divisions
+            {t("academic.configureAcademicDivisions")}
           </div>
 
           <p className="mt-1 text-sm text-slate-600">
-            Select only the levels offered by this school.
+            {t("academic.selectOfferedLevels")}
           </p>
 
           <div className="mt-3 grid gap-2 md:grid-cols-3">
@@ -281,7 +285,7 @@ export function AcademicStructureClient({
                 checked={includeKindergarten}
                 onChange={(event) => setIncludeKindergarten(event.target.checked)}
               />
-              Maternelle
+              {t("academic.kindergarten")}
             </label>
 
             <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
@@ -290,7 +294,7 @@ export function AcademicStructureClient({
                 checked={includePrimary}
                 onChange={(event) => setIncludePrimary(event.target.checked)}
               />
-              Primaire
+              {t("academic.primary")}
             </label>
 
             <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
@@ -299,7 +303,7 @@ export function AcademicStructureClient({
                 checked={includeSecondary}
                 onChange={(event) => setIncludeSecondary(event.target.checked)}
               />
-              Secondaire
+              {t("academic.secondary")}
             </label>
           </div>
 
@@ -309,7 +313,7 @@ export function AcademicStructureClient({
             disabled={seeding}
             className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
           >
-            {seeding ? "Creating..." : "Create selected structure"}
+            {seeding ? t("academic.creating") : t("academic.createSelectedStructure")}
           </button>
 
           {message ? (
@@ -326,13 +330,13 @@ export function AcademicStructureClient({
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Manual grade levels and sections</h2>
+          <h2 className="text-lg font-semibold">{t("academic.manualGradeLevelsAndSections")}</h2>
           <div className="mt-4 space-y-5">
             {["KINDERGARTEN", "PRIMARY", "SECONDARY", "OTHER"].map((key) =>
               groupedGradeLevels[key]?.length ? (
                 <div key={key}>
                   <div className="text-xs font-semibold uppercase text-slate-500">
-                    {divisionLabel(key === "OTHER" ? null : key)}
+                    {divisionLabel(key === "OTHER" ? null : key, t)}
                   </div>
 
                   <div className="mt-2 grid gap-3">
@@ -347,7 +351,7 @@ export function AcademicStructureClient({
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
                               <div className="font-semibold text-slate-900">
-                                {i18nName(level.name_i18n, level.code)}
+                                {i18nName(level.name_i18n, level.code, locale)}
                               </div>
                               <div className="mt-1 text-xs text-slate-500">
                                 {levelSections.length} section
@@ -383,7 +387,7 @@ export function AcademicStructureClient({
                                   key={section.id}
                                   className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
                                 >
-                                  {i18nName(section.nameI18n, section.code)}
+                                  {i18nName(section.nameI18n, section.code, locale)}
                                   {section.capacity ? (
                                     <span className="ml-2 text-xs text-slate-500">
                                       Cap. {section.capacity}
@@ -393,7 +397,7 @@ export function AcademicStructureClient({
                               ))
                             ) : (
                               <span className="text-sm text-slate-500">
-                                No sections configured yet.
+                                {t("academic.noSectionsConfigured")}
                               </span>
                             )}
                           </div>
@@ -401,7 +405,7 @@ export function AcademicStructureClient({
                           {configureGradeLevelId === level.id ? (
                             <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
                               <div className="font-semibold text-blue-900">
-                                Configure salles / sections
+                                {t("academic.configureRoomsSections")}
                               </div>
 
                               <p className="mt-1 text-sm text-blue-800">
@@ -413,7 +417,7 @@ export function AcademicStructureClient({
                               <div className="mt-3 grid gap-3 md:grid-cols-2">
                                 <input
                                   className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
-                                  placeholder="Number of salles/classes"
+                                  placeholder={t("academic.numberOfSections")}
                                   value={numberOfSections}
                                   onChange={(event) =>
                                     setNumberOfSections(event.target.value)
@@ -422,7 +426,7 @@ export function AcademicStructureClient({
 
                                 <input
                                   className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
-                                  placeholder="Capacity per section optional"
+                                  placeholder={t("academic.descriptionOptional")}
                                   value={defaultCapacity}
                                   onChange={(event) =>
                                     setDefaultCapacity(event.target.value)
@@ -436,7 +440,7 @@ export function AcademicStructureClient({
                                 onClick={() => configureSections(level.id)}
                                 className="mt-3 rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60"
                               >
-                                {saving ? "Saving..." : "Generate sections"}
+                                {saving ? t("common.saving") : t("common.save")}
                               </button>
                             </div>
                           ) : null}
@@ -450,7 +454,7 @@ export function AcademicStructureClient({
 
             {gradeLevels.length === 0 ? (
               <div className="text-sm text-slate-500">
-                Academic structure not configured yet.
+                {t("common.noRecords")}
               </div>
             ) : null}
           </div>

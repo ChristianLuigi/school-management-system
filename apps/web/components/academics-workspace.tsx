@@ -1,39 +1,41 @@
-import { ReactNode } from "react";
+﻿import { ReactNode } from "react";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
+import { getServerTranslator } from "@/lib/i18n";
 
-export function AcademicsWorkspace({
+export async function AcademicsWorkspace({
   currentRoles,
   children,
 }: {
   currentRoles: string[];
   children: ReactNode;
 }) {
+  const { t } = await getServerTranslator();
   const isSchoolAdmin = currentRoles.includes("SCHOOL_ADMIN");
   const isTeacher = currentRoles.includes("TEACHER");
 
   const quickActions = [
     {
       href: "/academic-structure",
-      title: "Academic Structure",
-      description: "Choose offered divisions and review grade levels and sections.",
+      title: t("academic.quickActionStructureTitle"),
+      description: t("academic.quickActionStructureDescription"),
     },
     {
       href: "/attendance",
-      title: "Attendance",
-      description: "Move from class structure into daily attendance operations.",
+      title: t("academic.quickActionAttendanceTitle"),
+      description: t("academic.quickActionAttendanceDescription"),
     },
     {
       href: "/gradebooks",
-      title: "Gradebooks",
-      description: "Review assessment and scoring workflows by academic context.",
+      title: t("academic.quickActionGradebookTitle"),
+      description: t("academic.quickActionGradebookDescription"),
     },
   ];
 
   if (isSchoolAdmin) {
     quickActions.push({
       href: "/setup",
-      title: "School Setup",
-      description: "Review the academic setup and structural readiness.",
+      title: t("academic.quickActionSettingsTitle"),
+      description: t("academic.quickActionSettingsDescription"),
     });
   }
 
@@ -44,48 +46,43 @@ export function AcademicsWorkspace({
   }> = [
     {
       tone: "blue" as const,
-      title: "Academic structure drives the whole school workflow",
-      description:
-        "Each school can choose its own structure: Maternelle only, Primaire only, Secondaire only, or a combination.",
+      title: t("academic.attentionStructureTitle"),
+      description: t("academic.attentionStructureDescription"),
     },
     {
       tone: "amber" as const,
-      title: "Check teacher-subject assignments",
-      description:
-        "A teacher should only see the classes and subjects that belong to their real assignment.",
+      title: t("academic.attentionTeacherSubjectTitle"),
+      description: t("academic.attentionTeacherSubjectDescription"),
     },
   ];
 
   if (isTeacher) {
     attentionItems.push({
       tone: "green" as const,
-      title: "Teacher priority",
-      description:
-        "Use this area to confirm your assigned academic context before taking attendance or managing gradebooks.",
+      title: t("academic.attentionTeacherPriorityTitle"),
+      description: t("academic.attentionTeacherPriorityDescription"),
     });
   }
 
   if (isSchoolAdmin) {
     attentionItems.push({
       tone: "amber" as const,
-      title: "Admin priority",
-      description:
-        "Validate the structure before publishing grades, generating report cards, or starting a new term.",
+      title: t("academic.attentionAdminPriorityTitle"),
+      description: t("academic.attentionAdminPriorityDescription"),
     });
   }
 
   return (
     <SchoolModuleWorkspace
-      title="Academics Workspace"
-      description="Review and manage the school's academic structure and teaching organization."
+      title={t("academic.workspaceTitle")}
+      description={t("academic.workspaceDescription")}
       roles={currentRoles}
       quickActions={quickActions}
       attentionItems={attentionItems}
-      mainTitle="Academic Operations"
-      mainSubtitle="Choose the divisions offered by this school, then add extra sections when needed."
+      mainTitle={t("academic.academicOperations")}
+      mainSubtitle={t("academic.academicOperationsDescription")}
     >
       {children}
     </SchoolModuleWorkspace>
   );
 }
-

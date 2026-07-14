@@ -1,4 +1,7 @@
+﻿"use client";
+
 import { ReactNode } from "react";
+import { useI18n } from "@/components/i18n-provider";
 import {
   QuickLinkCard,
   SchoolBadge,
@@ -86,11 +89,13 @@ export function SchoolModuleWorkspace({
   mainSubtitle?: string;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="space-y-6">
       <SchoolPageHeader title={title} description={description} />
 
-      <SchoolPanel title="Current Role Context">
+      <SchoolPanel title={t("workspace.currentRoleContext")}>
         <div className="flex flex-wrap gap-2">
           {roles.length > 0 ? (
             roles.map((role) => (
@@ -99,15 +104,15 @@ export function SchoolModuleWorkspace({
               </SchoolBadge>
             ))
           ) : (
-            <SchoolBadge>No active role</SchoolBadge>
+            <SchoolBadge>{t("workspace.noActiveRole")}</SchoolBadge>
           )}
         </div>
       </SchoolPanel>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <SchoolPanel
-          title="Quick Actions"
-          subtitle="Shortcuts relevant to this workspace."
+          title={t("workspace.quickActions")}
+          subtitle={t("workspace.quickActionsDescription")}
         >
           <div className="grid gap-4 md:grid-cols-2">
             {quickActions.map((action) => (
@@ -122,8 +127,8 @@ export function SchoolModuleWorkspace({
         </SchoolPanel>
 
         <SchoolPanel
-          title="Operational Attention"
-          subtitle="Things worth checking before continuing."
+          title={t("workspace.operationalAttention")}
+          subtitle={t("workspace.operationalAttentionDescription")}
         >
           <div className="space-y-3">
             {attentionItems.map((item, index) => {
