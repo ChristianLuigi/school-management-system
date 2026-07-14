@@ -1,4 +1,4 @@
-import { AttendanceSessionClient } from "@/components/attendance-session-client";
+﻿import { AttendanceSessionClient } from "@/components/attendance-session-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
   getMeContext,
@@ -15,7 +15,6 @@ export default async function AttendancePage() {
       <SchoolModuleWorkspace
         title="Attendance"
         description="Take morning and afternoon attendance by class/section."
-        roles={effectiveRoles}
         quickActions={[
           {
             href: "/academic-structure",

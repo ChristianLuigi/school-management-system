@@ -76,7 +76,6 @@ export async function AcademicsWorkspace({
     <SchoolModuleWorkspace
       title={t("academic.workspaceTitle")}
       description={t("academic.workspaceDescription")}
-      roles={currentRoles}
       quickActions={quickActions}
       attentionItems={attentionItems}
       mainTitle={t("academic.academicOperations")}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { AttendanceAdminReviewClient } from "@/components/attendance-admin-review-client";
@@ -91,7 +91,6 @@ export function AttendanceWorkspaceClient({
     <SchoolModuleWorkspace
       title="Attendance Workspace"
       description="Manage daily attendance operations with a clearer teaching and supervision flow."
-      roles={currentRoles}
       quickActions={quickActions}
       attentionItems={attentionItems}
       mainTitle="Attendance Operations"

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
   getMeContext,
@@ -157,7 +157,6 @@ export default async function DemoPage() {
       <SchoolModuleWorkspace
         title="Final Demo"
         description="Client presentation control center."
-        roles={effectiveRoles}
         quickActions={[
           {
             href: "/school",

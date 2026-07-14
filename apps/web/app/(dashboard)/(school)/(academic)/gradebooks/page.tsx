@@ -1,4 +1,4 @@
-import { GradebookMvpClient } from "@/components/gradebook-mvp-client";
+﻿import { GradebookMvpClient } from "@/components/gradebook-mvp-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
   getMeContext,
@@ -15,7 +15,6 @@ export default async function GradebooksPage() {
       <SchoolModuleWorkspace
         title="Gradebooks"
         description="Create assessments and enter student scores."
-        roles={effectiveRoles}
         quickActions={[
           {
             href: "/academic-structure",

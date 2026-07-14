@@ -1,4 +1,4 @@
-import { PayrollRunDetailClient } from "@/components/payroll-run-detail-client";
+﻿import { PayrollRunDetailClient } from "@/components/payroll-run-detail-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
   getMeContext,
@@ -20,7 +20,6 @@ export default async function PayrollRunDetailPage({
       <SchoolModuleWorkspace
         title="Payroll Run"
         description="Review payroll items and mark salaries as paid."
-        roles={effectiveRoles}
         quickActions={[
           {
             href: "/finance/payroll",

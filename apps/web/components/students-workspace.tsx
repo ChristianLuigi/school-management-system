@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+﻿import { ReactNode } from "react";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 
 export function StudentsWorkspace({
@@ -60,7 +60,6 @@ export function StudentsWorkspace({
     <SchoolModuleWorkspace
       title="Students Workspace"
       description="Manage student records, enrollment context, and operational student data."
-      roles={currentRoles}
       quickActions={quickActions}
       attentionItems={attentionItems}
       mainTitle="Student Operations"

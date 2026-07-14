@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FinanceActionsPageClient } from "@/components/finance-actions-page-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
@@ -48,7 +48,6 @@ export function FinanceActionsWorkspaceClient({
     <SchoolModuleWorkspace
       title="Finance Actions"
       description="Perform billing and finance operations from a cleaner action-focused workspace."
-      roles={currentRoles}
       quickActions={quickActions}
       attentionItems={attentionItems}
       mainTitle="Finance Action Center"

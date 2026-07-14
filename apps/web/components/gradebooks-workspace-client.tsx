@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { GradebookApprovalClient } from "@/components/gradebook-approval-client";
@@ -113,7 +113,6 @@ export function GradebooksWorkspaceClient({
     <SchoolModuleWorkspace
       title="Gradebook Workspace"
       description="Manage scoring, submissions, and academic validation with a clearer workflow."
-      roles={currentRoles}
       quickActions={quickActions}
       attentionItems={attentionItems}
       mainTitle="Gradebook Operations"

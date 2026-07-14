@@ -1,4 +1,4 @@
-import { StudentsManagementClient } from "@/components/students-management-client";
+﻿import { StudentsManagementClient } from "@/components/students-management-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
   getMeContext,
@@ -16,7 +16,6 @@ export default async function StudentsPage() {
       <SchoolModuleWorkspace
         title="Students Workspace"
         description="Manage student records and enrollment visibility."
-        roles={effectiveRoles}
         quickActions={[
           {
             href: "/attendance",

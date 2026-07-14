@@ -1,4 +1,4 @@
-import { SchoolDashboardOverviewClient } from "@/components/school-dashboard-overview-client";
+﻿import { SchoolDashboardOverviewClient } from "@/components/school-dashboard-overview-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import { getServerTranslator } from "@/lib/i18n";
 import {
@@ -17,7 +17,6 @@ export default async function SchoolDashboardPage() {
     <SchoolModuleWorkspace
       title={t("dashboard.title")}
       description={t("dashboard.description")}
-      roles={effectiveRoles}
       quickActions={[
         {
           href: "/demo",

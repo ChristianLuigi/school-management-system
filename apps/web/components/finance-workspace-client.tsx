@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { ReactNode } from "react";
@@ -107,7 +107,6 @@ export function FinanceWorkspaceClient({
     <SchoolModuleWorkspace
       title="Finance Workspace"
       description="Manage billing, outstanding balances, and financial follow-up from a clearer operational workspace."
-      roles={currentRoles}
       quickActions={quickActions}
       attentionItems={attentionItems}
       mainTitle="Finance Operations"

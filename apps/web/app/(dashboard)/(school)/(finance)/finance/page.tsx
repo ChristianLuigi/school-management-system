@@ -1,4 +1,4 @@
-import { FinanceDashboardClient } from "@/components/finance-dashboard-client";
+﻿import { FinanceDashboardClient } from "@/components/finance-dashboard-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
   getMeContext,
@@ -15,7 +15,6 @@ export default async function FinancePage() {
       <SchoolModuleWorkspace
         title="Finance"
         description="Manage student invoices, payments, balances, receipts, and payroll."
-        roles={effectiveRoles}
         quickActions={[
           {
             href: "/students",

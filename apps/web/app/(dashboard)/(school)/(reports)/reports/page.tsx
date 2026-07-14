@@ -1,4 +1,4 @@
-import { ReportCardBatchesClient } from "@/components/report-card-batches-client";
+﻿import { ReportCardBatchesClient } from "@/components/report-card-batches-client";
 import { SchoolBrandingClient } from "@/components/school-branding-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
@@ -71,7 +71,6 @@ export default async function ReportsPage() {
       <SchoolModuleWorkspace
         title="Reports Workspace"
         description="Review generated academic reports and operational report outputs."
-        roles={effectiveRoles}
         quickActions={quickActions}
         attentionItems={attentionItems}
         mainTitle="Report Operations"

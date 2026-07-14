@@ -1,4 +1,4 @@
-import { AdmissionsClient } from "@/components/admissions-client";
+﻿import { AdmissionsClient } from "@/components/admissions-client";
 import { AdmissionsSummaryClient } from "@/components/admissions-summary-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
@@ -18,7 +18,6 @@ export default async function AdmissionsPage() {
       <SchoolModuleWorkspace
         title="Admissions Workspace"
         description="Manage admission applications before creating official student records."
-        roles={effectiveRoles}
         quickActions={[
           {
             href: "/students",

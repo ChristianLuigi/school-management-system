@@ -4,7 +4,6 @@ import { ReactNode } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import {
   QuickLinkCard,
-  SchoolBadge,
   SchoolPageHeader,
   SchoolPanel,
 } from "@/components/school-ui";
@@ -20,13 +19,6 @@ type AttentionItem = {
   title: string;
   description: string;
 };
-
-function roleTone(role: string): "green" | "amber" | "red" | "blue" | "neutral" {
-  if (role === "SCHOOL_ADMIN") return "blue";
-  if (role === "TEACHER") return "green";
-  if (role === "FINANCE_ADMIN") return "amber";
-  return "neutral";
-}
 
 function attentionToneClasses(
   tone: AttentionItem["tone"],
@@ -73,7 +65,6 @@ function attentionToneClasses(
 export function SchoolModuleWorkspace({
   title,
   description,
-  roles,
   quickActions,
   attentionItems,
   mainTitle,
@@ -82,7 +73,6 @@ export function SchoolModuleWorkspace({
 }: {
   title: string;
   description: string;
-  roles: string[];
   quickActions: QuickAction[];
   attentionItems: AttentionItem[];
   mainTitle: string;
@@ -94,20 +84,6 @@ export function SchoolModuleWorkspace({
   return (
     <div className="space-y-6">
       <SchoolPageHeader title={title} description={description} />
-
-      <SchoolPanel title={t("workspace.currentRoleContext")}>
-        <div className="flex flex-wrap gap-2">
-          {roles.length > 0 ? (
-            roles.map((role) => (
-              <SchoolBadge key={role} tone={roleTone(role)}>
-                {role}
-              </SchoolBadge>
-            ))
-          ) : (
-            <SchoolBadge>{t("workspace.noActiveRole")}</SchoolBadge>
-          )}
-        </div>
-      </SchoolPanel>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <SchoolPanel
