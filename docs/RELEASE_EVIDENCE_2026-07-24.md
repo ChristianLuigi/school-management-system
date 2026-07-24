@@ -8,6 +8,10 @@ Status: **NO-GO pending external P0 gates**
 - Topology commit: `020b65c`
 - Release-readiness commit: `f318125`
 - Maintained-starter commit: `bb62c4f`
+- CI setup fix commit: `ecdff07`
+- Deterministic integration CI commit: `623c215`
+- Private repository: `ChristianLuigi/school-management-system`
+- Draft pull request: `https://github.com/ChristianLuigi/school-management-system/pull/1`
 - API image: `almac-api:release-candidate`
 - Web image: `almac-web:release-candidate`
 
@@ -35,10 +39,17 @@ Status: **NO-GO pending external P0 gates**
 - Argon2 hashing works in the pruned production API image.
 - `git diff --check master...HEAD` passes.
 
+## Verified on GitHub
+
+- The private remote is `https://github.com/ChristianLuigi/school-management-system`; `master` is the default branch and the unrelated `ChristianLuigi/almac-platform` repository was not modified.
+- Draft pull request `#1` targets `master` from `release/controlled-pilot-readiness`.
+- Push workflow `30134569355` passed at `623c215`.
+- Pull-request workflow `30134571426` passed at `623c215`.
+- Both workflows passed quality/build/audit, PostgreSQL migration/integration, and production-container jobs.
+- The integration job applied and verified the full migration chain, ran all six integration suites, and uploaded its JSON report.
+
 ## Open P0 gates
 
-- No Git remote is configured. The similarly named `ChristianLuigi/almac-platform` repository is an unrelated Django project and was not modified.
-- CI cannot run until the repository owner selects or creates the correct GitHub remote and the release branch is pushed.
 - No real staging target, hostname, secret store, or deployment credentials were available.
 - Migrations `002` and `019` still require comparison against the actual deployed/staging predecessor described in the canonicalization ADR.
 - The actual staging upgrade, HTTPS/proxy/email/alert verification, and role-based stakeholder UAT remain unperformed.
