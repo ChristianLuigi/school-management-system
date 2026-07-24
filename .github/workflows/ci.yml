@@ -130,10 +130,7 @@ jobs:
           pnpm db:migrate:verify
 
       - name: Run database-backed integration tests
-        run: >-
-          pnpm --dir apps/api run test:integration --
-          --json
-          --outputFile=integration-report.json
+        run: pnpm --dir apps/api test:integration:ci
 
       - name: Upload integration report
         if: always()
