@@ -62,6 +62,7 @@ export const messages = {
       academics: "Académie",
       admissions: "Admissions",
       students: "Élèves",
+      users: "Utilisateurs",
       attendance: "Présences",
       gradebooks: "Cahier de notes",
       finance: "Finances",
@@ -223,6 +224,12 @@ export const messages = {
       noSectionsConfigured: "Aucune section configurée pour le moment.",
     },
 
+    users: {
+      management: {
+        title: "Utilisateurs et accès", description: "Invitez les membres du personnel et gérez leurs accès à l’école.", inviteUser: "Inviter un utilisateur", inviteDescription: "L’utilisateur recevra un courriel sécurisé pour activer son compte.", email: "Adresse électronique", firstName: "Prénom", lastName: "Nom", role: "Rôle", language: "Langue du courriel", sendInvitation: "Envoyer l’invitation", sendingInvitation: "Envoi de l’invitation...", usersTab: "Utilisateurs", invitationsTab: "Invitations", verified: "Adresse vérifiée", notVerified: "Adresse non vérifiée", lastLogin: "Dernière connexion", neverConnected: "Jamais connecté", membershipActive: "Accès actif", membershipSuspended: "Accès suspendu", suspend: "Suspendre", reactivate: "Réactiver", resend: "Renvoyer", revoke: "Révoquer", pending: "En attente", accepted: "Acceptée", expired: "Expirée", revoked: "Révoquée", emailDeliveryFailed: "Échec de l’envoi du courriel", invitationSent: "L’invitation a été créée et envoyée.", invitationCreatedButEmailFailed: "L’invitation a été créée, mais le courriel n’a pas pu être envoyé.", noUsers: "Aucun utilisateur trouvé.", noInvitations: "Aucune invitation trouvée.", confirmSuspend: "Suspendre l’accès de cet utilisateur à l’école ?", confirmRevoke: "Révoquer cette invitation ?",
+        roles: { SCHOOL_ADMIN: "Administrateur de l’école", TEACHER: "Enseignant", FINANCE_ADMIN: "Responsable financier", PARENT: "Parent / Responsable" },
+      },
+    },
     students: {
       title: "Élèves",
       description:
@@ -392,6 +399,7 @@ export const messages = {
       academics: "Academics",
       admissions: "Admissions",
       students: "Students",
+      users: "Users",
       attendance: "Attendance",
       gradebooks: "Gradebook",
       finance: "Finance",
@@ -552,6 +560,12 @@ export const messages = {
       noSectionsConfigured: "No sections configured yet.",
     },
 
+    users: {
+      management: {
+        title: "Users and access", description: "Invite staff members and manage their access to the school.", inviteUser: "Invite a user", inviteDescription: "The user will receive a secure email to activate their account.", email: "Email address", firstName: "First name", lastName: "Last name", role: "Role", language: "Email language", sendInvitation: "Send invitation", sendingInvitation: "Sending invitation...", usersTab: "Users", invitationsTab: "Invitations", verified: "Email verified", notVerified: "Email not verified", lastLogin: "Last login", neverConnected: "Never signed in", membershipActive: "Access active", membershipSuspended: "Access suspended", suspend: "Suspend", reactivate: "Reactivate", resend: "Resend", revoke: "Revoke", pending: "Pending", accepted: "Accepted", expired: "Expired", revoked: "Revoked", emailDeliveryFailed: "Email delivery failed", invitationSent: "The invitation was created and sent.", invitationCreatedButEmailFailed: "The invitation was created, but the email could not be sent.", noUsers: "No users found.", noInvitations: "No invitations found.", confirmSuspend: "Suspend this user’s access to the school?", confirmRevoke: "Revoke this invitation?",
+        roles: { SCHOOL_ADMIN: "School administrator", TEACHER: "Teacher", FINANCE_ADMIN: "Finance administrator", PARENT: "Parent / Guardian" },
+      },
+    },
     students: {
       title: "Students",
       description:
