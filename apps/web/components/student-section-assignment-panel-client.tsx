@@ -70,7 +70,7 @@ export function StudentSectionAssignmentPanelClient({
             Class Assignment
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            Assign or change the student's active class/section.
+            Assign or change the student’s active class/section.
           </p>
         </div>
 

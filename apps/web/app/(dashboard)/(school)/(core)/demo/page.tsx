@@ -1,9 +1,5 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
-import {
-  getMeContext,
-  resolveEffectiveRoles,
-} from "@/lib/server-context";
 
 const DEMO_STEPS = [
   {
@@ -150,153 +146,148 @@ const EMERGENCY_DEMO_LINKS = [
 ];
 
 export default async function DemoPage() {
-  const context = await getMeContext();
-  const effectiveRoles = resolveEffectiveRoles(context);
-
   return (
-      <SchoolModuleWorkspace
-        title="Final Demo"
-        description="Client presentation control center."
-        quickActions={[
-          {
-            href: "/school",
-            title: "Dashboard",
-            description: "Start with the live school overview.",
-          },
-          {
-            href: "/academic-structure",
-            title: "Setup",
-            description: "Show structure, subjects, and coefficients.",
-          },
-          {
-            href: "/students",
-            title: "Students",
-            description: "Open the central student file.",
-          },
-          {
-            href: "/finance",
-            title: "Finance",
-            description: "Show invoices, payments, receipts, and payroll.",
-          },
-        ]}
-        attentionItems={[
-          {
-            tone: "green",
-            title: "Demo flow ready",
-            description:
-              "Follow this roadmap to present the system in a clean order without jumping randomly between modules.",
-          },
-        ]}
-        mainTitle="Client Demo Roadmap"
-        mainSubtitle="Follow this sequence to present the complete school workflow."
-      >
-        <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {DEMO_STEPS.map((step) => (
-              <Link
-                key={step.number}
-                href={step.href}
-                className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+    <SchoolModuleWorkspace
+      title="Final Demo"
+      description="Client presentation control center."
+      quickActions={[
+        {
+          href: "/school",
+          title: "Dashboard",
+          description: "Start with the live school overview.",
+        },
+        {
+          href: "/academic-structure",
+          title: "Setup",
+          description: "Show structure, subjects, and coefficients.",
+        },
+        {
+          href: "/students",
+          title: "Students",
+          description: "Open the central student file.",
+        },
+        {
+          href: "/finance",
+          title: "Finance",
+          description: "Show invoices, payments, receipts, and payroll.",
+        },
+      ]}
+      attentionItems={[
+        {
+          tone: "green",
+          title: "Demo flow ready",
+          description:
+            "Follow this roadmap to present the system in a clean order without jumping randomly between modules.",
+        },
+      ]}
+      mainTitle="Client Demo Roadmap"
+      mainSubtitle="Follow this sequence to present the complete school workflow."
+    >
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {DEMO_STEPS.map((step) => (
+            <Link
+              key={step.number}
+              href={step.href}
+              className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+            >
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Step {step.number}
+              </div>
+              <h3 className="mt-3 text-lg font-semibold text-slate-950">
+                {step.title}
+              </h3>
+              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">
+                {step.description}
+              </p>
+              <div className="mt-5 inline-flex w-fit rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition group-hover:bg-slate-700">
+                {step.action}
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h3 className="text-lg font-semibold text-slate-950">
+            Presentation Talking Points
+          </h3>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {DEMO_TALKING_POINTS.map((point) => (
+              <div
+                key={point}
+                className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700"
               >
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  Step {step.number}
+                <span className="mr-2 font-semibold text-emerald-700">
+                  Ready
+                </span>
+                {point}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h3 className="text-lg font-semibold text-slate-950">
+            Demo Data Checklist
+          </h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Check this scenario before presenting to make sure every demo flow
+            has connected data.
+          </p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {DEMO_DATA_CHECKLIST.map((group) => (
+              <div
+                key={group.title}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <h4 className="font-semibold text-slate-950">{group.title}</h4>
+                <div className="mt-3 space-y-2">
+                  {group.items.map((item) => (
+                    <label
+                      key={item}
+                      className="flex items-start gap-2 text-sm leading-6 text-slate-700"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-1.5 h-4 w-4 rounded border-slate-300"
+                      />
+                      <span>{item}</span>
+                    </label>
+                  ))}
                 </div>
-                <h3 className="mt-3 text-lg font-semibold text-slate-950">
-                  {step.title}
-                </h3>
-                <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">
-                  {step.description}
-                </p>
-                <div className="mt-5 inline-flex w-fit rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition group-hover:bg-slate-700">
-                  {step.action}
-                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h3 className="text-lg font-semibold text-slate-950">
+            Emergency Demo Links
+          </h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Jump directly to any core module during the presentation.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+            {EMERGENCY_DEMO_LINKS.map(([href, label]) => (
+              <Link
+                key={href}
+                href={href}
+                className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 transition hover:border-slate-300 hover:bg-slate-100"
+              >
+                {label}
               </Link>
             ))}
           </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-950">
-              Presentation Talking Points
-            </h3>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {DEMO_TALKING_POINTS.map((point) => (
-                <div
-                  key={point}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700"
-                >
-                  <span className="mr-2 font-semibold text-emerald-700">
-                    Ready
-                  </span>
-                  {point}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-950">
-              Demo Data Checklist
-            </h3>
-            <p className="mt-1 text-sm text-slate-600">
-              Check this scenario before presenting to make sure every demo flow
-              has connected data.
-            </p>
-            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {DEMO_DATA_CHECKLIST.map((group) => (
-                <div
-                  key={group.title}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <h4 className="font-semibold text-slate-950">
-                    {group.title}
-                  </h4>
-                  <div className="mt-3 space-y-2">
-                    {group.items.map((item) => (
-                      <label
-                        key={item}
-                        className="flex items-start gap-2 text-sm leading-6 text-slate-700"
-                      >
-                        <input
-                          type="checkbox"
-                          className="mt-1.5 h-4 w-4 rounded border-slate-300"
-                        />
-                        <span>{item}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-950">
-              Emergency Demo Links
-            </h3>
-            <p className="mt-1 text-sm text-slate-600">
-              Jump directly to any core module during the presentation.
-            </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-              {EMERGENCY_DEMO_LINKS.map(([href, label]) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-800 transition hover:border-slate-300 hover:bg-slate-100"
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-            <h3 className="text-lg font-semibold text-amber-950">Demo Rule</h3>
-            <p className="mt-2 text-sm leading-6 text-amber-900">
-              Present unfinished future modules as planned extensions. Focus on
-              what works end-to-end today: setup, admissions, students, finance,
-              attendance, gradebook, report cards, and payroll lite.
-            </p>
-          </div>
         </div>
-      </SchoolModuleWorkspace>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <h3 className="text-lg font-semibold text-amber-950">Demo Rule</h3>
+          <p className="mt-2 text-sm leading-6 text-amber-900">
+            Present unfinished future modules as planned extensions. Focus on
+            what works end-to-end today: setup, admissions, students, finance,
+            attendance, gradebook, report cards, and payroll lite.
+          </p>
+        </div>
+      </div>
+    </SchoolModuleWorkspace>
   );
 }

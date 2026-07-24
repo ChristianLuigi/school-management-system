@@ -106,7 +106,10 @@ type AdmissionApplicationDetails = {
   updatedAt: string;
 };
 
-function i18nName(value: Record<string, string> | null | undefined, fallback: string) {
+function i18nName(
+  value: Record<string, string> | null | undefined,
+  fallback: string,
+) {
   return value?.fr ?? value?.en ?? fallback;
 }
 
@@ -151,7 +154,9 @@ export function AdmissionDetailClient({
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to load admission application.");
+        throw new Error(
+          body?.message ?? "Failed to load admission application.",
+        );
       }
 
       setApplication(body);
@@ -236,7 +241,7 @@ export function AdmissionDetailClient({
               </div>
 
               <SchoolBadge
-                tone={admissionStatusTone(application.admissionStatus) as any}
+                tone={admissionStatusTone(application.admissionStatus)}
               >
                 {admissionStatusLabel(application.admissionStatus)}
               </SchoolBadge>
@@ -275,7 +280,6 @@ export function AdmissionDetailClient({
               </div>
             </div>
           </div>
-
 
           <AdmissionReadinessPanelClient application={application} />
 
@@ -425,7 +429,9 @@ export function AdmissionDetailClient({
 
               <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
                 <span>Previous school record</span>
-                {documentBadge(application.documents.previousSchoolRecordReceived)}
+                {documentBadge(
+                  application.documents.previousSchoolRecordReceived,
+                )}
               </div>
 
               <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
@@ -435,7 +441,9 @@ export function AdmissionDetailClient({
 
               <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
                 <span>Conduct certificate</span>
-                {documentBadge(application.documents.conductCertificateReceived)}
+                {documentBadge(
+                  application.documents.conductCertificateReceived,
+                )}
               </div>
             </div>
           </div>
@@ -445,9 +453,7 @@ export function AdmissionDetailClient({
               <h3 className="font-semibold text-slate-900">
                 Administrative Notes
               </h3>
-              <p className="mt-3 text-sm text-slate-600">
-                {application.notes}
-              </p>
+              <p className="mt-3 text-sm text-slate-600">{application.notes}</p>
             </div>
           ) : null}
 

@@ -6,11 +6,25 @@ export function getSessionCookieName() {
 }
 
 export function getSessionCookieOptions(expiresAt?: Date): Partial<ResponseCookie> {
+  const configuredSameSite = process.env.AUTH_COOKIE_SAME_SITE;
+  const sameSite =
+    configuredSameSite === "strict" || configuredSameSite === "lax"
+      ? configuredSameSite
+      : "lax";
+
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite,
     path: "/",
-    ...(expiresAt ? { expires: expiresAt } : {}),
+    ...(expiresAt
+      ? {
+          expires: expiresAt,
+          maxAge: Math.max(
+            0,
+            Math.floor((expiresAt.getTime() - Date.now()) / 1000),
+          ),
+        }
+      : {}),
   };
 }

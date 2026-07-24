@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
 export const ADMISSION_STATUSES = [
   "PROSPECT",
@@ -39,7 +39,7 @@ export function admissionStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
-export function admissionStatusTone(status: string) {
+export function admissionStatusTone(status: string): SchoolBadgeTone {
   if (status === "ADMITTED" || status === "CONFIRMED") return "green";
   if (status === "REJECTED" || status === "CANCELLED") return "red";
   if (
@@ -138,7 +138,7 @@ export function AdmissionStatusPanelClient({
           </p>
 
           <div className="mt-3">
-            <SchoolBadge tone={admissionStatusTone(currentStatus) as any}>
+            <SchoolBadge tone={admissionStatusTone(currentStatus)}>
               {admissionStatusLabel(currentStatus)}
             </SchoolBadge>
           </div>
@@ -226,7 +226,7 @@ export function AdmissionStatusPanelClient({
                     : "Initial"}
                 </span>
                 <span>-&gt;</span>
-                <SchoolBadge tone={admissionStatusTone(row.newStatus) as any}>
+                <SchoolBadge tone={admissionStatusTone(row.newStatus)}>
                   {admissionStatusLabel(row.newStatus)}
                 </SchoolBadge>
               </div>

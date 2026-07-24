@@ -2,7 +2,7 @@ import { getSessionCookieName } from "@/lib/auth/session-cookie";
 import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:4000"
+  process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:4000"
 ).replace("://localhost:", "://127.0.0.1:");
 
 export async function PATCH(

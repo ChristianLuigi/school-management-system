@@ -48,28 +48,6 @@ BEFORE UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- =========================================================
--- USERS / ROLES
--- =========================================================
-CREATE TABLE users (
-id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-email VARCHAR(255) NOT NULL UNIQUE,
-password_hash TEXT NOT NULL,
-preferred_locale locale_code NOT NULL DEFAULT 'fr',
-status user_status NOT NULL DEFAULT 'INVITED',
-last_login_at TIMESTAMPTZ NULL,
-
-
-created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-deleted_at TIMESTAMPTZ NULL
-
-
-);
-
-CREATE TRIGGER trg_users_updated_at
-BEFORE UPDATE ON users
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
 CREATE TABLE school_user_roles (
 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 school_id UUID NOT NULL REFERENCES schools(id),

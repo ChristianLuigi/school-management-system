@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
 type AttendanceHistory = {
   totals: {
@@ -42,7 +42,7 @@ function slotLabel(slot: string) {
   return slot === "MORNING" ? "Morning" : "Afternoon";
 }
 
-function statusTone(status: string) {
+function statusTone(status: string): SchoolBadgeTone {
   if (status === "PRESENT") return "green";
   if (status === "ABSENT") return "red";
   if (status === "LATE") return "amber";
@@ -186,7 +186,7 @@ export function StudentAttendanceHistoryPanelClient({
                     ) : null}
                   </div>
 
-                  <SchoolBadge tone={statusTone(record.status) as any}>
+                  <SchoolBadge tone={statusTone(record.status)}>
                     {statusLabel(record.status)}
                   </SchoolBadge>
                 </div>

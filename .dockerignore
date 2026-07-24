@@ -1,0 +1,16 @@
+.git
+.github
+.claude
+.agents
+.next
+**/.next
+**/dist
+**/node_modules
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+*.log
+apps/web/.private_uploads
+apps/web/public/uploads
+typescript-starter-master

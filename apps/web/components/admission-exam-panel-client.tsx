@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
 type AdmissionExam = {
   id: string;
@@ -36,14 +36,14 @@ function decisionLabel(status: string | null) {
     PENDING: "En attente",
     ADMITTED: "Admis",
     CONDITIONALLY_ADMITTED: "Admis sous condition",
-    WAITLISTED: "Liste d'attente",
+    WAITLISTED: "Liste d’attente",
     REJECTED: "Refuse",
   };
 
-  return status ? labels[status] ?? status : "-";
+  return status ? (labels[status] ?? status) : "-";
 }
 
-function toneForExam(status: string) {
+function toneForExam(status: string): SchoolBadgeTone {
   if (status === "COMPLETED") return "green";
   if (status === "SCHEDULED") return "blue";
   if (status === "CANCELLED") return "red";
@@ -113,8 +113,12 @@ export function AdmissionExamPanelClient({
     setSupervisorName(exam?.supervisorName ?? "");
     setFrenchScore(exam?.frenchScore == null ? "" : String(exam.frenchScore));
     setMathScore(exam?.mathScore == null ? "" : String(exam.mathScore));
-    setEnglishScore(exam?.englishScore == null ? "" : String(exam.englishScore));
-    setGeneralScore(exam?.generalScore == null ? "" : String(exam.generalScore));
+    setEnglishScore(
+      exam?.englishScore == null ? "" : String(exam.englishScore),
+    );
+    setGeneralScore(
+      exam?.generalScore == null ? "" : String(exam.generalScore),
+    );
     setInterviewScore(
       exam?.interviewScore == null ? "" : String(exam.interviewScore),
     );
@@ -130,29 +134,32 @@ export function AdmissionExamPanelClient({
     setError("");
 
     try {
-      const res = await fetch(`/api/admissions/${admissionApplicationId}/exam`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetch(
+        `/api/admissions/${admissionApplicationId}/exam`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            schoolId,
+            examStatus,
+            scheduledAt: scheduledAt || undefined,
+            location,
+            supervisorName,
+            frenchScore: numberOrUndefined(frenchScore),
+            mathScore: numberOrUndefined(mathScore),
+            englishScore: numberOrUndefined(englishScore),
+            generalScore: numberOrUndefined(generalScore),
+            interviewScore: numberOrUndefined(interviewScore),
+            totalScore: numberOrUndefined(totalScore),
+            maxScore: numberOrUndefined(maxScore) ?? 100,
+            decisionStatus,
+            notes,
+            syncAdmissionStatus,
+          }),
         },
-        body: JSON.stringify({
-          schoolId,
-          examStatus,
-          scheduledAt: scheduledAt || undefined,
-          location,
-          supervisorName,
-          frenchScore: numberOrUndefined(frenchScore),
-          mathScore: numberOrUndefined(mathScore),
-          englishScore: numberOrUndefined(englishScore),
-          generalScore: numberOrUndefined(generalScore),
-          interviewScore: numberOrUndefined(interviewScore),
-          totalScore: numberOrUndefined(totalScore),
-          maxScore: numberOrUndefined(maxScore) ?? 100,
-          decisionStatus,
-          notes,
-          syncAdmissionStatus,
-        }),
-      });
+      );
 
       const body = await res.json().catch(() => null);
 
@@ -179,15 +186,15 @@ export function AdmissionExamPanelClient({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
-            Examen d'admission
+            Examen d’admission
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            Planifier l'examen, saisir les resultats et enregistrer la decision.
+            Planifier l’examen, saisir les resultats et enregistrer la decision.
           </p>
 
           <div className="mt-3 flex flex-wrap gap-2">
             <SchoolBadge
-              tone={toneForExam(exam?.examStatus ?? "NOT_SCHEDULED") as any}
+              tone={toneForExam(exam?.examStatus ?? "NOT_SCHEDULED")}
             >
               {examStatusLabel(exam?.examStatus ?? "NOT_SCHEDULED")}
             </SchoolBadge>
@@ -218,7 +225,9 @@ export function AdmissionExamPanelClient({
           <div>
             <div className="text-slate-500">Date</div>
             <div className="font-medium">
-              {exam.scheduledAt ? new Date(exam.scheduledAt).toLocaleString() : "-"}
+              {exam.scheduledAt
+                ? new Date(exam.scheduledAt).toLocaleString()
+                : "-"}
             </div>
           </div>
 
@@ -241,7 +250,9 @@ export function AdmissionExamPanelClient({
 
           <div>
             <div className="text-slate-500">Decision</div>
-            <div className="font-medium">{decisionLabel(exam.decisionStatus)}</div>
+            <div className="font-medium">
+              {decisionLabel(exam.decisionStatus)}
+            </div>
           </div>
 
           <div>
@@ -251,7 +262,7 @@ export function AdmissionExamPanelClient({
         </div>
       ) : (
         <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
-          Aucun examen n'est encore planifie pour cette demande.
+          Aucun examen n’est encore planifie pour cette demande.
         </div>
       )}
 
@@ -360,7 +371,7 @@ export function AdmissionExamPanelClient({
             <option value="PENDING">Decision en attente</option>
             <option value="ADMITTED">Admis</option>
             <option value="CONDITIONALLY_ADMITTED">Admis sous condition</option>
-            <option value="WAITLISTED">Liste d'attente</option>
+            <option value="WAITLISTED">Liste d’attente</option>
             <option value="REJECTED">Refuse</option>
           </select>
 
@@ -370,7 +381,7 @@ export function AdmissionExamPanelClient({
               checked={syncAdmissionStatus}
               onChange={(event) => setSyncAdmissionStatus(event.target.checked)}
             />
-            Synchroniser automatiquement le statut de la demande d'admission
+            Synchroniser automatiquement le statut de la demande d’admission
           </label>
 
           <textarea

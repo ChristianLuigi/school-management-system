@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FinanceInvoiceCreateClient } from "@/components/finance-invoice-create-client";
 import { FinanceSettingsClient } from "@/components/finance-settings-client";
 import { FinancePaymentRecorderClient } from "@/components/finance-payment-recorder-client";
@@ -73,11 +73,7 @@ function statusTone(status: string): BadgeTone {
   return "blue";
 }
 
-export function FinanceOverviewClient({
-  schoolId,
-}: {
-  schoolId: string;
-}) {
+export function FinanceOverviewClient({ schoolId }: { schoolId: string }) {
   const [overview, setOverview] = useState<FinanceOverview | null>(null);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [status, setStatus] = useState("");
@@ -86,7 +82,7 @@ export function FinanceOverviewClient({
   const [loadingInvoices, setLoadingInvoices] = useState(false);
   const [error, setError] = useState("");
 
-  async function loadOverview() {
+  const loadOverview = useCallback(async () => {
     if (!schoolId) return;
 
     setLoadingOverview(true);
@@ -111,9 +107,9 @@ export function FinanceOverviewClient({
     } finally {
       setLoadingOverview(false);
     }
-  }
+  }, [schoolId]);
 
-  async function loadInvoices() {
+  const loadInvoices = useCallback(async () => {
     if (!schoolId) return;
 
     setLoadingInvoices(true);
@@ -146,15 +142,15 @@ export function FinanceOverviewClient({
     } finally {
       setLoadingInvoices(false);
     }
-  }
+  }, [schoolId, search, status]);
 
-  async function refreshAll() {
+  const refreshAll = useCallback(async () => {
     await Promise.all([loadOverview(), loadInvoices()]);
-  }
+  }, [loadInvoices, loadOverview]);
 
   useEffect(() => {
-    refreshAll();
-  }, [schoolId]);
+    void refreshAll();
+  }, [refreshAll]);
 
   return (
     <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5">
@@ -164,7 +160,8 @@ export function FinanceOverviewClient({
             Finance Overview
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            Review invoices, outstanding balances, payments, and overdue exposure.
+            Review invoices, outstanding balances, payments, and overdue
+            exposure.
           </p>
         </div>
 

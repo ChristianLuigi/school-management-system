@@ -58,7 +58,8 @@ export function StudentProfileEditClient({
   const [clearSection, setClearSection] = useState(false);
 
   const [photoReceived, setPhotoReceived] = useState(false);
-  const [birthCertificateReceived, setBirthCertificateReceived] = useState(false);
+  const [birthCertificateReceived, setBirthCertificateReceived] =
+    useState(false);
   const [vaccinationCardReceived, setVaccinationCardReceived] = useState(false);
   const [previousSchoolRecordReceived, setPreviousSchoolRecordReceived] =
     useState(false);
@@ -92,7 +93,9 @@ export function StudentProfileEditClient({
     setPhotoReceived(body.documents.photoReceived);
     setBirthCertificateReceived(body.documents.birthCertificateReceived);
     setVaccinationCardReceived(body.documents.vaccinationCardReceived);
-    setPreviousSchoolRecordReceived(body.documents.previousSchoolRecordReceived);
+    setPreviousSchoolRecordReceived(
+      body.documents.previousSchoolRecordReceived,
+    );
 
     setVaccinationStatus(body.health.vaccinationStatus ?? "");
     setAllergies(body.health.allergies ?? "");
@@ -324,6 +327,7 @@ export function StudentProfileEditClient({
 
                 <div className="mt-4 grid gap-4 md:grid-cols-[120px_1fr]">
                   {photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={photoUrl}
                       alt="Student photo preview"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
 type RegistrationFee = {
   required: boolean;
@@ -23,7 +23,7 @@ function money(value: number, currency = "USD") {
   }).format(value);
 }
 
-function feeStatusTone(status: string) {
+function feeStatusTone(status: string): SchoolBadgeTone {
   if (status === "PAID" || status === "WAIVED") return "green";
   if (status === "PENDING") return "amber";
   if (status === "REFUNDED") return "neutral";
@@ -138,14 +138,14 @@ export function AdmissionRegistrationFeePanelClient({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
-            Frais d'inscription
+            Frais d’inscription
           </h3>
           <p className="mt-1 text-sm text-slate-600">
             Suivre le paiement requis avant confirmation ou conversion en eleve.
           </p>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <SchoolBadge tone={feeStatusTone(fee.status) as any}>
+            <SchoolBadge tone={feeStatusTone(fee.status)}>
               {feeStatusLabel(fee.status)}
             </SchoolBadge>
 

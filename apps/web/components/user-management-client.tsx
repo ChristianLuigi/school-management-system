@@ -1,77 +1,599 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 
-type Role="SCHOOL_ADMIN"|"TEACHER"|"FINANCE_ADMIN"|"PARENT";
-type Membership={membershipId:string;roleCode:Role;membershipStatus:"ACTIVE"|"SUSPENDED";grantedAt:string};
-type SchoolUser={id:string;firstName:string|null;lastName:string|null;email:string;accountStatus:string;emailVerifiedAt:string|null;lastLoginAt:string|null;memberships:Membership[]};
-type Invitation={id:string;email:string;roleCode:Role;locale:"fr"|"en";status:string;expiresAt:string;sendCount:number;lastSentAt:string|null;deliveryFailed:boolean;createdAt:string};
-type ResponseData={users:SchoolUser[];invitations:Invitation[]};
-type GuardianOption={id:string;fullName:string;email:string|null;phone:string|null;linkedUserId:string|null};
-const ROLES=["TEACHER","FINANCE_ADMIN","PARENT"] as const;
-const FINANCE_PERMISSIONS=["FINANCE_DASHBOARD_VIEW","FINANCE_INVOICES_VIEW","FINANCE_INVOICES_CREATE","FINANCE_INVOICES_EDIT","FINANCE_PAYMENTS_VIEW","FINANCE_PAYMENTS_RECORD","FINANCE_RECEIPTS_PRINT","FINANCE_REPORTS_VIEW","PAYROLL_VIEW","PAYROLL_MANAGE"] as const;
-const DEFAULT_FINANCE_PERMISSIONS=["FINANCE_DASHBOARD_VIEW","FINANCE_INVOICES_VIEW","FINANCE_INVOICES_CREATE","FINANCE_PAYMENTS_VIEW","FINANCE_PAYMENTS_RECORD","FINANCE_RECEIPTS_PRINT"];
+type Role = "SCHOOL_ADMIN" | "TEACHER" | "FINANCE_ADMIN" | "PARENT";
+type Membership = {
+  membershipId: string;
+  roleCode: Role;
+  membershipStatus: "ACTIVE" | "SUSPENDED";
+  grantedAt: string;
+};
+type SchoolUser = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  accountStatus: string;
+  emailVerifiedAt: string | null;
+  lastLoginAt: string | null;
+  memberships: Membership[];
+};
+type Invitation = {
+  id: string;
+  email: string;
+  roleCode: Role;
+  locale: "fr" | "en";
+  status: string;
+  expiresAt: string;
+  sendCount: number;
+  lastSentAt: string | null;
+  deliveryFailed: boolean;
+  createdAt: string;
+};
+type ResponseData = { users: SchoolUser[]; invitations: Invitation[] };
+type GuardianOption = {
+  id: string;
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  linkedUserId: string | null;
+};
+const ROLES = ["TEACHER", "FINANCE_ADMIN", "PARENT"] as const;
+const FINANCE_PERMISSIONS = [
+  "FINANCE_DASHBOARD_VIEW",
+  "FINANCE_INVOICES_VIEW",
+  "FINANCE_INVOICES_CREATE",
+  "FINANCE_INVOICES_EDIT",
+  "FINANCE_PAYMENTS_VIEW",
+  "FINANCE_PAYMENTS_RECORD",
+  "FINANCE_RECEIPTS_PRINT",
+  "FINANCE_REPORTS_VIEW",
+  "PAYROLL_VIEW",
+  "PAYROLL_MANAGE",
+] as const;
+const DEFAULT_FINANCE_PERMISSIONS = [
+  "FINANCE_DASHBOARD_VIEW",
+  "FINANCE_INVOICES_VIEW",
+  "FINANCE_INVOICES_CREATE",
+  "FINANCE_PAYMENTS_VIEW",
+  "FINANCE_PAYMENTS_RECORD",
+  "FINANCE_RECEIPTS_PRINT",
+];
 
-export function UserManagementClient({schoolId}:{schoolId:string}){
- const {locale,t}=useI18n();
- const [data,setData]=useState<ResponseData>({users:[],invitations:[]});
- const [guardians,setGuardians]=useState<GuardianOption[]>([]);
- const [tab,setTab]=useState<"users"|"invitations">("users");
- const [email,setEmail]=useState("");const [firstName,setFirstName]=useState("");const [lastName,setLastName]=useState("");
- const [roleCode,setRoleCode]=useState<(typeof ROLES)[number]>("TEACHER");const [inviteLocale,setInviteLocale]=useState<"fr"|"en">(locale);
- const [guardianId,setGuardianId]=useState("");const [staffCode,setStaffCode]=useState("");const [jobTitle,setJobTitle]=useState("");const [department,setDepartment]=useState("");
- const [financePermissions,setFinancePermissions]=useState<string[]>(DEFAULT_FINANCE_PERMISSIONS);
- const [loading,setLoading]=useState(false);const [submitting,setSubmitting]=useState(false);const [actingId,setActingId]=useState("");const [message,setMessage]=useState("");const [error,setError]=useState("");
- const roleLabel=(role:string)=>t(`users.management.roles.${role}`);
- const formatDate=(value:string|null)=>value?new Intl.DateTimeFormat(locale==="fr"?"fr-HT":"en-US",{dateStyle:"medium",timeStyle:"short"}).format(new Date(value)):t("users.management.neverConnected");
+export function UserManagementClient({ schoolId }: { schoolId: string }) {
+  const { locale, t } = useI18n();
+  const [data, setData] = useState<ResponseData>({
+    users: [],
+    invitations: [],
+  });
+  const [guardians, setGuardians] = useState<GuardianOption[]>([]);
+  const [tab, setTab] = useState<"users" | "invitations">("users");
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [roleCode, setRoleCode] = useState<(typeof ROLES)[number]>("TEACHER");
+  const [inviteLocale, setInviteLocale] = useState<"fr" | "en">(locale);
+  const [guardianId, setGuardianId] = useState("");
+  const [staffCode, setStaffCode] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [department, setDepartment] = useState("");
+  const [financePermissions, setFinancePermissions] = useState<string[]>(
+    DEFAULT_FINANCE_PERMISSIONS,
+  );
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [actingId, setActingId] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const roleLabel = (role: string) => t(`users.management.roles.${role}`);
+  const formatDate = (value: string | null) =>
+    value
+      ? new Intl.DateTimeFormat(locale === "fr" ? "fr-HT" : "en-US", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(new Date(value))
+      : t("users.management.neverConnected");
 
- async function loadUsers(){setLoading(true);setError("");try{const response=await fetch(`/api/auth/invitations?${new URLSearchParams({schoolId})}`,{cache:"no-store"});const body=await response.json().catch(()=>null);if(!response.ok)throw new Error(body?.message??"Unable to load users.");setData(body);}catch(caught){setError(caught instanceof Error?caught.message:"Unable to load users.");}finally{setLoading(false);}}
- async function loadGuardians(){try{const response=await fetch(`/api/access-management/guardian-options?${new URLSearchParams({schoolId})}`,{cache:"no-store"});const body=await response.json().catch(()=>null);if(!response.ok)throw new Error(body?.message??"Unable to load guardians.");setGuardians(body);}catch(caught){setError(caught instanceof Error?caught.message:"Unable to load guardians.");}}
- useEffect(()=>{void Promise.all([loadUsers(),loadGuardians()]);},[schoolId]);
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/auth/invitations?${new URLSearchParams({ schoolId })}`,
+        { cache: "no-store" },
+      );
+      const body = await response.json().catch(() => null);
+      if (!response.ok)
+        throw new Error(body?.message ?? "Unable to load users.");
+      setData(body);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to load users.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId]);
+  const loadGuardians = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/access-management/guardian-options?${new URLSearchParams({ schoolId })}`,
+        { cache: "no-store" },
+      );
+      const body = await response.json().catch(() => null);
+      if (!response.ok)
+        throw new Error(body?.message ?? "Unable to load guardians.");
+      setGuardians(body);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to load guardians.",
+      );
+    }
+  }, [schoolId]);
+  useEffect(() => {
+    void Promise.all([loadUsers(), loadGuardians()]);
+  }, [loadGuardians, loadUsers]);
 
- async function inviteUser(event:FormEvent<HTMLFormElement>){event.preventDefault();setSubmitting(true);setMessage("");setError("");try{
-  const response=await fetch("/api/auth/invitations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-   schoolId,email,firstName:firstName.trim()||undefined,lastName:lastName.trim()||undefined,roleCode,locale:inviteLocale,
-   guardianId:roleCode==="PARENT"?guardianId:undefined,
-   staffCode:roleCode==="TEACHER"||roleCode==="FINANCE_ADMIN"?staffCode.trim()||undefined:undefined,
-   jobTitle:roleCode==="TEACHER"||roleCode==="FINANCE_ADMIN"?jobTitle.trim()||undefined:undefined,
-   department:roleCode==="TEACHER"||roleCode==="FINANCE_ADMIN"?department.trim()||undefined:undefined,
-   financePermissionCodes:roleCode==="FINANCE_ADMIN"?financePermissions:undefined,
-  })});
-  const body=await response.json().catch(()=>null);if(!response.ok)throw new Error(body?.message??"Unable to create invitation.");
-  setMessage(t(body.emailSent?"users.management.invitationSent":"users.management.invitationCreatedButEmailFailed"));
-  setEmail("");setFirstName("");setLastName("");setStaffCode("");setJobTitle("");setDepartment("");setGuardianId("");setFinancePermissions(DEFAULT_FINANCE_PERMISSIONS);await loadUsers();setTab("invitations");
- }catch(caught){setError(caught instanceof Error?caught.message:"Unable to create invitation.");}finally{setSubmitting(false);}}
+  async function inviteUser(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage("");
+    setError("");
+    try {
+      const response = await fetch("/api/auth/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          schoolId,
+          email,
+          firstName: firstName.trim() || undefined,
+          lastName: lastName.trim() || undefined,
+          roleCode,
+          locale: inviteLocale,
+          guardianId: roleCode === "PARENT" ? guardianId : undefined,
+          staffCode:
+            roleCode === "TEACHER" || roleCode === "FINANCE_ADMIN"
+              ? staffCode.trim() || undefined
+              : undefined,
+          jobTitle:
+            roleCode === "TEACHER" || roleCode === "FINANCE_ADMIN"
+              ? jobTitle.trim() || undefined
+              : undefined,
+          department:
+            roleCode === "TEACHER" || roleCode === "FINANCE_ADMIN"
+              ? department.trim() || undefined
+              : undefined,
+          financePermissionCodes:
+            roleCode === "FINANCE_ADMIN" ? financePermissions : undefined,
+        }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok)
+        throw new Error(body?.message ?? "Unable to create invitation.");
+      setMessage(
+        t(
+          body.emailSent
+            ? "users.management.invitationSent"
+            : "users.management.invitationCreatedButEmailFailed",
+        ),
+      );
+      setEmail("");
+      setFirstName("");
+      setLastName("");
+      setStaffCode("");
+      setJobTitle("");
+      setDepartment("");
+      setGuardianId("");
+      setFinancePermissions(DEFAULT_FINANCE_PERMISSIONS);
+      await loadUsers();
+      setTab("invitations");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Unable to create invitation.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
- async function action(url:string,method:"POST"|"DELETE"|"PATCH",id:string,body?:unknown){setActingId(id);setError("");setMessage("");try{const response=await fetch(url,{method,headers:body?{"Content-Type":"application/json"}:undefined,body:body?JSON.stringify(body):undefined});const result=await response.json().catch(()=>null);if(!response.ok)throw new Error(result?.message??"Unable to complete action.");await loadUsers();}catch(caught){setError(caught instanceof Error?caught.message:"Unable to complete action.");}finally{setActingId("");}}
- function invitationStatus(status:string){const key:Record<string,string>={PENDING:"pending",ACCEPTED:"accepted",EXPIRED:"expired",REVOKED:"revoked"};return t(`users.management.${key[status]??status.toLowerCase()}`);}
- function togglePermission(code:string){setFinancePermissions((current)=>current.includes(code)?current.filter((value)=>value!==code):[...current,code]);}
+  async function action(
+    url: string,
+    method: "POST" | "DELETE" | "PATCH",
+    id: string,
+    body?: unknown,
+  ) {
+    setActingId(id);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok)
+        throw new Error(result?.message ?? "Unable to complete action.");
+      await loadUsers();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to complete action.",
+      );
+    } finally {
+      setActingId("");
+    }
+  }
+  function invitationStatus(status: string) {
+    const key: Record<string, string> = {
+      PENDING: "pending",
+      ACCEPTED: "accepted",
+      EXPIRED: "expired",
+      REVOKED: "revoked",
+    };
+    return t(`users.management.${key[status] ?? status.toLowerCase()}`);
+  }
+  function togglePermission(code: string) {
+    setFinancePermissions((current) =>
+      current.includes(code)
+        ? current.filter((value) => value !== code)
+        : [...current, code],
+    );
+  }
 
- return <div className="space-y-6">
-  <form onSubmit={inviteUser} className="rounded-2xl border border-slate-200 bg-white p-5">
-   <h2 className="text-lg font-semibold text-slate-950">{t("users.management.inviteUser")}</h2><p className="mt-1 text-sm text-slate-600">{t("users.management.inviteDescription")}</p>
-   <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-    <Field label={t("users.management.email")} value={email} onChange={setEmail} type="email" required/>
-    <Field label={t("users.management.firstName")} value={firstName} onChange={setFirstName}/><Field label={t("users.management.lastName")} value={lastName} onChange={setLastName}/>
-    <label className="text-sm"><span className="font-medium">{t("users.management.role")}</span><select value={roleCode} onChange={(event)=>setRoleCode(event.target.value as typeof roleCode)} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2">{ROLES.map((role)=><option key={role} value={role}>{roleLabel(role)}</option>)}</select></label>
-    <label className="text-sm"><span className="font-medium">{t("users.management.language")}</span><select value={inviteLocale} onChange={(event)=>setInviteLocale(event.target.value as "fr"|"en")} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"><option value="fr">Français</option><option value="en">English</option></select></label>
-    {(roleCode==="TEACHER"||roleCode==="FINANCE_ADMIN")&&<><Field label={t("users.management.staffCode")} value={staffCode} onChange={setStaffCode}/><Field label={t("users.management.jobTitle")} value={jobTitle} onChange={setJobTitle}/><Field label={t("users.management.department")} value={department} onChange={setDepartment}/></>}
-    {roleCode==="PARENT"&&<label className="text-sm md:col-span-2"><span className="font-medium">{t("users.management.guardian")}</span><select required value={guardianId} onChange={(event)=>setGuardianId(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"><option value="">{t("users.management.selectGuardian")}</option>{guardians.map((guardian)=><option key={guardian.id} value={guardian.id}>{guardian.fullName}{guardian.email?` · ${guardian.email}`:""}{guardian.linkedUserId?` · ${t("users.management.alreadyLinked")}`:""}</option>)}</select></label>}
-   </div>
-   {roleCode==="FINANCE_ADMIN"&&<fieldset className="mt-5 rounded-xl border border-slate-200 p-4"><legend className="px-2 text-sm font-semibold">{t("users.management.financePermissions")}</legend><div className="grid gap-2 md:grid-cols-2">{FINANCE_PERMISSIONS.map((code)=><label key={code} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={financePermissions.includes(code)} onChange={()=>togglePermission(code)}/><span>{t(`users.management.permissions.${code}`)}</span></label>)}</div><p className="mt-3 text-xs text-slate-500">{t("users.management.payrollNotDefault")}</p></fieldset>}
-   <button disabled={submitting} className="mt-5 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">{t(submitting?"users.management.sendingInvitation":"users.management.sendInvitation")}</button>
-  </form>
-  {message&&<div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{message}</div>}{error&&<div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-  <div className="rounded-2xl border border-slate-200 bg-white"><div className="flex border-b border-slate-200 p-2">{(["users","invitations"] as const).map((name)=><button key={name} type="button" onClick={()=>setTab(name)} className={`rounded-xl px-4 py-2 text-sm font-medium ${tab===name?"bg-slate-950 text-white":"text-slate-600"}`}>{t(`users.management.${name}Tab`)} · {data[name].length}</button>)}</div>
-   <div className="space-y-3 p-5">{loading&&<div className="text-sm text-slate-500">{t("common.loading")}</div>}
-    {tab==="users"?data.users.map((user)=><div key={user.id} className="rounded-2xl border border-slate-200 p-4"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="font-semibold text-slate-950">{[user.firstName,user.lastName].filter(Boolean).join(" ")||user.email}</div><div className="mt-1 text-sm text-slate-600">{user.email}</div><div className="mt-2 text-xs text-slate-500">{t(user.emailVerifiedAt?"users.management.verified":"users.management.notVerified")} · {t("users.management.lastLogin")}: {formatDate(user.lastLoginAt)}</div></div><div className="space-y-2">{user.memberships.map((membership,index)=><div key={`${membership.membershipId}-${membership.roleCode}`} className="flex items-center justify-end gap-2"><span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">{roleLabel(membership.roleCode)}</span><span className={`rounded-full px-3 py-1 text-xs font-medium ${membership.membershipStatus==="ACTIVE"?"bg-green-50 text-green-700":"bg-amber-50 text-amber-700"}`}>{t(membership.membershipStatus==="ACTIVE"?"users.management.membershipActive":"users.management.membershipSuspended")}</span>{index===0&&<button type="button" disabled={actingId===membership.membershipId} onClick={()=>{const next=membership.membershipStatus==="ACTIVE"?"SUSPENDED":"ACTIVE";if(next==="SUSPENDED"&&!window.confirm(t("users.management.confirmSuspend")))return;void action(`/api/auth/invitations/school-users/${membership.membershipId}/status`,"PATCH",membership.membershipId,{schoolId,membershipStatus:next});}} className="rounded-lg border border-slate-300 px-3 py-1 text-xs">{t(membership.membershipStatus==="ACTIVE"?"users.management.suspend":"users.management.reactivate")}</button>}</div>)}</div></div></div>):data.invitations.map((invitation)=><div key={invitation.id} className="rounded-2xl border border-slate-200 p-4"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="font-semibold text-slate-950">{invitation.email}</div><div className="mt-1 text-sm text-slate-600">{roleLabel(invitation.roleCode)}</div><div className="mt-2 text-xs text-slate-500">{invitationStatus(invitation.status)} · {formatDate(invitation.expiresAt)}</div>{invitation.deliveryFailed&&<div className="mt-2 text-xs font-medium text-red-700">{t("users.management.emailDeliveryFailed")}</div>}</div>{invitation.status==="PENDING"&&<div className="flex gap-2"><button disabled={actingId===invitation.id} onClick={()=>void action("/api/auth/invitations/resend","POST",invitation.id,{invitationId:invitation.id})} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs">{t("users.management.resend")}</button><button disabled={actingId===invitation.id} onClick={()=>{if(window.confirm(t("users.management.confirmRevoke")))void action(`/api/auth/invitations/${invitation.id}`,"DELETE",invitation.id);}} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700">{t("users.management.revoke")}</button></div>}</div></div>)}
-    {!loading&&!(tab==="users"?data.users.length:data.invitations.length)&&<div className="text-sm text-slate-500">{t(tab==="users"?"users.management.noUsers":"users.management.noInvitations")}</div>}
-   </div>
-  </div>
- </div>;
+  return (
+    <div className="space-y-6">
+      <form
+        onSubmit={inviteUser}
+        className="rounded-2xl border border-slate-200 bg-white p-5"
+      >
+        <h2 className="text-lg font-semibold text-slate-950">
+          {t("users.management.inviteUser")}
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          {t("users.management.inviteDescription")}
+        </p>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Field
+            label={t("users.management.email")}
+            value={email}
+            onChange={setEmail}
+            type="email"
+            required
+          />
+          <Field
+            label={t("users.management.firstName")}
+            value={firstName}
+            onChange={setFirstName}
+          />
+          <Field
+            label={t("users.management.lastName")}
+            value={lastName}
+            onChange={setLastName}
+          />
+          <label className="text-sm">
+            <span className="font-medium">{t("users.management.role")}</span>
+            <select
+              value={roleCode}
+              onChange={(event) =>
+                setRoleCode(event.target.value as typeof roleCode)
+              }
+              className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+            >
+              {ROLES.map((role) => (
+                <option key={role} value={role}>
+                  {roleLabel(role)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm">
+            <span className="font-medium">
+              {t("users.management.language")}
+            </span>
+            <select
+              value={inviteLocale}
+              onChange={(event) =>
+                setInviteLocale(event.target.value as "fr" | "en")
+              }
+              className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+            >
+              <option value="fr">Français</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          {(roleCode === "TEACHER" || roleCode === "FINANCE_ADMIN") && (
+            <>
+              <Field
+                label={t("users.management.staffCode")}
+                value={staffCode}
+                onChange={setStaffCode}
+              />
+              <Field
+                label={t("users.management.jobTitle")}
+                value={jobTitle}
+                onChange={setJobTitle}
+              />
+              <Field
+                label={t("users.management.department")}
+                value={department}
+                onChange={setDepartment}
+              />
+            </>
+          )}
+          {roleCode === "PARENT" && (
+            <label className="text-sm md:col-span-2">
+              <span className="font-medium">
+                {t("users.management.guardian")}
+              </span>
+              <select
+                required
+                value={guardianId}
+                onChange={(event) => setGuardianId(event.target.value)}
+                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+              >
+                <option value="">{t("users.management.selectGuardian")}</option>
+                {guardians.map((guardian) => (
+                  <option key={guardian.id} value={guardian.id}>
+                    {guardian.fullName}
+                    {guardian.email ? ` · ${guardian.email}` : ""}
+                    {guardian.linkedUserId
+                      ? ` · ${t("users.management.alreadyLinked")}`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+        {roleCode === "FINANCE_ADMIN" && (
+          <fieldset className="mt-5 rounded-xl border border-slate-200 p-4">
+            <legend className="px-2 text-sm font-semibold">
+              {t("users.management.financePermissions")}
+            </legend>
+            <div className="grid gap-2 md:grid-cols-2">
+              {FINANCE_PERMISSIONS.map((code) => (
+                <label key={code} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={financePermissions.includes(code)}
+                    onChange={() => togglePermission(code)}
+                  />
+                  <span>{t(`users.management.permissions.${code}`)}</span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              {t("users.management.payrollNotDefault")}
+            </p>
+          </fieldset>
+        )}
+        <button
+          disabled={submitting}
+          className="mt-5 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+        >
+          {t(
+            submitting
+              ? "users.management.sendingInvitation"
+              : "users.management.sendInvitation",
+          )}
+        </button>
+      </form>
+      {message && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          {message}
+        </div>
+      )}
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      <div className="rounded-2xl border border-slate-200 bg-white">
+        <div className="flex border-b border-slate-200 p-2">
+          {(["users", "invitations"] as const).map((name) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => setTab(name)}
+              className={`rounded-xl px-4 py-2 text-sm font-medium ${tab === name ? "bg-slate-950 text-white" : "text-slate-600"}`}
+            >
+              {t(`users.management.${name}Tab`)} · {data[name].length}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-3 p-5">
+          {loading && (
+            <div className="text-sm text-slate-500">{t("common.loading")}</div>
+          )}
+          {tab === "users"
+            ? data.users.map((user) => (
+                <div
+                  key={user.id}
+                  className="rounded-2xl border border-slate-200 p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <div className="font-semibold text-slate-950">
+                        {[user.firstName, user.lastName]
+                          .filter(Boolean)
+                          .join(" ") || user.email}
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {user.email}
+                      </div>
+                      <div className="mt-2 text-xs text-slate-500">
+                        {t(
+                          user.emailVerifiedAt
+                            ? "users.management.verified"
+                            : "users.management.notVerified",
+                        )}{" "}
+                        · {t("users.management.lastLogin")}:{" "}
+                        {formatDate(user.lastLoginAt)}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {user.memberships.map((membership, index) => (
+                        <div
+                          key={`${membership.membershipId}-${membership.roleCode}`}
+                          className="flex items-center justify-end gap-2"
+                        >
+                          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                            {roleLabel(membership.roleCode)}
+                          </span>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${membership.membershipStatus === "ACTIVE" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}
+                          >
+                            {t(
+                              membership.membershipStatus === "ACTIVE"
+                                ? "users.management.membershipActive"
+                                : "users.management.membershipSuspended",
+                            )}
+                          </span>
+                          {index === 0 && (
+                            <button
+                              type="button"
+                              disabled={actingId === membership.membershipId}
+                              onClick={() => {
+                                const next =
+                                  membership.membershipStatus === "ACTIVE"
+                                    ? "SUSPENDED"
+                                    : "ACTIVE";
+                                if (
+                                  next === "SUSPENDED" &&
+                                  !window.confirm(
+                                    t("users.management.confirmSuspend"),
+                                  )
+                                )
+                                  return;
+                                void action(
+                                  `/api/auth/invitations/school-users/${membership.membershipId}/status`,
+                                  "PATCH",
+                                  membership.membershipId,
+                                  { schoolId, membershipStatus: next },
+                                );
+                              }}
+                              className="rounded-lg border border-slate-300 px-3 py-1 text-xs"
+                            >
+                              {t(
+                                membership.membershipStatus === "ACTIVE"
+                                  ? "users.management.suspend"
+                                  : "users.management.reactivate",
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))
+            : data.invitations.map((invitation) => (
+                <div
+                  key={invitation.id}
+                  className="rounded-2xl border border-slate-200 p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <div className="font-semibold text-slate-950">
+                        {invitation.email}
+                      </div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        {roleLabel(invitation.roleCode)}
+                      </div>
+                      <div className="mt-2 text-xs text-slate-500">
+                        {invitationStatus(invitation.status)} ·{" "}
+                        {formatDate(invitation.expiresAt)}
+                      </div>
+                      {invitation.deliveryFailed && (
+                        <div className="mt-2 text-xs font-medium text-red-700">
+                          {t("users.management.emailDeliveryFailed")}
+                        </div>
+                      )}
+                    </div>
+                    {invitation.status === "PENDING" && (
+                      <div className="flex gap-2">
+                        <button
+                          disabled={actingId === invitation.id}
+                          onClick={() =>
+                            void action(
+                              "/api/auth/invitations/resend",
+                              "POST",
+                              invitation.id,
+                              { invitationId: invitation.id },
+                            )
+                          }
+                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs"
+                        >
+                          {t("users.management.resend")}
+                        </button>
+                        <button
+                          disabled={actingId === invitation.id}
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                t("users.management.confirmRevoke"),
+                              )
+                            )
+                              void action(
+                                `/api/auth/invitations/${invitation.id}`,
+                                "DELETE",
+                                invitation.id,
+                              );
+                          }}
+                          className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700"
+                        >
+                          {t("users.management.revoke")}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+          {!loading &&
+            !(tab === "users"
+              ? data.users.length
+              : data.invitations.length) && (
+              <div className="text-sm text-slate-500">
+                {t(
+                  tab === "users"
+                    ? "users.management.noUsers"
+                    : "users.management.noInvitations",
+                )}
+              </div>
+            )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function Field({label,value,onChange,type="text",required=false}:{label:string;value:string;onChange:(value:string)=>void;type?:string;required?:boolean}){
- return <label className="text-sm"><span className="font-medium">{label}</span><input required={required} type={type} value={value} onChange={(event)=>onChange(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"/></label>;
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="text-sm">
+      <span className="font-medium">{label}</span>
+      <input
+        required={required}
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+      />
+    </label>
+  );
 }

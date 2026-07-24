@@ -7,6 +7,14 @@ INSERT INTO school_levels (
   display_order,
   is_active
 )
+SELECT
+  defaults.id::uuid,
+  defaults.school_id::uuid,
+  defaults.code,
+  defaults.name_i18n,
+  defaults.display_order,
+  defaults.is_active
+FROM (
 VALUES
 (
   '91111111-1111-4111-8111-111111111111',
@@ -32,6 +40,16 @@ VALUES
   3,
   TRUE
 )
+) AS defaults(
+  id,
+  school_id,
+  code,
+  name_i18n,
+  display_order,
+  is_active
+)
+JOIN schools school
+  ON school.id = defaults.school_id::uuid
 ON CONFLICT DO NOTHING;
 
 -- Link existing demo grade levels to Secondary

@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ReportCardCommentsEditor } from "@/components/report-card-comments-editor";
 import { ReportCardPrintTemplate } from "@/components/report-card-print-template";
-import {
-  ReportCardDetails,
-  ReportCardLanguage,
-} from "@/lib/report-card-types";
+import { ReportCardDetails, ReportCardLanguage } from "@/lib/report-card-types";
 
 export function ReportCardViewClient({
   reportCardId,
@@ -21,7 +18,7 @@ export function ReportCardViewClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function loadReportCard() {
+  const loadReportCard = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -38,15 +35,17 @@ export function ReportCardViewClient({
 
       setData(body);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load report card.");
+      setError(
+        err instanceof Error ? err.message : "Failed to load report card.",
+      );
     } finally {
       setLoading(false);
     }
-  }
+  }, [reportCardId]);
 
   useEffect(() => {
-    loadReportCard();
-  }, [reportCardId]);
+    void loadReportCard();
+  }, [loadReportCard]);
 
   return (
     <div className="space-y-6">

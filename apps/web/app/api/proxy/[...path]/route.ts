@@ -1,14 +1,24 @@
-﻿import { AUTH_COOKIE_NAME } from "@/lib/auth";
+import { AUTH_COOKIE_NAME } from "@/lib/auth";
+import { getRequestId } from "@/lib/api/request-id";
+import { assertTrustedOrigin } from "@/lib/security/trusted-origin";
 import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+  process.env.API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:4000";
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;
 };
 
 async function forwardRequest(request: NextRequest, context: RouteContext) {
+  const requestId = getRequestId(request);
+  if (!["GET", "HEAD"].includes(request.method.toUpperCase())) {
+    const originFailure = assertTrustedOrigin(request);
+    if (originFailure) return originFailure;
+  }
+
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value ?? "";
 
   if (!token) {
@@ -19,12 +29,13 @@ async function forwardRequest(request: NextRequest, context: RouteContext) {
   }
 
   const { path } = await context.params;
-  const cleanPath = path.join("/");
+  const cleanPath = path.map((segment) => encodeURIComponent(segment)).join("/");
   const query = request.nextUrl.search;
   const upstreamUrl = `${API_BASE_URL}/${cleanPath}${query}`;
 
   const headers = new Headers();
   headers.set("Authorization", `Bearer ${token}`);
+  headers.set("X-Request-Id", requestId);
 
   const contentType = request.headers.get("content-type");
   if (contentType) {
@@ -58,20 +69,26 @@ async function forwardRequest(request: NextRequest, context: RouteContext) {
     if (contentDisposition) {
       responseHeaders.set("content-disposition", contentDisposition);
     }
+    responseHeaders.set("cache-control", "no-store");
+    responseHeaders.set(
+      "x-request-id",
+      upstream.headers.get("x-request-id") ?? requestId,
+    );
 
     return new NextResponse(body, {
       status: upstream.status,
       headers: responseHeaders,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to reach upstream API.",
+        message: "Upstream API is unavailable.",
+        requestId,
       },
-      { status: 502 },
+      {
+        status: 502,
+        headers: { "X-Request-Id": requestId },
+      },
     );
   }
 }

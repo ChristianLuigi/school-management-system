@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { ReactNode } from "react";
 
 export function SchoolPageHeader({
@@ -73,12 +73,14 @@ export function SchoolStatCard({
   );
 }
 
+export type SchoolBadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
+
 export function SchoolBadge({
   children,
   tone = "neutral",
 }: {
   children: ReactNode;
-  tone?: "neutral" | "green" | "amber" | "red" | "blue";
+  tone?: SchoolBadgeTone;
 }) {
   const styles = {
     neutral: "bg-slate-100 text-slate-700",
@@ -89,7 +91,9 @@ export function SchoolBadge({
   };
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${styles[tone]}`}>
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-medium ${styles[tone]}`}
+    >
       {children}
     </span>
   );

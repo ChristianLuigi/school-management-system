@@ -82,7 +82,9 @@ export function AdmissionRegistrationReceiptThermalClient({
       setApplication(body);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load admission receipt.",
+        err instanceof Error
+          ? err.message
+          : "Failed to load admission receipt.",
       );
     }
   }
@@ -132,8 +134,8 @@ export function AdmissionRegistrationReceiptThermalClient({
 
       {application && !canPrintReceipt ? (
         <div className="thermal-no-print p-4 text-sm text-amber-800">
-          This registration fee has not been paid or waived yet. A receipt should
-          only be printed after payment or waiver.
+          This registration fee has not been paid or waived yet. A receipt
+          should only be printed after payment or waiver.
         </div>
       ) : null}
 
@@ -141,7 +143,7 @@ export function AdmissionRegistrationReceiptThermalClient({
         <div className="thermal-receipt">
           <div className="thermal-center">
             <div className="thermal-bold">ADMISSION RECEIPT</div>
-            <div>Frais d'inscription</div>
+            <div>Frais d’inscription</div>
           </div>
 
           <div className="thermal-divider" />
@@ -177,8 +179,7 @@ export function AdmissionRegistrationReceiptThermalClient({
           <div>
             <div className="thermal-bold">Candidate</div>
             <div>
-              {application.candidate.firstName}{" "}
-              {application.candidate.lastName}
+              {application.candidate.firstName} {application.candidate.lastName}
             </div>
             <div>DOB: {application.candidate.dateOfBirth ?? "-"}</div>
           </div>

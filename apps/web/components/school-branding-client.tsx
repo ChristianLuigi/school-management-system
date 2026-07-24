@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Branding = {
   schoolId: string;
@@ -19,11 +19,7 @@ type Branding = {
   brandingUpdatedAt: string | null;
 };
 
-export function SchoolBrandingClient({
-  schoolId,
-}: {
-  schoolId: string;
-}) {
+export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
   const [form, setForm] = useState({
     logoUrl: "",
     addressLine1: "",
@@ -44,7 +40,7 @@ export function SchoolBrandingClient({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  async function loadBranding() {
+  const loadBranding = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -86,7 +82,7 @@ export function SchoolBrandingClient({
     } finally {
       setLoading(false);
     }
-  }
+  }, [schoolId]);
 
   async function saveBranding() {
     setSaving(true);
@@ -135,8 +131,8 @@ export function SchoolBrandingClient({
   }
 
   useEffect(() => {
-    loadBranding();
-  }, [schoolId]);
+    void loadBranding();
+  }, [loadBranding]);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
