@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:4000"
@@ -35,8 +35,11 @@ const SCHOOL_ROUTE_ROLE_GATES: Array<{ prefix: string; roles: string[] }> = [
 function isPublicPath(pathname: string) {
   return (
     pathname === "/login" ||
+    pathname === "/activate-account" ||
     pathname.startsWith("/invite") ||
     pathname.startsWith("/api/session/") ||
+    pathname.startsWith("/api/auth/invitations/inspect") ||
+    pathname.startsWith("/api/auth/invitations/accept") ||
     pathname.startsWith("/api/proxy/") ||
     pathname.startsWith("/api/platform/") ||
     pathname.startsWith("/_next/") ||

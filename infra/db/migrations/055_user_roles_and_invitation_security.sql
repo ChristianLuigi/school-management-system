@@ -1,0 +1,10 @@
+BEGIN;
+
+ALTER TYPE school_staff_role ADD VALUE IF NOT EXISTS 'PARENT';
+
+ALTER TABLE user_invitations
+  ADD COLUMN IF NOT EXISTS first_name TEXT,
+  ADD COLUMN IF NOT EXISTS last_name TEXT,
+  ADD COLUMN IF NOT EXISTS failure_reason TEXT;
+
+COMMIT;
