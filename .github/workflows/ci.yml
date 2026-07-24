@@ -131,7 +131,7 @@ jobs:
 
       - name: Run database-backed integration tests
         run: >-
-          pnpm test:integration --
+          pnpm --dir apps/api run test:integration --
           --json
           --outputFile=integration-report.json
 
