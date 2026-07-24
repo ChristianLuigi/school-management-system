@@ -1,11 +1,10 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { getSessionCookieName } from "@/lib/auth/session-cookie";
+import { NextRequest, NextResponse } from "next/server";
+import { assertTrustedOrigin } from "@/lib/security/trusted-origin";
 
 const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:4000"
 ).replace("://localhost:", "://127.0.0.1:");
-
-const AUTH_COOKIE_NAME =
-  process.env.AUTH_COOKIE_NAME ?? "school_admin_session";
 
 const AUTH_SCHOOL_COOKIE_NAME =
   process.env.AUTH_SCHOOL_COOKIE_NAME ?? "school_current_id";
@@ -36,6 +35,8 @@ function isPublicPath(pathname: string) {
   return (
     pathname === "/login" ||
     pathname === "/activate-account" ||
+    pathname === "/api/auth/login" ||
+    pathname === "/api/auth/logout" ||
     pathname.startsWith("/invite") ||
     pathname.startsWith("/api/session/") ||
     pathname.startsWith("/api/auth/invitations/inspect") ||
@@ -136,11 +137,19 @@ async function fetchMeContext(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (
+    pathname.startsWith("/api/") &&
+    ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)
+  ) {
+    const originFailure = assertTrustedOrigin(request);
+    if (originFailure) return originFailure;
+  }
+
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value ?? "";
+  const token = request.cookies.get(getSessionCookieName())?.value ?? "";
 
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));

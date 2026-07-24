@@ -1,13 +1,11 @@
+import { getSessionCookieName } from "@/lib/auth/session-cookie";
 import { NextRequest, NextResponse } from "next/server";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
 
-const AUTH_COOKIE_NAME =
-  process.env.AUTH_COOKIE_NAME ?? "school_admin_session";
-
 export async function GET(request: NextRequest) {
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const token = request.cookies.get(getSessionCookieName())?.value;
 
   if (!token) {
     return NextResponse.json(
@@ -40,7 +38,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const token = request.cookies.get(getSessionCookieName())?.value;
 
   if (!token) {
     return NextResponse.json(

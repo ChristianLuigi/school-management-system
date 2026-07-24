@@ -1,3 +1,4 @@
+import { getSessionCookieName } from "@/lib/auth/session-cookie";
 import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -7,9 +8,6 @@ export const runtime = "nodejs";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
-
-const AUTH_COOKIE_NAME =
-  process.env.AUTH_COOKIE_NAME ?? "school_admin_session";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -90,7 +88,7 @@ async function verifyStudentAccess(input: {
 }
 
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const token = request.cookies.get(getSessionCookieName())?.value;
 
   if (!token) {
     return NextResponse.json(
@@ -182,7 +180,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const token = request.cookies.get(getSessionCookieName())?.value;
 
   if (!token) {
     return NextResponse.json(

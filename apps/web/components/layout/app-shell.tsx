@@ -59,7 +59,7 @@ export function AppShell({
     setLoggingOut(true);
 
     try {
-      await fetch("/api/session/logout", { method: "POST" });
+      await fetch("/api/auth/logout", { method: "POST" });
       router.push("/login");
       router.refresh();
     } finally {
