@@ -37,8 +37,29 @@ describe('database migration runner integration', () => {
     return directory;
   }
 
+  async function waitForDatabaseConnectionsToClose(name: string) {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const result = await adminPool.query<{ count: string }>(
+        `
+        SELECT COUNT(*)::text AS count
+        FROM pg_stat_activity
+        WHERE datname = $1
+          AND pid <> pg_backend_pid()
+        `,
+        [name],
+      );
+
+      if (Number(result.rows[0]?.count ?? 0) === 0) {
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+  }
+
   afterEach(async () => {
     for (const name of databases) {
+      await waitForDatabaseConnectionsToClose(name);
       await adminPool.query(
         `
         SELECT pg_terminate_backend(pid)
