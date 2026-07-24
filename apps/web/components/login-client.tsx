@@ -12,6 +12,7 @@ export function LoginClient() {
   const [error, setError] = useState("");
   const activated = searchParams.get("activated") === "1";
   const membershipAdded = searchParams.get("membershipAdded") === "1";
+  const passwordReset = searchParams.get("passwordReset") === "1";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,6 +62,7 @@ export function LoginClient() {
         <p className="mt-2 text-sm text-slate-600">Accédez à votre espace scolaire sécurisé.</p>
         {activated && <Notice>Votre compte a été activé. Vous pouvez maintenant vous connecter.</Notice>}
         {membershipAdded && <Notice>Votre nouvelle école a été ajoutée. Reconnectez-vous pour continuer.</Notice>}
+        {passwordReset && <Notice>Votre mot de passe a été réinitialisé. Toutes les anciennes sessions ont été fermées.</Notice>}
         {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
         <label className="mt-6 block text-sm">
           <span className="font-medium">Adresse électronique</span>
@@ -78,6 +80,7 @@ export function LoginClient() {
           className="mt-6 w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">
           {submitting ? "Connexion…" : "Se connecter"}
         </button>
+        <a href="/forgot-password" className="mt-4 block text-center text-sm text-blue-700 hover:underline">Mot de passe oublié ?</a>
       </form>
     </main>
   );

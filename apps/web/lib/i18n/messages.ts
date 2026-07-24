@@ -1,4 +1,4 @@
-﻿export const messages = {
+export const messages = {
   fr: {
     common: {
       appName: "ALMAC School Management",
@@ -29,6 +29,32 @@
       ready: "Prêt",
     },
 
+    auth: {
+      forgotPassword: {
+        title: "Mot de passe oublié",
+        description: "Entrez votre adresse électronique. Si un compte admissible existe, vous recevrez les instructions de réinitialisation.",
+        email: "Adresse électronique",
+        submit: "Envoyer les instructions",
+        submitting: "Envoi...",
+        successTitle: "Vérifiez votre messagerie",
+        successMessage: "Si un compte admissible existe pour cette adresse, un courriel de réinitialisation sera envoyé.",
+        backToLogin: "Retour à la connexion",
+        requestFailed: "Impossible de traiter la demande.",
+      },
+      resetPassword: {
+        title: "Créer un nouveau mot de passe",
+        checking: "Vérification du lien...",
+        invalidTitle: "Lien indisponible",
+        invalidMessage: "Ce lien de réinitialisation est invalide ou a expiré.",
+        account: "Compte",
+        password: "Nouveau mot de passe",
+        confirmPassword: "Confirmer le mot de passe",
+        passwordHint: "Utilisez au moins 15 caractères. Les espaces sont autorisés.",
+        submit: "Réinitialiser le mot de passe",
+        submitting: "Réinitialisation...",
+        mismatch: "Les mots de passe ne correspondent pas.",
+      },
+    },
     nav: {
       dashboard: "Tableau de bord",
       demo: "Démo finale",
@@ -333,6 +359,32 @@
       ready: "Ready",
     },
 
+    auth: {
+      forgotPassword: {
+        title: "Forgot password",
+        description: "Enter your email address. If an eligible account exists, you will receive reset instructions.",
+        email: "Email address",
+        submit: "Send instructions",
+        submitting: "Sending...",
+        successTitle: "Check your inbox",
+        successMessage: "If an eligible account exists for this address, a password-reset email will be sent.",
+        backToLogin: "Back to login",
+        requestFailed: "Unable to process the request.",
+      },
+      resetPassword: {
+        title: "Create a new password",
+        checking: "Checking the link...",
+        invalidTitle: "Link unavailable",
+        invalidMessage: "This password-reset link is invalid or has expired.",
+        account: "Account",
+        password: "New password",
+        confirmPassword: "Confirm password",
+        passwordHint: "Use at least 15 characters. Spaces are allowed.",
+        submit: "Reset password",
+        submitting: "Resetting...",
+        mismatch: "The passwords do not match.",
+      },
+    },
     nav: {
       dashboard: "Dashboard",
       demo: "Final Demo",
