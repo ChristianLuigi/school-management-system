@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { SectionSelectorClient } from "@/components/section-selector-client";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
 type AdmissionApplicationRow = {
   id: string;
@@ -57,7 +57,7 @@ function admissionStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
-function admissionStatusTone(status: string) {
+function admissionStatusTone(status: string): SchoolBadgeTone {
   if (status === "ADMITTED" || status === "CONFIRMED") return "green";
   if (status === "REJECTED" || status === "CANCELLED") return "red";
   if (status === "DOCUMENTS_INCOMPLETE" || status === "PENDING_PAYMENT") {
@@ -67,7 +67,10 @@ function admissionStatusTone(status: string) {
   return "blue";
 }
 
-function i18nName(value: Record<string, string> | null | undefined, fallback: string) {
+function i18nName(
+  value: Record<string, string> | null | undefined,
+  fallback: string,
+) {
   return value?.fr ?? value?.en ?? fallback;
 }
 
@@ -117,11 +120,13 @@ export function AdmissionsClient({
   const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
 
   const [photoReceived, setPhotoReceived] = useState(false);
-  const [birthCertificateReceived, setBirthCertificateReceived] = useState(false);
+  const [birthCertificateReceived, setBirthCertificateReceived] =
+    useState(false);
   const [vaccinationCardReceived, setVaccinationCardReceived] = useState(false);
   const [previousSchoolRecordReceived, setPreviousSchoolRecordReceived] =
     useState(false);
-  const [parentIdDocumentReceived, setParentIdDocumentReceived] = useState(false);
+  const [parentIdDocumentReceived, setParentIdDocumentReceived] =
+    useState(false);
   const [conductCertificateReceived, setConductCertificateReceived] =
     useState(false);
 
@@ -206,7 +211,9 @@ export function AdmissionsClient({
 
       setRows(body);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load admissions.");
+      setError(
+        err instanceof Error ? err.message : "Failed to load admissions.",
+      );
     } finally {
       setLoading(false);
     }
@@ -261,7 +268,9 @@ export function AdmissionsClient({
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to create admission application.");
+        throw new Error(
+          body?.message ?? "Failed to create admission application.",
+        );
       }
 
       setMessage(`Admission application created: ${body.applicationNumber}`);
@@ -313,11 +322,10 @@ export function AdmissionsClient({
       <div className="rounded-2xl border border-slate-200 bg-white p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Admissions
-            </h3>
+            <h3 className="text-lg font-semibold text-slate-900">Admissions</h3>
             <p className="mt-1 text-sm text-slate-600">
-              Create and track admission applications before converting them into official student files.
+              Create and track admission applications before converting them
+              into official student files.
             </p>
           </div>
 
@@ -413,7 +421,9 @@ export function AdmissionsClient({
                   className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
                   placeholder="Previous school name"
                   value={previousSchoolName}
-                  onChange={(event) => setPreviousSchoolName(event.target.value)}
+                  onChange={(event) =>
+                    setPreviousSchoolName(event.target.value)
+                  }
                 />
 
                 <textarea
@@ -428,9 +438,7 @@ export function AdmissionsClient({
             </div>
 
             <div>
-              <h4 className="font-semibold text-slate-900">
-                Academic Request
-              </h4>
+              <h4 className="font-semibold text-slate-900">Academic Request</h4>
 
               <div className="mt-3 grid gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
@@ -696,7 +704,9 @@ export function AdmissionsClient({
                   </td>
 
                   <td className="px-4 py-3">
-                    <SchoolBadge tone={admissionStatusTone(row.admissionStatus) as any}>
+                    <SchoolBadge
+                      tone={admissionStatusTone(row.admissionStatus)}
+                    >
                       {admissionStatusLabel(row.admissionStatus)}
                     </SchoolBadge>
                   </td>

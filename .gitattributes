@@ -1,0 +1,7 @@
+* text=auto
+
+# Migration identity must not vary between Windows and Linux checkouts.
+infra/db/migrations/*.sql text eol=lf
+
+# Container entrypoints and operational scripts execute on Linux.
+*.sh text eol=lf

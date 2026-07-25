@@ -58,8 +58,7 @@ export function ThemeProvider({
   storageKey = THEME_STORAGE_KEY,
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
-  const [resolvedTheme, setResolvedTheme] =
-    useState<ResolvedTheme>("light");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
   const setTheme = useCallback(
     (nextTheme: Theme) => {
@@ -71,11 +70,15 @@ export function ThemeProvider({
   );
 
   useEffect(() => {
-    const storedTheme = window.localStorage.getItem(storageKey);
-    const initialTheme = isTheme(storedTheme) ? storedTheme : defaultTheme;
+    const frame = window.requestAnimationFrame(() => {
+      const storedTheme = window.localStorage.getItem(storageKey);
+      const initialTheme = isTheme(storedTheme) ? storedTheme : defaultTheme;
 
-    setThemeState(initialTheme);
-    setResolvedTheme(applyTheme(initialTheme));
+      setThemeState(initialTheme);
+      setResolvedTheme(applyTheme(initialTheme));
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [defaultTheme, storageKey]);
 
   useEffect(() => {

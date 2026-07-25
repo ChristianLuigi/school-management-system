@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
 type AdmissionReceiptDetails = {
   id: string;
@@ -52,7 +52,7 @@ function feeStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
-function feeStatusTone(status: string) {
+function feeStatusTone(status: string): SchoolBadgeTone {
   if (status === "PAID" || status === "WAIVED") return "green";
   if (status === "PENDING") return "amber";
   if (status === "REFUNDED") return "neutral";
@@ -92,7 +92,9 @@ export function AdmissionRegistrationReceiptClient({
       setApplication(body);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load admission receipt.",
+        err instanceof Error
+          ? err.message
+          : "Failed to load admission receipt.",
       );
     } finally {
       setLoading(false);
@@ -158,8 +160,8 @@ export function AdmissionRegistrationReceiptClient({
 
       {application && !canPrintReceipt ? (
         <div className="print:hidden rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          This registration fee has not been paid or waived yet. A receipt should
-          only be printed after payment or waiver.
+          This registration fee has not been paid or waived yet. A receipt
+          should only be printed after payment or waiver.
         </div>
       ) : null}
 
@@ -168,7 +170,7 @@ export function AdmissionRegistrationReceiptClient({
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-6">
             <div>
               <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                Recu frais d'inscription
+                Recu frais d’inscription
               </div>
 
               <h1 className="mt-2 text-3xl font-bold text-slate-900">
@@ -181,7 +183,7 @@ export function AdmissionRegistrationReceiptClient({
             </div>
 
             <SchoolBadge
-              tone={feeStatusTone(application.registrationFee.status) as any}
+              tone={feeStatusTone(application.registrationFee.status)}
             >
               {feeStatusLabel(application.registrationFee.status)}
             </SchoolBadge>

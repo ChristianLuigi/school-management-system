@@ -1,8 +1,7 @@
-﻿import { ReactNode } from "react";
+import { ReactNode } from "react";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 
 export function StudentsWorkspace({
-  currentRoles,
   children,
 }: {
   currentRoles: string[];
@@ -69,4 +68,3 @@ export function StudentsWorkspace({
     </SchoolModuleWorkspace>
   );
 }
-

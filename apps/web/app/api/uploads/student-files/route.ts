@@ -1,4 +1,5 @@
 import { getSessionCookieName } from "@/lib/auth/session-cookie";
+import { assertTrustedOrigin } from "@/lib/security/trusted-origin";
 import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -7,7 +8,9 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+  process.env.API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:4000";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -18,11 +21,9 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
 ]);
 
-const STORAGE_ROOT = path.join(
-  process.cwd(),
-  ".private_uploads",
-  "student-files",
-);
+const STORAGE_ROOT = process.env.UPLOAD_STORAGE_ROOT
+  ? path.resolve(process.env.UPLOAD_STORAGE_ROOT, "student-files")
+  : path.join(process.cwd(), ".private_uploads", "student-files");
 
 function sanitize(value: string) {
   return value
@@ -55,13 +56,36 @@ function safeResolveFilePath(fileKey: string) {
     throw new Error("Invalid file key.");
   }
 
-  const resolved = path.join(STORAGE_ROOT, fileKey);
+  const resolved = path.resolve(STORAGE_ROOT, fileKey);
+  const relative = path.relative(STORAGE_ROOT, resolved);
 
-  if (!resolved.startsWith(STORAGE_ROOT)) {
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
     throw new Error("Invalid file path.");
   }
 
   return resolved;
+}
+
+function hasExpectedFileSignature(buffer: Buffer, mimeType: string) {
+  if (mimeType === "image/jpeg") {
+    return buffer.length >= 3 &&
+      buffer[0] === 0xff &&
+      buffer[1] === 0xd8 &&
+      buffer[2] === 0xff;
+  }
+  if (mimeType === "image/png") {
+    return buffer.subarray(0, 8).equals(
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    );
+  }
+  if (mimeType === "image/webp") {
+    return buffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+      buffer.subarray(8, 12).toString("ascii") === "WEBP";
+  }
+  if (mimeType === "application/pdf") {
+    return buffer.subarray(0, 1024).indexOf(Buffer.from("%PDF-")) >= 0;
+  }
+  return false;
 }
 
 async function verifyStudentAccess(input: {
@@ -88,6 +112,9 @@ async function verifyStudentAccess(input: {
 }
 
 export async function POST(request: NextRequest) {
+  const originFailure = assertTrustedOrigin(request);
+  if (originFailure) return originFailure;
+
   const token = request.cookies.get(getSessionCookieName())?.value;
 
   if (!token) {
@@ -144,6 +171,12 @@ export async function POST(request: NextRequest) {
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
+  if (!hasExpectedFileSignature(buffer, file.type)) {
+    return NextResponse.json(
+      { message: "The file content does not match its declared type." },
+      { status: 400 },
+    );
+  }
 
   const safeSchoolId = sanitize(schoolId);
   const safeStudentId = sanitize(studentId);
@@ -211,6 +244,11 @@ export async function GET(request: NextRequest) {
       { message: "You do not have access to this student file." },
       { status: 403 },
     );
+  }
+
+  const expectedPrefix = `${sanitize(schoolId)}/${sanitize(studentId)}/`;
+  if (!fileKey.replaceAll("\\", "/").startsWith(expectedPrefix)) {
+    return NextResponse.json({ message: "File not found." }, { status: 404 });
   }
 
   let filePath: string;

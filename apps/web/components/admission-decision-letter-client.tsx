@@ -69,7 +69,10 @@ type AdmissionDecisionLetterDetails = {
   createdAt: string;
 };
 
-function i18nName(value: Record<string, string> | null | undefined, fallback: string) {
+function i18nName(
+  value: Record<string, string> | null | undefined,
+  fallback: string,
+) {
   return value?.fr ?? value?.en ?? fallback;
 }
 
@@ -178,7 +181,9 @@ export function AdmissionDecisionLetterClient({
           type="button"
           onClick={() => window.print()}
           disabled={
-            application ? !isPrintableDecision(application.admissionStatus) : true
+            application
+              ? !isPrintableDecision(application.admissionStatus)
+              : true
           }
           className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
@@ -200,8 +205,8 @@ export function AdmissionDecisionLetterClient({
 
       {application && !isPrintableDecision(application.admissionStatus) ? (
         <div className="admission-letter-no-print rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          Cette demande n'est pas encore admise ou confirmee. Le bordereau
-          d'admission devrait etre imprime uniquement apres une decision
+          Cette demande n’est pas encore admise ou confirmee. Le bordereau
+          d’admission devrait etre imprime uniquement apres une decision
           positive.
         </div>
       ) : null}
@@ -212,7 +217,7 @@ export function AdmissionDecisionLetterClient({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="admission-letter-subtitle uppercase text-slate-500">
-                  Bordereau d'admission
+                  Bordereau d’admission
                 </div>
 
                 <h1 className="admission-letter-title mt-1 font-bold text-slate-900">
@@ -221,12 +226,14 @@ export function AdmissionDecisionLetterClient({
 
                 <div className="mt-1 text-[10px] text-slate-500">
                   Dossier : {application.applicationNumber}
-                  {application.school.code ? ` - ${application.school.code}` : ""}
+                  {application.school.code
+                    ? ` - ${application.school.code}`
+                    : ""}
                 </div>
               </div>
 
               <SchoolBadge
-                tone={admissionStatusTone(application.admissionStatus) as any}
+                tone={admissionStatusTone(application.admissionStatus)}
               >
                 {admissionStatusLabel(application.admissionStatus)}
               </SchoolBadge>
@@ -234,11 +241,11 @@ export function AdmissionDecisionLetterClient({
           </div>
 
           <div className="admission-letter-section py-3 text-[11px] leading-5 text-slate-700">
-            La presente atteste que la demande d'admission de{" "}
+            La presente atteste que la demande d’admission de{" "}
             <span className="font-bold text-slate-900">
               {application.candidate.firstName} {application.candidate.lastName}
             </span>{" "}
-            a ete etudiee par l'administration. Decision :{" "}
+            a ete etudiee par l’administration. Decision :{" "}
             <span className="font-bold text-slate-900">
               {admissionStatusLabel(application.admissionStatus)}
             </span>
@@ -300,7 +307,9 @@ export function AdmissionDecisionLetterClient({
 
               <div className="admission-letter-line">
                 <span>Date dossier</span>
-                <span>{new Date(application.createdAt).toLocaleDateString()}</span>
+                <span>
+                  {new Date(application.createdAt).toLocaleDateString()}
+                </span>
               </div>
             </div>
 
@@ -309,27 +318,45 @@ export function AdmissionDecisionLetterClient({
 
               <div className="admission-letter-line">
                 <span>Photo</span>
-                <span>{documentStatus(application.documents.photoReceived)}</span>
+                <span>
+                  {documentStatus(application.documents.photoReceived)}
+                </span>
               </div>
 
               <div className="admission-letter-line">
                 <span>Acte naissance</span>
-                <span>{documentStatus(application.documents.birthCertificateReceived)}</span>
+                <span>
+                  {documentStatus(
+                    application.documents.birthCertificateReceived,
+                  )}
+                </span>
               </div>
 
               <div className="admission-letter-line">
                 <span>Carnet vaccination</span>
-                <span>{documentStatus(application.documents.vaccinationCardReceived)}</span>
+                <span>
+                  {documentStatus(
+                    application.documents.vaccinationCardReceived,
+                  )}
+                </span>
               </div>
 
               <div className="admission-letter-line">
                 <span>Dossier ancienne ecole</span>
-                <span>{documentStatus(application.documents.previousSchoolRecordReceived)}</span>
+                <span>
+                  {documentStatus(
+                    application.documents.previousSchoolRecordReceived,
+                  )}
+                </span>
               </div>
 
               <div className="admission-letter-line">
                 <span>Piece identite parent</span>
-                <span>{documentStatus(application.documents.parentIdDocumentReceived)}</span>
+                <span>
+                  {documentStatus(
+                    application.documents.parentIdDocumentReceived,
+                  )}
+                </span>
               </div>
             </div>
 
@@ -338,7 +365,9 @@ export function AdmissionDecisionLetterClient({
 
               <div className="admission-letter-line">
                 <span>Frais inscription</span>
-                <span>{feeStatusLabel(application.registrationFee.status)}</span>
+                <span>
+                  {feeStatusLabel(application.registrationFee.status)}
+                </span>
               </div>
 
               <div className="admission-letter-line">
@@ -383,7 +412,7 @@ export function AdmissionDecisionLetterClient({
               <div>1. Finaliser les documents manquants.</div>
               <div>2. Respecter les modalites financieres.</div>
               <div>3. Signer les engagements requis.</div>
-              <div>4. Confirmer l'inscription aupres de l'administration.</div>
+              <div>4. Confirmer l’inscription aupres de l’administration.</div>
             </div>
           </div>
 

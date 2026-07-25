@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AcademicQuickSetupClient } from "@/components/academic-quick-setup-client";
 import { useI18n } from "@/components/i18n-provider";
 import { AcademicSubjectSetupClient } from "@/components/academic-subject-setup-client";
@@ -36,14 +36,17 @@ function i18nName(
   return value?.[locale] ?? value?.fr ?? value?.en ?? fallback;
 }
 
-function divisionLabel(value: string | null | undefined, t: (key: string) => string) {
+function divisionLabel(
+  value: string | null | undefined,
+  t: (key: string) => string,
+) {
   const labels: Record<string, string> = {
     KINDERGARTEN: t("academic.kindergarten"),
     PRIMARY: t("academic.primary"),
     SECONDARY: t("academic.secondary"),
   };
 
-  return value ? labels[value] ?? value : t("academic.other");
+  return value ? (labels[value] ?? value) : t("academic.other");
 }
 
 function sortGradeLevels(items: GradeLevel[]) {
@@ -143,7 +146,9 @@ export function AcademicStructureClient({
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to create academic structure.");
+        throw new Error(
+          body?.message ?? "Failed to create academic structure.",
+        );
       }
 
       setMessage(t("common.savedSuccessfully"));
@@ -226,11 +231,14 @@ export function AcademicStructureClient({
     return groups;
   }, {});
 
-  function sectionsForGradeLevel(level: GradeLevel) {
-    return sortSections(
-      sections.filter((section) => section.gradeLevelCode === level.code),
-    );
-  }
+  const sectionsForGradeLevel = useCallback(
+    (level: GradeLevel) =>
+      sortSections(
+        sections.filter((section) => section.gradeLevelCode === level.code),
+      ),
+    [sections],
+  );
+
   const sectionManagerLevels = useMemo(
     () =>
       sortGradeLevels(gradeLevels).map((level) => ({
@@ -244,7 +252,7 @@ export function AcademicStructureClient({
           nameI18n: section.nameI18n,
         })),
       })),
-    [gradeLevels, sections],
+    [gradeLevels, sectionsForGradeLevel],
   );
 
   return (
@@ -256,7 +264,10 @@ export function AcademicStructureClient({
         onUpdated={loadStructure}
       />
 
-      <AcademicSubjectSetupClient schoolId={schoolId} gradeLevels={gradeLevels} />
+      <AcademicSubjectSetupClient
+        schoolId={schoolId}
+        gradeLevels={gradeLevels}
+      />
 
       <div className="space-y-4">
         <div>
@@ -283,7 +294,9 @@ export function AcademicStructureClient({
               <input
                 type="checkbox"
                 checked={includeKindergarten}
-                onChange={(event) => setIncludeKindergarten(event.target.checked)}
+                onChange={(event) =>
+                  setIncludeKindergarten(event.target.checked)
+                }
               />
               {t("academic.kindergarten")}
             </label>
@@ -313,7 +326,9 @@ export function AcademicStructureClient({
             disabled={seeding}
             className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
           >
-            {seeding ? t("academic.creating") : t("academic.createSelectedStructure")}
+            {seeding
+              ? t("academic.creating")
+              : t("academic.createSelectedStructure")}
           </button>
 
           {message ? (
@@ -330,7 +345,9 @@ export function AcademicStructureClient({
         </div>
 
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">{t("academic.manualGradeLevelsAndSections")}</h2>
+          <h2 className="text-lg font-semibold">
+            {t("academic.manualGradeLevelsAndSections")}
+          </h2>
           <div className="mt-4 space-y-5">
             {["KINDERGARTEN", "PRIMARY", "SECONDARY", "OTHER"].map((key) =>
               groupedGradeLevels[key]?.length ? (
@@ -387,7 +404,11 @@ export function AcademicStructureClient({
                                   key={section.id}
                                   className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
                                 >
-                                  {i18nName(section.nameI18n, section.code, locale)}
+                                  {i18nName(
+                                    section.nameI18n,
+                                    section.code,
+                                    locale,
+                                  )}
                                   {section.capacity ? (
                                     <span className="ml-2 text-xs text-slate-500">
                                       Cap. {section.capacity}
@@ -426,7 +447,9 @@ export function AcademicStructureClient({
 
                                 <input
                                   className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
-                                  placeholder={t("academic.descriptionOptional")}
+                                  placeholder={t(
+                                    "academic.descriptionOptional",
+                                  )}
                                   value={defaultCapacity}
                                   onChange={(event) =>
                                     setDefaultCapacity(event.target.value)

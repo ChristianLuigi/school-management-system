@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
 type ReportCard = {
   school: {
@@ -93,7 +93,7 @@ function decisionLabel(avg: number | null) {
   return "Needs support";
 }
 
-function decisionTone(avg: number | null) {
+function decisionTone(avg: number | null): SchoolBadgeTone {
   if (avg === null) return "neutral";
   if (avg >= 10) return "green";
   return "amber";
@@ -190,9 +190,7 @@ export function StudentReportCardPrintClient({
               </p>
             </div>
 
-            <SchoolBadge
-              tone={decisionTone(report.summary.generalAverageOn20) as any}
-            >
+            <SchoolBadge tone={decisionTone(report.summary.generalAverageOn20)}>
               {decisionLabel(report.summary.generalAverageOn20)}
             </SchoolBadge>
           </div>

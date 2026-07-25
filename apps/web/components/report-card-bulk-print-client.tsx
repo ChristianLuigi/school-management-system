@@ -1,12 +1,9 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ReportCardPrintTemplate } from "@/components/report-card-print-template";
-import {
-  ReportCardDetails,
-  ReportCardLanguage,
-} from "@/lib/report-card-types";
+import { ReportCardDetails, ReportCardLanguage } from "@/lib/report-card-types";
 
 type BatchPrintDetails = {
   batchId: string;
@@ -27,7 +24,7 @@ export function ReportCardBulkPrintClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function loadBatch() {
+  const loadBatch = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -52,11 +49,11 @@ export function ReportCardBulkPrintClient({
     } finally {
       setLoading(false);
     }
-  }
+  }, [batchId]);
 
   useEffect(() => {
-    loadBatch();
-  }, [batchId]);
+    void loadBatch();
+  }, [loadBatch]);
 
   return (
     <div className="space-y-6">

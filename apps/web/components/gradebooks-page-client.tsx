@@ -70,7 +70,6 @@ type RosterStudent = {
   last_name: string;
 };
 
-
 async function parseApiResponse<T>(res: Response): Promise<T> {
   if (res.status === 204) {
     return null as T;
@@ -126,7 +125,9 @@ export function GradebooksPageClient({
   });
 
   const currentSectionId = useMemo(
-    () => sectionSubjects.find((ss) => ss.id === sectionSubjectId)?.section_id ?? "",
+    () =>
+      sectionSubjects.find((ss) => ss.id === sectionSubjectId)?.section_id ??
+      "",
     [sectionSubjects, sectionSubjectId],
   );
 
@@ -194,7 +195,9 @@ export function GradebooksPageClient({
       setGradebook(existingGradebook);
 
       const [assessmentsData, readinessData] = await Promise.all([
-        apiGet<Assessment[]>(`/assessments?gradebookId=${existingGradebook.id}`),
+        apiGet<Assessment[]>(
+          `/assessments?gradebookId=${existingGradebook.id}`,
+        ),
         apiGet<Readiness>(
           `/gradebooks/readiness?gradebookId=${existingGradebook.id}`,
         ),
@@ -211,7 +214,9 @@ export function GradebooksPageClient({
 
       setMessage("Gradebook loaded.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load gradebook.");
+      setError(
+        err instanceof Error ? err.message : "Failed to load gradebook.",
+      );
     } finally {
       setLoading(false);
     }
@@ -281,7 +286,9 @@ export function GradebooksPageClient({
       await loadPageData();
       setMessage("Assessment created successfully.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create assessment.");
+      setError(
+        err instanceof Error ? err.message : "Failed to create assessment.",
+      );
     } finally {
       setActionLoading(false);
     }
@@ -342,7 +349,9 @@ export function GradebooksPageClient({
 
       setMessage("Gradebook submitted successfully.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit gradebook.");
+      setError(
+        err instanceof Error ? err.message : "Failed to submit gradebook.",
+      );
     } finally {
       setActionLoading(false);
     }
@@ -370,7 +379,9 @@ export function GradebooksPageClient({
 
       setMessage("Gradebook approved successfully.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to approve gradebook.");
+      setError(
+        err instanceof Error ? err.message : "Failed to approve gradebook.",
+      );
     } finally {
       setActionLoading(false);
     }
@@ -378,114 +389,166 @@ export function GradebooksPageClient({
 
   return (
     <div className="space-y-6">
-        <div className="grid gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 md:grid-cols-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Section Subject
-            </label>
-            <select
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
-              value={sectionSubjectId}
-              onChange={(e) => setSectionSubjectId(e.target.value)}
-            >
-              {sectionSubjects.map((ss) => (
-                <option key={ss.id} value={ss.id}>
-                  {ss.section_name_i18n.fr ?? ss.section_code} &middot;{" "}
-                  {ss.subject_name_i18n.fr ?? ss.subject_code}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Grading Period
-            </label>
-            <select
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
-              value={gradingPeriodId}
-              onChange={(e) => setGradingPeriodId(e.target.value)}
-            >
-              {gradingPeriods.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name_i18n.fr ?? p.name_i18n.en ?? `Period ${p.sequence_no}`}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button
-              type="button"
-              onClick={loadPageData}
-              disabled={loading}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
-            >
-              {loading ? "Loading..." : "Reload Gradebook"}
-            </button>
-          </div>
+      <div className="grid gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 md:grid-cols-3">
+        <div>
+          <label className="mb-1 block text-sm font-medium">
+            Section Subject
+          </label>
+          <select
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            value={sectionSubjectId}
+            onChange={(e) => setSectionSubjectId(e.target.value)}
+          >
+            {sectionSubjects.map((ss) => (
+              <option key={ss.id} value={ss.id}>
+                {ss.section_name_i18n.fr ?? ss.section_code} &middot;{" "}
+                {ss.subject_name_i18n.fr ?? ss.subject_code}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {gradebook ? (
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              <div className="text-sm text-slate-500">Status</div>
-              <div className="mt-2 text-2xl font-bold">{gradebook.status}</div>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              <div className="text-sm text-slate-500">Assessments</div>
-              <div className="mt-2 text-2xl font-bold">
-                {readiness?.assessmentCount ?? 0}
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              <div className="text-sm text-slate-500">Weight Total</div>
-              <div className="mt-2 text-2xl font-bold">
-                {readiness?.totalWeightPercent ?? 0}%
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              <div className="text-sm text-slate-500">Missing Scores</div>
-              <div className="mt-2 text-2xl font-bold">
-                {readiness?.missingScoreEntriesCount ?? 0}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-            {error}
-          </div>
-        ) : null}
-
-        {message ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
-            {message}
-          </div>
-        ) : null}
-
-        <div className="grid gap-6 xl:grid-cols-2">
-          <form
-            onSubmit={handleCreateAssessment}
-            className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+        <div>
+          <label className="mb-1 block text-sm font-medium">
+            Grading Period
+          </label>
+          <select
+            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            value={gradingPeriodId}
+            onChange={(e) => setGradingPeriodId(e.target.value)}
           >
-            <h2 className="text-lg font-semibold">Create Assessment</h2>
+            {gradingPeriods.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name_i18n.fr ?? p.name_i18n.en ?? `Period ${p.sequence_no}`}
+              </option>
+            ))}
+          </select>
+        </div>
 
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={loadPageData}
+            disabled={loading}
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
+          >
+            {loading ? "Loading..." : "Reload Gradebook"}
+          </button>
+        </div>
+      </div>
+
+      {gradebook ? (
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="text-sm text-slate-500">Status</div>
+            <div className="mt-2 text-2xl font-bold">{gradebook.status}</div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="text-sm text-slate-500">Assessments</div>
+            <div className="mt-2 text-2xl font-bold">
+              {readiness?.assessmentCount ?? 0}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="text-sm text-slate-500">Weight Total</div>
+            <div className="mt-2 text-2xl font-bold">
+              {readiness?.totalWeightPercent ?? 0}%
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="text-sm text-slate-500">Missing Scores</div>
+            <div className="mt-2 text-2xl font-bold">
+              {readiness?.missingScoreEntriesCount ?? 0}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+          {error}
+        </div>
+      ) : null}
+
+      {message ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+          {message}
+        </div>
+      ) : null}
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <form
+          onSubmit={handleCreateAssessment}
+          className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+        >
+          <h2 className="text-lg font-semibold">Create Assessment</h2>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              French Title
+            </label>
+            <input
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={assessmentForm.frTitle}
+              onChange={(e) =>
+                setAssessmentForm((prev) => ({
+                  ...prev,
+                  frTitle: e.target.value,
+                }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              English Title
+            </label>
+            <input
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={assessmentForm.enTitle}
+              onChange={(e) =>
+                setAssessmentForm((prev) => ({
+                  ...prev,
+                  enTitle: e.target.value,
+                }))
+              }
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium">Type</label>
+            <select
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={assessmentForm.assessmentType}
+              onChange={(e) =>
+                setAssessmentForm((prev) => ({
+                  ...prev,
+                  assessmentType: e.target.value,
+                }))
+              }
+            >
+              <option value="HOMEWORK">HOMEWORK</option>
+              <option value="EXAM">EXAM</option>
+              <option value="QUIZ">QUIZ</option>
+              <option value="PARTICIPATION">PARTICIPATION</option>
+              <option value="PROJECT">PROJECT</option>
+            </select>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-sm font-medium">
-                French Title
-              </label>
+              <label className="mb-1 block text-sm font-medium">Date</label>
               <input
+                type="date"
                 className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                value={assessmentForm.frTitle}
+                value={assessmentForm.assessmentDate}
                 onChange={(e) =>
                   setAssessmentForm((prev) => ({
                     ...prev,
-                    frTitle: e.target.value,
+                    assessmentDate: e.target.value,
                   }))
                 }
               />
@@ -493,269 +556,220 @@ export function GradebooksPageClient({
 
             <div>
               <label className="mb-1 block text-sm font-medium">
-                English Title
-              </label>
-              <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                value={assessmentForm.enTitle}
-                onChange={(e) =>
-                  setAssessmentForm((prev) => ({
-                    ...prev,
-                    enTitle: e.target.value,
-                  }))
-                }
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">Type</label>
-              <select
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                value={assessmentForm.assessmentType}
-                onChange={(e) =>
-                  setAssessmentForm((prev) => ({
-                    ...prev,
-                    assessmentType: e.target.value,
-                  }))
-                }
-              >
-                <option value="HOMEWORK">HOMEWORK</option>
-                <option value="EXAM">EXAM</option>
-                <option value="QUIZ">QUIZ</option>
-                <option value="PARTICIPATION">PARTICIPATION</option>
-                <option value="PROJECT">PROJECT</option>
-              </select>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-medium">Date</label>
-                <input
-                  type="date"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  value={assessmentForm.assessmentDate}
-                  onChange={(e) =>
-                    setAssessmentForm((prev) => ({
-                      ...prev,
-                      assessmentDate: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Max Points
-                </label>
-                <input
-                  type="number"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  value={assessmentForm.maxPointsPossible}
-                  onChange={(e) =>
-                    setAssessmentForm((prev) => ({
-                      ...prev,
-                      maxPointsPossible: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Weight %
-                </label>
-                <input
-                  type="number"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  value={assessmentForm.weightPercent}
-                  onChange={(e) =>
-                    setAssessmentForm((prev) => ({
-                      ...prev,
-                      weightPercent: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Display Order
+                Max Points
               </label>
               <input
                 type="number"
                 className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                value={assessmentForm.displayOrder}
+                value={assessmentForm.maxPointsPossible}
                 onChange={(e) =>
                   setAssessmentForm((prev) => ({
                     ...prev,
-                    displayOrder: e.target.value,
+                    maxPointsPossible: e.target.value,
                   }))
                 }
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={!gradebook || actionLoading}
-              className="w-full rounded-xl bg-slate-900 px-4 py-3 text-white hover:bg-slate-800 disabled:opacity-60"
-            >
-              {actionLoading ? "Working..." : "Create Assessment"}
-            </button>
-          </form>
-
-          <div className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <h2 className="text-lg font-semibold">Workflow Actions</h2>
-
-            <div className="grid gap-3">
-              <button
-                type="button"
-                disabled={!gradebook || actionLoading || !readiness?.canSubmit}
-                onClick={handleSubmitGradebook}
-                className="rounded-xl bg-slate-900 px-4 py-3 text-white hover:bg-slate-800 disabled:opacity-60"
-              >
-                Submit Gradebook
-              </button>
-
-              <button
-                type="button"
-                disabled={
-                  !gradebook || actionLoading || gradebook.status !== "SUBMITTED"
+            <div>
+              <label className="mb-1 block text-sm font-medium">Weight %</label>
+              <input
+                type="number"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                value={assessmentForm.weightPercent}
+                onChange={(e) =>
+                  setAssessmentForm((prev) => ({
+                    ...prev,
+                    weightPercent: e.target.value,
+                  }))
                 }
-                onClick={handleApproveGradebook}
-                className="rounded-xl border border-slate-300 px-4 py-3 hover:bg-slate-50 disabled:opacity-60"
-              >
-                Approve Gradebook
-              </button>
+              />
             </div>
-
-            {readiness ? (
-              <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
-                <div>
-                  <span className="font-medium">Weight valid:</span>{" "}
-                  {readiness.isWeightValid ? "Yes" : "No"}
-                </div>
-                <div>
-                  <span className="font-medium">Complete:</span>{" "}
-                  {readiness.isComplete ? "Yes" : "No"}
-                </div>
-                <div>
-                  <span className="font-medium">Can submit:</span>{" "}
-                  {readiness.canSubmit ? "Yes" : "No"}
-                </div>
-                <div>
-                  <span className="font-medium">Scored entries:</span>{" "}
-                  {readiness.scoredEntriesCount} /{" "}
-                  {readiness.requiredScoreEntriesCount}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Assessments</h2>
-
-          <div className="mt-4 space-y-3">
-            {assessments.map((assessment) => (
-              <button
-                key={assessment.id}
-                type="button"
-                onClick={() => setSelectedAssessmentId(assessment.id)}
-                className={`block w-full rounded-xl border p-4 text-left transition ${
-                  selectedAssessmentId === assessment.id
-                    ? "border-slate-900 bg-slate-50"
-                    : "border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                <div className="font-semibold">
-                  {assessment.title_i18n?.fr ?? assessment.id}
-                </div>
-                <div className="mt-1 text-sm text-slate-600">
-                  {assessment.assessment_type} | Date: {assessment.assessment_date}
-                  {" | "}Max: {assessment.max_points_possible}
-                  {" | "}Weight: {assessment.weight_percent}%
-                </div>
-              </button>
-            ))}
-
-            {assessments.length === 0 ? (
-              <div className="text-sm text-slate-500">
-                No assessments created yet.
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <form
-          onSubmit={handleSaveScores}
-          className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
-        >
-          <div className="border-b border-slate-200 px-5 py-4">
-            <h2 className="text-lg font-semibold">Scores</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Select an assessment above, then enter scores for each student.
-            </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-600">
-                <tr>
-                  <th className="px-4 py-3">Student #</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Raw Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {roster.map((student) => (
-                  <tr key={student.student_id} className="border-t border-slate-200">
-                    <td className="px-4 py-3">{student.student_number}</td>
-                    <td className="px-4 py-3">
-                      {student.first_name} {student.last_name}
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                        value={scores[student.student_id] ?? ""}
-                        onChange={(e) =>
-                          setScores((prev) => ({
-                            ...prev,
-                            [student.student_id]: e.target.value,
-                          }))
-                        }
-                        disabled={!selectedAssessmentId}
-                      />
-                    </td>
-                  </tr>
-                ))}
-
-                {roster.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={3}
-                      className="px-4 py-6 text-center text-slate-500"
-                    >
-                      No roster found for this subject's section.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Display Order
+            </label>
+            <input
+              type="number"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              value={assessmentForm.displayOrder}
+              onChange={(e) =>
+                setAssessmentForm((prev) => ({
+                  ...prev,
+                  displayOrder: e.target.value,
+                }))
+              }
+            />
           </div>
 
-          <div className="border-t border-slate-200 px-5 py-4">
+          <button
+            type="submit"
+            disabled={!gradebook || actionLoading}
+            className="w-full rounded-xl bg-slate-900 px-4 py-3 text-white hover:bg-slate-800 disabled:opacity-60"
+          >
+            {actionLoading ? "Working..." : "Create Assessment"}
+          </button>
+        </form>
+
+        <div className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <h2 className="text-lg font-semibold">Workflow Actions</h2>
+
+          <div className="grid gap-3">
             <button
-              type="submit"
-              disabled={!selectedAssessmentId || actionLoading || roster.length === 0}
-              className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+              type="button"
+              disabled={!gradebook || actionLoading || !readiness?.canSubmit}
+              onClick={handleSubmitGradebook}
+              className="rounded-xl bg-slate-900 px-4 py-3 text-white hover:bg-slate-800 disabled:opacity-60"
             >
-              {actionLoading ? "Working..." : "Save Scores"}
+              Submit Gradebook
+            </button>
+
+            <button
+              type="button"
+              disabled={
+                !gradebook || actionLoading || gradebook.status !== "SUBMITTED"
+              }
+              onClick={handleApproveGradebook}
+              className="rounded-xl border border-slate-300 px-4 py-3 hover:bg-slate-50 disabled:opacity-60"
+            >
+              Approve Gradebook
             </button>
           </div>
-        </form>
+
+          {readiness ? (
+            <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-700">
+              <div>
+                <span className="font-medium">Weight valid:</span>{" "}
+                {readiness.isWeightValid ? "Yes" : "No"}
+              </div>
+              <div>
+                <span className="font-medium">Complete:</span>{" "}
+                {readiness.isComplete ? "Yes" : "No"}
+              </div>
+              <div>
+                <span className="font-medium">Can submit:</span>{" "}
+                {readiness.canSubmit ? "Yes" : "No"}
+              </div>
+              <div>
+                <span className="font-medium">Scored entries:</span>{" "}
+                {readiness.scoredEntriesCount} /{" "}
+                {readiness.requiredScoreEntriesCount}
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
+
+      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+        <h2 className="text-lg font-semibold">Assessments</h2>
+
+        <div className="mt-4 space-y-3">
+          {assessments.map((assessment) => (
+            <button
+              key={assessment.id}
+              type="button"
+              onClick={() => setSelectedAssessmentId(assessment.id)}
+              className={`block w-full rounded-xl border p-4 text-left transition ${
+                selectedAssessmentId === assessment.id
+                  ? "border-slate-900 bg-slate-50"
+                  : "border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <div className="font-semibold">
+                {assessment.title_i18n?.fr ?? assessment.id}
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                {assessment.assessment_type} | Date:{" "}
+                {assessment.assessment_date}
+                {" | "}Max: {assessment.max_points_possible}
+                {" | "}Weight: {assessment.weight_percent}%
+              </div>
+            </button>
+          ))}
+
+          {assessments.length === 0 ? (
+            <div className="text-sm text-slate-500">
+              No assessments created yet.
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <form
+        onSubmit={handleSaveScores}
+        className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+      >
+        <div className="border-b border-slate-200 px-5 py-4">
+          <h2 className="text-lg font-semibold">Scores</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Select an assessment above, then enter scores for each student.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-100 text-left text-slate-600">
+              <tr>
+                <th className="px-4 py-3">Student #</th>
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Raw Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roster.map((student) => (
+                <tr
+                  key={student.student_id}
+                  className="border-t border-slate-200"
+                >
+                  <td className="px-4 py-3">{student.student_number}</td>
+                  <td className="px-4 py-3">
+                    {student.first_name} {student.last_name}
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="number"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      value={scores[student.student_id] ?? ""}
+                      onChange={(e) =>
+                        setScores((prev) => ({
+                          ...prev,
+                          [student.student_id]: e.target.value,
+                        }))
+                      }
+                      disabled={!selectedAssessmentId}
+                    />
+                  </td>
+                </tr>
+              ))}
+
+              {roster.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="px-4 py-6 text-center text-slate-500"
+                  >
+                    No roster found for this subject’s section.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="border-t border-slate-200 px-5 py-4">
+          <button
+            type="submit"
+            disabled={
+              !selectedAssessmentId || actionLoading || roster.length === 0
+            }
+            className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          >
+            {actionLoading ? "Working..." : "Save Scores"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
-

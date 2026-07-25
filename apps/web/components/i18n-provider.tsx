@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useMemo,
   useState,
@@ -40,21 +41,24 @@ export function I18nProvider({
       : defaultLocale,
   );
 
-  function setLocale(nextLocale: Locale) {
-    if (!supportedLocales.includes(nextLocale)) return;
+  const setLocale = useCallback(
+    (nextLocale: Locale) => {
+      if (!supportedLocales.includes(nextLocale)) return;
 
-    setLocaleState(nextLocale);
+      setLocaleState(nextLocale);
 
-    document.cookie = `${LOCALE_COOKIE}=${nextLocale}; path=/; max-age=31536000; SameSite=Lax`;
+      document.cookie = `${LOCALE_COOKIE}=${nextLocale}; path=/; max-age=31536000; SameSite=Lax`;
 
-    try {
-      window.localStorage.setItem(LOCALE_COOKIE, nextLocale);
-    } catch {
-      // Ignore localStorage errors; the cookie is the server source of truth.
-    }
+      try {
+        window.localStorage.setItem(LOCALE_COOKIE, nextLocale);
+      } catch {
+        // Ignore localStorage errors; the cookie is the server source of truth.
+      }
 
-    router.refresh();
-  }
+      router.refresh();
+    },
+    [router],
+  );
 
   const value = useMemo<I18nContextValue>(() => {
     return {
@@ -62,7 +66,7 @@ export function I18nProvider({
       setLocale,
       t: (key, params) => translate(locale, key, params),
     };
-  }, [locale]);
+  }, [locale, setLocale]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

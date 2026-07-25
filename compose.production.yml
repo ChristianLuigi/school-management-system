@@ -1,0 +1,162 @@
+name: almac-school-management
+
+services:
+  postgres:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?POSTGRES_SUPERUSER_PASSWORD is required}
+      APP_DATABASE_USER: ${APP_DATABASE_USER:?APP_DATABASE_USER is required}
+      APP_DATABASE_PASSWORD: ${APP_DATABASE_PASSWORD:?APP_DATABASE_PASSWORD is required}
+      MIGRATION_DATABASE_USER: ${MIGRATION_DATABASE_USER:?MIGRATION_DATABASE_USER is required}
+      MIGRATION_DATABASE_PASSWORD: ${MIGRATION_DATABASE_PASSWORD:?MIGRATION_DATABASE_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/db/init/001-create-runtime-roles.sh:/docker-entrypoint-initdb.d/001-create-runtime-roles.sh:ro
+    networks:
+      - backend
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    shm_size: 256mb
+    mem_limit: 2g
+    cpus: 2
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: almac-api:${APP_VERSION:-pilot}
+    command: ["node", "dist/migration-cli.js", "up"]
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      APP_VERSION: ${APP_VERSION:-pilot}
+      DATABASE_URL: postgresql://${MIGRATION_DATABASE_USER}:${MIGRATION_DATABASE_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      MIGRATIONS_DIR: /workspace/infra/db/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: almac-api:${APP_VERSION:-pilot}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      SERVICE_NAME: almac-api
+      APP_VERSION: ${APP_VERSION:-pilot}
+      PORT: 4000
+      DATABASE_URL: postgresql://${APP_DATABASE_USER}:${APP_DATABASE_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      APP_PUBLIC_URL: https://${APP_DOMAIN}
+      CORS_ALLOWED_ORIGINS: https://${APP_DOMAIN}
+      RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+      AUTH_EMAIL_FROM: ${AUTH_EMAIL_FROM:?AUTH_EMAIL_FROM is required}
+      AUTH_INVITATION_TTL_HOURS: ${AUTH_INVITATION_TTL_HOURS:-48}
+      AUTH_PASSWORD_MIN_LENGTH: ${AUTH_PASSWORD_MIN_LENGTH:-15}
+      AUTH_PASSWORD_MAX_LENGTH: ${AUTH_PASSWORD_MAX_LENGTH:-128}
+      AUTH_SESSION_ABSOLUTE_HOURS: ${AUTH_SESSION_ABSOLUTE_HOURS:-12}
+      AUTH_SESSION_IDLE_MINUTES: ${AUTH_SESSION_IDLE_MINUTES:-30}
+      AUTH_MAX_FAILED_LOGINS: ${AUTH_MAX_FAILED_LOGINS:-5}
+      AUTH_ACCOUNT_LOCK_MINUTES: ${AUTH_ACCOUNT_LOCK_MINUTES:-15}
+      AUTH_PASSWORD_RESET_TTL_MINUTES: ${AUTH_PASSWORD_RESET_TTL_MINUTES:-30}
+      JSON_BODY_LIMIT: ${JSON_BODY_LIMIT:-1mb}
+      TRUST_PROXY: "true"
+      DB_POOL_MAX: ${DB_POOL_MAX:-20}
+      DB_CONNECTION_TIMEOUT_MS: ${DB_CONNECTION_TIMEOUT_MS:-5000}
+      DB_IDLE_TIMEOUT_MS: ${DB_IDLE_TIMEOUT_MS:-30000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    stop_grace_period: 30s
+    mem_limit: 1g
+    cpus: 1.5
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: almac-web:${APP_VERSION:-pilot}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      APP_PUBLIC_URL: https://${APP_DOMAIN}
+      TRUSTED_ORIGINS: https://${APP_DOMAIN}
+      API_BASE_URL: http://api:4000
+      AUTH_COOKIE_NAME: __Host-almac_session
+      AUTH_COOKIE_SAME_SITE: lax
+      AUTH_SCHOOL_COOKIE_NAME: school_current_id
+      UPLOAD_STORAGE_ROOT: /data/uploads
+    volumes:
+      - uploaded_files:/data/uploads
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    stop_grace_period: 30s
+    mem_limit: 1g
+    cpus: 1.5
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?APP_DOMAIN is required}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./infra/deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    networks:
+      - frontend
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: 0.5
+
+networks:
+  frontend:
+  backend:
+    internal: true
+
+volumes:
+  postgres_data:
+  uploaded_files:
+  caddy_data:
+  caddy_config:

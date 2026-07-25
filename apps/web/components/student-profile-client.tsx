@@ -148,17 +148,17 @@ function i18nName(
 
 function studentStatusLabel(status: string | null) {
   const labels: Record<string, string> = {
-    PRE_REGISTERED: "PrÃƒÂ©inscrit",
+    PRE_REGISTERED: "Préinscrit",
     REGISTERED: "Inscrit",
     ACTIVE: "Actif",
     SUSPENDED: "Suspendu",
-    WITHDRAWN: "RetirÃƒÂ©",
-    TRANSFERRED: "TransfÃƒÂ©rÃƒÂ©",
-    GRADUATED: "DiplÃƒÂ´mÃƒÂ©",
-    ARCHIVED: "ArchivÃƒÂ©",
+    WITHDRAWN: "Retiré",
+    TRANSFERRED: "Transféré",
+    GRADUATED: "Diplômé",
+    ARCHIVED: "Archivé",
   };
 
-  return status ? labels[status] ?? status : "Status pending";
+  return status ? (labels[status] ?? status) : "Status pending";
 }
 
 function studentStatusTone(status: string | null): BadgeTone {
@@ -204,7 +204,10 @@ function enrollmentLabel(row: {
   return [grade, section].filter(Boolean).join(" - ") || "Unknown class";
 }
 
-function enrollmentStatusTone(status: string, endedAt: string | null): BadgeTone {
+function enrollmentStatusTone(
+  status: string,
+  endedAt: string | null,
+): BadgeTone {
   if (!endedAt && status === "ACTIVE") return "green";
   if (status === "TRANSFERRED") return "amber";
   return "neutral";
@@ -308,6 +311,7 @@ export function StudentProfileClient({
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex flex-wrap items-start gap-5">
                 {profile.student.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={profile.student.photoUrl}
                     alt={studentName(profile)}
@@ -334,7 +338,9 @@ export function StudentProfileClient({
                 </div>
               </div>
 
-              <SchoolBadge tone={studentStatusTone(profile.student.studentStatus)}>
+              <SchoolBadge
+                tone={studentStatusTone(profile.student.studentStatus)}
+              >
                 {studentStatusLabel(profile.student.studentStatus)}
               </SchoolBadge>
             </div>
@@ -532,11 +538,9 @@ export function StudentProfileClient({
 
                 <div className="flex flex-wrap gap-2">
                   <SchoolBadge
-                    tone={
-                      admissionStatusTone(
-                        profile.admissionSource.admissionStatus,
-                      ) as any
-                    }
+                    tone={admissionStatusTone(
+                      profile.admissionSource.admissionStatus,
+                    )}
                   >
                     {admissionStatusLabel(
                       profile.admissionSource.admissionStatus,
@@ -756,7 +760,6 @@ export function StudentProfileClient({
             </div>
           </div>
 
-
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <h3 className="text-lg font-semibold text-slate-900">
               Quick Actions
@@ -783,9 +786,3 @@ export function StudentProfileClient({
     </div>
   );
 }
-
-
-
-
-
-

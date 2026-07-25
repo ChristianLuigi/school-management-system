@@ -1,10 +1,9 @@
-﻿"use client";
+"use client";
 
 import { FinanceActionsPageClient } from "@/components/finance-actions-page-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 
 export function FinanceActionsWorkspaceClient({
-  currentRoles,
   schoolId,
   userId,
   academicYearId,

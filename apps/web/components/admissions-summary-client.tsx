@@ -84,7 +84,9 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
       setSummary(body);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load admissions summary.",
+        err instanceof Error
+          ? err.message
+          : "Failed to load admissions summary.",
       );
     }
   }
@@ -163,7 +165,7 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
                 key={row.status}
                 className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
               >
-                <SchoolBadge tone={admissionStatusTone(row.status) as any}>
+                <SchoolBadge tone={admissionStatusTone(row.status)}>
                   {admissionStatusLabel(row.status)}
                 </SchoolBadge>
 

@@ -1,16 +1,16 @@
 import { SchoolBadge } from "@/components/school-ui";
 import { reportCardLabels } from "@/lib/report-card-labels";
-import {
-  ReportCardDetails,
-  ReportCardLanguage,
-} from "@/lib/report-card-types";
+import { ReportCardDetails, ReportCardLanguage } from "@/lib/report-card-types";
 
 function formatScore(value: number | null) {
   if (value === null || Number.isNaN(value)) return "-";
   return value.toFixed(2);
 }
 
-function decisionFromAverage(value: number | null, language: ReportCardLanguage) {
+function decisionFromAverage(
+  value: number | null,
+  language: ReportCardLanguage,
+) {
   const labels = reportCardLabels(language);
 
   if (value === null) return labels.pending;
@@ -51,6 +51,7 @@ export function ReportCardPrintTemplate({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             {data.school.branding?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={data.school.branding.logoUrl}
                 alt={data.school.name}
@@ -108,11 +109,14 @@ export function ReportCardPrintTemplate({
           </div>
 
           <div className="text-right">
-            <SchoolBadge tone={data.batchStatus === "PUBLISHED" ? "green" : "blue"}>
+            <SchoolBadge
+              tone={data.batchStatus === "PUBLISHED" ? "green" : "blue"}
+            >
               {data.batchStatus}
             </SchoolBadge>
             <div className="mt-3 text-sm text-slate-500">
-              {labels.generatedOn} {new Date(data.generatedAt).toLocaleDateString()}
+              {labels.generatedOn}{" "}
+              {new Date(data.generatedAt).toLocaleDateString()}
             </div>
             {data.publishedAt ? (
               <div className="text-sm text-slate-500">
@@ -159,7 +163,11 @@ export function ReportCardPrintTemplate({
             {labels.period}
           </div>
           <div className="mt-1 text-xl font-bold text-slate-900">
-            {i18nName(data.gradingPeriod.nameI18n, language, data.gradingPeriod.id)}
+            {i18nName(
+              data.gradingPeriod.nameI18n,
+              language,
+              data.gradingPeriod.id,
+            )}
           </div>
         </div>
       </div>
@@ -205,9 +213,15 @@ export function ReportCardPrintTemplate({
               <tr key={subject.subjectId} className="border-t border-slate-200">
                 <td className="px-4 py-3">
                   <div className="font-medium text-slate-900">
-                    {i18nName(subject.subjectNameI18n, language, subject.subjectCode)}
+                    {i18nName(
+                      subject.subjectNameI18n,
+                      language,
+                      subject.subjectCode,
+                    )}
                   </div>
-                  <div className="text-xs text-slate-500">{subject.subjectCode}</div>
+                  <div className="text-xs text-slate-500">
+                    {subject.subjectCode}
+                  </div>
                 </td>
                 <td className="px-4 py-3">{subject.coefficient}</td>
                 <td className="px-4 py-3 font-semibold">
@@ -220,7 +234,10 @@ export function ReportCardPrintTemplate({
             ))}
             {data.subjectResults.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                <td
+                  colSpan={4}
+                  className="px-4 py-8 text-center text-slate-500"
+                >
                   {labels.noSubjectResults}
                 </td>
               </tr>
@@ -301,4 +318,3 @@ export function ReportCardPrintTemplate({
     </div>
   );
 }
-

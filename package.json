@@ -5,18 +5,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "pnpm --dir apps/api test --runInBand && npm --prefix typescript-starter-master test -- --runInBand",
+    "lint": "pnpm --dir apps/api lint && pnpm --dir apps/web lint && npm --prefix typescript-starter-master run lint",
+    "build": "pnpm build:api && pnpm build:web && npm --prefix typescript-starter-master run build",
+    "check": "pnpm lint && pnpm test && pnpm build",
+    "test:integration": "pnpm --dir apps/api test:integration",
     "dev:web": "pnpm --dir apps/web dev",
     "dev:api": "pnpm --dir apps/api start:dev",
     "build:web": "pnpm --dir apps/web build",
     "build:api": "pnpm --dir apps/api build",
+    "db:migrate": "pnpm --dir apps/api db:migrate",
+    "db:migrate:status": "pnpm --dir apps/api db:migrate:status",
+    "db:migrate:verify": "pnpm --dir apps/api db:migrate:verify",
+    "db:migrate:baseline": "pnpm --dir apps/api db:migrate:baseline",
     "db:seed:demo": "docker exec -i school_mgmt_pg psql -v ON_ERROR_STOP=1 -U school_admin -d school_mgmt < infra/db/seeds/demo_seed.sql"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.33.0",
-  "dependencies": {
-    "next": "^16.2.2"
-  }
+  "packageManager": "pnpm@10.33.0"
 }

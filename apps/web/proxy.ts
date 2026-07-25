@@ -3,25 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { assertTrustedOrigin } from "@/lib/security/trusted-origin";
 
 const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:4000"
+  process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:4000"
 ).replace("://localhost:", "://127.0.0.1:");
 
 const AUTH_SCHOOL_COOKIE_NAME =
   process.env.AUTH_SCHOOL_COOKIE_NAME ?? "school_current_id";
 
-type ManagementMode =
-  | "SELF_MANAGED"
-  | "SUPERADMIN_MANAGED"
-  | "HYBRID_MANAGED";
+type ManagementMode = "SELF_MANAGED" | "SUPERADMIN_MANAGED" | "HYBRID_MANAGED";
 
 type MeContextLite = {
   isSuperAdmin: boolean;
   currentRoles: string[];
-  currentSchool:
-    | {
-        management_mode?: ManagementMode;
-      }
-    | null;
+  currentSchool: {
+    management_mode?: ManagementMode;
+  } | null;
 };
 
 const SCHOOL_ROUTE_ROLE_GATES: Array<{ prefix: string; roles: string[] }> = [
@@ -137,7 +132,7 @@ async function fetchMeContext(
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (

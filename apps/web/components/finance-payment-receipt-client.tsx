@@ -170,6 +170,7 @@ export function FinancePaymentReceiptClient({
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-start gap-4">
                 {receipt.school.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={receipt.school.logoUrl}
                     alt={receipt.school.name}
@@ -201,19 +202,28 @@ export function FinancePaymentReceiptClient({
                     {receipt.school.addressLine2 ? (
                       <div>{receipt.school.addressLine2}</div>
                     ) : null}
-                    {receipt.school.city ? <div>{receipt.school.city}</div> : null}
+                    {receipt.school.city ? (
+                      <div>{receipt.school.city}</div>
+                    ) : null}
 
                     <div className="flex flex-wrap gap-x-3 gap-y-1">
-                      {receipt.school.phone ? <span>{receipt.school.phone}</span> : null}
-                      {receipt.school.email ? <span>{receipt.school.email}</span> : null}
-                      {receipt.school.website ? <span>{receipt.school.website}</span> : null}
+                      {receipt.school.phone ? (
+                        <span>{receipt.school.phone}</span>
+                      ) : null}
+                      {receipt.school.email ? (
+                        <span>{receipt.school.email}</span>
+                      ) : null}
+                      {receipt.school.website ? (
+                        <span>{receipt.school.website}</span>
+                      ) : null}
                     </div>
                     {receipt.school.financeSettings?.financeContactName ||
                     receipt.school.financeSettings?.financeContactEmail ||
                     receipt.school.financeSettings?.financeContactPhone ? (
                       <div className="mt-2 text-sm text-slate-500">
                         Finance contact:{" "}
-                        {receipt.school.financeSettings.financeContactName ?? ""}
+                        {receipt.school.financeSettings.financeContactName ??
+                          ""}
                         {receipt.school.financeSettings.financeContactPhone
                           ? ` - ${receipt.school.financeSettings.financeContactPhone}`
                           : ""}
@@ -300,7 +310,10 @@ export function FinancePaymentReceiptClient({
                 <div className="mt-2 text-xl font-bold text-slate-900">
                   {receipt.invoice.totalAmount === null
                     ? "-"
-                    : money(receipt.invoice.totalAmount, receipt.invoice.currencyCode)}
+                    : money(
+                        receipt.invoice.totalAmount,
+                        receipt.invoice.currencyCode,
+                      )}
                 </div>
               </div>
 
@@ -309,7 +322,10 @@ export function FinancePaymentReceiptClient({
                 <div className="mt-2 text-xl font-bold text-green-900">
                   {receipt.invoice.amountPaid === null
                     ? "-"
-                    : money(receipt.invoice.amountPaid, receipt.invoice.currencyCode)}
+                    : money(
+                        receipt.invoice.amountPaid,
+                        receipt.invoice.currencyCode,
+                      )}
                 </div>
               </div>
 
@@ -318,7 +334,10 @@ export function FinancePaymentReceiptClient({
                 <div className="mt-2 text-xl font-bold text-amber-900">
                   {receipt.invoice.balanceDue === null
                     ? "-"
-                    : money(receipt.invoice.balanceDue, receipt.invoice.currencyCode)}
+                    : money(
+                        receipt.invoice.balanceDue,
+                        receipt.invoice.currencyCode,
+                      )}
                 </div>
               </div>
             </div>

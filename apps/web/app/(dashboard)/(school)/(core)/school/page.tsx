@@ -1,15 +1,10 @@
-﻿import { SchoolDashboardOverviewClient } from "@/components/school-dashboard-overview-client";
+import { SchoolDashboardOverviewClient } from "@/components/school-dashboard-overview-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import { getServerTranslator } from "@/lib/i18n";
-import {
-  getMeContext,
-  resolveCurrentSchoolId,
-  resolveEffectiveRoles,
-} from "@/lib/server-context";
+import { getMeContext, resolveCurrentSchoolId } from "@/lib/server-context";
 
 export default async function SchoolDashboardPage() {
   const context = await getMeContext();
-  const effectiveRoles = resolveEffectiveRoles(context);
   const currentSchoolId = resolveCurrentSchoolId(context);
   const { t } = await getServerTranslator();
 

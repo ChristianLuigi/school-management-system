@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
 export type StudentDocumentRecord = {
   id: string;
@@ -36,7 +36,7 @@ function documentTypeLabel(value: string) {
   return labels[value] ?? value;
 }
 
-function statusTone(status: string) {
+function statusTone(status: string): SchoolBadgeTone {
   if (status === "VERIFIED") return "green";
   if (status === "REJECTED") return "red";
   return "amber";
@@ -219,13 +219,18 @@ export function StudentDocumentsPanelClient({
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
               value={form.documentType}
               onChange={(event) =>
-                setForm((prev) => ({ ...prev, documentType: event.target.value }))
+                setForm((prev) => ({
+                  ...prev,
+                  documentType: event.target.value,
+                }))
               }
             >
               <option value="PHOTO">Student photo</option>
               <option value="BIRTH_CERTIFICATE">Birth certificate</option>
               <option value="VACCINATION_CARD">Vaccination card</option>
-              <option value="PREVIOUS_SCHOOL_RECORD">Previous school record</option>
+              <option value="PREVIOUS_SCHOOL_RECORD">
+                Previous school record
+              </option>
               <option value="OTHER">Other</option>
             </select>
 
@@ -233,7 +238,10 @@ export function StudentDocumentsPanelClient({
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
               value={form.documentStatus}
               onChange={(event) =>
-                setForm((prev) => ({ ...prev, documentStatus: event.target.value }))
+                setForm((prev) => ({
+                  ...prev,
+                  documentStatus: event.target.value,
+                }))
               }
             >
               <option value="PENDING">Pending</option>
@@ -310,7 +318,11 @@ export function StudentDocumentsPanelClient({
               onClick={saveDocument}
               className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
             >
-              {saving ? "Saving..." : editingId ? "Save Document" : "Add Document"}
+              {saving
+                ? "Saving..."
+                : editingId
+                  ? "Save Document"
+                  : "Add Document"}
             </button>
 
             <button
@@ -342,12 +354,14 @@ export function StudentDocumentsPanelClient({
 
                 <div className="mt-1 text-sm text-slate-500">
                   {document.fileName ?? "No file name"}
-                  {document.receivedAt ? ` - Received: ${document.receivedAt}` : ""}
+                  {document.receivedAt
+                    ? ` - Received: ${document.receivedAt}`
+                    : ""}
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <SchoolBadge tone={statusTone(document.documentStatus) as any}>
+                <SchoolBadge tone={statusTone(document.documentStatus)}>
                   {document.documentStatus}
                 </SchoolBadge>
 
@@ -364,6 +378,7 @@ export function StudentDocumentsPanelClient({
             {document.fileUrl ? (
               <div className="mt-3 space-y-3">
                 {document.fileUrl.match(/(jpg|jpeg|png|webp)(\?|$)/i) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={document.fileUrl}
                     alt={

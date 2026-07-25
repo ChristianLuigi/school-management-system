@@ -1,0 +1,177 @@
+name: Release verification
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - main
+      - "release/**"
+
+concurrency:
+  group: release-verification-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10.33.0"
+
+jobs:
+  quality:
+    name: Lint, unit tests, builds, and audits
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify repository topology
+        run: |
+          test -f apps/api/package.json || {
+            echo "::error::apps/api is unavailable from the parent repository checkout."
+            exit 1
+          }
+          if git ls-files --stage apps/api | grep -q '^160000 '; then
+            echo "::error::apps/api must be normal parent-repository content, not a gitlink."
+            exit 1
+          fi
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            apps/api/pnpm-lock.yaml
+            apps/web/pnpm-lock.yaml
+
+      - name: Install API dependencies
+        run: pnpm --dir apps/api install --frozen-lockfile
+
+      - name: Install web dependencies
+        run: pnpm --dir apps/web install --frozen-lockfile
+
+      - name: Install maintained starter dependencies
+        run: npm --prefix typescript-starter-master ci
+
+      - name: Run complete local quality gate
+        run: pnpm check
+
+      - name: Audit production dependencies
+        run: |
+          pnpm --dir apps/api audit --prod
+          pnpm --dir apps/web audit --prod
+          npm --prefix typescript-starter-master audit --omit=dev
+
+  integration:
+    name: PostgreSQL migrations and integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-bookworm
+        env:
+          POSTGRES_USER: school_test
+          POSTGRES_PASSWORD: integration-test-password
+          POSTGRES_DB: school_mgmt_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U school_test -d school_mgmt_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://school_test:integration-test-password@127.0.0.1:5432/school_mgmt_test
+      TEST_DATABASE_URL: postgresql://school_test:integration-test-password@127.0.0.1:5432/school_mgmt_test
+      TEST_DATABASE_ADMIN_URL: postgresql://school_test:integration-test-password@127.0.0.1:5432/postgres
+      APP_PUBLIC_URL: http://localhost:3001
+      NODE_ENV: test
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify repository topology
+        run: |
+          test -f apps/api/package.json
+          ! git ls-files --stage apps/api | grep -q '^160000 '
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: apps/api/pnpm-lock.yaml
+
+      - name: Install API dependencies
+        run: pnpm --dir apps/api install --frozen-lockfile
+
+      - name: Apply fresh migrations
+        run: pnpm db:migrate
+
+      - name: Verify migration no-op and checksums
+        run: |
+          pnpm db:migrate
+          pnpm db:migrate:verify
+
+      - name: Run database-backed integration tests
+        run: pnpm --dir apps/api test:integration:ci
+
+      - name: Upload integration report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-report
+          path: apps/api/integration-report.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  containers:
+    name: Production container builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify repository topology
+        run: |
+          test -f apps/api/package.json
+          ! git ls-files --stage apps/api | grep -q '^160000 '
+
+      - name: Build API image
+        run: docker build --file apps/api/Dockerfile --tag almac-api:ci .
+
+      - name: Build web image
+        run: docker build --file apps/web/Dockerfile --tag almac-web:ci .
+
+      - name: Validate production Compose
+        env:
+          APP_VERSION: ci
+          APP_DOMAIN: school.example.com
+          ACME_EMAIL: operations@example.com
+          POSTGRES_DB: almac
+          POSTGRES_SUPERUSER: postgres
+          POSTGRES_SUPERUSER_PASSWORD: CI-Bootstrap-Password-42
+          MIGRATION_DATABASE_USER: almac_migration
+          MIGRATION_DATABASE_PASSWORD: CI-Migration-Password-42
+          APP_DATABASE_USER: almac_app
+          APP_DATABASE_PASSWORD: CI-Application-Password-42
+          RESEND_API_KEY: re_ci_placeholder_key
+          AUTH_EMAIL_FROM: ALMAC <accounts@example.com>
+        run: docker compose --file compose.production.yml config --quiet

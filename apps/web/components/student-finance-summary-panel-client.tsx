@@ -64,12 +64,12 @@ function invoiceTone(status: string): BadgeTone {
 function invoiceLabel(status: string) {
   const labels: Record<string, string> = {
     DRAFT: "Brouillon",
-    ISSUED: "ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°mise",
-    PARTIALLY_PAID: "Partiellement payÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e",
-    PAID: "PayÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e",
+    ISSUED: "Émise",
+    PARTIALLY_PAID: "Partiellement payée",
+    PAID: "Payée",
     OVERDUE: "En retard",
-    VOID: "AnnulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e",
-    CANCELLED: "AnnulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e",
+    VOID: "Annulée",
+    CANCELLED: "Annulée",
   };
 
   return labels[status] ?? status;
@@ -132,7 +132,9 @@ export function StudentFinanceSummaryPanelClient({
       setLoading(false);
     }
   }
-  async function recordPayment(invoice: StudentFinanceSummary["invoices"][number]) {
+  async function recordPayment(
+    invoice: StudentFinanceSummary["invoices"][number],
+  ) {
     setRecordingPayment(true);
     setPaymentMessage("");
     setPaymentError("");
@@ -167,7 +169,9 @@ export function StudentFinanceSummaryPanelClient({
         throw new Error(body?.message ?? "Failed to record payment.");
       }
 
-      setPaymentMessage(`Payment ${body.paymentNumber ?? ""} recorded successfully.`);
+      setPaymentMessage(
+        `Payment ${body.paymentNumber ?? ""} recorded successfully.`,
+      );
       setPaymentInvoiceId("");
       setPaymentAmount("");
       setPaymentMethod("CASH");
@@ -267,7 +271,9 @@ export function StudentFinanceSummaryPanelClient({
 
           <div className="grid gap-5 xl:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 p-4">
-              <div className="font-semibold text-slate-900">Recent Invoices</div>
+              <div className="font-semibold text-slate-900">
+                Recent Invoices
+              </div>
 
               <div className="mt-3 space-y-2">
                 {summary.invoices.slice(0, 5).map((invoice) => (
@@ -376,9 +382,13 @@ export function StudentFinanceSummaryPanelClient({
                                 }
                               >
                                 <option value="CASH">Cash</option>
-                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                                <option value="BANK_TRANSFER">
+                                  Bank Transfer
+                                </option>
                                 <option value="CHECK">Check</option>
-                                <option value="MOBILE_MONEY">Mobile Money</option>
+                                <option value="MOBILE_MONEY">
+                                  Mobile Money
+                                </option>
                                 <option value="CARD">Card</option>
                                 <option value="OTHER">Other</option>
                               </select>
@@ -426,7 +436,9 @@ export function StudentFinanceSummaryPanelClient({
             </div>
 
             <div className="rounded-2xl border border-slate-200 p-4">
-              <div className="font-semibold text-slate-900">Recent Payments</div>
+              <div className="font-semibold text-slate-900">
+                Recent Payments
+              </div>
 
               <div className="mt-3 space-y-2">
                 {summary.payments.slice(0, 5).map((payment) => (
@@ -462,7 +474,9 @@ export function StudentFinanceSummaryPanelClient({
 
                     <div className="text-xs text-slate-500">
                       {payment.paidAt ?? payment.createdAt}
-                      {payment.paymentMethod ? ` - ${payment.paymentMethod}` : ""}
+                      {payment.paymentMethod
+                        ? ` - ${payment.paymentMethod}`
+                        : ""}
                       {payment.paymentReference
                         ? ` - Ref: ${payment.paymentReference}`
                         : ""}

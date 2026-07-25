@@ -6,3 +6,12 @@ coverage
 .vscode/settings.json
 apps/web/.private_uploads/
 .private_uploads/
+.env.*
+!**/.env.example
+!.env.production.example
+backups/
+integration-report.json
+.release-backups/
+.claude/
+*.log
+apps/web/public/uploads/
