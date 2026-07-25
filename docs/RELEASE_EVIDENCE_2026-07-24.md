@@ -10,8 +10,10 @@ Status: **NO-GO pending external P0 gates**
 - Maintained-starter commit: `bb62c4f`
 - CI setup fix commit: `ecdff07`
 - Deterministic integration CI commit: `623c215`
+- Runtime candidate source: `d90bcf5`
 - Private repository: `ChristianLuigi/school-management-system`
 - Draft pull request: `https://github.com/ChristianLuigi/school-management-system/pull/1`
+- Local staging rehearsal: `docs/STAGING_REHEARSAL_EVIDENCE_2026-07-25.md`
 - API image: `almac-api:release-candidate`
 - Web image: `almac-web:release-candidate`
 
@@ -47,6 +49,7 @@ Status: **NO-GO pending external P0 gates**
 - Pull-request workflow `30134571426` passed at `623c215`.
 - Both workflows passed quality/build/audit, PostgreSQL migration/integration, and production-container jobs.
 - The integration job applied and verified the full migration chain, ran all six integration suites, and uploaded its JSON report.
+- The isolated local staging rehearsal passed migrations, health/security smoke tests, rate limiting, log redaction checks, database dependency recovery, backup/restore, uploads backup, and rollback/roll-forward. It does not replace real staging or stakeholder UAT.
 
 ## Open P0 gates
 
