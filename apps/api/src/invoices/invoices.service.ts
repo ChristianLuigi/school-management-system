@@ -15,13 +15,21 @@ type InvoiceRow = {
   academic_year_id: string;
   grading_period_id: string | null;
   invoice_number: string;
-  status: 'DRAFT' | 'ISSUED' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'VOID';
+  status:
+    | 'DRAFT'
+    | 'ISSUED'
+    | 'PARTIAL'
+    | 'PARTIALLY_PAID'
+    | 'PAID'
+    | 'OVERDUE'
+    | 'VOID';
   issue_date: string;
   due_date: string;
   currency_code: string;
   subtotal_amount: string;
   discount_amount: string;
   total_amount: string;
+  amount_paid: string;
   balance_due: string;
   created_at: string;
   updated_at: string;
@@ -44,7 +52,7 @@ type InvoiceLineRow = {
 export class InvoicesService {
   constructor(private readonly db: DbService) {}
 
-  async findAll(studentId: string) {
+  async findAll(schoolId: string, studentId: string) {
     const invoicesResult = await this.db.query<InvoiceRow>(
       `
         SELECT
@@ -54,28 +62,35 @@ export class InvoicesService {
           academic_year_id,
           grading_period_id,
           invoice_number,
-          status,
+          invoice_status::text AS status,
           issue_date,
           due_date,
           currency_code,
           subtotal_amount,
           discount_amount,
           total_amount,
+          amount_paid,
           balance_due,
           created_at,
           updated_at
         FROM invoices
-        WHERE student_id = $1
+        WHERE school_id = $1
+          AND student_id = $2
           AND deleted_at IS NULL
+          AND invoice_status <> 'DRAFT'
         ORDER BY issue_date DESC, created_at DESC
         `,
-      [studentId],
+      [schoolId, studentId],
     );
 
     return invoicesResult.rows;
   }
 
-  async findParentSummary(guardianId: string, studentId: string) {
+  async findParentSummary(
+    schoolId: string,
+    guardianId: string,
+    studentId: string,
+  ) {
     const accessCheck = await this.db.query(
       `
         SELECT sg.id
@@ -83,12 +98,14 @@ export class InvoicesService {
         JOIN guardians g ON g.id = sg.guardian_id
         WHERE sg.guardian_id = $1
           AND sg.student_id = $2
+          AND sg.school_id = $3
+          AND g.school_id = $3
           AND sg.can_view_finance = TRUE
           AND sg.deleted_at IS NULL
           AND g.deleted_at IS NULL
         LIMIT 1
         `,
-      [guardianId, studentId],
+      [guardianId, studentId, schoolId],
     );
 
     if (accessCheck.rows.length === 0) {
@@ -107,10 +124,11 @@ export class InvoicesService {
         SELECT id, student_number, first_name, last_name
         FROM students
         WHERE id = $1
+          AND school_id = $2
           AND deleted_at IS NULL
         LIMIT 1
         `,
-      [studentId],
+      [studentId, schoolId],
     );
 
     const student = studentResult.rows[0];
@@ -119,17 +137,46 @@ export class InvoicesService {
       throw new NotFoundException(`Student ${studentId} not found.`);
     }
 
-    const invoices = await this.findAll(studentId);
-
-    const totalInvoiced = invoices.reduce(
-      (sum, inv) => sum + Number(inv.total_amount),
-      0,
+    const invoices = await this.findAll(schoolId, studentId);
+    const totalsByCurrency = Array.from(
+      invoices
+        .filter((invoice) => invoice.status !== 'VOID')
+        .reduce(
+          (totals, invoice) => {
+            const current = totals.get(invoice.currency_code) ?? {
+              currencyCode: invoice.currency_code,
+              totalInvoiced: 0,
+              totalPaid: 0,
+              totalOutstanding: 0,
+            };
+            current.totalInvoiced = Number(
+              (current.totalInvoiced + Number(invoice.total_amount)).toFixed(2),
+            );
+            current.totalPaid = Number(
+              (current.totalPaid + Number(invoice.amount_paid)).toFixed(2),
+            );
+            current.totalOutstanding = Number(
+              (
+                current.totalOutstanding + Number(invoice.balance_due)
+              ).toFixed(2),
+            );
+            totals.set(invoice.currency_code, current);
+            return totals;
+          },
+          new Map<
+            string,
+            {
+              currencyCode: string;
+              totalInvoiced: number;
+              totalPaid: number;
+              totalOutstanding: number;
+            }
+          >(),
+        )
+        .values(),
+    ).sort((left, right) =>
+      left.currencyCode.localeCompare(right.currencyCode),
     );
-    const totalOutstanding = invoices.reduce(
-      (sum, inv) => sum + Number(inv.balance_due),
-      0,
-    );
-    const totalPaid = totalInvoiced - totalOutstanding;
 
     return {
       student: {
@@ -138,11 +185,7 @@ export class InvoicesService {
         firstName: student.first_name,
         lastName: student.last_name,
       },
-      summary: {
-        totalInvoiced,
-        totalPaid,
-        totalOutstanding,
-      },
+      totalsByCurrency,
       invoices,
     };
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 import { StudentSelectorClient } from "@/components/student-selector-client";
 import type { SelectedStudent } from "@/components/student-selector-client";
@@ -66,6 +66,8 @@ export function FinanceInvoiceCreateClient({
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const idempotencyKeyRef = useRef("");
+  const idempotencyPayloadRef = useRef("");
 
   const effectiveIssueDate = issueDate || todayIsoDate();
 
@@ -202,27 +204,33 @@ export function FinanceInvoiceCreateClient({
 
     try {
       validateInvoiceDraft();
+      const payload = JSON.stringify({
+        schoolId,
+        studentId: selectedStudent!.id,
+        invoiceStatus,
+        issueDate: effectiveIssueDate,
+        dueDate: effectiveDueDate,
+        discountAmount: discount,
+        currencyCode,
+        notes,
+        items: cleanItems.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitAmount: item.unitAmount,
+        })),
+      });
+      if (idempotencyPayloadRef.current !== payload) {
+        idempotencyKeyRef.current = crypto.randomUUID();
+        idempotencyPayloadRef.current = payload;
+      }
 
       const res = await fetch("/api/finance/invoices", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKeyRef.current,
         },
-        body: JSON.stringify({
-          schoolId,
-          studentId: selectedStudent!.id,
-          invoiceStatus,
-          issueDate: effectiveIssueDate,
-          dueDate: effectiveDueDate,
-          discountAmount: discount,
-          currencyCode,
-          notes,
-          items: cleanItems.map((item) => ({
-            description: item.description,
-            quantity: item.quantity,
-            unitAmount: item.unitAmount,
-          })),
-        }),
+        body: payload,
       });
 
       const body = await res.json().catch(() => null);
@@ -240,6 +248,8 @@ export function FinanceInvoiceCreateClient({
       setNotes("");
       setItems([emptyItem()]);
       setPreviewVisible(false);
+      idempotencyKeyRef.current = "";
+      idempotencyPayloadRef.current = "";
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create invoice.");

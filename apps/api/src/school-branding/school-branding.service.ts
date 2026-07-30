@@ -1,4 +1,4 @@
-﻿import {
+import {
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -59,6 +59,14 @@ export class SchoolBrandingService {
         AND sm.school_id = $2
         AND sm.deleted_at IS NULL
         AND sm.membership_status = 'ACTIVE'
+        AND EXISTS (
+          SELECT 1
+          FROM school_staff_accounts staff
+          WHERE staff.school_id = sm.school_id
+            AND staff.user_id = sm.user_id
+            AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+            AND staff.deleted_at IS NULL
+        )
       `,
       [actorUserId, schoolId],
     );

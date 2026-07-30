@@ -12,13 +12,11 @@ import {
 import { AccessManagementService } from '../access-management/access-management.service';
 import { InternalAuthService } from '../internal-auth/internal-auth.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { CreateStudentInvoiceDto } from './dto/create-student-invoice.dto';
 import { FinanceOverviewDto } from './dto/finance-overview.dto';
 import { InvoiceActionDto } from './dto/invoice-action.dto';
 import { InvoicePaymentsDto } from './dto/invoice-payments.dto';
 import { ListInvoicesDto } from './dto/list-invoices.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
-import { RecordStudentPaymentDto } from './dto/record-student-payment.dto';
 import { StudentFinanceProfileDto } from './dto/student-finance-profile.dto';
 import { UpdateFinanceSettingsDto } from './dto/update-finance-settings.dto';
 import { VoidInvoiceDto } from './dto/void-invoice.dto';
@@ -41,11 +39,20 @@ export class FinanceOperationsController {
     return this.internalAuthService.validateSessionToken(token);
   }
 
-  private schoolIdFromBody(body: Record<string, unknown>): string {
-    return typeof body.schoolId === 'string' ? body.schoolId : '';
+  private async assertPermission(
+    session: Awaited<ReturnType<InternalAuthService['validateSessionToken']>>,
+    schoolId: string,
+    permissionCode: string,
+  ) {
+    if (await this.hasPermission(session, schoolId, permissionCode)) return;
+    await this.accessManagementService.assertFinancePermission(
+      session.user_id,
+      schoolId,
+      permissionCode,
+    );
   }
 
-  private async assertPermission(
+  private async hasPermission(
     session: Awaited<ReturnType<InternalAuthService['validateSessionToken']>>,
     schoolId: string,
     permissionCode: string,
@@ -57,8 +64,8 @@ export class FinanceOperationsController {
           role.schoolId === schoolId && role.roleCode === 'SCHOOL_ADMIN',
       )
     )
-      return;
-    await this.accessManagementService.assertFinancePermission(
+      return true;
+    return this.accessManagementService.hasFinancePermission(
       session.user_id,
       schoolId,
       permissionCode,
@@ -70,15 +77,22 @@ export class FinanceOperationsController {
     @Query('schoolId') schoolId: string,
   ) {
     const session = await this.requireSession(authorization);
+    await this.assertPermission(session, schoolId, 'FINANCE_DASHBOARD_VIEW');
 
     const platformRole =
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
 
-    return this.financeOperationsService.getFinanceSettings(
+    const settings = await this.financeOperationsService.getFinanceSettings(
       schoolId,
       session.user_id,
       platformRole,
     );
+    const canManage = await this.hasPermission(
+      session,
+      schoolId,
+      'FINANCE_SETTINGS_MANAGE',
+    );
+    return { ...settings, canManage };
   }
 
   @Patch('settings')
@@ -87,6 +101,11 @@ export class FinanceOperationsController {
     @Body() body: UpdateFinanceSettingsDto,
   ) {
     const session = await this.requireSession(authorization);
+    await this.assertPermission(
+      session,
+      body.schoolId,
+      'FINANCE_SETTINGS_MANAGE',
+    );
 
     const platformRole =
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
@@ -136,7 +155,33 @@ export class FinanceOperationsController {
       platformRole,
     );
 
-    return this.financeOperationsService.getOverview(query.schoolId);
+    const [overview, canCreateInvoices, canRecordPayments, canManageSettings] =
+      await Promise.all([
+        this.financeOperationsService.getOverview(query.schoolId),
+        this.hasPermission(
+          session,
+          query.schoolId,
+          'FINANCE_INVOICES_CREATE',
+        ),
+        this.hasPermission(
+          session,
+          query.schoolId,
+          'FINANCE_PAYMENTS_RECORD',
+        ),
+        this.hasPermission(
+          session,
+          query.schoolId,
+          'FINANCE_SETTINGS_MANAGE',
+        ),
+      ]);
+    return {
+      ...overview,
+      capabilities: {
+        canCreateInvoices,
+        canRecordPayments,
+        canManageSettings,
+      },
+    };
   }
 
   @Get('invoices')
@@ -166,67 +211,47 @@ export class FinanceOperationsController {
   @Post('invoices')
   async createInvoice(
     @Headers('authorization') authorization: string | undefined,
-    @Body() body: Record<string, unknown>,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Body() body: CreateInvoiceDto,
   ) {
     const session = await this.requireSession(authorization);
     await this.assertPermission(
       session,
-      this.schoolIdFromBody(body),
+      body.schoolId,
       'FINANCE_INVOICES_CREATE',
     );
 
     const platformRole =
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
 
-    if (
-      typeof body.invoiceTitle === 'string' &&
-      body.totalAmount !== undefined &&
-      !Array.isArray(body.items)
-    ) {
-      return this.financeOperationsService.createStudentInvoice(
-        body as unknown as CreateStudentInvoiceDto,
-        session.user_id,
-        platformRole,
-      );
-    }
-
     return this.financeOperationsService.createInvoice(
-      body as unknown as CreateInvoiceDto,
+      body,
       session.user_id,
       platformRole,
+      idempotencyKey,
     );
   }
   @Post('payments')
   async recordPayment(
     @Headers('authorization') authorization: string | undefined,
-    @Body() body: Record<string, unknown>,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Body() body: RecordPaymentDto,
   ) {
     const session = await this.requireSession(authorization);
     await this.assertPermission(
       session,
-      this.schoolIdFromBody(body),
+      body.schoolId,
       'FINANCE_PAYMENTS_RECORD',
     );
 
     const platformRole =
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
 
-    if (
-      typeof body.studentId === 'string' &&
-      typeof body.invoiceId === 'string' &&
-      body.amount !== undefined
-    ) {
-      return this.financeOperationsService.recordStudentPayment(
-        body as unknown as RecordStudentPaymentDto,
-        session.user_id,
-        platformRole,
-      );
-    }
-
     return this.financeOperationsService.recordPayment(
-      body as unknown as RecordPaymentDto,
+      body,
       session.user_id,
       platformRole,
+      idempotencyKey,
     );
   }
   @Get('students/search')
@@ -309,15 +334,21 @@ export class FinanceOperationsController {
 
     const platformRole =
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
-
-    return this.financeOperationsService.getPaymentReceiptDetails(
-      {
-        schoolId,
-        paymentId,
-      },
-      session.user_id,
-      platformRole,
-    );
+    const [receipt, canRequestCorrection] = await Promise.all([
+      this.financeOperationsService.getPaymentReceiptDetails(
+        {
+          schoolId,
+          paymentId,
+        },
+        session.user_id,
+        platformRole,
+      ),
+      this.hasPermission(session, schoolId, 'FINANCE_PAYMENTS_REVERSE'),
+    ]);
+    return {
+      ...receipt,
+      capabilities: { canRequestCorrection },
+    };
   }
   @Get('payments/:id/receipt')
   async getPaymentReceipt(
@@ -330,27 +361,32 @@ export class FinanceOperationsController {
 
     const platformRole =
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
-
-    return this.financeOperationsService.getPaymentReceipt(
-      {
-        schoolId,
-        paymentId: id,
-      },
-      session.user_id,
-      platformRole,
-    );
+    const [receipt, canRequestCorrection] = await Promise.all([
+      this.financeOperationsService.getPaymentReceipt(
+        {
+          schoolId,
+          paymentId: id,
+        },
+        session.user_id,
+        platformRole,
+      ),
+      this.hasPermission(session, schoolId, 'FINANCE_PAYMENTS_REVERSE'),
+    ]);
+    return {
+      ...receipt,
+      capabilities: { canRequestCorrection },
+    };
   }
-
   @Post('invoices/:id/issue')
   async issueInvoice(
     @Headers('authorization') authorization: string | undefined,
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: InvoiceActionDto,
   ) {
     const session = await this.requireSession(authorization);
     await this.assertPermission(
       session,
-      this.schoolIdFromBody(body),
+      body.schoolId,
       'FINANCE_INVOICES_EDIT',
     );
 
@@ -359,7 +395,7 @@ export class FinanceOperationsController {
 
     return this.financeOperationsService.issueInvoice(
       {
-        schoolId: (body as unknown as InvoiceActionDto).schoolId,
+        schoolId: body.schoolId,
         invoiceId: id,
       },
       session.user_id,
@@ -371,13 +407,13 @@ export class FinanceOperationsController {
   async voidInvoice(
     @Headers('authorization') authorization: string | undefined,
     @Param('id') id: string,
-    @Body() body: Record<string, unknown>,
+    @Body() body: VoidInvoiceDto,
   ) {
     const session = await this.requireSession(authorization);
     await this.assertPermission(
       session,
-      this.schoolIdFromBody(body),
-      'FINANCE_INVOICES_EDIT',
+      body.schoolId,
+      'FINANCE_INVOICES_VOID',
     );
 
     const platformRole =
@@ -385,9 +421,9 @@ export class FinanceOperationsController {
 
     return this.financeOperationsService.voidInvoice(
       {
-        schoolId: (body as unknown as VoidInvoiceDto).schoolId,
+        schoolId: body.schoolId,
         invoiceId: id,
-        reason: (body as unknown as VoidInvoiceDto).reason,
+        reason: body.reason,
       },
       session.user_id,
       platformRole,
@@ -406,7 +442,7 @@ export class FinanceOperationsController {
     const platformRole =
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
 
-    return this.financeOperationsService.getInvoiceDetails(
+    const invoice = await this.financeOperationsService.getInvoiceDetails(
       {
         schoolId,
         invoiceId: id,
@@ -414,6 +450,19 @@ export class FinanceOperationsController {
       session.user_id,
       platformRole,
     );
+    const [canIssue, canVoid, canRequestCreditNote] = await Promise.all([
+      this.hasPermission(session, schoolId, 'FINANCE_INVOICES_EDIT'),
+      this.hasPermission(session, schoolId, 'FINANCE_INVOICES_VOID'),
+      this.hasPermission(session, schoolId, 'FINANCE_CREDIT_NOTES_CREATE'),
+    ]);
+    return {
+      ...invoice,
+      capabilities: {
+        canIssue,
+        canVoid,
+        canRequestCreditNote,
+      },
+    };
   }
   @Get('invoices/:id/payments')
   async listInvoicePayments(

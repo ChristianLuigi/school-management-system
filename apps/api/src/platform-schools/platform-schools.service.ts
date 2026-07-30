@@ -561,6 +561,97 @@ export class PlatformSchoolsService {
       [input.schoolId, user.id, input.role],
     );
 
+    const staffCategory =
+      input.role === 'SCHOOL_ADMIN'
+        ? 'SCHOOL_LEADERSHIP'
+        : input.role === 'TEACHER'
+          ? 'TEACHING'
+          : 'FINANCE';
+
+    /*
+     * Platform provisioning is the bootstrap path for the first school
+     * administrator. Keep the staff identity in the same transaction as the
+     * account, membership, and role so the administrator can immediately use
+     * staff-management features without weakening their authorization guard.
+     */
+    await client.query(
+      `
+      INSERT INTO school_staff_accounts (
+        school_id,
+        user_id,
+        staff_type,
+        staff_category,
+        employment_status,
+        hire_date,
+        first_name,
+        last_name,
+        email_original,
+        email_normalized
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        'ACTIVE',
+        CURRENT_DATE,
+        $5,
+        $6,
+        $7,
+        LOWER($7)
+      )
+      ON CONFLICT (
+        school_id,
+        user_id
+      )
+      WHERE deleted_at IS NULL
+      DO UPDATE SET
+        staff_type = CASE
+          WHEN school_staff_accounts.staff_type = 'SCHOOL_ADMIN'
+            OR EXCLUDED.staff_type = 'SCHOOL_ADMIN'
+            THEN 'SCHOOL_ADMIN'
+          ELSE EXCLUDED.staff_type
+        END,
+        staff_category = CASE
+          WHEN school_staff_accounts.staff_type = 'SCHOOL_ADMIN'
+            OR EXCLUDED.staff_type = 'SCHOOL_ADMIN'
+            THEN 'SCHOOL_LEADERSHIP'
+          ELSE EXCLUDED.staff_category
+        END,
+        employment_status = 'ACTIVE',
+        hire_date = COALESCE(
+          school_staff_accounts.hire_date,
+          EXCLUDED.hire_date
+        ),
+        first_name = COALESCE(
+          school_staff_accounts.first_name,
+          EXCLUDED.first_name
+        ),
+        last_name = COALESCE(
+          school_staff_accounts.last_name,
+          EXCLUDED.last_name
+        ),
+        email_original = COALESCE(
+          school_staff_accounts.email_original,
+          EXCLUDED.email_original
+        ),
+        email_normalized = COALESCE(
+          school_staff_accounts.email_normalized,
+          EXCLUDED.email_normalized
+        ),
+        updated_at = NOW()
+      `,
+      [
+        input.schoolId,
+        user.id,
+        input.role,
+        staffCategory,
+        input.firstName,
+        input.lastName,
+        input.email,
+      ],
+    );
+
     return user;
   }
 

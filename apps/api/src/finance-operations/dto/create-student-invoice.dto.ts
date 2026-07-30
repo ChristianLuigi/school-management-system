@@ -5,6 +5,8 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -16,6 +18,7 @@ export class CreateStudentInvoiceDto {
   studentId: string;
 
   @IsString()
+  @MaxLength(200)
   invoiceTitle: string;
 
   @IsNumber()
@@ -24,6 +27,7 @@ export class CreateStudentInvoiceDto {
 
   @IsOptional()
   @IsString()
+  @Matches(/^[A-Za-z]{3}$/)
   currencyCode?: string;
 
   @IsOptional()
@@ -40,5 +44,6 @@ export class CreateStudentInvoiceDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   notes?: string;
 }

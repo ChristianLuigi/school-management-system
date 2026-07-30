@@ -69,6 +69,14 @@ export class SchoolStudentsService {
         AND sm.school_id = $2
         AND sm.deleted_at IS NULL
         AND sm.membership_status = 'ACTIVE'
+        AND EXISTS (
+          SELECT 1
+          FROM school_staff_accounts staff
+          WHERE staff.school_id = sm.school_id
+            AND staff.user_id = sm.user_id
+            AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+            AND staff.deleted_at IS NULL
+        )
       `,
       [actorUserId, schoolId],
     );
@@ -81,6 +89,79 @@ export class SchoolStudentsService {
         'You do not have permission to manage students.',
       );
     }
+  }
+
+  private async getFinanceCapabilities(
+    actorUserId: string,
+    schoolId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+  ) {
+    if (platformRole === 'SUPER_ADMIN') {
+      return {
+        canViewFinance: true,
+        canCreateInvoices: true,
+        canRecordPayments: true,
+      };
+    }
+
+    const rolesResult = await this.db.query<{ role: string }>(
+      `
+      SELECT smr.role::text AS role
+      FROM school_memberships sm
+      JOIN school_membership_roles smr
+        ON smr.school_membership_id = sm.id
+       AND smr.deleted_at IS NULL
+      WHERE sm.school_id = $1
+        AND sm.user_id = $2
+        AND sm.membership_status = 'ACTIVE'
+        AND EXISTS (
+          SELECT 1
+          FROM school_staff_accounts staff
+          WHERE staff.school_id = sm.school_id
+            AND staff.user_id = sm.user_id
+            AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+            AND staff.deleted_at IS NULL
+        )
+        AND sm.deleted_at IS NULL
+      `,
+      [schoolId, actorUserId],
+    );
+    const roles = rolesResult.rows.map((row) => row.role);
+    if (roles.includes('SCHOOL_ADMIN')) {
+      return {
+        canViewFinance: true,
+        canCreateInvoices: true,
+        canRecordPayments: true,
+      };
+    }
+    if (!roles.includes('FINANCE_ADMIN')) {
+      return {
+        canViewFinance: false,
+        canCreateInvoices: false,
+        canRecordPayments: false,
+      };
+    }
+
+    const permissionsResult = await this.db.query<{
+      permission_code: string;
+    }>(
+      `
+      SELECT permission_code
+      FROM school_user_permissions
+      WHERE school_id = $1
+        AND user_id = $2
+        AND deleted_at IS NULL
+      `,
+      [schoolId, actorUserId],
+    );
+    const permissions = new Set(
+      permissionsResult.rows.map((row) => row.permission_code),
+    );
+    return {
+      canViewFinance: permissions.has('FINANCE_INVOICES_VIEW'),
+      canCreateInvoices: permissions.has('FINANCE_INVOICES_CREATE'),
+      canRecordPayments: permissions.has('FINANCE_PAYMENTS_RECORD'),
+    };
   }
 
   async listStudents(query: {
@@ -294,12 +375,15 @@ export class SchoolStudentsService {
       throw new NotFoundException('Student not found for this school.');
     }
 
+    const financeCapabilities = await this.getFinanceCapabilities(
+      actorUserId,
+      input.schoolId,
+      platformRole,
+    );
+
     const financeResult = await this.db.query<{
       invoice_count: string;
       overdue_count: string;
-      total_billed: string;
-      total_paid: string;
-      total_outstanding: string;
     }>(
       `
       SELECT
@@ -309,7 +393,25 @@ export class SchoolStudentsService {
             AND due_date IS NOT NULL
             AND due_date < CURRENT_DATE
             AND invoice_status NOT IN ('PAID', 'VOID')
-        )::text AS overdue_count,
+        )::text AS overdue_count
+      FROM invoices
+      WHERE school_id = $1
+        AND student_id = $2
+        AND deleted_at IS NULL
+        AND $3::boolean
+      `,
+      [input.schoolId, input.studentId, financeCapabilities.canViewFinance],
+    );
+
+    const financeMoneyResult = await this.db.query<{
+      currency_code: string;
+      total_billed: string;
+      total_paid: string;
+      total_outstanding: string;
+    }>(
+      `
+      SELECT
+        currency_code,
         COALESCE(SUM(total_amount), 0)::text AS total_billed,
         COALESCE(SUM(amount_paid), 0)::text AS total_paid,
         COALESCE(SUM(balance_due), 0)::text AS total_outstanding
@@ -317,8 +419,12 @@ export class SchoolStudentsService {
       WHERE school_id = $1
         AND student_id = $2
         AND deleted_at IS NULL
+        AND invoice_status <> 'VOID'
+        AND $3::boolean
+      GROUP BY currency_code
+      ORDER BY currency_code
       `,
-      [input.schoolId, input.studentId],
+      [input.schoolId, input.studentId, financeCapabilities.canViewFinance],
     );
 
     const recentInvoicesResult = await this.db.query<{
@@ -347,10 +453,11 @@ export class SchoolStudentsService {
       WHERE school_id = $1
         AND student_id = $2
         AND deleted_at IS NULL
+        AND $3::boolean
       ORDER BY created_at DESC
       LIMIT 5
       `,
-      [input.schoolId, input.studentId],
+      [input.schoolId, input.studentId, financeCapabilities.canViewFinance],
     );
 
     const recentPaymentsResult = await this.db.query<{
@@ -361,6 +468,7 @@ export class SchoolStudentsService {
       payment_status: string;
       payment_date: string;
       amount: string;
+      currency_code: string;
       method: string | null;
       reference: string | null;
     }>(
@@ -373,6 +481,7 @@ export class SchoolStudentsService {
         pay.payment_status::text AS payment_status,
         pay.payment_date::text AS payment_date,
         pay.amount::text AS amount,
+        pay.currency_code,
         pay.method,
         pay.reference
       FROM payments pay
@@ -380,10 +489,11 @@ export class SchoolStudentsService {
       WHERE pay.school_id = $1
         AND pay.student_id = $2
         AND pay.deleted_at IS NULL
+        AND $3::boolean
       ORDER BY pay.payment_date DESC, pay.created_at DESC
       LIMIT 5
       `,
-      [input.schoolId, input.studentId],
+      [input.schoolId, input.studentId, financeCapabilities.canViewFinance],
     );
 
     const documentRecordsResult = await this.db.query<{
@@ -627,8 +737,7 @@ export class SchoolStudentsService {
       admissionSource: admissionSourceResult.rows[0]
         ? {
             id: admissionSourceResult.rows[0].id,
-            applicationNumber:
-              admissionSourceResult.rows[0].application_number,
+            applicationNumber: admissionSourceResult.rows[0].application_number,
             admissionStatus: admissionSourceResult.rows[0].admission_status,
             firstName: admissionSourceResult.rows[0].first_name,
             lastName: admissionSourceResult.rows[0].last_name,
@@ -657,7 +766,8 @@ export class SchoolStudentsService {
         verifiedAt: row.verified_at,
         notes: row.notes,
         createdAt: row.created_at,
-      })),      guardians: guardiansResult.rows.map((row) => ({
+      })),
+      guardians: guardiansResult.rows.map((row) => ({
         studentGuardianId: row.student_guardian_id,
         guardianId: row.guardian_id,
         relationship: row.relationship,
@@ -674,8 +784,7 @@ export class SchoolStudentsService {
       currentEnrollment: currentEnrollmentResult.rows[0]
         ? {
             enrollmentId: currentEnrollmentResult.rows[0].enrollment_id,
-            enrollmentStatus:
-              currentEnrollmentResult.rows[0].enrollment_status,
+            enrollmentStatus: currentEnrollmentResult.rows[0].enrollment_status,
             section: {
               id: currentEnrollmentResult.rows[0].section_id,
               code: currentEnrollmentResult.rows[0].section_code,
@@ -684,8 +793,7 @@ export class SchoolStudentsService {
             gradeLevel: {
               id: currentEnrollmentResult.rows[0].grade_level_id,
               code: currentEnrollmentResult.rows[0].grade_level_code,
-              nameI18n:
-                currentEnrollmentResult.rows[0].grade_level_name_i18n,
+              nameI18n: currentEnrollmentResult.rows[0].grade_level_name_i18n,
               academicDivision:
                 currentEnrollmentResult.rows[0].academic_division,
             },
@@ -717,13 +825,19 @@ export class SchoolStudentsService {
         changedByUserId: row.changed_by_user_id,
         changedAt: row.changed_at,
       })),
-      finance: {
-        invoiceCount: Number(finance.invoice_count),
-        overdueCount: Number(finance.overdue_count),
-        totalBilled: Number(finance.total_billed),
-        totalPaid: Number(finance.total_paid),
-        totalOutstanding: Number(finance.total_outstanding),
-      },
+      capabilities: financeCapabilities,
+      finance: financeCapabilities.canViewFinance
+        ? {
+            invoiceCount: Number(finance.invoice_count),
+            overdueCount: Number(finance.overdue_count),
+            totalsByCurrency: financeMoneyResult.rows.map((row) => ({
+              currencyCode: row.currency_code,
+              totalBilled: Number(row.total_billed),
+              totalPaid: Number(row.total_paid),
+              totalOutstanding: Number(row.total_outstanding),
+            })),
+          }
+        : null,
       recentInvoices: recentInvoicesResult.rows.map((row) => ({
         id: row.id,
         invoiceNumber: row.invoice_number,
@@ -743,6 +857,7 @@ export class SchoolStudentsService {
         paymentStatus: row.payment_status,
         paymentDate: row.payment_date,
         amount: Number(row.amount),
+        currencyCode: row.currency_code,
         method: row.method,
         reference: row.reference,
       })),
@@ -1050,7 +1165,8 @@ export class SchoolStudentsService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'STUDENT_STATUS_CHANGED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary: `Student ${student.student_code ?? student.id} status changed from ${student.student_status} to ${dto.newStatus}.`,
@@ -1143,7 +1259,9 @@ export class SchoolStudentsService {
       }
 
       const nextFirstName =
-        dto.firstName !== undefined ? dto.firstName.trim() : existing.first_name;
+        dto.firstName !== undefined
+          ? dto.firstName.trim()
+          : existing.first_name;
 
       const nextLastName =
         dto.lastName !== undefined ? dto.lastName.trim() : existing.last_name;
@@ -1200,7 +1318,9 @@ export class SchoolStudentsService {
           nextLastName,
           nextStudentCode,
           dto.gender !== undefined ? dto.gender : existing.gender,
-          dto.dateOfBirth !== undefined ? dto.dateOfBirth : existing.date_of_birth,
+          dto.dateOfBirth !== undefined
+            ? dto.dateOfBirth
+            : existing.date_of_birth,
           dto.placeOfBirth !== undefined
             ? dto.placeOfBirth.trim() || null
             : existing.place_of_birth,
@@ -1304,7 +1424,10 @@ export class SchoolStudentsService {
 
         const activeEnrollment = activeEnrollmentResult.rows[0];
 
-        if (!activeEnrollment || activeEnrollment.section_id !== dto.sectionId) {
+        if (
+          !activeEnrollment ||
+          activeEnrollment.section_id !== dto.sectionId
+        ) {
           await client.query(
             `
             UPDATE enrollments
@@ -1345,7 +1468,8 @@ export class SchoolStudentsService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'STUDENT_UPDATED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary:
@@ -1434,7 +1558,9 @@ export class SchoolStudentsService {
       }
 
       const nextFirstName =
-        dto.firstName !== undefined ? dto.firstName.trim() : existing.first_name;
+        dto.firstName !== undefined
+          ? dto.firstName.trim()
+          : existing.first_name;
 
       const nextLastName =
         dto.lastName !== undefined ? dto.lastName.trim() : existing.last_name;
@@ -1524,7 +1650,8 @@ export class SchoolStudentsService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'STUDENT_PROFILE_UPDATED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary: `Student profile updated for ${updated.first_name ?? ''} ${updated.last_name ?? ''}.`,
@@ -1642,7 +1769,8 @@ export class SchoolStudentsService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'STUDENT_DOCUMENT_ADDED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary: `Document ${document.document_type} added to student file.`,
@@ -1787,7 +1915,8 @@ export class SchoolStudentsService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'STUDENT_DOCUMENT_UPDATED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary: `Student document ${document.document_type} updated.`,
@@ -1952,7 +2081,8 @@ export class SchoolStudentsService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'STUDENT_GUARDIAN_ADDED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary: `Guardian ${guardian.full_name} added to student file.`,
@@ -2171,7 +2301,8 @@ export class SchoolStudentsService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'STUDENT_GUARDIAN_UPDATED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary: `Guardian ${guardian.full_name} updated.`,
@@ -2367,7 +2498,8 @@ export class SchoolStudentsService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'STUDENT_CREATED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary:

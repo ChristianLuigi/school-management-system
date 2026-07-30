@@ -57,10 +57,8 @@ export class IntegrationFactory {
     verified?: boolean;
   }): Promise<TestUser> {
     const id = randomUUID();
-    const email =
-      input?.email ?? `user-${id.slice(0, 12)}@release.test`;
-    const password =
-      input?.password ?? 'Release Pilot Password 84!Cobalt';
+    const email = input?.email ?? `user-${id.slice(0, 12)}@release.test`;
+    const password = input?.password ?? 'Release Pilot Password 84!Cobalt';
     const passwordHash = await this.passwords.hash(password);
     const accountStatus = input?.accountStatus ?? 'ACTIVE';
     const verified = input?.verified ?? true;
@@ -151,10 +149,20 @@ export class IntegrationFactory {
       [schoolId, userId, role],
     );
 
+    if (role !== 'PARENT') {
+      await this.schoolStaffAccount(schoolId, userId, {
+        staffType: role,
+        createdByUserId: userId,
+      });
+    }
+
     return membershipId;
   }
 
-  async session(userId: string, input?: { expired?: boolean; revoked?: boolean }) {
+  async session(
+    userId: string,
+    input?: { expired?: boolean; revoked?: boolean },
+  ) {
     const { rawToken, tokenHash } = this.sessionTokens.generate();
     const expiresAt = input?.expired
       ? new Date(Date.now() - 60_000)
@@ -194,7 +202,88 @@ export class IntegrationFactory {
     return { id: result.rows[0].id, rawToken, tokenHash };
   }
 
-  async guardian(schoolId: string, input?: { userId?: string; email?: string }) {
+  async schoolStaffAccount(
+    schoolId: string,
+    userId: string,
+    input?: {
+      staffCode?: string;
+      staffType?: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN';
+      employmentStatus?:
+        | 'ACTIVE'
+        | 'ON_LEAVE'
+        | 'SUSPENDED'
+        | 'TERMINATED'
+        | 'ARCHIVED';
+      jobTitle?: string;
+      department?: string;
+      createdByUserId?: string;
+    },
+  ) {
+    const id = randomUUID();
+    const staffCode = input?.staffCode ?? `STAFF-${id.slice(0, 8)}`;
+    const status = input?.employmentStatus ?? 'ACTIVE';
+    const result = await this.pool.query<{ id: string }>(
+      `
+      INSERT INTO school_staff_accounts (
+        id,
+        school_id,
+        user_id,
+        staff_code,
+        staff_type,
+        job_title,
+        department,
+        employment_status,
+        termination_date,
+        status_reason,
+        created_by_user_id
+      )
+      VALUES (
+        $1,
+$2,
+$3,
+$4,
+$5,
+$6,
+$7,
+$8,
+        CASE WHEN $8 = 'TERMINATED' THEN CURRENT_DATE ELSE NULL END,
+$9,
+$10
+      )
+      ON CONFLICT (school_id, user_id)
+      WHERE deleted_at IS NULL
+      DO UPDATE SET
+        staff_type = EXCLUDED.staff_type,
+        job_title = EXCLUDED.job_title,
+        department = EXCLUDED.department,
+        employment_status = EXCLUDED.employment_status,
+        termination_date = EXCLUDED.termination_date,
+        status_effective_date = CURRENT_DATE,
+        status_reason = EXCLUDED.status_reason,
+        employment_status_changed_by_user_id =
+          EXCLUDED.created_by_user_id,
+        updated_at = NOW()
+      RETURNING id
+      `,
+      [
+        id,
+        schoolId,
+        userId,
+        staffCode,
+        input?.staffType ?? 'TEACHER',
+        input?.jobTitle ?? 'Test Staff',
+        input?.department ?? 'Test Department',
+        status,
+        `Integration fixture status: ${status}.`,
+        input?.createdByUserId ?? userId,
+      ],
+    );
+    return result.rows[0].id;
+  }
+  async guardian(
+    schoolId: string,
+    input?: { userId?: string; email?: string },
+  ) {
     const id = randomUUID();
     await this.pool.query(
       `

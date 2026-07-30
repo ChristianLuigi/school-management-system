@@ -16,11 +16,7 @@ import { TeachersModule } from './teachers/teachers.module';
 import { AssessmentsModule } from './assessments/assessments.module';
 import { AssessmentScoresModule } from './assessment-scores/assessment-scores.module';
 import { ReportCardsModule } from './report-cards/report-cards.module';
-import { FeePlansModule } from './fee-plans/fee-plans.module';
 import { InvoicesModule } from './invoices/invoices.module';
-import { PaymentsModule } from './payments/payments.module';
-import { StudentDiscountsModule } from './student-discounts/student-discounts.module';
-import { FinanceAdminModule } from './finance-admin/finance-admin.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PlatformSchoolsModule } from './platform-schools/platform-schools.module';
 import { InternalAuthModule } from './internal-auth/internal-auth.module';
@@ -38,6 +34,7 @@ import { SchoolStudentsModule } from './school-students/school-students.module';
 import { AdmissionsModule } from './admissions/admissions.module';
 import { AccessManagementModule } from './access-management/access-management.module';
 import { validateEnvironment } from './config/environment';
+import { StaffManagementModule } from './staff-management/staff-management.module';
 
 @Module({
   imports: [
@@ -48,6 +45,7 @@ import { validateEnvironment } from './config/environment';
     }),
     AuthModule,
     AccessManagementModule,
+    StaffManagementModule,
     DbModule,
     HealthModule,
     SchoolsModule,
@@ -63,11 +61,7 @@ import { validateEnvironment } from './config/environment';
     AssessmentsModule,
     AssessmentScoresModule,
     ReportCardsModule,
-    FeePlansModule,
     InvoicesModule,
-    PaymentsModule,
-    StudentDiscountsModule,
-    FinanceAdminModule,
     DashboardModule,
     PlatformSchoolsModule,
     InternalAuthModule,

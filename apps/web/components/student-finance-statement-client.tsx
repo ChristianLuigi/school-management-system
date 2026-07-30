@@ -17,10 +17,13 @@ type StudentFinanceProfile = {
   summary: {
     invoiceCount: number;
     overdueCount: number;
+  };
+  totalsByCurrency: Array<{
+    currencyCode: string;
     totalBilled: number;
     totalPaid: number;
     totalOutstanding: number;
-  };
+  }>;
   invoices: Array<{
     id: string;
     invoiceNumber: string | null;
@@ -50,6 +53,7 @@ type StudentFinanceProfile = {
     paymentStatus: string;
     paymentDate: string;
     amount: number;
+    currencyCode: string;
     method: string | null;
     reference: string | null;
     notes: string | null;
@@ -176,7 +180,9 @@ export function StudentFinanceStatementClient({
               </div>
 
               <div className="text-right">
-                {profile.summary.totalOutstanding > 0 ? (
+                {profile.totalsByCurrency.some(
+                  (totals) => totals.totalOutstanding > 0,
+                ) ? (
                   <SchoolBadge tone="amber">Outstanding Balance</SchoolBadge>
                 ) : (
                   <SchoolBadge tone="green">No Balance Due</SchoolBadge>
@@ -228,26 +234,41 @@ export function StudentFinanceStatementClient({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 print:bg-white">
-              <div className="text-sm text-slate-500">Total Billed</div>
-              <div className="mt-2 text-2xl font-bold text-slate-900">
-                {money(profile.summary.totalBilled)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-green-200 bg-green-50 p-5 print:bg-white">
-              <div className="text-sm text-green-700">Total Paid</div>
-              <div className="mt-2 text-2xl font-bold text-green-900">
-                {money(profile.summary.totalPaid)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 print:bg-white">
-              <div className="text-sm text-amber-700">Outstanding</div>
-              <div className="mt-2 text-2xl font-bold text-amber-900">
-                {money(profile.summary.totalOutstanding)}
-              </div>
-            </div>
+            {profile.totalsByCurrency.flatMap((totals) => [
+              <div
+                key={`${totals.currencyCode}-billed`}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-5 print:bg-white"
+              >
+                <div className="text-sm text-slate-500">
+                  Total Billed ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold text-slate-900">
+                  {money(totals.totalBilled, totals.currencyCode)}
+                </div>
+              </div>,
+              <div
+                key={`${totals.currencyCode}-paid`}
+                className="rounded-2xl border border-green-200 bg-green-50 p-5 print:bg-white"
+              >
+                <div className="text-sm text-green-700">
+                  Total Paid ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold text-green-900">
+                  {money(totals.totalPaid, totals.currencyCode)}
+                </div>
+              </div>,
+              <div
+                key={`${totals.currencyCode}-outstanding`}
+                className="rounded-2xl border border-amber-200 bg-amber-50 p-5 print:bg-white"
+              >
+                <div className="text-sm text-amber-700">
+                  Outstanding ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold text-amber-900">
+                  {money(totals.totalOutstanding, totals.currencyCode)}
+                </div>
+              </div>,
+            ])}
           </div>
 
           <div className="mt-2">
@@ -371,7 +392,7 @@ export function StudentFinanceStatementClient({
                       <td className="px-4 py-3">{payment.reference ?? "-"}</td>
 
                       <td className="px-4 py-3 font-semibold">
-                        {money(payment.amount)}
+                        {money(payment.amount, payment.currencyCode)}
                       </td>
                       <td className="px-4 py-3 print:hidden">
                         <a

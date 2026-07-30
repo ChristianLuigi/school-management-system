@@ -7,10 +7,31 @@ const API_BASE_URL = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BAS
 export async function POST(request: NextRequest) {
   const originFailure = assertTrustedOrigin(request);
   if (originFailure) return originFailure;
-  const upstream = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: await request.text(), cache: "no-store",
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: await request.text(),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch {
+    return NextResponse.json(
+      {
+        code: "AUTH_SERVICE_UNAVAILABLE",
+        message:
+          "Le service de connexion est temporairement indisponible. Réessayez dans un instant.",
+      },
+      {
+        status: 503,
+        headers: {
+          "Cache-Control": "no-store",
+          "Retry-After": "5",
+        },
+      },
+    );
+  }
   const body = await upstream.json().catch(() => null);
   if (!upstream.ok) {
     const payload = body?.response ?? body;

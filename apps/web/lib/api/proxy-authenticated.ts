@@ -16,9 +16,15 @@ export async function proxyAuthenticated(
   }
   const token=request.cookies.get(getSessionCookieName())?.value;
   if(!token) return NextResponse.json({message:"Authentication required."},{status:401});
+  const idempotencyKey = request.headers.get("idempotency-key");
   const upstream=await fetch(`${API_BASE_URL}${input.path}`,{
     method:input.method,
-    headers:{Authorization:`Bearer ${token}`,"X-Request-Id":requestId,...(input.method!=="GET"?{"Content-Type":"application/json"}:{})},
+    headers:{
+      Authorization:`Bearer ${token}`,
+      "X-Request-Id":requestId,
+      ...(idempotencyKey ? {"Idempotency-Key": idempotencyKey} : {}),
+      ...(input.method!=="GET"?{"Content-Type":"application/json"}:{}),
+    },
     ...(input.method!=="GET"?{body:await request.text()}:{}),
     cache:"no-store",
   });

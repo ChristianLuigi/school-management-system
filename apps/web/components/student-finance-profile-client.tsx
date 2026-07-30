@@ -18,10 +18,13 @@ type StudentFinanceProfile = {
   summary: {
     invoiceCount: number;
     overdueCount: number;
+  };
+  totalsByCurrency: Array<{
+    currencyCode: string;
     totalBilled: number;
     totalPaid: number;
     totalOutstanding: number;
-  };
+  }>;
   invoices: Array<{
     id: string;
     invoiceNumber: string | null;
@@ -51,6 +54,7 @@ type StudentFinanceProfile = {
     paymentStatus: string;
     paymentDate: string;
     amount: number;
+    currencyCode: string;
     method: string | null;
     reference: string | null;
     notes: string | null;
@@ -197,26 +201,41 @@ export function StudentFinanceProfileClient({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Total Billed</div>
-              <div className="mt-2 text-2xl font-bold">
-                {money(profile.summary.totalBilled)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
-              <div className="text-sm text-green-700">Total Paid</div>
-              <div className="mt-2 text-2xl font-bold text-green-900">
-                {money(profile.summary.totalPaid)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <div className="text-sm text-amber-700">Outstanding</div>
-              <div className="mt-2 text-2xl font-bold text-amber-900">
-                {money(profile.summary.totalOutstanding)}
-              </div>
-            </div>
+            {profile.totalsByCurrency.flatMap((totals) => [
+              <div
+                key={`${totals.currencyCode}-billed`}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div className="text-sm text-slate-500">
+                  Total Billed ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold">
+                  {money(totals.totalBilled, totals.currencyCode)}
+                </div>
+              </div>,
+              <div
+                key={`${totals.currencyCode}-paid`}
+                className="rounded-2xl border border-green-200 bg-green-50 p-4"
+              >
+                <div className="text-sm text-green-700">
+                  Total Paid ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold text-green-900">
+                  {money(totals.totalPaid, totals.currencyCode)}
+                </div>
+              </div>,
+              <div
+                key={`${totals.currencyCode}-outstanding`}
+                className="rounded-2xl border border-amber-200 bg-amber-50 p-4"
+              >
+                <div className="text-sm text-amber-700">
+                  Outstanding ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold text-amber-900">
+                  {money(totals.totalOutstanding, totals.currencyCode)}
+                </div>
+              </div>,
+            ])}
           </div>
 
           <div className="rounded-2xl border border-slate-200">
@@ -323,7 +342,7 @@ export function StudentFinanceProfileClient({
                 >
                   <div className="flex flex-wrap justify-between gap-2">
                     <div className="font-semibold text-slate-900">
-                      {money(payment.amount)}
+                      {money(payment.amount, payment.currencyCode)}
                     </div>
 
                     <SchoolBadge tone={statusTone(payment.paymentStatus)}>
@@ -358,4 +377,3 @@ export function StudentFinanceProfileClient({
     </div>
   );
 }
-

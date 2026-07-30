@@ -1,9 +1,12 @@
 import {
   IsDateString,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -23,14 +26,16 @@ export class RecordStudentPaymentDto {
 
   @IsOptional()
   @IsString()
+  @Matches(/^[A-Za-z]{3}$/)
   currencyCode?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['CASH', 'BANK_TRANSFER', 'CHECK', 'MOBILE_MONEY', 'CARD', 'OTHER'])
   paymentMethod?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   paymentReference?: string;
 
   @IsOptional()
@@ -39,5 +44,6 @@ export class RecordStudentPaymentDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   notes?: string;
 }

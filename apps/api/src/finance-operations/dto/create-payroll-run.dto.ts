@@ -1,4 +1,10 @@
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Matches,
+} from 'class-validator';
 
 export class CreatePayrollRunDto {
   @IsUUID('all')
@@ -7,17 +13,15 @@ export class CreatePayrollRunDto {
   @IsString()
   periodLabel: string;
 
-  @IsOptional()
   @IsDateString()
-  periodStart?: string;
+  periodStart: string;
 
-  @IsOptional()
   @IsDateString()
-  periodEnd?: string;
+  periodEnd: string;
 
-  @IsOptional()
   @IsString()
-  currencyCode?: string;
+  @Matches(/^[A-Za-z]{3}$/)
+  currencyCode: string;
 
   @IsOptional()
   @IsString()

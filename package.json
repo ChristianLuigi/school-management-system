@@ -18,6 +18,8 @@
     "db:migrate:status": "pnpm --dir apps/api db:migrate:status",
     "db:migrate:verify": "pnpm --dir apps/api db:migrate:verify",
     "db:migrate:baseline": "pnpm --dir apps/api db:migrate:baseline",
+    "db:staff:reconcile": "pnpm --dir apps/api db:staff:reconcile",
+    "db:staff:reconcile:strict": "pnpm --dir apps/api db:staff:reconcile:strict",
     "db:seed:demo": "docker exec -i school_mgmt_pg psql -v ON_ERROR_STOP=1 -U school_admin -d school_mgmt < infra/db/seeds/demo_seed.sql"
   },
   "keywords": [],

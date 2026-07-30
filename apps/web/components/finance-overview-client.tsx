@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { FinanceInvoiceCreateClient } from "@/components/finance-invoice-create-client";
 import { FinanceSettingsClient } from "@/components/finance-settings-client";
-import { FinancePaymentRecorderClient } from "@/components/finance-payment-recorder-client";
 import { SchoolBadge } from "@/components/school-ui";
 import { StudentFinanceProfileClient } from "@/components/student-finance-profile-client";
 
@@ -11,6 +10,11 @@ type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
 
 type FinanceOverview = {
   schoolId: string;
+  capabilities: {
+    canCreateInvoices: boolean;
+    canRecordPayments: boolean;
+    canManageSettings: boolean;
+  };
   invoices: {
     total: number;
     draft: number;
@@ -20,22 +24,23 @@ type FinanceOverview = {
     overdue: number;
     void: number;
   };
-  money: {
+  moneyByCurrency: Array<{
+    currencyCode: string;
     totalBilled: number;
     totalPaid: number;
     totalOutstanding: number;
-  };
+  }>;
   payments: {
     confirmedPayments: number;
-    confirmedAmount: number;
     lastPaymentAt: string | null;
   };
-  aging: {
+  agingByCurrency: Array<{
+    currencyCode: string;
     current: number;
     days1To30: number;
     days31To60: number;
     days61Plus: number;
-  };
+  }>;
 };
 
 type InvoiceRow = {
@@ -186,35 +191,54 @@ export function FinanceOverviewClient({ schoolId }: { schoolId: string }) {
         </div>
       ) : null}
 
-      <FinanceSettingsClient schoolId={schoolId} />
+      {overview?.capabilities.canManageSettings ? (
+        <FinanceSettingsClient schoolId={schoolId} />
+      ) : null}
 
-      <FinanceInvoiceCreateClient schoolId={schoolId} onCreated={refreshAll} />
+      {overview?.capabilities.canCreateInvoices ? (
+        <FinanceInvoiceCreateClient schoolId={schoolId} onCreated={refreshAll} />
+      ) : null}
 
       <StudentFinanceProfileClient schoolId={schoolId} />
 
       {overview ? (
         <>
           <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Total Billed</div>
-              <div className="mt-2 text-2xl font-bold">
-                {money(overview.money.totalBilled)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Paid</div>
-              <div className="mt-2 text-2xl font-bold">
-                {money(overview.money.totalPaid)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Outstanding</div>
-              <div className="mt-2 text-2xl font-bold">
-                {money(overview.money.totalOutstanding)}
-              </div>
-            </div>
+            {overview.moneyByCurrency.flatMap((totals) => [
+              <div
+                key={`${totals.currencyCode}-billed`}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div className="text-sm text-slate-500">
+                  Total Billed ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold">
+                  {money(totals.totalBilled, totals.currencyCode)}
+                </div>
+              </div>,
+              <div
+                key={`${totals.currencyCode}-paid`}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div className="text-sm text-slate-500">
+                  Paid ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold">
+                  {money(totals.totalPaid, totals.currencyCode)}
+                </div>
+              </div>,
+              <div
+                key={`${totals.currencyCode}-outstanding`}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div className="text-sm text-slate-500">
+                  Outstanding ({totals.currencyCode})
+                </div>
+                <div className="mt-2 text-2xl font-bold">
+                  {money(totals.totalOutstanding, totals.currencyCode)}
+                </div>
+              </div>,
+            ])}
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="text-sm text-slate-500">Invoices</div>
@@ -238,35 +262,39 @@ export function FinanceOverviewClient({ schoolId }: { schoolId: string }) {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Current</div>
-              <div className="mt-2 text-xl font-bold">
-                {money(overview.aging.current)}
+          {overview.agingByCurrency.map((aging) => (
+            <div key={aging.currencyCode}>
+              <h4 className="mb-3 font-semibold text-slate-900">
+                Aging ({aging.currencyCode})
+              </h4>
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="text-sm text-slate-500">Current</div>
+                  <div className="mt-2 text-xl font-bold">
+                    {money(aging.current, aging.currencyCode)}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="text-sm text-amber-700">1 - 30 days</div>
+                  <div className="mt-2 text-xl font-bold text-amber-900">
+                    {money(aging.days1To30, aging.currencyCode)}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
+                  <div className="text-sm text-orange-700">31 - 60 days</div>
+                  <div className="mt-2 text-xl font-bold text-orange-900">
+                    {money(aging.days31To60, aging.currencyCode)}
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+                  <div className="text-sm text-red-700">61+ days</div>
+                  <div className="mt-2 text-xl font-bold text-red-900">
+                    {money(aging.days61Plus, aging.currencyCode)}
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <div className="text-sm text-amber-700">1 - 30 days</div>
-              <div className="mt-2 text-xl font-bold text-amber-900">
-                {money(overview.aging.days1To30)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
-              <div className="text-sm text-orange-700">31 - 60 days</div>
-              <div className="mt-2 text-xl font-bold text-orange-900">
-                {money(overview.aging.days31To60)}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-              <div className="text-sm text-red-700">61+ days</div>
-              <div className="mt-2 text-xl font-bold text-red-900">
-                {money(overview.aging.days61Plus)}
-              </div>
-            </div>
-          </div>
+          ))}
         </>
       ) : null}
 
@@ -388,11 +416,21 @@ export function FinanceOverviewClient({ schoolId }: { schoolId: string }) {
                         Open Invoice
                       </a>
 
-                      <FinancePaymentRecorderClient
-                        schoolId={schoolId}
-                        invoice={invoice}
-                        onPaymentRecorded={refreshAll}
-                      />
+                      {overview?.capabilities.canRecordPayments ? (
+                        <a
+                          href={
+                            invoice.student
+                              ? `/finance/cashier?${new URLSearchParams({
+                                  studentId: invoice.student.id,
+                                  invoiceId: invoice.id,
+                                }).toString()}`
+                              : "/finance/cashier"
+                          }
+                          className="inline-flex rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
+                        >
+                          Open cashier
+                        </a>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import type { PoolClient } from 'pg';
 import {
   BadRequestException,
   ConflictException,
@@ -7,22 +9,208 @@ import {
 } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { PlatformActivityService } from '../platform-activity/platform-activity.service';
+import { CashierWorkflowService } from './cashier-workflow.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { RecordPaymentDto } from './dto/record-payment.dto';
 import { CreateStudentInvoiceDto } from './dto/create-student-invoice.dto';
 import { RecordStudentPaymentDto } from './dto/record-student-payment.dto';
 import { UpdateFinanceSettingsDto } from './dto/update-finance-settings.dto';
+import { assertFinanceDateOpen } from './security/finance-period-policy';
 
 @Injectable()
 export class FinanceOperationsService {
   constructor(
     private readonly db: DbService,
     private readonly platformActivityService: PlatformActivityService,
+    private readonly cashierWorkflowService: CashierWorkflowService,
   ) {}
 
+  private effectivePaymentStatusSql(paymentAlias: string) {
+    if (!/^[a-z][a-z0-9_]*$/i.test(paymentAlias)) {
+      throw new Error('Invalid internal payment alias.');
+    }
+    return `
+      COALESCE(
+        (
+          SELECT CASE
+            WHEN correction.correction_status = 'COMPLETED'
+              AND correction.correction_type = 'REVERSAL'
+              THEN 'REVERSED'
+            WHEN correction.correction_status = 'COMPLETED'
+              AND correction.correction_type = 'REFUND'
+              THEN 'REFUNDED'
+            WHEN correction.correction_status = 'APPROVED'
+              THEN 'CORRECTION_APPROVED'
+            WHEN correction.correction_status = 'PENDING_REVIEW'
+              THEN 'CORRECTION_PENDING'
+            ELSE NULL
+          END
+          FROM finance_payment_corrections correction
+          WHERE correction.payment_id = ${paymentAlias}.id
+            AND correction.correction_status <> 'REJECTED'
+          ORDER BY correction.requested_at DESC
+          LIMIT 1
+        ),
+        ${paymentAlias}.payment_status::text
+      )
+    `;
+  }
   private addDays(dateString: string, days: number) {
     const date = new Date(`${dateString}T00:00:00.000Z`);
     date.setUTCDate(date.getUTCDate() + days);
     return date.toISOString().slice(0, 10);
+  }
+
+  private normalizeIdempotencyKey(value: string | undefined) {
+    const key = value?.trim();
+    if (!key || key.length < 8 || key.length > 128) {
+      throw new BadRequestException(
+        'A valid Idempotency-Key header between 8 and 128 characters is required.',
+      );
+    }
+    return key;
+  }
+
+  private stableStringify(value: unknown): string {
+    if (Array.isArray(value)) {
+      return `[${value.map((item) => this.stableStringify(item)).join(',')}]`;
+    }
+    if (value && typeof value === 'object') {
+      const entries = Object.entries(value as Record<string, unknown>)
+        .filter(([, entryValue]) => entryValue !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right));
+      return `{${entries
+        .map(
+          ([key, entryValue]) =>
+            `${JSON.stringify(key)}:${this.stableStringify(entryValue)}`,
+        )
+        .join(',')}}`;
+    }
+    return JSON.stringify(value) ?? 'null';
+  }
+
+  private requestHash(value: unknown) {
+    return createHash('sha256')
+      .update(this.stableStringify(value))
+      .digest('hex');
+  }
+
+  private async getIdempotentResponseTx<T>(
+    client: PoolClient,
+    input: {
+      schoolId: string;
+      operationType: string;
+      idempotencyKey: string;
+      requestHash: string;
+      actorUserId: string;
+    },
+  ): Promise<T | null> {
+    await client.query(
+      `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
+      [
+        `finance:${input.schoolId}:${input.operationType}:${input.idempotencyKey}`,
+      ],
+    );
+
+    const existing = await client.query<{
+      request_hash: string;
+      response_body: T;
+      actor_user_id: string;
+    }>(
+      `
+      SELECT request_hash, response_body, actor_user_id
+      FROM finance_idempotency_records
+      WHERE school_id = $1
+        AND operation_type = $2
+        AND idempotency_key = $3
+      LIMIT 1
+      `,
+      [input.schoolId, input.operationType, input.idempotencyKey],
+    );
+
+    const record = existing.rows[0];
+    if (!record) return null;
+    if (
+      record.request_hash !== input.requestHash ||
+      record.actor_user_id !== input.actorUserId
+    ) {
+      throw new ConflictException(
+        'The Idempotency-Key was already used for a different finance request.',
+      );
+    }
+    return record.response_body;
+  }
+
+  private async saveIdempotentResponseTx(
+    client: PoolClient,
+    input: {
+      schoolId: string;
+      operationType: string;
+      idempotencyKey: string;
+      requestHash: string;
+      responseBody: unknown;
+      actorUserId: string;
+    },
+  ) {
+    await client.query(
+      `
+      INSERT INTO finance_idempotency_records (
+        school_id,
+        operation_type,
+        idempotency_key,
+        request_hash,
+        response_body,
+        actor_user_id
+      )
+      VALUES ($1, $2, $3, $4, $5::jsonb, $6)
+      `,
+      [
+        input.schoolId,
+        input.operationType,
+        input.idempotencyKey,
+        input.requestHash,
+        JSON.stringify(input.responseBody),
+        input.actorUserId,
+      ],
+    );
+  }
+
+  private async assertPaymentMethodEnabledTx(
+    client: PoolClient,
+    schoolId: string,
+    paymentMethod: string,
+    reference: string | null,
+  ) {
+    const settings = await client.query<{
+      enabled_payment_methods: string[];
+    }>(
+      `
+      SELECT enabled_payment_methods
+      FROM school_finance_settings
+      WHERE school_id = $1
+        AND deleted_at IS NULL
+      LIMIT 1
+      `,
+      [schoolId],
+    );
+    const enabledMethods = settings.rows[0]?.enabled_payment_methods ?? [
+      'CASH',
+      'BANK_TRANSFER',
+      'CHECK',
+      'MOBILE_MONEY',
+      'CARD',
+      'OTHER',
+    ];
+    if (!enabledMethods.includes(paymentMethod)) {
+      throw new BadRequestException(
+        'The selected payment method is not enabled for this school.',
+      );
+    }
+    if (paymentMethod !== 'CASH' && !reference) {
+      throw new BadRequestException(
+        'A payment reference is required for non-cash payments.',
+      );
+    }
   }
 
   async getFinanceSettings(
@@ -242,6 +430,14 @@ export class FinanceOperationsService {
         AND sm.school_id = $2
         AND sm.deleted_at IS NULL
         AND sm.membership_status = 'ACTIVE'
+        AND EXISTS (
+          SELECT 1
+          FROM school_staff_accounts staff
+          WHERE staff.school_id = sm.school_id
+            AND staff.user_id = sm.user_id
+            AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+            AND staff.deleted_at IS NULL
+        )
       `,
       [actorUserId, schoolId],
     );
@@ -269,9 +465,6 @@ export class FinanceOperationsService {
     );
 
     const summaryResult = await this.db.query<{
-      total_invoiced: string;
-      total_paid: string;
-      total_balance_due: string;
       invoice_count: string;
       unpaid_invoice_count: string;
       paid_invoice_count: string;
@@ -279,9 +472,6 @@ export class FinanceOperationsService {
     }>(
       `
       SELECT
-        COALESCE(SUM(total_amount), 0)::text AS total_invoiced,
-        COALESCE(SUM(amount_paid), 0)::text AS total_paid,
-        COALESCE(SUM(balance_due), 0)::text AS total_balance_due,
         COUNT(*)::text AS invoice_count,
         COUNT(*) FILTER (WHERE balance_due > 0)::text AS unpaid_invoice_count,
         COUNT(*) FILTER (WHERE balance_due <= 0)::text AS paid_invoice_count,
@@ -291,11 +481,39 @@ export class FinanceOperationsService {
           WHERE school_id = $1
             AND deleted_at IS NULL
             AND payment_status <> 'CANCELLED'
+            AND NOT EXISTS (
+              SELECT 1
+              FROM finance_payment_corrections correction
+              WHERE correction.payment_id = payments.id
+                AND correction.correction_status = 'COMPLETED'
+            )
         ) AS payment_count
       FROM invoices
       WHERE school_id = $1
         AND deleted_at IS NULL
         AND invoice_status <> 'VOID'
+      `,
+      [query.schoolId],
+    );
+
+    const moneyResult = await this.db.query<{
+      currency_code: string;
+      total_invoiced: string;
+      total_paid: string;
+      total_balance_due: string;
+    }>(
+      `
+      SELECT
+        currency_code,
+        COALESCE(SUM(total_amount), 0)::text AS total_invoiced,
+        COALESCE(SUM(amount_paid), 0)::text AS total_paid,
+        COALESCE(SUM(balance_due), 0)::text AS total_balance_due
+      FROM invoices
+      WHERE school_id = $1
+        AND deleted_at IS NULL
+        AND invoice_status <> 'VOID'
+      GROUP BY currency_code
+      ORDER BY currency_code
       `,
       [query.schoolId],
     );
@@ -367,10 +585,10 @@ export class FinanceOperationsService {
       SELECT
         pay.id,
         COALESCE(pay.payment_number, pay.receipt_number) AS payment_number,
-        pay.payment_status::text AS payment_status,
+        ${this.effectivePaymentStatusSql('pay')} AS payment_status,
         COALESCE(pay.payment_method::text, pay.method) AS payment_method,
         COALESCE(pay.payment_reference, pay.reference, pay.reference_no) AS payment_reference,
-        COALESCE(inv.currency_code, 'USD') AS currency_code,
+        pay.currency_code,
         pay.amount::text AS amount,
         COALESCE(pay.paid_at::text, pay.payment_date::text) AS paid_at,
         inv.id AS invoice_id,
@@ -399,14 +617,17 @@ export class FinanceOperationsService {
 
     return {
       totals: {
-        totalInvoiced: Number(summary.total_invoiced),
-        totalPaid: Number(summary.total_paid),
-        totalBalanceDue: Number(summary.total_balance_due),
         invoiceCount: Number(summary.invoice_count),
         unpaidInvoiceCount: Number(summary.unpaid_invoice_count),
         paidInvoiceCount: Number(summary.paid_invoice_count),
         paymentCount: Number(summary.payment_count),
       },
+      moneyByCurrency: moneyResult.rows.map((row) => ({
+        currencyCode: row.currency_code,
+        totalInvoiced: Number(row.total_invoiced),
+        totalPaid: Number(row.total_paid),
+        totalBalanceDue: Number(row.total_balance_due),
+      })),
       recentInvoices: recentInvoicesResult.rows.map((row) => ({
         id: row.id,
         invoiceNumber: row.invoice_number,
@@ -460,9 +681,6 @@ export class FinanceOperationsService {
       paid_invoices: string;
       overdue_invoices: string;
       void_invoices: string;
-      total_billed: string;
-      total_paid: string;
-      total_outstanding: string;
     }>(
       `
       SELECT
@@ -482,10 +700,7 @@ export class FinanceOperationsService {
             )
           )
         )::text AS overdue_invoices,
-        COUNT(*) FILTER (WHERE invoice_status = 'VOID')::text AS void_invoices,
-        COALESCE(SUM(total_amount), 0)::text AS total_billed,
-        COALESCE(SUM(amount_paid), 0)::text AS total_paid,
-        COALESCE(SUM(balance_due), 0)::text AS total_outstanding
+        COUNT(*) FILTER (WHERE invoice_status = 'VOID')::text AS void_invoices
       FROM invoices
       WHERE school_id = $1
         AND deleted_at IS NULL
@@ -495,22 +710,40 @@ export class FinanceOperationsService {
 
     const paymentsResult = await this.db.query<{
       confirmed_payments: string;
-      confirmed_amount: string;
       last_payment_at: string | null;
     }>(
       `
       SELECT
-        COUNT(*) FILTER (WHERE payment_status = 'CONFIRMED')::text AS confirmed_payments,
-        COALESCE(SUM(amount) FILTER (WHERE payment_status = 'CONFIRMED'), 0)::text AS confirmed_amount,
-        MAX(payment_date)::text AS last_payment_at
-      FROM payments
-      WHERE school_id = $1
-        AND deleted_at IS NULL
+        COUNT(*) FILTER (
+          WHERE pay.payment_status = 'CONFIRMED'
+            AND NOT EXISTS (
+              SELECT 1
+              FROM finance_payment_corrections correction
+              WHERE correction.payment_id = pay.id
+                AND correction.correction_status = 'COMPLETED'
+            )
+        )::text AS confirmed_payments,
+        MAX(pay.payment_date) FILTER (
+          WHERE pay.payment_status = 'CONFIRMED'
+            AND NOT EXISTS (
+              SELECT 1
+              FROM finance_payment_corrections correction
+              WHERE correction.payment_id = pay.id
+                AND correction.correction_status = 'COMPLETED'
+            )
+        )::text AS last_payment_at
+      FROM payments pay
+      WHERE pay.school_id = $1
+        AND pay.deleted_at IS NULL
       `,
       [schoolId],
     );
 
-    const agingResult = await this.db.query<{
+    const moneyResult = await this.db.query<{
+      currency_code: string;
+      total_billed: string;
+      total_paid: string;
+      total_outstanding: string;
       current_bucket: string;
       days_1_30: string;
       days_31_60: string;
@@ -518,6 +751,16 @@ export class FinanceOperationsService {
     }>(
       `
       SELECT
+        currency_code,
+        COALESCE(SUM(total_amount) FILTER (
+          WHERE invoice_status <> 'VOID'
+        ), 0)::text AS total_billed,
+        COALESCE(SUM(amount_paid) FILTER (
+          WHERE invoice_status <> 'VOID'
+        ), 0)::text AS total_paid,
+        COALESCE(SUM(balance_due) FILTER (
+          WHERE invoice_status <> 'VOID'
+        ), 0)::text AS total_outstanding,
         COALESCE(SUM(balance_due) FILTER (
           WHERE balance_due > 0
             AND (due_date IS NULL OR due_date >= CURRENT_DATE)
@@ -547,13 +790,14 @@ export class FinanceOperationsService {
       FROM invoices
       WHERE school_id = $1
         AND deleted_at IS NULL
+      GROUP BY currency_code
+      ORDER BY currency_code
       `,
       [schoolId],
     );
 
     const invoices = invoicesResult.rows[0];
     const payments = paymentsResult.rows[0];
-    const aging = agingResult.rows[0];
 
     return {
       schoolId,
@@ -566,22 +810,23 @@ export class FinanceOperationsService {
         overdue: Number(invoices.overdue_invoices),
         void: Number(invoices.void_invoices),
       },
-      money: {
-        totalBilled: Number(invoices.total_billed),
-        totalPaid: Number(invoices.total_paid),
-        totalOutstanding: Number(invoices.total_outstanding),
-      },
+      moneyByCurrency: moneyResult.rows.map((row) => ({
+        currencyCode: row.currency_code,
+        totalBilled: Number(row.total_billed),
+        totalPaid: Number(row.total_paid),
+        totalOutstanding: Number(row.total_outstanding),
+      })),
       payments: {
         confirmedPayments: Number(payments.confirmed_payments),
-        confirmedAmount: Number(payments.confirmed_amount),
         lastPaymentAt: payments.last_payment_at,
       },
-      aging: {
-        current: Number(aging.current_bucket),
-        days1To30: Number(aging.days_1_30),
-        days31To60: Number(aging.days_31_60),
-        days61Plus: Number(aging.days_61_plus),
-      },
+      agingByCurrency: moneyResult.rows.map((row) => ({
+        currencyCode: row.currency_code,
+        current: Number(row.current_bucket),
+        days1To30: Number(row.days_1_30),
+        days31To60: Number(row.days_31_60),
+        days61Plus: Number(row.days_61_plus),
+      })),
     };
   }
 
@@ -755,6 +1000,12 @@ export class FinanceOperationsService {
         settings?.default_currency_code ||
         'USD';
       const invoiceStatus = dto.invoiceStatus ?? 'ISSUED';
+      await assertFinanceDateOpen(
+        client,
+        dto.schoolId,
+        issueDate,
+        'Invoice creation',
+      );
 
       const studentResult = await client.query<{
         id: string;
@@ -1027,6 +1278,7 @@ export class FinanceOperationsService {
     dto: CreateInvoiceDto,
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
+    idempotencyKeyValue?: string,
   ) {
     await this.assertUserCanAccessFinance(
       actorUserId,
@@ -1034,8 +1286,14 @@ export class FinanceOperationsService {
       platformRole,
     );
 
+    const idempotencyKey = this.normalizeIdempotencyKey(idempotencyKeyValue);
+
     if (!dto.items?.length) {
       throw new BadRequestException('Invoice must contain at least one item.');
+    }
+
+    if (dto.issueDate && dto.dueDate && dto.dueDate < dto.issueDate) {
+      throw new BadRequestException('Due date cannot be before issue date.');
     }
 
     const cleanItems = dto.items.map((item) => {
@@ -1049,13 +1307,13 @@ export class FinanceOperationsService {
         );
       }
 
-      if (quantity <= 0) {
+      if (!Number.isFinite(quantity) || quantity <= 0) {
         throw new BadRequestException(
           'Invoice item quantity must be greater than zero.',
         );
       }
 
-      if (unitAmount < 0) {
+      if (!Number.isFinite(unitAmount) || unitAmount < 0) {
         throw new BadRequestException(
           'Invoice item unit amount cannot be negative.',
         );
@@ -1072,7 +1330,6 @@ export class FinanceOperationsService {
     const subtotalAmount = Number(
       cleanItems.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2),
     );
-
     const discountAmount = Number((dto.discountAmount ?? 0).toFixed(2));
 
     if (discountAmount > subtotalAmount) {
@@ -1080,15 +1337,40 @@ export class FinanceOperationsService {
     }
 
     const totalAmount = Number((subtotalAmount - discountAmount).toFixed(2));
+    if (totalAmount <= 0) {
+      throw new BadRequestException('Invoice total must be greater than zero.');
+    }
     const balanceDue = totalAmount;
+    const requestHash = this.requestHash({ dto, cleanItems });
 
     return this.db.withTransaction(async (client) => {
-      const schoolResult = await client.query<{
+      const replay = await this.getIdempotentResponseTx<{
         id: string;
-        code: string | null;
-      }>(
+        invoiceNumber: string;
+        schoolId: string;
+        studentId: string;
+        invoiceStatus: string;
+        issueDate: string;
+        dueDate: string;
+        subtotalAmount: number;
+        discountAmount: number;
+        totalAmount: number;
+        amountPaid: number;
+        balanceDue: number;
+        currencyCode: string;
+        items: typeof cleanItems;
+      }>(client, {
+        schoolId: dto.schoolId,
+        operationType: 'INVOICE_CREATE',
+        idempotencyKey,
+        requestHash,
+        actorUserId,
+      });
+      if (replay) return replay;
+
+      const schoolResult = await client.query<{ id: string }>(
         `
-        SELECT id, code
+        SELECT id
         FROM schools
         WHERE id = $1
           AND deleted_at IS NULL
@@ -1096,10 +1378,7 @@ export class FinanceOperationsService {
         `,
         [dto.schoolId],
       );
-
-      const school = schoolResult.rows[0];
-
-      if (!school) {
+      if (!schoolResult.rows[0]) {
         throw new NotFoundException(`School ${dto.schoolId} not found.`);
       }
 
@@ -1118,21 +1397,27 @@ export class FinanceOperationsService {
         `,
         [dto.schoolId],
       );
-
       const settings = settingsResult.rows[0];
-
       const issueDate = dto.issueDate ?? new Date().toISOString().slice(0, 10);
-
       const dueDate =
         dto.dueDate ??
         (settings
           ? this.addDays(issueDate, Number(settings.default_invoice_due_days))
           : this.addDays(issueDate, 30));
-
-      const currencyCode =
-        dto.currencyCode?.trim().toUpperCase() ||
+      if (dueDate < issueDate) {
+        throw new BadRequestException('Due date cannot be before issue date.');
+      }
+      const currencyCode = (
+        dto.currencyCode?.trim() ||
         settings?.default_currency_code ||
-        'USD';
+        'USD'
+      ).toUpperCase();
+      await assertFinanceDateOpen(
+        client,
+        dto.schoolId,
+        issueDate,
+        'Invoice creation',
+      );
 
       const studentResult = await client.query<{
         id: string;
@@ -1154,9 +1439,7 @@ export class FinanceOperationsService {
         `,
         [dto.studentId, dto.schoolId],
       );
-
       const student = studentResult.rows[0];
-
       if (!student) {
         throw new NotFoundException('Student not found for this school.');
       }
@@ -1204,64 +1487,27 @@ export class FinanceOperationsService {
           WHERE academic_year_id = sy.id
             AND deleted_at IS NULL
             AND (is_current = TRUE OR $3::date BETWEEN start_date AND end_date)
-          ORDER BY
-            is_current DESC,
-            start_date DESC
+          ORDER BY is_current DESC, start_date DESC
           LIMIT 1
         ) gp ON TRUE
         `,
         [dto.studentId, dto.schoolId, issueDate],
       );
-
-      let academicContext = academicContextResult.rows[0];
-
+      const academicContext = academicContextResult.rows[0];
       if (!academicContext) {
-        const issueYear = Number(issueDate.slice(0, 4));
-        const fallbackYearResult = await client.query<{
-          academic_year_id: string;
-          grading_period_id: string | null;
-        }>(
-          `
-          INSERT INTO academic_years (
-            school_id,
-            name_i18n,
-            start_date,
-            end_date,
-            status
-          )
-          VALUES (
-            $1,
-            $2::jsonb,
-            $3::date,
-            $4::date,
-            'ACTIVE'
-          )
-          RETURNING id AS academic_year_id, NULL::uuid AS grading_period_id
-          `,
-          [
-            dto.schoolId,
-            JSON.stringify({
-              en: `Finance Year ${issueYear}`,
-              fr: `Année financière ${issueYear}`,
-            }),
-            `${issueYear}-01-01`,
-            `${issueYear}-12-31`,
-          ],
+        throw new BadRequestException(
+          'An active academic year is required before creating an invoice.',
         );
-
-        academicContext = fallbackYearResult.rows[0];
       }
 
+      const invoiceNumberResult = await client.query<{
+        invoice_number: string;
+      }>(`SELECT next_invoice_number($1) AS invoice_number`, [dto.schoolId]);
+      const invoiceNumber = invoiceNumberResult.rows[0].invoice_number;
       const invoiceIdResult = await client.query<{ id: string }>(
         'SELECT gen_random_uuid()::text AS id',
       );
-
       const invoiceId = invoiceIdResult.rows[0].id;
-      const invoiceNumber = this.buildInvoiceNumber({
-        schoolCode: school.code,
-        invoiceId,
-        issueDate,
-      });
       const invoiceStatus = dto.invoiceStatus ?? 'ISSUED';
 
       await client.query(
@@ -1273,7 +1519,7 @@ export class FinanceOperationsService {
           academic_year_id,
           grading_period_id,
           invoice_number,
-          status,
+          invoice_title,
           invoice_status,
           issue_date,
           due_date,
@@ -1287,24 +1533,8 @@ export class FinanceOperationsService {
           created_by_user_id
         )
         VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          $7::invoice_status,
-          $7::invoice_status,
-          $8::date,
-          $9::date,
-          $10,
-          $11,
-          $12,
-          0,
-          $13,
-          $14,
-          $15,
-          $16
+          $1, $2, $3, $4, $5, $6, $7, $8::invoice_status, $9::date,
+          $10::date, $11, $12, $13, 0, $14, $15, $16, $17
         )
         `,
         [
@@ -1314,6 +1544,7 @@ export class FinanceOperationsService {
           academicContext.academic_year_id,
           academicContext.grading_period_id,
           invoiceNumber,
+          cleanItems[0].description,
           invoiceStatus,
           issueDate,
           dueDate,
@@ -1326,6 +1557,7 @@ export class FinanceOperationsService {
           actorUserId,
         ],
       );
+
       for (const item of cleanItems) {
         await client.query(
           `
@@ -1371,7 +1603,7 @@ export class FinanceOperationsService {
         },
       });
 
-      return {
+      const response = {
         id: invoiceId,
         invoiceNumber,
         schoolId: dto.schoolId,
@@ -1387,6 +1619,15 @@ export class FinanceOperationsService {
         currencyCode,
         items: cleanItems,
       };
+      await this.saveIdempotentResponseTx(client, {
+        schoolId: dto.schoolId,
+        operationType: 'INVOICE_CREATE',
+        idempotencyKey,
+        requestHash,
+        responseBody: response,
+        actorUserId,
+      });
+      return response;
     });
   }
   private resolveInvoiceStatus(input: {
@@ -1538,12 +1779,32 @@ export class FinanceOperationsService {
 
       const paymentNumber = paymentNumberResult.rows[0].payment_number;
       const paidAt = dto.paidAt || null;
-      const paymentMethod = dto.paymentMethod?.trim() || 'CASH';
+      const paymentDate = paidAt
+        ? paidAt.slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+      await assertFinanceDateOpen(
+        client,
+        dto.schoolId,
+        paymentDate,
+        'Payment recording',
+      );
+      const paymentMethod = (dto.paymentMethod?.trim() || 'CASH').toUpperCase();
       const paymentReference = dto.paymentReference?.trim() || null;
-      const currencyCode =
-        dto.currencyCode?.trim().toUpperCase() ||
-        invoice.currency_code ||
-        'USD';
+      const currencyCode = invoice.currency_code;
+      if (
+        dto.currencyCode &&
+        dto.currencyCode.trim().toUpperCase() !== currencyCode
+      ) {
+        throw new BadRequestException(
+          'Payment currency must match the invoice currency.',
+        );
+      }
+      await this.assertPaymentMethodEnabledTx(
+        client,
+        dto.schoolId,
+        paymentMethod,
+        paymentReference,
+      );
 
       const paymentResult = await client.query<{
         id: string;
@@ -1573,6 +1834,7 @@ export class FinanceOperationsService {
           method,
           reference,
           amount,
+          currency_code,
           notes,
           recorded_by_user_id,
           received_by_user_id,
@@ -1596,7 +1858,8 @@ export class FinanceOperationsService {
           $8,
           $9,
           $10,
-          $10,
+          $11,
+          $11,
           NOW()
         )
         RETURNING
@@ -1619,6 +1882,7 @@ export class FinanceOperationsService {
           paymentReference,
           paidAt,
           dto.amount,
+          currencyCode,
           dto.notes?.trim() || null,
           actorUserId,
         ],
@@ -1700,17 +1964,10 @@ export class FinanceOperationsService {
     });
   }
   async recordPayment(
-    input: {
-      schoolId: string;
-      invoiceId: string;
-      amount: number;
-      paymentDate?: string;
-      method?: string;
-      reference?: string;
-      notes?: string;
-    },
+    input: RecordPaymentDto,
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
+    idempotencyKeyValue?: string,
   ) {
     await this.assertUserCanAccessFinance(
       actorUserId,
@@ -1718,13 +1975,45 @@ export class FinanceOperationsService {
       platformRole,
     );
 
-    if (input.amount <= 0) {
+    const idempotencyKey = this.normalizeIdempotencyKey(idempotencyKeyValue);
+    const amount = Number(Number(input.amount).toFixed(2));
+    if (!Number.isFinite(amount) || amount <= 0) {
       throw new BadRequestException(
         'Payment amount must be greater than zero.',
       );
     }
+    const paymentMethod = (input.method?.trim() || 'CASH').toUpperCase();
+    const paymentReference = input.reference?.trim() || null;
+    const requestHash = this.requestHash({
+      ...input,
+      amount,
+      method: paymentMethod,
+      reference: paymentReference,
+    });
 
     return this.db.withTransaction(async (client) => {
+      const replay = await this.getIdempotentResponseTx<{
+        paymentId: string;
+        paymentNumber: string;
+        receiptNumber: string;
+        currencyCode: string;
+        amount: number;
+        invoice: {
+          id: string;
+          invoiceStatus: string;
+          totalAmount: number;
+          amountPaid: number;
+          balanceDue: number;
+        };
+      }>(client, {
+        schoolId: input.schoolId,
+        operationType: 'PAYMENT_RECORD',
+        idempotencyKey,
+        requestHash,
+        actorUserId,
+      });
+      if (replay) return replay;
+
       const invoiceResult = await client.query<{
         id: string;
         school_id: string;
@@ -1756,17 +2045,13 @@ export class FinanceOperationsService {
         `,
         [input.invoiceId, input.schoolId],
       );
-
       const invoice = invoiceResult.rows[0];
-
       if (!invoice) {
         throw new NotFoundException('Invoice not found for this school.');
       }
-
       if (invoice.invoice_status === 'VOID') {
         throw new ConflictException('Cannot record payment on a void invoice.');
       }
-
       if (invoice.invoice_status === 'DRAFT') {
         throw new ConflictException(
           'Cannot record payment on a draft invoice. Issue the invoice first.',
@@ -1774,45 +2059,44 @@ export class FinanceOperationsService {
       }
 
       const currentBalance = Number(invoice.balance_due);
-
       if (currentBalance <= 0) {
         throw new ConflictException('Invoice is already fully paid.');
       }
-
-      if (input.amount > currentBalance) {
+      if (amount > currentBalance) {
         throw new BadRequestException(
           `Payment amount cannot exceed the remaining balance of ${currentBalance}.`,
         );
       }
-
-      const schoolResult = await client.query<{
-        code: string | null;
-      }>(
-        `
-        SELECT code
-        FROM schools
-        WHERE id = $1
-          AND deleted_at IS NULL
-        LIMIT 1
-        `,
-        [input.schoolId],
+      await this.assertPaymentMethodEnabledTx(
+        client,
+        input.schoolId,
+        paymentMethod,
+        paymentReference,
       );
 
-      const schoolCode = schoolResult.rows[0]?.code ?? null;
-      const paymentDate =
-        input.paymentDate ?? new Date().toISOString().slice(0, 10);
-
+      const paymentNumberResult = await client.query<{
+        payment_number: string;
+      }>(`SELECT next_payment_number($1) AS payment_number`, [input.schoolId]);
+      const paymentNumber = paymentNumberResult.rows[0].payment_number;
+      const cashierSession =
+        await this.cashierWorkflowService.assertOpenSessionTx(client, {
+          sessionId: input.cashierSessionId,
+          schoolId: input.schoolId,
+          cashierUserId: actorUserId,
+          currencyCode: invoice.currency_code,
+          paymentDate: input.paymentDate,
+        });
+      const paymentDate = input.paymentDate ?? cashierSession.business_date;
+      await assertFinanceDateOpen(
+        client,
+        input.schoolId,
+        paymentDate,
+        'Payment recording',
+      );
       const paymentIdResult = await client.query<{ id: string }>(
         'SELECT gen_random_uuid()::text AS id',
       );
-
       const paymentId = paymentIdResult.rows[0].id;
-      const receiptNumber = this.buildReceiptNumber({
-        schoolCode,
-        paymentId,
-        paymentDate,
-      });
-      const paymentMethod = input.method?.trim() || 'CASH';
 
       await client.query(
         `
@@ -1821,38 +2105,28 @@ export class FinanceOperationsService {
           school_id,
           invoice_id,
           student_id,
+          payment_number,
+          receipt_number,
           payment_date,
+          paid_at,
           amount,
+          currency_code,
           payment_method,
           reference_no,
-          receipt_number,
+          payment_reference,
           recorded_by_user_id,
-          status,
           payment_status,
           method,
           reference,
           notes,
           received_by_user_id,
-          receipt_generated_at
+          receipt_generated_at,
+          cashier_session_id
         )
         VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5::date,
-          $6,
-          $7::payment_method,
-          $8::varchar,
-          $9,
-          $10,
-          'RECORDED'::payment_status,
-          'CONFIRMED'::payment_status,
-          $7::text,
-          $8::text,
-          $11,
-          $10,
-          NOW()
+          $1, $2, $3, $4, $5::text, $5::text, $6::date, $6::timestamptz, $7, $8,
+          $9::payment_method, $10::varchar, $10, $11, 'CONFIRMED', $9,
+          $10, $12, $11, NOW(), $13
         )
         `,
         [
@@ -1860,18 +2134,24 @@ export class FinanceOperationsService {
           input.schoolId,
           input.invoiceId,
           invoice.student_id,
+          paymentNumber,
           paymentDate,
-          input.amount,
+          amount,
+          invoice.currency_code,
           paymentMethod,
-          input.reference?.trim() || null,
-          receiptNumber,
+          paymentReference,
           actorUserId,
           input.notes?.trim() || null,
+          input.cashierSessionId,
         ],
       );
-      const newAmountPaid = Number(invoice.amount_paid) + input.amount;
-      const newBalanceDue = Number(invoice.total_amount) - newAmountPaid;
 
+      const newAmountPaid = Number(
+        (Number(invoice.amount_paid) + amount).toFixed(2),
+      );
+      const newBalanceDue = Number(
+        (Number(invoice.total_amount) - newAmountPaid).toFixed(2),
+      );
       const newStatus = this.resolveInvoiceStatus({
         totalAmount: Number(invoice.total_amount),
         amountPaid: newAmountPaid,
@@ -1890,11 +2170,12 @@ export class FinanceOperationsService {
         `
         UPDATE invoices
         SET
-          amount_paid = $2,
-          balance_due = $3,
-          invoice_status = $4::invoice_status,
+          amount_paid = $3,
+          balance_due = $4,
+          invoice_status = $5::invoice_status,
           updated_at = NOW()
         WHERE id = $1
+          AND school_id = $2
           AND deleted_at IS NULL
         RETURNING
           id,
@@ -1903,7 +2184,13 @@ export class FinanceOperationsService {
           amount_paid::text AS amount_paid,
           balance_due::text AS balance_due
         `,
-        [input.invoiceId, newAmountPaid, newBalanceDue, newStatus],
+        [
+          input.invoiceId,
+          input.schoolId,
+          newAmountPaid,
+          newBalanceDue,
+          newStatus,
+        ],
       );
 
       await this.platformActivityService.recordTx(client, {
@@ -1912,24 +2199,30 @@ export class FinanceOperationsService {
           platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: input.schoolId,
-        summary: `Payment recorded for invoice ${input.invoiceId}.`,
+        summary: `Payment ${paymentNumber} recorded for invoice ${input.invoiceId}.`,
         payload: {
           paymentId,
-          receiptNumber,
+          paymentNumber,
+          receiptNumber: paymentNumber,
           invoiceId: input.invoiceId,
           studentId: invoice.student_id,
-          amount: input.amount,
+          amount,
           currencyCode: invoice.currency_code,
+          paymentMethod,
+          cashierSessionId: input.cashierSessionId,
           newInvoiceStatus: newStatus,
           newBalanceDue,
         },
       });
 
       const updatedInvoice = updatedInvoiceResult.rows[0];
-
-      return {
+      const response = {
         paymentId,
-        receiptNumber,
+        paymentNumber,
+        receiptNumber: paymentNumber,
+        currencyCode: invoice.currency_code,
+        amount,
+        cashierSessionId: input.cashierSessionId,
         invoice: {
           id: updatedInvoice.id,
           invoiceStatus: updatedInvoice.invoice_status,
@@ -1938,9 +2231,17 @@ export class FinanceOperationsService {
           balanceDue: Number(updatedInvoice.balance_due),
         },
       };
+      await this.saveIdempotentResponseTx(client, {
+        schoolId: input.schoolId,
+        operationType: 'PAYMENT_RECORD',
+        idempotencyKey,
+        requestHash,
+        responseBody: response,
+        actorUserId,
+      });
+      return response;
     });
   }
-
   async searchStudentsForFinance(
     input: {
       schoolId: string;
@@ -2112,10 +2413,10 @@ export class FinanceOperationsService {
         COALESCE(pay.payment_number, pay.receipt_number) AS payment_number,
         pay.invoice_id,
         inv.invoice_number,
-        pay.payment_status::text AS payment_status,
+        ${this.effectivePaymentStatusSql('pay')} AS payment_status,
         COALESCE(pay.payment_method::text, pay.method) AS payment_method,
         COALESCE(pay.payment_reference, pay.reference, pay.reference_no) AS payment_reference,
-        COALESCE(inv.currency_code, 'USD') AS currency_code,
+        pay.currency_code,
         pay.amount::text AS amount,
         COALESCE(pay.paid_at::text, pay.payment_date::text) AS paid_at,
         pay.created_at::text AS created_at
@@ -2159,19 +2460,41 @@ export class FinanceOperationsService {
       createdAt: row.created_at,
     }));
 
-    const totalInvoiced = invoices.reduce(
-      (sum, invoice) => sum + invoice.totalAmount,
-      0,
-    );
-
-    const totalPaid = invoices.reduce(
-      (sum, invoice) => sum + invoice.paidAmount,
-      0,
-    );
-
-    const balanceDue = invoices.reduce(
-      (sum, invoice) => sum + invoice.balanceDue,
-      0,
+    const totalsByCurrency = Array.from(
+      invoices
+        .reduce(
+          (totals, invoice) => {
+            const current = totals.get(invoice.currencyCode) ?? {
+              currencyCode: invoice.currencyCode,
+              totalInvoiced: 0,
+              totalPaid: 0,
+              balanceDue: 0,
+            };
+            current.totalInvoiced = Number(
+              (current.totalInvoiced + invoice.totalAmount).toFixed(2),
+            );
+            current.totalPaid = Number(
+              (current.totalPaid + invoice.paidAmount).toFixed(2),
+            );
+            current.balanceDue = Number(
+              (current.balanceDue + invoice.balanceDue).toFixed(2),
+            );
+            totals.set(invoice.currencyCode, current);
+            return totals;
+          },
+          new Map<
+            string,
+            {
+              currencyCode: string;
+              totalInvoiced: number;
+              totalPaid: number;
+              balanceDue: number;
+            }
+          >(),
+        )
+        .values(),
+    ).sort((left, right) =>
+      left.currencyCode.localeCompare(right.currencyCode),
     );
 
     return {
@@ -2181,11 +2504,7 @@ export class FinanceOperationsService {
         firstName: student.first_name,
         lastName: student.last_name,
       },
-      totals: {
-        totalInvoiced,
-        totalPaid,
-        balanceDue,
-      },
+      totalsByCurrency,
       invoices,
       payments,
     };
@@ -2234,9 +2553,6 @@ export class FinanceOperationsService {
     const summaryResult = await this.db.query<{
       invoice_count: string;
       overdue_count: string;
-      total_billed: string;
-      total_paid: string;
-      total_outstanding: string;
     }>(
       `
       SELECT
@@ -2246,7 +2562,24 @@ export class FinanceOperationsService {
             AND due_date IS NOT NULL
             AND due_date < CURRENT_DATE
             AND invoice_status NOT IN ('PAID', 'VOID')
-        )::text AS overdue_count,
+        )::text AS overdue_count
+      FROM invoices
+      WHERE school_id = $1
+        AND student_id = $2
+        AND deleted_at IS NULL
+      `,
+      [input.schoolId, input.studentId],
+    );
+
+    const moneyResult = await this.db.query<{
+      currency_code: string;
+      total_billed: string;
+      total_paid: string;
+      total_outstanding: string;
+    }>(
+      `
+      SELECT
+        currency_code,
         COALESCE(SUM(total_amount), 0)::text AS total_billed,
         COALESCE(SUM(amount_paid), 0)::text AS total_paid,
         COALESCE(SUM(balance_due), 0)::text AS total_outstanding
@@ -2254,6 +2587,9 @@ export class FinanceOperationsService {
       WHERE school_id = $1
         AND student_id = $2
         AND deleted_at IS NULL
+        AND invoice_status <> 'VOID'
+      GROUP BY currency_code
+      ORDER BY currency_code
       `,
       [input.schoolId, input.studentId],
     );
@@ -2315,6 +2651,7 @@ export class FinanceOperationsService {
       payment_status: string;
       payment_date: string;
       amount: string;
+      currency_code: string;
       method: string | null;
       reference: string | null;
       notes: string | null;
@@ -2326,9 +2663,10 @@ export class FinanceOperationsService {
         COALESCE(pay.payment_number, pay.receipt_number) AS payment_number,
         pay.invoice_id,
         inv.invoice_number,
-        pay.payment_status::text AS payment_status,
+        ${this.effectivePaymentStatusSql('pay')} AS payment_status,
         COALESCE(pay.paid_at::text, pay.payment_date::text) AS payment_date,
         pay.amount::text AS amount,
+        pay.currency_code,
         COALESCE(pay.payment_method::text, pay.method) AS method,
         COALESCE(pay.payment_reference, pay.reference, pay.reference_no) AS reference,
         pay.notes,
@@ -2408,10 +2746,13 @@ export class FinanceOperationsService {
       summary: {
         invoiceCount: Number(summary.invoice_count),
         overdueCount: Number(summary.overdue_count),
-        totalBilled: Number(summary.total_billed),
-        totalPaid: Number(summary.total_paid),
-        totalOutstanding: Number(summary.total_outstanding),
       },
+      totalsByCurrency: moneyResult.rows.map((row) => ({
+        currencyCode: row.currency_code,
+        totalBilled: Number(row.total_billed),
+        totalPaid: Number(row.total_paid),
+        totalOutstanding: Number(row.total_outstanding),
+      })),
       invoices: invoicesResult.rows.map((row) => ({
         id: row.id,
         invoiceNumber: row.invoice_number,
@@ -2438,6 +2779,7 @@ export class FinanceOperationsService {
         paymentStatus: row.payment_status,
         paymentDate: row.payment_date,
         amount: Number(row.amount),
+        currencyCode: row.currency_code,
         method: row.method,
         reference: row.reference,
         notes: row.notes,
@@ -2460,88 +2802,92 @@ export class FinanceOperationsService {
       platformRole,
     );
 
-    const invoiceResult = await this.db.query<{
-      id: string;
-      invoice_number: string | null;
-      invoice_title: string | null;
-      invoice_status: string;
-      total_amount: string;
-      balance_due: string;
-      due_date: string | null;
-    }>(
-      `
-      SELECT
-        id,
-        invoice_number,
-        invoice_status::text AS invoice_status,
-        total_amount::text AS total_amount,
-        balance_due::text AS balance_due,
-        due_date::text AS due_date
-      FROM invoices
-      WHERE id = $1
-        AND school_id = $2
-        AND deleted_at IS NULL
-      LIMIT 1
-      `,
-      [input.invoiceId, input.schoolId],
-    );
-
-    const invoice = invoiceResult.rows[0];
-
-    if (!invoice) {
-      throw new NotFoundException('Invoice not found for this school.');
-    }
-
-    if (invoice.invoice_status !== 'DRAFT') {
-      throw new ConflictException(
-        `Only draft invoices can be issued. Current status: ${invoice.invoice_status}.`,
+    return this.db.withTransaction(async (client) => {
+      const invoiceResult = await client.query<{
+        id: string;
+        invoice_number: string | null;
+        invoice_status: string;
+        total_amount: string;
+        amount_paid: string;
+        balance_due: string;
+        due_date: string | null;
+        issue_date: string;
+      }>(
+        `
+        SELECT
+          id,
+          invoice_number,
+          invoice_status::text AS invoice_status,
+          total_amount::text AS total_amount,
+          amount_paid::text AS amount_paid,
+          balance_due::text AS balance_due,
+          due_date::text AS due_date,
+          issue_date::text AS issue_date
+        FROM invoices
+        WHERE id = $1
+          AND school_id = $2
+          AND deleted_at IS NULL
+        LIMIT 1
+        FOR UPDATE
+        `,
+        [input.invoiceId, input.schoolId],
       );
-    }
+      const invoice = invoiceResult.rows[0];
+      if (!invoice) {
+        throw new NotFoundException('Invoice not found for this school.');
+      }
+      await assertFinanceDateOpen(
+        client,
+        input.schoolId,
+        invoice.issue_date,
+        'Invoice issue',
+      );
+      if (invoice.invoice_status !== 'DRAFT') {
+        throw new ConflictException(
+          `Only draft invoices can be issued. Current status: ${invoice.invoice_status}.`,
+        );
+      }
 
-    const newStatus = this.resolveInvoiceStatus({
-      totalAmount: Number(invoice.total_amount),
-      amountPaid: 0,
-      balanceDue: Number(invoice.balance_due),
-      dueDate: invoice.due_date,
-      currentStatus: 'ISSUED',
+      const newStatus = this.resolveInvoiceStatus({
+        totalAmount: Number(invoice.total_amount),
+        amountPaid: Number(invoice.amount_paid),
+        balanceDue: Number(invoice.balance_due),
+        dueDate: invoice.due_date,
+        currentStatus: 'ISSUED',
+      });
+      const result = await client.query<{
+        id: string;
+        invoice_status: string;
+        invoice_number: string | null;
+      }>(
+        `
+        UPDATE invoices
+        SET invoice_status = $3::invoice_status, updated_at = NOW()
+        WHERE id = $1
+          AND school_id = $2
+          AND invoice_status = 'DRAFT'
+          AND deleted_at IS NULL
+        RETURNING id, invoice_status::text AS invoice_status, invoice_number
+        `,
+        [input.invoiceId, input.schoolId, newStatus],
+      );
+
+      await this.platformActivityService.recordTx(client, {
+        eventType: 'INVOICE_ISSUED',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorUserId,
+        schoolId: input.schoolId,
+        summary: `Invoice ${invoice.invoice_number ?? input.invoiceId} issued.`,
+        payload: {
+          invoiceId: input.invoiceId,
+          invoiceNumber: invoice.invoice_number,
+          previousStatus: invoice.invoice_status,
+          newStatus,
+        },
+      });
+      return result.rows[0];
     });
-
-    const result = await this.db.query<{
-      id: string;
-      invoice_status: string;
-      invoice_number: string | null;
-    }>(
-      `
-      UPDATE invoices
-      SET
-        invoice_status = $3::invoice_status,
-        updated_at = NOW()
-      WHERE id = $1
-        AND school_id = $2
-        AND deleted_at IS NULL
-      RETURNING
-        id,
-        invoice_status::text AS invoice_status,
-        invoice_number
-      `,
-      [input.invoiceId, input.schoolId, newStatus],
-    );
-
-    await this.platformActivityService.record({
-      eventType: 'INVOICE_ISSUED',
-      actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
-      actorUserId,
-      schoolId: input.schoolId,
-      summary: `Invoice ${invoice.invoice_number ?? input.invoiceId} issued.`,
-      payload: {
-        invoiceId: input.invoiceId,
-        invoiceNumber: invoice.invoice_number,
-        previousStatus: invoice.invoice_status,
-        newStatus,
-      },
-    });
-
-    return result.rows[0];
   }
 
   async voidInvoice(
@@ -2558,89 +2904,107 @@ export class FinanceOperationsService {
       input.schoolId,
       platformRole,
     );
-
-    const invoiceResult = await this.db.query<{
-      id: string;
-      invoice_number: string | null;
-      invoice_title: string | null;
-      invoice_status: string;
-      amount_paid: string;
-    }>(
-      `
-      SELECT
-        id,
-        invoice_number,
-        invoice_status::text AS invoice_status,
-        amount_paid::text AS amount_paid
-      FROM invoices
-      WHERE id = $1
-        AND school_id = $2
-        AND deleted_at IS NULL
-      LIMIT 1
-      `,
-      [input.invoiceId, input.schoolId],
-    );
-
-    const invoice = invoiceResult.rows[0];
-
-    if (!invoice) {
-      throw new NotFoundException('Invoice not found for this school.');
+    const reason = input.reason?.trim();
+    if (!reason) {
+      throw new BadRequestException('A void reason is required.');
     }
 
-    if (invoice.invoice_status === 'VOID') {
-      throw new ConflictException('Invoice is already void.');
-    }
-
-    if (Number(invoice.amount_paid) > 0) {
-      throw new ConflictException(
-        'Cannot void an invoice that already has payments recorded. Cancel/refund payments first in a later workflow.',
+    return this.db.withTransaction(async (client) => {
+      const invoiceResult = await client.query<{
+        id: string;
+        invoice_number: string | null;
+        invoice_status: string;
+        amount_paid: string;
+        issue_date: string;
+      }>(
+        `
+        SELECT
+          id,
+          invoice_number,
+          invoice_status::text AS invoice_status,
+          amount_paid::text AS amount_paid,
+          issue_date::text AS issue_date
+        FROM invoices
+        WHERE id = $1
+          AND school_id = $2
+          AND deleted_at IS NULL
+        LIMIT 1
+        FOR UPDATE
+        `,
+        [input.invoiceId, input.schoolId],
       );
-    }
+      const invoice = invoiceResult.rows[0];
+      if (!invoice) {
+        throw new NotFoundException('Invoice not found for this school.');
+      }
+      await assertFinanceDateOpen(
+        client,
+        input.schoolId,
+        invoice.issue_date,
+        'Invoice void',
+      );
+      if (invoice.invoice_status === 'VOID') {
+        throw new ConflictException('Invoice is already void.');
+      }
+      if (Number(invoice.amount_paid) > 0) {
+        throw new ConflictException(
+          'Cannot void an invoice with confirmed payments. Reverse the payments first.',
+        );
+      }
 
-    const result = await this.db.query<{
-      id: string;
-      invoice_status: string;
-      invoice_number: string | null;
-    }>(
-      `
-      UPDATE invoices
-      SET
-        invoice_status = 'VOID',
-        updated_at = NOW(),
-        notes = CASE
-          WHEN $3::text IS NULL OR $3::text = ''
-          THEN notes
-          ELSE CONCAT(COALESCE(notes, ''), E'\nVoid reason: ', $3::text)
-        END
-      WHERE id = $1
-        AND school_id = $2
-        AND deleted_at IS NULL
-      RETURNING
-        id,
-        invoice_status::text AS invoice_status,
-        invoice_number
-      `,
-      [input.invoiceId, input.schoolId, input.reason?.trim() ?? null],
-    );
+      const result = await client.query<{
+        id: string;
+        invoice_status: string;
+        invoice_number: string | null;
+      }>(
+        `
+        UPDATE invoices inv
+        SET
+          invoice_status = 'VOID',
+          updated_at = NOW(),
+          notes = CONCAT(COALESCE(notes, ''), E'\nVoid reason: ', $3::text)
+        WHERE inv.id = $1
+          AND inv.school_id = $2
+          AND inv.deleted_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1
+            FROM payments pay
+            WHERE pay.invoice_id = inv.id
+              AND pay.school_id = inv.school_id
+              AND pay.payment_status = 'CONFIRMED'
+              AND pay.deleted_at IS NULL
+          )
+        RETURNING
+          inv.id,
+          inv.invoice_status::text AS invoice_status,
+          inv.invoice_number
+        `,
+        [input.invoiceId, input.schoolId, reason],
+      );
+      if (!result.rows[0]) {
+        throw new ConflictException(
+          'The invoice received a payment and can no longer be voided.',
+        );
+      }
 
-    await this.platformActivityService.record({
-      eventType: 'INVOICE_VOIDED',
-      actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
-      actorUserId,
-      schoolId: input.schoolId,
-      summary: `Invoice ${invoice.invoice_number ?? input.invoiceId} voided.`,
-      payload: {
-        invoiceId: input.invoiceId,
-        invoiceNumber: invoice.invoice_number,
-        previousStatus: invoice.invoice_status,
-        newStatus: 'VOID',
-        reason: input.reason?.trim() ?? null,
-      },
+      await this.platformActivityService.recordTx(client, {
+        eventType: 'INVOICE_VOIDED',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorUserId,
+        schoolId: input.schoolId,
+        summary: `Invoice ${invoice.invoice_number ?? input.invoiceId} voided.`,
+        payload: {
+          invoiceId: input.invoiceId,
+          invoiceNumber: invoice.invoice_number,
+          previousStatus: invoice.invoice_status,
+          newStatus: 'VOID',
+          reason,
+        },
+      });
+      return result.rows[0];
     });
-
-    return result.rows[0];
   }
-
   async getPaymentReceiptDetails(
     input: {
       schoolId: string;
@@ -2682,7 +3046,7 @@ export class FinanceOperationsService {
       SELECT
         pay.id AS payment_id,
         COALESCE(pay.payment_number, pay.receipt_number) AS payment_number,
-        pay.payment_status::text AS payment_status,
+        ${this.effectivePaymentStatusSql('pay')} AS payment_status,
         COALESCE(pay.payment_method::text, pay.method) AS payment_method,
         COALESCE(pay.payment_reference, pay.reference, pay.reference_no) AS payment_reference,
         COALESCE(inv.currency_code, 'USD') AS payment_currency_code,
@@ -2821,7 +3185,7 @@ export class FinanceOperationsService {
         pay.id AS payment_id,
         pay.receipt_number,
         pay.receipt_generated_at::text AS receipt_generated_at,
-        pay.payment_status::text AS payment_status,
+        ${this.effectivePaymentStatusSql('pay')} AS payment_status,
         pay.payment_date::text AS payment_date,
         pay.amount::text AS amount,
         pay.method,
@@ -3101,14 +3465,14 @@ export class FinanceOperationsService {
       SELECT
         id,
         COALESCE(payment_number, receipt_number) AS payment_number,
-        payment_status::text AS payment_status,
+        ${this.effectivePaymentStatusSql('pay')} AS payment_status,
         COALESCE(paid_at::text, payment_date::text) AS payment_date,
         amount::text AS amount,
         COALESCE(payment_method::text, method) AS method,
         COALESCE(payment_reference, reference, reference_no) AS reference,
         notes,
         created_at::text AS created_at
-      FROM payments
+      FROM payments pay
       WHERE invoice_id = $1
         AND school_id = $2
         AND deleted_at IS NULL
@@ -3228,7 +3592,7 @@ export class FinanceOperationsService {
       SELECT
         id,
         COALESCE(payment_number, receipt_number) AS payment_number,
-        payment_status::text AS payment_status,
+        ${this.effectivePaymentStatusSql('pay')} AS payment_status,
         COALESCE(paid_at::text, payment_date::text) AS payment_date,
         amount::text AS amount,
         COALESCE(payment_method::text, method) AS method,
@@ -3236,7 +3600,7 @@ export class FinanceOperationsService {
         notes,
         received_by_user_id,
         created_at::text AS created_at
-      FROM payments
+      FROM payments pay
       WHERE invoice_id = $1
         AND school_id = $2
         AND deleted_at IS NULL

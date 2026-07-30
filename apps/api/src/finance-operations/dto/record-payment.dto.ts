@@ -1,4 +1,13 @@
-﻿import { IsDateString, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class RecordPaymentDto {
   @IsUUID('all')
@@ -7,7 +16,10 @@ export class RecordPaymentDto {
   @IsUUID('all')
   invoiceId: string;
 
-  @IsNumber()
+  @IsUUID('all')
+  cashierSessionId: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
   amount: number;
 
@@ -16,14 +28,16 @@ export class RecordPaymentDto {
   paymentDate?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['CASH', 'BANK_TRANSFER', 'CHECK', 'MOBILE_MONEY', 'CARD', 'OTHER'])
   method?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   reference?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   notes?: string;
 }

@@ -16,6 +16,7 @@ export class CreateUserInvitationDto {
   @IsOptional() @IsString() firstName?: string;
   @IsOptional() @IsString() lastName?: string;
   @IsOptional() @IsUUID('all') guardianId?: string;
+  @IsOptional() @IsUUID('all') staffAccountId?: string;
   @IsOptional() @IsString() staffCode?: string;
   @IsOptional() @IsString() jobTitle?: string;
   @IsOptional() @IsString() department?: string;

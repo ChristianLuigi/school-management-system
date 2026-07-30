@@ -8,14 +8,17 @@ type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
 
 type FinanceDashboard = {
   totals: {
-    totalInvoiced: number;
-    totalPaid: number;
-    totalBalanceDue: number;
     invoiceCount: number;
     unpaidInvoiceCount: number;
     paidInvoiceCount: number;
     paymentCount: number;
   };
+  moneyByCurrency: Array<{
+    currencyCode: string;
+    totalInvoiced: number;
+    totalPaid: number;
+    totalBalanceDue: number;
+  }>;
   recentInvoices: Array<{
     id: string;
     invoiceNumber: string | null;
@@ -195,21 +198,26 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
       {dashboard ? (
         <>
           <div className="grid gap-4 md:grid-cols-4">
-            <KpiCard
-              label="Total invoiced"
-              value={money(dashboard.totals.totalInvoiced)}
-              tone="blue"
-            />
-            <KpiCard
-              label="Total paid"
-              value={money(dashboard.totals.totalPaid)}
-              tone="green"
-            />
-            <KpiCard
-              label="Balance due"
-              value={money(dashboard.totals.totalBalanceDue)}
-              tone={dashboard.totals.totalBalanceDue > 0 ? "amber" : "green"}
-            />
+            {dashboard.moneyByCurrency.flatMap((totals) => [
+              <KpiCard
+                key={`${totals.currencyCode}-invoiced`}
+                label={`Total invoiced (${totals.currencyCode})`}
+                value={money(totals.totalInvoiced, totals.currencyCode)}
+                tone="blue"
+              />,
+              <KpiCard
+                key={`${totals.currencyCode}-paid`}
+                label={`Total paid (${totals.currencyCode})`}
+                value={money(totals.totalPaid, totals.currencyCode)}
+                tone="green"
+              />,
+              <KpiCard
+                key={`${totals.currencyCode}-balance`}
+                label={`Balance due (${totals.currencyCode})`}
+                value={money(totals.totalBalanceDue, totals.currencyCode)}
+                tone={totals.totalBalanceDue > 0 ? "amber" : "green"}
+              />,
+            ])}
             <KpiCard label="Payments" value={dashboard.totals.paymentCount} />
             <KpiCard label="Invoices" value={dashboard.totals.invoiceCount} />
             <KpiCard

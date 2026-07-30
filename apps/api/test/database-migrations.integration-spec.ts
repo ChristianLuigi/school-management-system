@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { Pool } from 'pg';
@@ -235,6 +235,183 @@ describe('database migration runner integration', () => {
     }
   });
 
+  it('upgrades legacy linked staff without guessing payroll links', async () => {
+    const database = await createDatabase();
+    const directory = await migrationDirectory();
+    const productionDirectory = path.resolve(
+      __dirname,
+      '../../../infra/db/migrations',
+    );
+    const migrationNames = (await readdir(productionDirectory))
+      .filter((name) => name.endsWith('.sql'))
+      .sort((left, right) => left.localeCompare(right));
+
+    for (const migrationName of migrationNames) {
+      if (
+        migrationName === '067_staff_directory_foundation.sql' ||
+        migrationName === '068_staff_employment_lifecycle.sql'
+      )
+        continue;
+      await copyFile(
+        path.join(productionDirectory, migrationName),
+        path.join(directory, migrationName),
+      );
+    }
+
+    const runner = new MigrationRunner({
+      databaseUrl: database.url,
+      migrationsDirectory: directory,
+      applicationVersion: 'staff-upgrade-test',
+    });
+    const pool = new Pool({ connectionString: database.url });
+
+    try {
+      await expect(runner.up()).resolves.toMatchObject({
+        appliedCount: 70,
+        totalCount: 70,
+      });
+      const schoolId = randomUUID();
+      const userId = randomUUID();
+      const payrollProfileId = randomUUID();
+      await pool.query(
+        `
+        INSERT INTO schools (
+          id,
+          code,
+          name,
+          currency_code,
+          country_code,
+          timezone,
+          status,
+          management_mode
+        )
+        VALUES (
+          $1,
+          $2,
+          'Staff Upgrade School',
+          'HTG',
+          'HT',
+          'America/Port-au-Prince',
+          'ACTIVE',
+          'SELF_MANAGED'
+        )
+        `,
+        [schoolId, `UPGRADE-${schoolId.slice(0, 8)}`],
+      );
+      await pool.query(
+        `
+        INSERT INTO users (
+          id,
+          email,
+          email_original,
+          email_normalized,
+          password_hash,
+          preferred_locale,
+          status,
+          account_status,
+          first_name,
+          last_name
+        )
+        VALUES (
+          $1,
+          $2::text,
+          $2::text,
+          $2::text,
+          'INTEGRATION_TEST_DISABLED_PASSWORD',
+          'fr',
+          'ACTIVE',
+          'ACTIVE',
+          'Legacy',
+          'Employee'
+        )
+        `,
+        [userId, `legacy-${userId.slice(0, 12)}@integration.test`],
+      );
+      await pool.query(
+        `
+        INSERT INTO school_staff_accounts (
+          school_id,
+          user_id,
+          staff_code,
+          staff_type,
+          employment_status
+        )
+        VALUES ($1, $2, ' legacy-001 ', 'TEACHER', 'ACTIVE')
+        `,
+        [schoolId, userId],
+      );
+      await pool.query(
+        `
+        INSERT INTO payroll_staff_profiles (
+          id,
+          school_id,
+          full_name,
+          base_salary,
+          currency_code,
+          payroll_active
+        )
+        VALUES ($1, $2, 'Unverified Legacy Profile', 1000, 'HTG', TRUE)
+        `,
+        [payrollProfileId, schoolId],
+      );
+
+      await copyFile(
+        path.join(productionDirectory, '067_staff_directory_foundation.sql'),
+        path.join(directory, '067_staff_directory_foundation.sql'),
+      );
+      await expect(runner.up()).resolves.toMatchObject({
+        applied: ['067_staff_directory_foundation.sql'],
+        appliedCount: 1,
+        totalCount: 71,
+      });
+
+      const staff = await pool.query<{
+        first_name: string;
+        last_name: string;
+        email_normalized: string;
+        staff_code: string;
+        staff_category: string;
+        hire_date: string;
+      }>(
+        `
+        SELECT
+          first_name,
+          last_name,
+          email_normalized,
+          staff_code,
+          staff_category,
+          hire_date::text
+        FROM school_staff_accounts
+        WHERE school_id = $1
+          AND user_id = $2
+        `,
+        [schoolId, userId],
+      );
+      expect(staff.rows[0]).toMatchObject({
+        first_name: 'Legacy',
+        last_name: 'Employee',
+        email_normalized: `legacy-${userId.slice(0, 12)}@integration.test`,
+        staff_code: 'LEGACY-001',
+        staff_category: 'TEACHING',
+      });
+      expect(staff.rows[0].hire_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+      const payrollProfile = await pool.query<{
+        school_staff_account_id: string | null;
+      }>(
+        `
+        SELECT school_staff_account_id
+        FROM payroll_staff_profiles
+        WHERE id = $1
+        `,
+        [payrollProfileId],
+      );
+      expect(payrollProfile.rows[0].school_staff_account_id).toBeNull();
+    } finally {
+      await pool.end();
+      await runner.close();
+    }
+  });
   it('applies and verifies the complete production migration chain', async () => {
     const database = await createDatabase();
     const migrationsDirectory = path.resolve(
@@ -249,12 +426,12 @@ describe('database migration runner integration', () => {
 
     try {
       await expect(runner.up()).resolves.toMatchObject({
-        appliedCount: 63,
-        totalCount: 63,
+        appliedCount: 72,
+        totalCount: 72,
       });
       await expect(runner.verify()).resolves.toMatchObject({
         verified: true,
-        migrationCount: 63,
+        migrationCount: 72,
       });
 
       const pool = new Pool({ connectionString: database.url });
@@ -287,6 +464,23 @@ describe('database migration runner integration', () => {
           confirmation: 'WRONG_CONFIRMATION',
         }),
       ).rejects.toThrow('Baseline requires');
+      const baselineContractPool = new Pool({ connectionString: database.url });
+      try {
+        await baselineContractPool.query(
+          'ALTER TABLE payroll_run_sequences RENAME TO payroll_run_sequences_missing',
+        );
+        await expect(
+          runner.baseline({
+            through: '058_operational_user_access.sql',
+            confirmation: MigrationRunner.baselineConfirmation(),
+          }),
+        ).rejects.toThrow('Missing tables: public.payroll_run_sequences.');
+      } finally {
+        await baselineContractPool.query(
+          'ALTER TABLE payroll_run_sequences_missing RENAME TO payroll_run_sequences',
+        );
+        await baselineContractPool.end();
+      }
       await expect(
         runner.baseline({
           through: '058_operational_user_access.sql',
@@ -297,12 +491,23 @@ describe('database migration runner integration', () => {
         through: '058_operational_user_access.sql',
       });
       await expect(runner.up()).resolves.toMatchObject({
-        applied: ['059_disable_legacy_seed_super_admin.sql'],
-        appliedCount: 1,
+        applied: [
+          '059_disable_legacy_seed_super_admin.sql',
+          '060_finance_core_integrity.sql',
+          '061_finance_cashier_workflow.sql',
+          '062_finance_controlled_corrections.sql',
+          '063_finance_billing_plans.sql',
+          '064_finance_reconciliation_and_period_close.sql',
+          '065_payroll_hardening.sql',
+          '066_payroll_school_admin_approval.sql',
+          '067_staff_directory_foundation.sql',
+          '068_staff_employment_lifecycle.sql',
+        ],
+        appliedCount: 10,
       });
       await expect(runner.verify()).resolves.toMatchObject({
         verified: true,
-        migrationCount: 63,
+        migrationCount: 72,
         baselineCount: 62,
       });
     } finally {

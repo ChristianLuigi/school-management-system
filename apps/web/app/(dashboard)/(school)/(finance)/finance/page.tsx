@@ -12,10 +12,34 @@ export default async function FinancePage() {
       description="Manage student invoices, payments, balances, receipts, and payroll."
       quickActions={[
         {
+          href: "/finance/billing",
+          title: "Billing plans",
+          description:
+            "Preview eligible students and generate duplicate-safe invoice batches from controlled fee plans.",
+        },
+        {
+          href: "/finance/reconciliation",
+          title: "Deposits and period close",
+          description:
+            "Match closed cashier sessions to reviewed bank deposits and lock completed financial periods.",
+        },
+        {
+          href: "/finance/cashier",
+          title: "Cashier",
+          description:
+            "Search a student, collect an invoice payment, reconcile the drawer, and print an audited receipt.",
+        },
+        {
+          href: "/finance/corrections",
+          title: "Corrections and credit notes",
+          description:
+            "Request, independently approve, and settle reversals, refunds, and invoice credits.",
+        },
+        {
           href: "/students",
           title: "Students",
           description:
-            "Open a student file to create invoices and record payments.",
+            "Open a student file to review billing and create invoices.",
         },
         {
           href: "/admissions",
@@ -25,15 +49,15 @@ export default async function FinancePage() {
         {
           href: "/finance/payroll",
           title: "Payroll",
-          description: "Prepare staff payroll runs. Coming next.",
+          description: "Prepare, review, approve, process, pay, and close controlled staff payroll runs.",
         },
       ]}
       attentionItems={[
         {
-          tone: "amber",
-          title: "MVP finance workflow",
+          tone: "blue",
+          title: "Controlled cashier workflow",
           description:
-            "For now, invoices and payments are created from the student profile. This dashboard centralizes recent activity.",
+            "Payments require an open daily cashier session. Close the session only after counting physical cash.",
         },
       ]}
       mainTitle="Finance Dashboard"

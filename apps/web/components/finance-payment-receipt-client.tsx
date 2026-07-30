@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { SchoolBadge } from "@/components/school-ui";
+import { useReceiptPrintAudit } from "@/lib/finance/use-receipt-print-audit";
 
 type PaymentReceipt = {
+  capabilities: {
+    canRequestCorrection: boolean;
+  };
   id: string;
   receiptNumber: string;
   receiptGeneratedAt: string | null;
@@ -61,7 +66,17 @@ function money(value: number, currency = "USD") {
 
 function statusTone(status: string): BadgeTone {
   if (status === "CONFIRMED" || status === "PAID") return "green";
-  if (status === "CANCELLED" || status === "REFUNDED") return "red";
+  if (
+    status === "CANCELLED" ||
+    status === "REFUNDED" ||
+    status === "REVERSED"
+  )
+    return "red";
+  if (
+    status === "CORRECTION_PENDING" ||
+    status === "CORRECTION_APPROVED"
+  )
+    return "amber";
   return "blue";
 }
 
@@ -75,6 +90,10 @@ export function FinancePaymentReceiptClient({
   const [receipt, setReceipt] = useState<PaymentReceipt | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const autoPrintStarted = useRef(false);
+  const { printCount, loadingPrintAudit, printError, recordAndPrint } =
+    useReceiptPrintAudit({ schoolId, paymentId });
 
   async function loadReceipt() {
     setLoading(true);
@@ -109,6 +128,18 @@ export function FinancePaymentReceiptClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId, paymentId]);
 
+  useEffect(() => {
+    if (
+      !receipt ||
+      searchParams.get("autoprint") !== "1" ||
+      autoPrintStarted.current
+    ) {
+      return;
+    }
+    autoPrintStarted.current = true;
+    void recordAndPrint("A4");
+  }, [receipt, recordAndPrint, searchParams]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
@@ -122,7 +153,8 @@ export function FinancePaymentReceiptClient({
 
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => void recordAndPrint("A4")}
+            disabled={loadingPrintAudit}
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
           >
             Print / Save as PDF
@@ -141,6 +173,15 @@ export function FinancePaymentReceiptClient({
           >
             Quick 80mm Print
           </Link>
+          {receipt?.capabilities.canRequestCorrection &&
+          receipt.paymentStatus === "CONFIRMED" ? (
+            <Link
+              href={`/finance/corrections?paymentId=${encodeURIComponent(paymentId)}`}
+              className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
+            >
+              Request correction
+            </Link>
+          ) : null}
         </div>
 
         <button
@@ -151,6 +192,16 @@ export function FinancePaymentReceiptClient({
           Refresh
         </button>
       </div>
+
+      <div className="text-xs text-slate-500 print:hidden">
+        Recorded prints: {printCount}
+      </div>
+
+      {printError ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 print:hidden">
+          {printError}
+        </div>
+      ) : null}
 
       {loading ? (
         <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 print:hidden">

@@ -1,4 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Pool } from 'pg';
 import {
   createIntegrationPool,
@@ -128,24 +132,32 @@ describe('representative school workflows integration', () => {
       },
       admin.id,
       null,
+      'invoice-workflow-20261001',
     );
     expect(invoice).toMatchObject({
       invoiceStatus: 'ISSUED',
       totalAmount: 1000,
       balanceDue: 1000,
     });
+    const cashierSession = await harness.cashier.openSession(
+      { schoolId, currencyCode: 'HTG', openingCashAmount: 0 },
+      admin.id,
+      null,
+    );
 
     const payment = await harness.finance.recordPayment(
       {
         schoolId,
         invoiceId: invoice.id,
+        cashierSessionId: cashierSession.id,
         amount: 400,
-        paymentDate: '2026-10-02',
+        paymentDate: cashierSession.businessDate,
         method: 'CASH',
         reference: 'RR-TEST-001',
       },
       admin.id,
       null,
+      'payment-workflow-20261002',
     );
     expect(payment.invoice).toMatchObject({
       id: invoice.id,
@@ -220,7 +232,326 @@ describe('representative school workflows integration', () => {
         },
         admin.id,
         null,
+        'invoice-cross-school-attempt',
       ),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('replays identical finance requests without duplicate ledger entries', async () => {
+    const schoolId = await factory.school();
+    const admin = await factory.user();
+    await factory.membership(schoolId, admin.id, 'SCHOOL_ADMIN');
+    const scope = await factory.academicScope(schoolId);
+    const studentId = await factory.student(schoolId);
+    await factory.enrollment(studentId, scope);
+
+    const invoiceRequest = {
+      schoolId,
+      studentId,
+      invoiceStatus: 'ISSUED' as const,
+      currencyCode: 'HTG',
+      items: [
+        {
+          description: 'Idempotent tuition',
+          quantity: 1,
+          unitAmount: 1000,
+        },
+      ],
+    };
+    const firstInvoice = await harness.finance.createInvoice(
+      invoiceRequest,
+      admin.id,
+      null,
+      'invoice-idempotency-same-request',
+    );
+    const replayedInvoice = await harness.finance.createInvoice(
+      invoiceRequest,
+      admin.id,
+      null,
+      'invoice-idempotency-same-request',
+    );
+    expect(replayedInvoice).toEqual(firstInvoice);
+
+    await expect(
+      harness.finance.createInvoice(
+        {
+          ...invoiceRequest,
+          items: [
+            {
+              description: 'Changed request',
+              quantity: 1,
+              unitAmount: 1200,
+            },
+          ],
+        },
+        admin.id,
+        null,
+        'invoice-idempotency-same-request',
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    const cashierSession = await harness.cashier.openSession(
+      { schoolId, currencyCode: 'HTG', openingCashAmount: 0 },
+      admin.id,
+      null,
+    );
+    const paymentRequest = {
+      schoolId,
+      invoiceId: firstInvoice.id,
+      cashierSessionId: cashierSession.id,
+      paymentDate: cashierSession.businessDate,
+      amount: 400,
+      method: 'CASH',
+    };
+    const firstPayment = await harness.finance.recordPayment(
+      paymentRequest,
+      admin.id,
+      null,
+      'payment-idempotency-same-request',
+    );
+    const replayedPayment = await harness.finance.recordPayment(
+      paymentRequest,
+      admin.id,
+      null,
+      'payment-idempotency-same-request',
+    );
+    expect(replayedPayment).toEqual(firstPayment);
+
+    await expect(
+      harness.finance.recordPayment(
+        { ...paymentRequest, amount: 401 },
+        admin.id,
+        null,
+        'payment-idempotency-same-request',
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
+
+    const persisted = await pool.query<{
+      invoice_count: string;
+      payment_count: string;
+      amount_paid: string;
+      balance_due: string;
+      invoice_columns_match: boolean;
+      payment_columns_match: boolean;
+    }>(
+      `
+      SELECT
+        (SELECT COUNT(*)::text FROM invoices WHERE school_id = $1) AS invoice_count,
+        (SELECT COUNT(*)::text FROM payments WHERE school_id = $1) AS payment_count,
+        (SELECT amount_paid::text FROM invoices WHERE id = $2) AS amount_paid,
+        (SELECT balance_due::text FROM invoices WHERE id = $2) AS balance_due,
+        (
+          SELECT status::text = invoice_status::text
+          FROM invoices
+          WHERE id = $2
+        ) AS invoice_columns_match,
+        (
+          SELECT status::text = payment_status::text
+          FROM payments
+          WHERE id = $3
+        ) AS payment_columns_match
+      `,
+      [schoolId, firstInvoice.id, firstPayment.paymentId],
+    );
+    expect(persisted.rows[0]).toMatchObject({
+      invoice_count: '1',
+      payment_count: '1',
+      amount_paid: '400.00',
+      balance_due: '600.00',
+      invoice_columns_match: true,
+      payment_columns_match: true,
+    });
+  });
+
+  it('serializes concurrent payments and prevents overpayment', async () => {
+    const schoolId = await factory.school();
+    const admin = await factory.user();
+    await factory.membership(schoolId, admin.id, 'SCHOOL_ADMIN');
+    const scope = await factory.academicScope(schoolId);
+    const studentId = await factory.student(schoolId);
+    await factory.enrollment(studentId, scope);
+    const invoice = await harness.finance.createInvoice(
+      {
+        schoolId,
+        studentId,
+        invoiceStatus: 'ISSUED',
+        currencyCode: 'HTG',
+        items: [
+          {
+            description: 'Concurrent collection test',
+            quantity: 1,
+            unitAmount: 1000,
+          },
+        ],
+      },
+      admin.id,
+      null,
+      'invoice-concurrency-test',
+    );
+
+    const cashierSession = await harness.cashier.openSession(
+      { schoolId, currencyCode: 'HTG', openingCashAmount: 0 },
+      admin.id,
+      null,
+    );
+    const attempts = await Promise.allSettled([
+      harness.finance.recordPayment(
+        {
+          schoolId,
+          invoiceId: invoice.id,
+          cashierSessionId: cashierSession.id,
+          paymentDate: cashierSession.businessDate,
+          amount: 700,
+          method: 'CASH',
+        },
+        admin.id,
+        null,
+        'payment-concurrency-first',
+      ),
+      harness.finance.recordPayment(
+        {
+          schoolId,
+          invoiceId: invoice.id,
+          cashierSessionId: cashierSession.id,
+          paymentDate: cashierSession.businessDate,
+          amount: 700,
+          method: 'CASH',
+        },
+        admin.id,
+        null,
+        'payment-concurrency-second',
+      ),
+    ]);
+    expect(attempts.filter((attempt) => attempt.status === 'fulfilled')).toHaveLength(
+      1,
+    );
+    expect(attempts.filter((attempt) => attempt.status === 'rejected')).toHaveLength(
+      1,
+    );
+
+    const persisted = await pool.query<{
+      amount_paid: string;
+      balance_due: string;
+      payment_count: string;
+    }>(
+      `
+      SELECT
+        inv.amount_paid::text AS amount_paid,
+        inv.balance_due::text AS balance_due,
+        COUNT(pay.id)::text AS payment_count
+      FROM invoices inv
+      LEFT JOIN payments pay
+        ON pay.invoice_id = inv.id
+       AND pay.payment_status = 'CONFIRMED'
+       AND pay.deleted_at IS NULL
+      WHERE inv.id = $1
+      GROUP BY inv.id
+      `,
+      [invoice.id],
+    );
+    expect(persisted.rows[0]).toEqual({
+      amount_paid: '700.00',
+      balance_due: '300.00',
+      payment_count: '1',
+    });
+  });
+
+  it('enforces payment methods and reports each currency separately', async () => {
+    const schoolId = await factory.school();
+    const admin = await factory.user();
+    await factory.membership(schoolId, admin.id, 'SCHOOL_ADMIN');
+    const scope = await factory.academicScope(schoolId);
+    const studentId = await factory.student(schoolId);
+    await factory.enrollment(studentId, scope);
+
+    const htgInvoice = await harness.finance.createInvoice(
+      {
+        schoolId,
+        studentId,
+        currencyCode: 'HTG',
+        items: [{ description: 'HTG charge', quantity: 1, unitAmount: 1000 }],
+      },
+      admin.id,
+      null,
+      'invoice-currency-htg',
+    );
+    await harness.finance.createInvoice(
+      {
+        schoolId,
+        studentId,
+        currencyCode: 'USD',
+        items: [{ description: 'USD charge', quantity: 1, unitAmount: 20 }],
+      },
+      admin.id,
+      null,
+      'invoice-currency-usd',
+    );
+
+    const cashierSession = await harness.cashier.openSession(
+      { schoolId, currencyCode: 'HTG', openingCashAmount: 0 },
+      admin.id,
+      null,
+    );
+
+    await expect(
+      harness.finance.recordPayment(
+        {
+          schoolId,
+          invoiceId: htgInvoice.id,
+          cashierSessionId: cashierSession.id,
+          amount: 100,
+          method: 'BANK_TRANSFER',
+        },
+        admin.id,
+        null,
+        'payment-reference-required',
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    await pool.query(
+      `
+      INSERT INTO school_finance_settings (school_id, enabled_payment_methods)
+      VALUES ($1, '["CASH"]'::jsonb)
+      ON CONFLICT (school_id)
+      WHERE deleted_at IS NULL
+      DO UPDATE SET enabled_payment_methods = EXCLUDED.enabled_payment_methods
+      `,
+      [schoolId],
+    );
+    await expect(
+      harness.finance.recordPayment(
+        {
+          schoolId,
+          invoiceId: htgInvoice.id,
+          cashierSessionId: cashierSession.id,
+          amount: 100,
+          method: 'CARD',
+          reference: 'CARD-TEST',
+        },
+        admin.id,
+        null,
+        'payment-disabled-method',
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    const dashboard = await harness.finance.getFinanceDashboard(
+      { schoolId },
+      admin.id,
+      null,
+    );
+    expect(dashboard.moneyByCurrency).toEqual([
+      {
+        currencyCode: 'HTG',
+        totalInvoiced: 1000,
+        totalPaid: 0,
+        totalBalanceDue: 1000,
+      },
+      {
+        currencyCode: 'USD',
+        totalInvoiced: 20,
+        totalPaid: 0,
+        totalBalanceDue: 20,
+      },
+    ]);
   });
 });

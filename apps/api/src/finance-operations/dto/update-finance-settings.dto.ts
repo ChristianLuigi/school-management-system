@@ -1,12 +1,18 @@
 import {
+  ArrayMinSize,
+  ArrayUnique,
   IsArray,
   IsBoolean,
+  IsEmail,
   IsIn,
   IsNumber,
   IsObject,
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
+  Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -16,28 +22,38 @@ export class UpdateFinanceSettingsDto {
 
   @IsOptional()
   @IsString()
+  @Matches(/^[A-Za-z]{3}$/)
   defaultCurrencyCode?: string;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(365)
   defaultInvoiceDueDays?: number;
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
+  @ArrayMinSize(1)
+  @ArrayUnique()
+  @IsIn(
+    ['CASH', 'BANK_TRANSFER', 'CHECK', 'MOBILE_MONEY', 'CARD', 'OTHER'],
+    { each: true },
+  )
   enabledPaymentMethods?: string[];
 
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   financeContactName?: string;
 
   @IsOptional()
-  @IsString()
+  @IsEmail()
+  @MaxLength(254)
   financeContactEmail?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(50)
   financeContactPhone?: string;
 
   @IsOptional()

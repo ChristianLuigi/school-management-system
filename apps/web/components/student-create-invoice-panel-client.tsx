@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export function StudentCreateInvoicePanelClient({
   schoolId,
@@ -24,6 +24,8 @@ export function StudentCreateInvoicePanelClient({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const idempotencyKeyRef = useRef("");
+  const idempotencyPayloadRef = useRef("");
 
   async function createInvoice() {
     setSaving(true);
@@ -40,23 +42,35 @@ export function StudentCreateInvoicePanelClient({
       if (!Number.isFinite(amount) || amount <= 0) {
         throw new Error("Invoice amount must be greater than zero.");
       }
+      const payload = JSON.stringify({
+        schoolId,
+        studentId,
+        items: [
+          {
+            description: invoiceTitle.trim(),
+            quantity: 1,
+            unitAmount: amount,
+          },
+        ],
+        discountAmount: 0,
+        currencyCode,
+        issueDate: issueDate || undefined,
+        dueDate: dueDate || undefined,
+        invoiceStatus,
+        notes,
+      });
+      if (idempotencyPayloadRef.current !== payload) {
+        idempotencyKeyRef.current = crypto.randomUUID();
+        idempotencyPayloadRef.current = payload;
+      }
 
       const res = await fetch("/api/finance/invoices", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKeyRef.current,
         },
-        body: JSON.stringify({
-          schoolId,
-          studentId,
-          invoiceTitle,
-          totalAmount: amount,
-          currencyCode,
-          issueDate: issueDate || undefined,
-          dueDate: dueDate || undefined,
-          invoiceStatus,
-          notes,
-        }),
+        body: payload,
       });
 
       const body = await res.json().catch(() => null);
@@ -74,6 +88,8 @@ export function StudentCreateInvoicePanelClient({
       setDueDate("");
       setInvoiceStatus("ISSUED");
       setNotes("");
+      idempotencyKeyRef.current = "";
+      idempotencyPayloadRef.current = "";
 
       onCreated();
     } catch (err) {

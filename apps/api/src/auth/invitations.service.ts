@@ -43,6 +43,7 @@ type InvitationRow = {
   existing_user_id: string | null;
   invited_by_user_id: string;
   guardian_id: string | null;
+  staff_account_id: string | null;
   staff_code: string | null;
   job_title: string | null;
   department: string | null;
@@ -141,7 +142,53 @@ export class InvitationsService {
         'A guardian record can only be used for a parent invitation.',
       );
     }
-    if (
+    if (dto.staffAccountId) {
+      if (dto.roleCode === 'PARENT') {
+        throw new BadRequestException(
+          'A parent invitation cannot be linked to a staff record.',
+        );
+      }
+      const staff = await this.db.query<{
+        id: string;
+        user_id: string | null;
+        email_normalized: string | null;
+        employment_status: string;
+      }>(
+        `
+        SELECT id, user_id, email_normalized, employment_status
+        FROM school_staff_accounts
+        WHERE id = $1
+          AND school_id = $2
+          AND deleted_at IS NULL
+        LIMIT 1
+        `,
+        [dto.staffAccountId, dto.schoolId],
+      );
+      const record = staff.rows[0];
+      if (!record) {
+        throw new BadRequestException(
+          'The selected staff record does not belong to this school.',
+        );
+      }
+      if (record.user_id) {
+        throw new ConflictException(
+          'The selected staff record already has a linked account.',
+        );
+      }
+      if (['TERMINATED', 'ARCHIVED'].includes(record.employment_status)) {
+        throw new BadRequestException(
+          'A terminated or archived staff record cannot receive an account invitation.',
+        );
+      }
+      if (
+        record.email_normalized &&
+        record.email_normalized !== canonicalizeEmail(dto.email).normalized
+      ) {
+        throw new BadRequestException(
+          'The invitation email must match the staff record email.',
+        );
+      }
+    }    if (
       dto.financePermissionCodes?.length &&
       dto.roleCode !== 'FINANCE_ADMIN'
     ) {
@@ -197,18 +244,29 @@ export class InvitationsService {
     const invitation = await this.db.withTransaction(async (client) => {
       await client.query(
         `
-        UPDATE user_invitations SET invitation_status = 'REVOKED', revoked_at = NOW(), updated_at = NOW()
-        WHERE school_id = $1 AND email_normalized = $2 AND role_code = $3 AND invitation_status = 'PENDING'
+        UPDATE user_invitations
+        SET invitation_status = 'REVOKED', revoked_at = NOW(), updated_at = NOW()
+        WHERE school_id = $1
+          AND invitation_status = 'PENDING'
+          AND (
+            (email_normalized = $2 AND role_code = $3)
+            OR staff_account_id = $4
+          )
       `,
-        [dto.schoolId, canonical.normalized, dto.roleCode],
+        [
+          dto.schoolId,
+          canonical.normalized,
+          dto.roleCode,
+          dto.staffAccountId ?? null,
+        ],
       );
       const result = await client.query<{ id: string; expires_at: Date }>(
         `
         INSERT INTO user_invitations (
           school_id, invited_by_user_id, email_original, email_normalized, role_code, locale,
-          token_hash, expires_at, first_name, last_name, guardian_id, staff_code, job_title,
-          department, initial_permission_codes, send_count, last_sent_at
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::text[],1,NOW())
+          token_hash, expires_at, first_name, last_name, guardian_id, staff_account_id,
+          staff_code, job_title, department, initial_permission_codes, send_count, last_sent_at
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16::text[],1,NOW())
         RETURNING id, expires_at
       `,
         [
@@ -223,6 +281,7 @@ export class InvitationsService {
           dto.firstName?.trim() || null,
           dto.lastName?.trim() || null,
           dto.guardianId ?? null,
+          dto.staffAccountId ?? null,
           dto.staffCode?.trim() || null,
           dto.jobTitle?.trim() || null,
           dto.department?.trim() || null,
@@ -236,7 +295,11 @@ export class InvitationsService {
         actorUserId,
         schoolId: dto.schoolId,
         summary: `User invitation created for ${canonical.normalized}.`,
-        payload: { invitationId: result.rows[0].id, roleCode: dto.roleCode },
+        payload: {
+          invitationId: result.rows[0].id,
+          roleCode: dto.roleCode,
+          staffAccountId: dto.staffAccountId ?? null,
+        },
       });
       return result.rows[0];
     });
@@ -355,6 +418,7 @@ export class InvitationsService {
       roleCode: SchoolRole;
       invitedByUserId: string;
       guardianId: string | null;
+      staffAccountId: string | null;
       staffCode: string | null;
       jobTitle: string | null;
       department: string | null;
@@ -362,30 +426,98 @@ export class InvitationsService {
     },
   ) {
     if (['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'].includes(input.roleCode)) {
-      await client.query(
-        `
-        INSERT INTO school_staff_accounts (
-          school_id,user_id,staff_code,staff_type,job_title,department,employment_status,created_by_user_id
-        ) VALUES ($1,$2,$3,$4,$5,$6,'ACTIVE',$7)
-        ON CONFLICT (school_id,user_id) WHERE deleted_at IS NULL DO UPDATE SET
-          staff_code=COALESCE(EXCLUDED.staff_code,school_staff_accounts.staff_code),
-          staff_type=EXCLUDED.staff_type,
-          job_title=COALESCE(EXCLUDED.job_title,school_staff_accounts.job_title),
-          department=COALESCE(EXCLUDED.department,school_staff_accounts.department),
-          employment_status='ACTIVE',updated_at=NOW()
-      `,
-        [
-          input.schoolId,
-          input.userId,
-          input.staffCode,
-          input.roleCode,
-          input.jobTitle,
-          input.department,
-          input.invitedByUserId,
-        ],
-      );
-    }
-    if (input.roleCode === 'PARENT') {
+      if (input.staffAccountId) {
+        const designated = await client.query<{
+          user_id: string | null;
+          employment_status: string;
+        }>(
+          `
+          SELECT user_id, employment_status
+          FROM school_staff_accounts
+          WHERE id = $1
+            AND school_id = $2
+            AND deleted_at IS NULL
+          LIMIT 1
+          FOR UPDATE
+          `,
+          [input.staffAccountId, input.schoolId],
+        );
+        const staff = designated.rows[0];
+        if (!staff) {
+          throw new BadRequestException(
+            'The designated staff record is no longer available.',
+          );
+        }
+        if (staff.user_id && staff.user_id !== input.userId) {
+          throw new ConflictException(
+            'The designated staff record is already linked to another account.',
+          );
+        }
+        if (['TERMINATED', 'ARCHIVED'].includes(staff.employment_status)) {
+          throw new BadRequestException(
+            'A terminated or archived staff record cannot be linked to an account.',
+          );
+        }
+        const duplicate = await client.query(
+          `
+          SELECT id
+          FROM school_staff_accounts
+          WHERE school_id = $1
+            AND user_id = $2
+            AND id <> $3
+            AND deleted_at IS NULL
+          LIMIT 1
+          `,
+          [input.schoolId, input.userId, input.staffAccountId],
+        );
+        if (duplicate.rowCount) {
+          throw new ConflictException(
+            'This account is already linked to another staff record in the school.',
+          );
+        }
+        await client.query(
+          `
+          UPDATE school_staff_accounts
+          SET
+            user_id = $3,
+            staff_type = $4,
+            updated_at = NOW()
+          WHERE id = $1
+            AND school_id = $2
+            AND deleted_at IS NULL
+          `,
+          [
+            input.staffAccountId,
+            input.schoolId,
+            input.userId,
+            input.roleCode,
+          ],
+        );
+      } else {
+        await client.query(
+          `
+          INSERT INTO school_staff_accounts (
+            school_id,user_id,staff_code,staff_type,job_title,department,employment_status,created_by_user_id
+          ) VALUES ($1,$2,$3,$4,$5,$6,'ACTIVE',$7)
+          ON CONFLICT (school_id,user_id) WHERE deleted_at IS NULL DO UPDATE SET
+            staff_code=COALESCE(EXCLUDED.staff_code,school_staff_accounts.staff_code),
+            staff_type=EXCLUDED.staff_type,
+            job_title=COALESCE(EXCLUDED.job_title,school_staff_accounts.job_title),
+            department=COALESCE(EXCLUDED.department,school_staff_accounts.department),
+            employment_status='ACTIVE',updated_at=NOW()
+        `,
+          [
+            input.schoolId,
+            input.userId,
+            input.staffCode,
+            input.roleCode,
+            input.jobTitle,
+            input.department,
+            input.invitedByUserId,
+          ],
+        );
+      }
+    }    if (input.roleCode === 'PARENT') {
       if (!input.guardianId)
         throw new BadRequestException(
           'The parent invitation has no guardian record.',
@@ -442,6 +574,7 @@ export class InvitationsService {
       roleCode: invitation.role_code,
       invitedByUserId: invitation.invited_by_user_id,
       guardianId: invitation.guardian_id,
+      staffAccountId: invitation.staff_account_id,
       staffCode: invitation.staff_code,
       jobTitle: invitation.job_title,
       department: invitation.department,

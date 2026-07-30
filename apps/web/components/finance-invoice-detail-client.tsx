@@ -8,6 +8,11 @@ import { SchoolBadge } from "@/components/school-ui";
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
 
 type InvoiceDetails = {
+  capabilities: {
+    canIssue: boolean;
+    canVoid: boolean;
+    canRequestCreditNote: boolean;
+  };
   id: string;
   school: {
     id: string;
@@ -78,7 +83,18 @@ function statusTone(status: string): BadgeTone {
   if (status === "PAID" || status === "CONFIRMED") return "green";
   if (status === "OVERDUE") return "red";
   if (status === "PARTIALLY_PAID") return "amber";
-  if (status === "VOID" || status === "CANCELLED") return "neutral";
+  if (
+    status === "VOID" ||
+    status === "CANCELLED" ||
+    status === "REVERSED" ||
+    status === "REFUNDED"
+  )
+    return "neutral";
+  if (
+    status === "CORRECTION_PENDING" ||
+    status === "CORRECTION_APPROVED"
+  )
+    return "amber";
   return "blue";
 }
 
@@ -134,6 +150,16 @@ export function FinanceInvoiceDetailClient({
           >
             Back to Finance
           </Link>
+          {invoice?.capabilities.canRequestCreditNote &&
+          invoice.balanceDue > 0 &&
+          !["DRAFT", "VOID"].includes(invoice.invoiceStatus) ? (
+            <Link
+              href={`/finance/corrections?invoiceId=${encodeURIComponent(invoiceId)}`}
+              className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 hover:bg-blue-100"
+            >
+              Request credit note
+            </Link>
+          ) : null}
 
           {invoice?.school.financeSettings?.defaultInvoicePrintFormat ===
           "THERMAL_80MM" ? (
@@ -204,6 +230,8 @@ export function FinanceInvoiceDetailClient({
             invoiceId={invoice.id}
             invoiceStatus={invoice.invoiceStatus}
             amountPaid={invoice.amountPaid}
+            canIssue={invoice.capabilities.canIssue}
+            canVoid={invoice.capabilities.canVoid}
             onChanged={loadInvoice}
           />
 

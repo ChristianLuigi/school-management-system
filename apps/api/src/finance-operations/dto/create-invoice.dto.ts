@@ -8,21 +8,24 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
+  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
 
 class CreateInvoiceItemDto {
   @IsString()
+  @MaxLength(200)
   description: string;
 
   @Type(() => Number)
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 4 })
   @Min(0.01)
   quantity: number;
 
   @Type(() => Number)
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   unitAmount: number;
 }
@@ -48,16 +51,18 @@ export class CreateInvoiceDto {
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   discountAmount?: number;
 
   @IsOptional()
   @IsString()
+  @Matches(/^[A-Za-z]{3}$/)
   currencyCode?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   notes?: string;
 
   @IsArray()

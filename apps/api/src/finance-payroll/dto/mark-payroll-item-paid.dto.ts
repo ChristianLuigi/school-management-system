@@ -1,4 +1,10 @@
-import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class MarkPayrollItemPaidDto {
   @IsUUID('all')
@@ -8,9 +14,14 @@ export class MarkPayrollItemPaidDto {
   @IsDateString()
   paidAt?: string;
 
-  @IsOptional()
-  @IsString()
-  paymentMethod?: string;
+  @IsIn([
+    'CASH',
+    'BANK_TRANSFER',
+    'CHECK',
+    'MOBILE_MONEY',
+    'OTHER',
+  ])
+  paymentMethod: string;
 
   @IsOptional()
   @IsString()

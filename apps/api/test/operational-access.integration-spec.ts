@@ -196,6 +196,71 @@ describe('operational scope integration', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
+  it('omits finance data and controls from teacher student profiles', async () => {
+    const schoolId = await factory.school();
+    const admin = await factory.user();
+    const teacher = await factory.user();
+    await factory.membership(schoolId, admin.id, 'SCHOOL_ADMIN');
+    await factory.membership(schoolId, teacher.id, 'TEACHER');
+    const scope = await factory.academicScope(schoolId);
+    const studentId = await factory.student(schoolId);
+    await factory.enrollment(studentId, scope);
+    await harness.finance.createInvoice(
+      {
+        schoolId,
+        studentId,
+        currencyCode: 'HTG',
+        items: [
+          {
+            description: 'Private finance record',
+            quantity: 1,
+            unitAmount: 1000,
+          },
+        ],
+      },
+      admin.id,
+      null,
+      'invoice-teacher-privacy-test',
+    );
+
+    const profile = await harness.schoolStudents.getStudentDetails(
+      { schoolId, studentId },
+      teacher.id,
+      null,
+    );
+    expect(profile.capabilities).toEqual({
+      canViewFinance: false,
+      canCreateInvoices: false,
+      canRecordPayments: false,
+    });
+    expect(profile.finance).toBeNull();
+    expect(profile.recentInvoices).toEqual([]);
+    expect(profile.recentPayments).toEqual([]);
+
+    const administratorProfile =
+      await harness.schoolStudents.getStudentDetails(
+        { schoolId, studentId },
+        admin.id,
+        null,
+      );
+    expect(administratorProfile.capabilities).toEqual({
+      canViewFinance: true,
+      canCreateInvoices: true,
+      canRecordPayments: true,
+    });
+    expect(administratorProfile.finance).toMatchObject({
+      invoiceCount: 1,
+      totalsByCurrency: [
+        {
+          currencyCode: 'HTG',
+          totalBilled: 1000,
+          totalPaid: 0,
+          totalOutstanding: 1000,
+        },
+      ],
+    });
+  });
+
   it('limits parent access to students reached through active guardian links', async () => {
     const schoolId = await factory.school();
     const foreignSchoolId = await factory.school();

@@ -4,25 +4,24 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
+  Min,
 } from 'class-validator';
 
 export class CreatePayrollProfileDto {
   @IsUUID('all')
   schoolId: string;
 
-  @IsString()
-  fullName: string;
-
-  @IsOptional()
-  @IsString()
-  jobTitle?: string;
+  @IsUUID('all')
+  staffAccountId: string;
 
   @IsNumber()
+  @Min(0)
   baseSalary: number;
 
-  @IsOptional()
   @IsString()
-  currencyCode?: string;
+  @Matches(/^[A-Za-z]{3}$/)
+  currencyCode: string;
 
   @IsOptional()
   @IsBoolean()

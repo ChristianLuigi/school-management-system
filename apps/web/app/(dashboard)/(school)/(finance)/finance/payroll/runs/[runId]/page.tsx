@@ -1,6 +1,6 @@
 import { PayrollRunDetailClient } from "@/components/payroll-run-detail-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
-import { getMeContext, resolveCurrentSchoolId } from "@/lib/server-context";
+import { getMeContext, hasSchoolRole, resolveCurrentSchoolId } from "@/lib/server-context";
 
 export default async function PayrollRunDetailPage({
   params,
@@ -10,17 +10,25 @@ export default async function PayrollRunDetailPage({
   const { runId } = await params;
   const context = await getMeContext();
   const currentSchoolId = resolveCurrentSchoolId(context);
+  const isSchoolAdmin = hasSchoolRole(context, "SCHOOL_ADMIN");
 
   return (
     <SchoolModuleWorkspace
       title="Payroll Run"
-      description="Review payroll items and mark salaries as paid."
+      description="Review salary snapshots, workflow approvals, adjustments, payments, and close."
       quickActions={[
         {
           href: "/finance/payroll",
           title: "Payroll",
           description: "Return to payroll runs and staff profiles.",
         },
+        ...(isSchoolAdmin
+          ? [{
+              href: "/finance/payroll/approvals",
+              title: "Approval inbox",
+              description: "Review payroll runs awaiting final School Admin approval.",
+            }]
+          : []),
         {
           href: "/finance",
           title: "Finance Dashboard",
@@ -30,15 +38,19 @@ export default async function PayrollRunDetailPage({
       attentionItems={[
         {
           tone: "blue",
-          title: "Payroll Lite",
+          title: "Controlled payroll workflow",
           description:
-            "This MVP records salary payments manually. Advanced deductions and statutory calculations come later.",
+            "Follow the review and approval sequence before processing payments. Closed runs remain locked and auditable.",
         },
       ]}
       mainTitle="Payroll Run Details"
-      mainSubtitle="Validate staff salaries and record salary payments."
+      mainSubtitle="Validate salary snapshots, approve independently, process payments, and close the run."
     >
-      <PayrollRunDetailClient schoolId={currentSchoolId} runId={runId} />
+      <PayrollRunDetailClient
+        schoolId={currentSchoolId}
+        runId={runId}
+        isSchoolAdmin={isSchoolAdmin}
+      />
     </SchoolModuleWorkspace>
   );
 }

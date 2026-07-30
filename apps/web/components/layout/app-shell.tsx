@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 
@@ -106,6 +107,7 @@ export function AppShell({
 
         <main id="main-content" tabIndex={-1} className="outline-none">
           <div className="mx-auto w-full max-w-[100rem] p-4 sm:p-6 lg:p-8 print:p-0">
+            <AppBreadcrumbs navigation={navigation} />
             {notice}
             {children}
           </div>

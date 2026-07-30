@@ -28,6 +28,10 @@ const REQUIRED_BASELINE_TABLES = [
   'public.guardian_account_links',
   'public.teacher_academic_assignments',
   'public.school_user_permissions',
+  'public.payroll_staff_profiles',
+  'public.payroll_runs',
+  'public.payroll_run_items',
+  'public.payroll_run_sequences',
 ] as const;
 
 const REQUIRED_BASELINE_COLUMNS = [
@@ -38,6 +42,15 @@ const REQUIRED_BASELINE_COLUMNS = [
   ['auth_sessions', 'idle_expires_at'],
   ['user_invitations', 'guardian_id'],
   ['user_invitations', 'initial_permission_codes'],
+  ['payroll_staff_profiles', 'staff_code'],
+  ['payroll_staff_profiles', 'position_title'],
+  ['payroll_staff_profiles', 'employment_type'],
+  ['payroll_staff_profiles', 'pay_frequency'],
+  ['payroll_runs', 'payroll_status'],
+  ['payroll_runs', 'currency_code'],
+  ['payroll_run_items', 'paid_at'],
+  ['payroll_run_items', 'payment_method'],
+  ['payroll_run_items', 'payment_reference'],
 ] as const;
 
 export type MigrationState = 'applied' | 'pending';

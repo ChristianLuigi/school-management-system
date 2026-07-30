@@ -24,6 +24,11 @@ type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
 
 type StudentProfile = {
   schoolId: string;
+  capabilities: {
+    canViewFinance: boolean;
+    canCreateInvoices: boolean;
+    canRecordPayments: boolean;
+  };
   student: {
     id: string;
     studentCode: string | null;
@@ -111,10 +116,13 @@ type StudentProfile = {
   finance: {
     invoiceCount: number;
     overdueCount: number;
-    totalBilled: number;
-    totalPaid: number;
-    totalOutstanding: number;
-  };
+    totalsByCurrency: Array<{
+      currencyCode: string;
+      totalBilled: number;
+      totalPaid: number;
+      totalOutstanding: number;
+    }>;
+  } | null;
   recentInvoices: Array<{
     id: string;
     invoiceNumber: string | null;
@@ -134,6 +142,7 @@ type StudentProfile = {
     paymentStatus: string;
     paymentDate: string;
     amount: number;
+    currencyCode: string;
     method: string | null;
     reference: string | null;
   }>;
@@ -705,20 +714,25 @@ export function StudentProfileClient({
             onUpdated={loadProfile}
           />
 
-          <StudentCreateInvoicePanelClient
-            schoolId={schoolId}
-            studentId={profile.student.id}
-            onCreated={() => {
-              setFinanceRefreshKey((value) => value + 1);
-              loadProfile();
-            }}
-          />
+          {profile.capabilities.canCreateInvoices ? (
+            <StudentCreateInvoicePanelClient
+              schoolId={schoolId}
+              studentId={profile.student.id}
+              onCreated={() => {
+                setFinanceRefreshKey((value) => value + 1);
+                loadProfile();
+              }}
+            />
+          ) : null}
 
-          <StudentFinanceSummaryPanelClient
-            schoolId={schoolId}
-            studentId={profile.student.id}
-            refreshKey={financeRefreshKey}
-          />
+          {profile.capabilities.canViewFinance ? (
+            <StudentFinanceSummaryPanelClient
+              schoolId={schoolId}
+              studentId={profile.student.id}
+              refreshKey={financeRefreshKey}
+              canRecordPayments={profile.capabilities.canRecordPayments}
+            />
+          ) : null}
 
           <StudentAttendanceHistoryPanelClient
             schoolId={schoolId}

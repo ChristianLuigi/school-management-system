@@ -77,6 +77,97 @@ describe('HTTP runtime security integration', () => {
       .expect(401);
   });
 
+  it('keeps superseded finance mutation routes retired', async () => {
+    await request(app.getHttpServer()).post('/fee-plans').send({}).expect(404);
+    await request(app.getHttpServer())
+      .post('/payments/record')
+      .send({})
+      .expect(404);
+    await request(app.getHttpServer())
+      .post('/invoices/generate')
+      .send({})
+      .expect(404);
+    await request(app.getHttpServer()).get('/finance/overdue').expect(404);
+  });
+
+  it('protects cashier sessions and receipt-print audit routes', async () => {
+    const sessionId = randomUUID();
+    const paymentId = randomUUID();
+
+    await request(app.getHttpServer())
+      .get('/finance/cashier/session')
+      .query({ schoolId: randomUUID(), currencyCode: 'HTG' })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post('/finance/cashier/sessions')
+      .send({
+        schoolId: randomUUID(),
+        currencyCode: 'HTG',
+        openingCashAmount: 0,
+      })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post(`/finance/cashier/sessions/${sessionId}/close`)
+      .send({ schoolId: randomUUID(), closingCashAmount: 0 })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post(`/finance/cashier/sessions/${sessionId}/reopen`)
+      .send({
+        schoolId: randomUUID(),
+        reason: 'Supervisor approved correction',
+      })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post(`/finance/payments/${paymentId}/receipt-prints`)
+      .send({
+        schoolId: randomUUID(),
+        printFormat: 'A4',
+      })
+      .expect(401);
+  });
+
+  it('protects payment corrections, refunds, and credit-note approvals', async () => {
+    const schoolId = randomUUID();
+    const paymentId = randomUUID();
+    const correctionId = randomUUID();
+    const invoiceId = randomUUID();
+    const creditNoteId = randomUUID();
+
+    await request(app.getHttpServer())
+      .get('/finance/corrections')
+      .query({ schoolId })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post(`/finance/payments/${paymentId}/corrections`)
+      .set('Idempotency-Key', 'security-correction-001')
+      .send({
+        schoolId,
+        correctionType: 'REVERSAL',
+        reason: 'Unauthorized users cannot request a reversal.',
+      })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post(`/finance/payment-corrections/${correctionId}/approve`)
+      .send({ schoolId })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post(`/finance/payment-corrections/${correctionId}/process`)
+      .send({ schoolId })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post(`/finance/invoices/${invoiceId}/credit-notes`)
+      .set('Idempotency-Key', 'security-credit-note-001')
+      .send({
+        schoolId,
+        amount: 10,
+        reason: 'Unauthorized users cannot request a credit note.',
+      })
+      .expect(401);
+    await request(app.getHttpServer())
+      .post(`/finance/credit-notes/${creditNoteId}/approve`)
+      .send({ schoolId })
+      .expect(401);
+  });
   it('returns safe production-style errors with a correlation ID', async () => {
     const response = await request(app.getHttpServer())
       .get('/__release-test/failure')

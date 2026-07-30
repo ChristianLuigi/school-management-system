@@ -24,7 +24,9 @@
     "db:migrate": "ts-node --transpile-only src/migration-cli.ts up",
     "db:migrate:status": "ts-node --transpile-only src/migration-cli.ts status",
     "db:migrate:verify": "ts-node --transpile-only src/migration-cli.ts verify",
-    "db:migrate:baseline": "ts-node --transpile-only src/migration-cli.ts baseline"
+    "db:migrate:baseline": "ts-node --transpile-only src/migration-cli.ts baseline",
+    "db:staff:reconcile": "ts-node --transpile-only src/staff-reconciliation-cli.ts",
+    "db:staff:reconcile:strict": "ts-node --transpile-only src/staff-reconciliation-cli.ts --strict"
   },
   "engines": {
     "node": ">=20.0.0",

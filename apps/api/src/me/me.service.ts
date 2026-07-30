@@ -6,10 +6,7 @@ import {
 import { DbService } from '../db/db.service';
 import { InternalAuthService } from '../internal-auth/internal-auth.service';
 
-type ManagementMode =
-  | 'SELF_MANAGED'
-  | 'SUPERADMIN_MANAGED'
-  | 'HYBRID_MANAGED';
+type ManagementMode = 'SELF_MANAGED' | 'SUPERADMIN_MANAGED' | 'HYBRID_MANAGED';
 
 type MembershipSchoolRow = {
   school_id: string;
@@ -48,7 +45,8 @@ export class MeService {
       throw new UnauthorizedException('Missing bearer token.');
     }
 
-    const session = await this.internalAuthService.validateSessionToken(rawToken);
+    const session =
+      await this.internalAuthService.validateSessionToken(rawToken);
 
     const memberships = await this.db.query<MembershipSchoolRow>(
       `
@@ -61,13 +59,28 @@ export class MeService {
         sm.id AS membership_id,
         sm.membership_status,
         COALESCE(
-          ARRAY_AGG(smr.role) FILTER (WHERE smr.deleted_at IS NULL),
+          ARRAY_AGG(smr.role) FILTER (
+            WHERE smr.deleted_at IS NULL
+              AND (
+                smr.role::TEXT NOT IN (
+                  'SCHOOL_ADMIN',
+                  'TEACHER',
+                  'FINANCE_ADMIN'
+                )
+                OR staff.id IS NOT NULL
+              )
+          ),
           ARRAY[]::school_staff_role[]
         ) AS roles
       FROM school_memberships sm
       JOIN schools s ON s.id = sm.school_id
       LEFT JOIN school_membership_roles smr
         ON smr.school_membership_id = sm.id
+      LEFT JOIN school_staff_accounts staff
+        ON staff.school_id = sm.school_id
+       AND staff.user_id = sm.user_id
+       AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+       AND staff.deleted_at IS NULL
       WHERE sm.user_id = $1
         AND sm.deleted_at IS NULL
         AND s.deleted_at IS NULL
@@ -127,8 +140,9 @@ export class MeService {
       isSuperAdmin,
       availableSchools: memberships.rows,
       currentSchool,
-      currentRoles:
-        hasMembershipRoles(currentSchool) ? (currentSchool.roles ?? []) : [],
+      currentRoles: hasMembershipRoles(currentSchool)
+        ? (currentSchool.roles ?? [])
+        : [],
     };
   }
 }

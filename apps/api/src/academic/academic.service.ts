@@ -130,6 +130,14 @@ export class AcademicService {
         AND sm.school_id = $2
         AND sm.deleted_at IS NULL
         AND sm.membership_status = 'ACTIVE'
+        AND EXISTS (
+          SELECT 1
+          FROM school_staff_accounts staff
+          WHERE staff.school_id = sm.school_id
+            AND staff.user_id = sm.user_id
+            AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+            AND staff.deleted_at IS NULL
+        )
       `,
       [actorUserId, schoolId],
     );
@@ -198,7 +206,9 @@ export class AcademicService {
     const nameFr = dto.nameFr.trim();
 
     if (!code || !nameFr) {
-      throw new BadRequestException('Subject code and French name are required.');
+      throw new BadRequestException(
+        'Subject code and French name are required.',
+      );
     }
 
     const result = await this.db.query<{
@@ -581,7 +591,8 @@ export class AcademicService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'ACADEMIC_QUICK_SETUP_APPLIED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary: `Academic quick setup applied with ${enabledGrades.length} grade levels.`,
@@ -711,7 +722,9 @@ export class AcademicService {
     return result.rows;
   }
 
-  async findGradingPeriods(academicYearId: string): Promise<GradingPeriodRow[]> {
+  async findGradingPeriods(
+    academicYearId: string,
+  ): Promise<GradingPeriodRow[]> {
     const result = await this.db.query<GradingPeriodRow>(
       `
       SELECT
@@ -916,8 +929,10 @@ export class AcademicService {
       );
 
       const existingSections = existingSectionsResult.rows;
-      const gradeNameFr = grade.name_i18n?.fr ?? grade.name_i18n?.en ?? grade.code;
-      const gradeNameEn = grade.name_i18n?.en ?? grade.name_i18n?.fr ?? grade.code;
+      const gradeNameFr =
+        grade.name_i18n?.fr ?? grade.name_i18n?.en ?? grade.code;
+      const gradeNameEn =
+        grade.name_i18n?.en ?? grade.name_i18n?.fr ?? grade.code;
       const createdOrUpdated: Array<{
         id: string;
         code: string;
@@ -1014,7 +1029,8 @@ export class AcademicService {
 
       await this.platformActivityService.recordTx(client, {
         eventType: 'GRADE_LEVEL_SECTIONS_CONFIGURED',
-        actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+        actorType:
+          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
         actorUserId,
         schoolId: dto.schoolId,
         summary: `Configured ${dto.sectionCount} section(s) for ${gradeNameFr}.`,
@@ -1145,14 +1161,10 @@ export class AcademicService {
       }
 
       const gradeNameFr =
-        gradeLevel.name_i18n?.fr ??
-        gradeLevel.name_i18n?.en ??
-        gradeLevel.code;
+        gradeLevel.name_i18n?.fr ?? gradeLevel.name_i18n?.en ?? gradeLevel.code;
 
       const gradeNameEn =
-        gradeLevel.name_i18n?.en ??
-        gradeLevel.name_i18n?.fr ??
-        gradeLevel.code;
+        gradeLevel.name_i18n?.en ?? gradeLevel.name_i18n?.fr ?? gradeLevel.code;
 
       const createdOrUpdatedSections: Array<{
         id: string;

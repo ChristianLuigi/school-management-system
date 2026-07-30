@@ -24,6 +24,7 @@ type FinanceSettings = {
   defaultReceiptPrintFormat: "A4" | "THERMAL_80MM";
   defaultInvoicePrintFormat: "A4" | "THERMAL_80MM";
   autoOpenReceiptAfterPayment: boolean;
+  canManage: boolean;
 };
 
 export function FinanceSettingsClient({
@@ -52,6 +53,7 @@ export function FinanceSettingsClient({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [canManage, setCanManage] = useState<boolean | null>(null);
 
   async function loadSettings() {
     setLoading(true);
@@ -71,6 +73,7 @@ export function FinanceSettingsClient({
       }
 
       const settings = body as FinanceSettings;
+      setCanManage(settings.canManage);
 
       setForm({
         defaultCurrencyCode: settings.defaultCurrencyCode ?? "USD",
@@ -153,6 +156,11 @@ export function FinanceSettingsClient({
   function togglePaymentMethod(method: string) {
     setForm((prev) => {
       const exists = prev.enabledPaymentMethods.includes(method);
+      if (exists && prev.enabledPaymentMethods.length === 1) {
+        setError("At least one payment method must remain enabled.");
+        return prev;
+      }
+      setError("");
 
       return {
         ...prev,
@@ -167,6 +175,10 @@ export function FinanceSettingsClient({
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
+
+  if (canManage === false && !loading) {
+    return null;
+  }
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">

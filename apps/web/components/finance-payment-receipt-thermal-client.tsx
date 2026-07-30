@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useReceiptPrintAudit } from "@/lib/finance/use-receipt-print-audit";
 
 type PaymentReceipt = {
   id: string;
@@ -59,6 +60,9 @@ export function FinancePaymentReceiptThermalClient({
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const autoPrint = searchParams.get("autoprint") === "1";
+  const autoPrintStarted = useRef(false);
+  const { printCount, loadingPrintAudit, printError, recordAndPrint } =
+    useReceiptPrintAudit({ schoolId, paymentId });
 
   async function loadReceipt() {
     setError("");
@@ -89,14 +93,10 @@ export function FinancePaymentReceiptThermalClient({
   }, [schoolId, paymentId]);
 
   useEffect(() => {
-    if (!receipt || !autoPrint) return;
-
-    const timer = window.setTimeout(() => {
-      window.print();
-    }, 400);
-
-    return () => window.clearTimeout(timer);
-  }, [receipt, autoPrint]);
+    if (!receipt || !autoPrint || autoPrintStarted.current) return;
+    autoPrintStarted.current = true;
+    void recordAndPrint("THERMAL_80MM");
+  }, [receipt, autoPrint, recordAndPrint]);
 
   return (
     <div className="thermal-print-page bg-white">
@@ -110,15 +110,24 @@ export function FinancePaymentReceiptThermalClient({
 
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={() => void recordAndPrint("THERMAL_80MM")}
+          disabled={loadingPrintAudit}
           className="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white"
         >
           Print Thermal
         </button>
+        <span className="self-center text-xs text-slate-500">
+          Recorded prints: {printCount}
+        </span>
       </div>
 
       {error ? (
         <div className="thermal-no-print p-4 text-sm text-red-700">{error}</div>
+      ) : null}
+      {printError ? (
+        <div className="thermal-no-print p-4 text-sm text-red-700">
+          {printError}
+        </div>
       ) : null}
 
       {receipt ? (

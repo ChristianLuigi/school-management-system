@@ -29,7 +29,14 @@ export class AccessManagementService {
       SELECT sm.id FROM school_memberships sm
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id
       WHERE sm.school_id=$1 AND sm.user_id=$2 AND sm.membership_status='ACTIVE'
-        AND sm.deleted_at IS NULL AND smr.role='SCHOOL_ADMIN' AND smr.deleted_at IS NULL LIMIT 1
+        AND sm.deleted_at IS NULL AND smr.role='SCHOOL_ADMIN' AND smr.deleted_at IS NULL
+        AND EXISTS (
+          SELECT 1 FROM school_staff_accounts staff
+          WHERE staff.school_id=sm.school_id AND staff.user_id=sm.user_id
+            AND staff.employment_status IN ('ACTIVE','ON_LEAVE')
+            AND staff.deleted_at IS NULL
+        )
+      LIMIT 1
     `,
       [schoolId, actorUserId],
     );
@@ -47,7 +54,17 @@ export class AccessManagementService {
       SELECT sm.id FROM school_memberships sm
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id
       WHERE sm.school_id=$1 AND sm.user_id=$2 AND sm.membership_status='ACTIVE'
-        AND sm.deleted_at IS NULL AND smr.role::text=$3 AND smr.deleted_at IS NULL LIMIT 1
+        AND sm.deleted_at IS NULL AND smr.role::text=$3 AND smr.deleted_at IS NULL
+        AND (
+          $3 = 'PARENT'
+          OR EXISTS (
+            SELECT 1 FROM school_staff_accounts staff
+            WHERE staff.school_id=sm.school_id AND staff.user_id=sm.user_id
+              AND staff.employment_status IN ('ACTIVE','ON_LEAVE')
+              AND staff.deleted_at IS NULL
+          )
+        )
+      LIMIT 1
     `,
       [schoolId, userId, roleCode],
     );
@@ -289,7 +306,7 @@ export class AccessManagementService {
     return { updated: true, parentUserId, guardianIds, sessionsRevoked: true };
   }
 
-  async assertFinancePermission(
+  async hasFinancePermission(
     userId: string,
     schoolId: string,
     permissionCode: string,
@@ -300,11 +317,21 @@ export class AccessManagementService {
       JOIN school_memberships sm ON sm.school_id=permission.school_id AND sm.user_id=permission.user_id
         AND sm.membership_status='ACTIVE' AND sm.deleted_at IS NULL
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id AND smr.role='FINANCE_ADMIN' AND smr.deleted_at IS NULL
+      JOIN school_staff_accounts staff ON staff.school_id=sm.school_id AND staff.user_id=sm.user_id
+        AND staff.employment_status IN ('ACTIVE','ON_LEAVE') AND staff.deleted_at IS NULL
       WHERE permission.school_id=$1 AND permission.user_id=$2 AND permission.permission_code=$3 AND permission.deleted_at IS NULL LIMIT 1
     `,
       [schoolId, userId, permissionCode],
     );
-    if (!result.rowCount)
+    return Boolean(result.rowCount);
+  }
+
+  async assertFinancePermission(
+    userId: string,
+    schoolId: string,
+    permissionCode: string,
+  ) {
+    if (!(await this.hasFinancePermission(userId, schoolId, permissionCode)))
       throw new ForbiddenException(
         'You do not have the required finance permission.',
       );
@@ -323,6 +350,8 @@ export class AccessManagementService {
       JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=assignment.teacher_user_id
         AND sm.membership_status='ACTIVE' AND sm.deleted_at IS NULL
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id AND smr.role='TEACHER' AND smr.deleted_at IS NULL
+      JOIN school_staff_accounts staff ON staff.school_id=sm.school_id AND staff.user_id=sm.user_id
+        AND staff.employment_status IN ('ACTIVE','ON_LEAVE') AND staff.deleted_at IS NULL
       WHERE assignment.teacher_user_id=$1 AND assignment.school_id=$2
         AND assignment.assignment_status='ACTIVE' AND assignment.deleted_at IS NULL
     `,
@@ -341,6 +370,8 @@ export class AccessManagementService {
       JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=assignment.teacher_user_id
         AND sm.membership_status='ACTIVE' AND sm.deleted_at IS NULL
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id AND smr.role='TEACHER' AND smr.deleted_at IS NULL
+      JOIN school_staff_accounts staff ON staff.school_id=sm.school_id AND staff.user_id=sm.user_id
+        AND staff.employment_status IN ('ACTIVE','ON_LEAVE') AND staff.deleted_at IS NULL
       WHERE assignment.teacher_user_id=$1 AND assignment.school_id=$2
         AND assignment.assignment_status='ACTIVE' AND assignment.deleted_at IS NULL
     `,
@@ -372,6 +403,8 @@ export class AccessManagementService {
       JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=assignment.teacher_user_id
         AND sm.membership_status='ACTIVE' AND sm.deleted_at IS NULL
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id AND smr.role='TEACHER' AND smr.deleted_at IS NULL
+      JOIN school_staff_accounts staff ON staff.school_id=sm.school_id AND staff.user_id=sm.user_id
+        AND staff.employment_status IN ('ACTIVE','ON_LEAVE') AND staff.deleted_at IS NULL
       WHERE assignment.teacher_user_id=$1 AND assignment.school_id=$2 AND assignment.academic_year_id=$3
         AND assignment.section_id=$4 ${subjectFilter} AND assignment.assignment_status='ACTIVE' AND assignment.deleted_at IS NULL LIMIT 1
     `,

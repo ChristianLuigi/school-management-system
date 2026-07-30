@@ -23,12 +23,14 @@ export class ParentFinanceController {
     @Query() query: ParentFinanceSummaryDto,
   ) {
     const session = await this.authService.requireSession(authorization);
-    await this.accessManagementService.assertParentGuardianStudent(
+    const schoolId =
+      await this.accessManagementService.assertParentGuardianStudent(
       session.user_id,
       query.guardianId,
       query.studentId,
     );
     return this.invoicesService.findParentSummary(
+      schoolId,
       query.guardianId,
       query.studentId,
     );

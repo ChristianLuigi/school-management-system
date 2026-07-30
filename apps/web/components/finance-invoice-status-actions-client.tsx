@@ -7,12 +7,16 @@ export function FinanceInvoiceStatusActionsClient({
   invoiceId,
   invoiceStatus,
   amountPaid,
+  canIssue,
+  canVoid,
   onChanged,
 }: {
   schoolId: string;
   invoiceId: string;
   invoiceStatus: string;
   amountPaid: number;
+  canIssue: boolean;
+  canVoid: boolean;
   onChanged: () => void;
 }) {
   const [voidReason, setVoidReason] = useState("");
@@ -84,8 +88,9 @@ export function FinanceInvoiceStatusActionsClient({
     }
   }
 
-  const canIssue = invoiceStatus === "DRAFT";
-  const canVoid =
+  const issueAvailable = canIssue && invoiceStatus === "DRAFT";
+  const voidAvailable =
+    canVoid &&
     invoiceStatus !== "VOID" && invoiceStatus !== "PAID" && amountPaid <= 0;
 
   return (
@@ -112,7 +117,7 @@ export function FinanceInvoiceStatusActionsClient({
       ) : null}
 
       <div className="mt-5 flex flex-wrap gap-3">
-        {canIssue ? (
+        {issueAvailable ? (
           <button
             type="button"
             disabled={working === "issue"}
@@ -123,7 +128,7 @@ export function FinanceInvoiceStatusActionsClient({
           </button>
         ) : null}
 
-        {canVoid ? (
+        {voidAvailable ? (
           <button
             type="button"
             disabled={working === "void"}
@@ -134,7 +139,7 @@ export function FinanceInvoiceStatusActionsClient({
           </button>
         ) : null}
 
-        {!canIssue && !canVoid ? (
+        {!issueAvailable && !voidAvailable ? (
           <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
             No status action is available for this invoice.
           </div>

@@ -16,7 +16,7 @@ export class InvoicesController {
 
   @Get()
   async findAll(@Query() query: FindInvoicesDto) {
-    return this.invoicesService.findAll(query.studentId);
+    return this.invoicesService.findAll(query.schoolId, query.studentId);
   }
 
   @Post('generate')

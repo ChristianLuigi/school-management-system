@@ -119,6 +119,85 @@ describe('secure invitation and membership integration', () => {
     ).rejects.toBeInstanceOf(HttpException);
   });
 
+  it('links an invitation to the designated offline staff record', async () => {
+    const schoolId = await factory.school({ name: 'Staff Link Academy' });
+    const admin = await factory.user();
+    await factory.membership(schoolId, admin.id, 'SCHOOL_ADMIN');
+    const offline = await pool.query<{ id: string }>(
+      `
+      INSERT INTO school_staff_accounts (
+        school_id,
+        first_name,
+        last_name,
+        email_original,
+        staff_category,
+        employment_type,
+        employment_status
+      )
+      VALUES (
+        $1,
+        'Nadine',
+        'Joseph',
+        'nadine.joseph@release.test',
+        'TEACHING',
+        'FULL_TIME',
+        'DRAFT'
+      )
+      RETURNING id
+      `,
+      [schoolId],
+    );
+    const staffAccountId = offline.rows[0].id;
+
+    await invitations.createInvitation(
+      {
+        schoolId,
+        staffAccountId,
+        email: 'nadine.joseph@release.test',
+        roleCode: 'TEACHER',
+        firstName: 'Nadine',
+        lastName: 'Joseph',
+        locale: 'en',
+      },
+      admin.id,
+      null,
+    );
+    const token = invitationToken(
+      harness.email.invitations[0]?.activationUrl,
+    );
+    const password = 'Copper Harbor 87!Quiet Lantern';
+    const accepted = await invitations.acceptInvitation({
+      token,
+      firstName: 'Nadine',
+      lastName: 'Joseph',
+      password,
+      passwordConfirmation: password,
+    });
+
+    const linked = await pool.query<{
+      id: string;
+      user_id: string;
+      staff_type: string;
+      employment_status: string;
+    }>(
+      `
+      SELECT id, user_id, staff_type, employment_status
+      FROM school_staff_accounts
+      WHERE school_id = $1
+        AND (id = $2 OR user_id = $3)
+        AND deleted_at IS NULL
+      `,
+      [schoolId, staffAccountId, accepted.userId],
+    );
+    expect(linked.rows).toEqual([
+      {
+        id: staffAccountId,
+        user_id: accepted.userId,
+        staff_type: 'TEACHER',
+        employment_status: 'DRAFT',
+      },
+    ]);
+  });
   it('enforces role-grant and school boundaries on invitation creation', async () => {
     const firstSchoolId = await factory.school();
     const secondSchoolId = await factory.school();
