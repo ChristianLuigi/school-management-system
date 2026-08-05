@@ -466,11 +466,26 @@ $10
     assignedByUserId: string,
   ) {
     const id = randomUUID();
+    const staff = await this.pool.query<{ id: string }>(
+      `
+      SELECT id
+      FROM school_staff_accounts
+      WHERE school_id = $1
+        AND user_id = $2
+        AND deleted_at IS NULL
+      LIMIT 1
+      `,
+      [schoolId, teacherUserId],
+    );
+    if (!staff.rows[0]) {
+      throw new Error('Teacher staff account was not created.');
+    }
     await this.pool.query(
       `
       INSERT INTO teacher_academic_assignments (
         id,
         school_id,
+        teacher_staff_account_id,
         teacher_user_id,
         academic_year_id,
         section_id,
@@ -478,11 +493,12 @@ $10
         assignment_status,
         assigned_by_user_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, 'ACTIVE', $7)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'ACTIVE', $8)
       `,
       [
         id,
         schoolId,
+        staff.rows[0].id,
         teacherUserId,
         scope.academicYearId,
         scope.sectionId,

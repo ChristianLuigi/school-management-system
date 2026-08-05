@@ -38,6 +38,24 @@ export class AccessManagementController {
     );
   }
 
+  @Put('teachers/staff/:staffAccountId/assignments')
+  async updateTeacherStaffAssignments(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('staffAccountId', new ParseUUIDPipe()) staffAccountId: string,
+    @Body() body: UpdateTeacherAssignmentsDto,
+  ) {
+    const session = await this.session(authorization);
+    return this.access.updateTeacherStaffAssignments(
+      staffAccountId,
+      body,
+      session.user_id,
+      session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null,
+    );
+  }
+
+  /**
+   * Compatibility endpoint for clients that still identify a teacher by user.
+   */
   @Put('teachers/:userId/assignments')
   async updateTeacherAssignments(
     @Headers('authorization') authorization: string | undefined,

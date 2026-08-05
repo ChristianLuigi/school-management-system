@@ -6,12 +6,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { PoolClient, QueryResultRow } from 'pg';
+import { InvitationsService } from '../auth/invitations.service';
 import { DbService } from '../db/db.service';
 import { PlatformActivityService } from '../platform-activity/platform-activity.service';
+import { CreateStaffAccountInvitationDto } from './dto/create-staff-account-invitation.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
+import { LinkStaffUserDto } from './dto/link-staff-user.dto';
 import { ListStaffDto } from './dto/list-staff.dto';
 import { RehireStaffDto } from './dto/rehire-staff.dto';
 import { StaffLifecycleActionDto } from './dto/staff-lifecycle-action.dto';
+import { UnlinkStaffUserDto } from './dto/unlink-staff-user.dto';
 import { UpdateStaffMedicalDto } from './dto/update-staff-medical.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
 
@@ -27,11 +31,13 @@ type StaffRecord = {
   id: string;
   school_id: string;
   user_id: string | null;
+  staff_type: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN' | null;
   staff_code: string | null;
   first_name: string | null;
   last_name: string | null;
   preferred_name: string | null;
   email_original: string | null;
+  email_normalized: string | null;
   phone: string | null;
   address_line_1: string | null;
   address_line_2: string | null;
@@ -84,6 +90,7 @@ export class StaffManagementService {
   constructor(
     private readonly db: DbService,
     private readonly platformActivityService: PlatformActivityService,
+    private readonly invitationsService: InvitationsService,
   ) {}
 
   private hasOwn(value: object, key: string) {
@@ -191,11 +198,13 @@ export class StaffManagementService {
         id,
         school_id,
         user_id,
+        staff_type,
         staff_code,
         first_name,
         last_name,
         preferred_name,
         email_original,
+        email_normalized,
         phone,
         address_line_1,
         address_line_2,
@@ -236,6 +245,22 @@ export class StaffManagementService {
     if (staff.row_version !== rowVersion) {
       throw new ConflictException(
         'This staff record was changed by another user. Refresh and try again.',
+      );
+    }
+  }
+
+  private assertRoleMatchesStaff(
+    staff: StaffRecord,
+    roleCode: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN',
+  ) {
+    const expectedCategory = {
+      SCHOOL_ADMIN: 'SCHOOL_LEADERSHIP',
+      TEACHER: 'TEACHING',
+      FINANCE_ADMIN: 'FINANCE',
+    }[roleCode];
+    if (staff.staff_category !== expectedCategory) {
+      throw new BadRequestException(
+        `The ${roleCode} role does not match this staff record category.`,
       );
     }
   }
@@ -405,7 +430,7 @@ export class StaffManagementService {
         SELECT COUNT(*) AS assignment_count
         FROM teacher_academic_assignments assignment
         WHERE assignment.school_id = staff.school_id
-          AND assignment.teacher_user_id = staff.user_id
+          AND assignment.teacher_staff_account_id = staff.id
           AND assignment.assignment_status = 'ACTIVE'
           AND assignment.deleted_at IS NULL
       ) assignment_stats ON TRUE
@@ -434,7 +459,7 @@ export class StaffManagementService {
           SELECT COUNT(*) AS assignment_count
           FROM teacher_academic_assignments assignment
           WHERE assignment.school_id = staff.school_id
-            AND assignment.teacher_user_id = staff.user_id
+            AND assignment.teacher_staff_account_id = staff.id
             AND assignment.assignment_status = 'ACTIVE'
             AND assignment.deleted_at IS NULL
         ) assignment_stats ON TRUE
@@ -996,24 +1021,22 @@ export class StaffManagementService {
           );
           payrollProfilesDisabled = payrollResult.rowCount ?? 0;
 
-          if (staff.user_id) {
-            const assignmentStatus =
-              targetStatus === 'SUSPENDED' ? 'SUSPENDED' : 'ARCHIVED';
-            const assignmentResult = await client.query(
-              `
-              UPDATE teacher_academic_assignments
-              SET
-                assignment_status = $3,
-                updated_at = NOW()
-              WHERE school_id = $1
-                AND teacher_user_id = $2
-                AND assignment_status = 'ACTIVE'
-                AND deleted_at IS NULL
-              `,
-              [dto.schoolId, staff.user_id, assignmentStatus],
-            );
-            assignmentsChanged = assignmentResult.rowCount ?? 0;
-          }
+          const assignmentStatus =
+            targetStatus === 'SUSPENDED' ? 'SUSPENDED' : 'ARCHIVED';
+          const assignmentResult = await client.query(
+            `
+            UPDATE teacher_academic_assignments
+            SET
+              assignment_status = $3,
+              updated_at = NOW()
+            WHERE school_id = $1
+              AND teacher_staff_account_id = $2
+              AND assignment_status = 'ACTIVE'
+              AND deleted_at IS NULL
+            `,
+            [dto.schoolId, staffId, assignmentStatus],
+          );
+          assignmentsChanged = assignmentResult.rowCount ?? 0;
         }
 
         if (staff.user_id) {
@@ -1312,6 +1335,7 @@ export class StaffManagementService {
       id: string;
       user_id: string | null;
       employment_status: EmploymentStatus;
+      row_version: number;
       account_status: string | null;
       email_verified_at: string | null;
       last_login_at: string | null;
@@ -1321,6 +1345,7 @@ export class StaffManagementService {
         staff.id,
         staff.user_id,
         staff.employment_status,
+        staff.row_version,
         usr.account_status,
         usr.email_verified_at,
         usr.last_login_at
@@ -1371,6 +1396,7 @@ export class StaffManagementService {
       return {
         linked: false,
         employmentStatus: staff.employment_status,
+        rowVersion: staff.row_version,
         account: null,
         roles: [],
         financePermissions: [],
@@ -1430,6 +1456,7 @@ export class StaffManagementService {
     return {
       linked: true,
       employmentStatus: staff.employment_status,
+      rowVersion: staff.row_version,
       accessEnabled: ['ACTIVE', 'ON_LEAVE'].includes(staff.employment_status),
       account: {
         userId: staff.user_id,
@@ -1443,13 +1470,500 @@ export class StaffManagementService {
     };
   }
 
+  async createStaffInvitation(
+    staffId: string,
+    dto: CreateStaffAccountInvitationDto,
+    actorUserId: string,
+  ) {
+    await this.assertSchoolAdministrator(this.db, dto.schoolId, actorUserId);
+    const result = await this.db.query<StaffRecord>(
+      `
+      SELECT *
+      FROM school_staff_accounts
+      WHERE id = $1
+        AND school_id = $2
+        AND deleted_at IS NULL
+      LIMIT 1
+      `,
+      [staffId, dto.schoolId],
+    );
+    const staff = result.rows[0];
+    if (!staff) {
+      throw new NotFoundException('Staff record not found.');
+    }
+    if (staff.user_id) {
+      throw new ConflictException(
+        'This staff record already has a linked account.',
+      );
+    }
+    if (!['ACTIVE', 'ON_LEAVE'].includes(staff.employment_status)) {
+      throw new BadRequestException(
+        'Only active or on-leave staff can receive an account invitation.',
+      );
+    }
+    if (!staff.email_original || !staff.email_normalized) {
+      throw new BadRequestException(
+        'Add a valid email address to the staff record before inviting access.',
+      );
+    }
+    this.assertRoleMatchesStaff(staff, dto.roleCode);
+
+    return this.invitationsService.createInvitation(
+      {
+        schoolId: dto.schoolId,
+        staffAccountId: staffId,
+        email: staff.email_original,
+        firstName: staff.first_name ?? undefined,
+        lastName: staff.last_name ?? undefined,
+        roleCode: dto.roleCode,
+        locale: dto.locale,
+        staffCode: staff.staff_code ?? undefined,
+        jobTitle: staff.job_title ?? undefined,
+        department: staff.department ?? undefined,
+        financePermissionCodes:
+          dto.roleCode === 'FINANCE_ADMIN'
+            ? dto.financePermissionCodes
+            : undefined,
+      },
+      actorUserId,
+      null,
+    );
+  }
+
+  async linkStaffUser(
+    staffId: string,
+    dto: LinkStaffUserDto,
+    actorUserId: string,
+  ) {
+    return this.db.withTransaction(async (client) => {
+      await this.assertSchoolAdministrator(client, dto.schoolId, actorUserId);
+      const staff = await this.lockStaff(client, dto.schoolId, staffId);
+      this.assertVersion(staff, dto.rowVersion);
+      if (staff.user_id) {
+        throw new ConflictException(
+          'This staff record already has a linked account.',
+        );
+      }
+      if (!['ACTIVE', 'ON_LEAVE'].includes(staff.employment_status)) {
+        throw new BadRequestException(
+          'Only active or on-leave staff can receive account access.',
+        );
+      }
+      if (!staff.email_normalized) {
+        throw new BadRequestException(
+          'Add a valid email address to the staff record before linking access.',
+        );
+      }
+      this.assertRoleMatchesStaff(staff, dto.roleCode);
+      const reason = dto.reason.trim();
+      if (!reason) {
+        throw new BadRequestException(
+          'A reason is required to link a staff account.',
+        );
+      }
+
+      const userResult = await client.query<{
+        id: string;
+        email_normalized: string | null;
+        account_status: string;
+      }>(
+        `
+        SELECT id, email_normalized, account_status
+        FROM users
+        WHERE id = $1
+          AND deleted_at IS NULL
+        LIMIT 1
+        FOR UPDATE
+        `,
+        [dto.userId],
+      );
+      const user = userResult.rows[0];
+      if (!user || user.account_status !== 'ACTIVE') {
+        throw new BadRequestException(
+          'The selected user account is unavailable or inactive.',
+        );
+      }
+      if (user.email_normalized !== staff.email_normalized) {
+        throw new BadRequestException(
+          'The user account email must match the staff record email.',
+        );
+      }
+
+      const membership = await client.query(
+        `
+        SELECT membership.id
+        FROM school_memberships membership
+        JOIN school_membership_roles role
+          ON role.school_membership_id = membership.id
+         AND role.role::TEXT = $3
+         AND role.deleted_at IS NULL
+        WHERE membership.school_id = $1
+          AND membership.user_id = $2
+          AND membership.membership_status = 'ACTIVE'
+          AND membership.deleted_at IS NULL
+        LIMIT 1
+        `,
+        [dto.schoolId, dto.userId, dto.roleCode],
+      );
+      if (!membership.rowCount) {
+        throw new BadRequestException(
+          'The selected user does not have the required active school role.',
+        );
+      }
+
+      const duplicate = await client.query(
+        `
+        SELECT id
+        FROM school_staff_accounts
+        WHERE school_id = $1
+          AND user_id = $2
+          AND id <> $3
+          AND deleted_at IS NULL
+        LIMIT 1
+        `,
+        [dto.schoolId, dto.userId, staffId],
+      );
+      if (duplicate.rowCount) {
+        throw new ConflictException(
+          'This user is already linked to another staff record in the school.',
+        );
+      }
+
+      await client.query(
+        `
+        UPDATE user_invitations
+        SET
+          invitation_status = 'REVOKED',
+          revoked_at = NOW(),
+          updated_at = NOW()
+        WHERE school_id = $1
+          AND staff_account_id = $2
+          AND invitation_status = 'PENDING'
+        `,
+        [dto.schoolId, staffId],
+      );
+
+      const updated = await client.query<{ row_version: number }>(
+        `
+        UPDATE school_staff_accounts
+        SET
+          user_id = $3,
+          staff_type = $4,
+          updated_at = NOW()
+        WHERE id = $1
+          AND school_id = $2
+          AND row_version = $5
+          AND deleted_at IS NULL
+        RETURNING row_version
+        `,
+        [staffId, dto.schoolId, dto.userId, dto.roleCode, dto.rowVersion],
+      );
+      if (!updated.rowCount) {
+        throw new ConflictException(
+          'This staff record was changed by another user. Refresh and try again.',
+        );
+      }
+
+      if (dto.roleCode === 'TEACHER') {
+        await client.query(
+          `
+          UPDATE teacher_academic_assignments
+          SET teacher_user_id = $3, updated_at = NOW()
+          WHERE school_id = $1
+            AND teacher_staff_account_id = $2
+          `,
+          [dto.schoolId, staffId, dto.userId],
+        );
+      }
+
+      await client.query(
+        `
+        INSERT INTO staff_account_user_link_events (
+          school_id,
+          staff_account_id,
+          user_id,
+          event_type,
+          role_code,
+          actor_user_id,
+          reason
+        )
+        VALUES ($1, $2, $3, 'LINKED', $4, $5, $6)
+        `,
+        [dto.schoolId, staffId, dto.userId, dto.roleCode, actorUserId, reason],
+      );
+      const sessionsRevoked = await this.invalidateLinkedUserTx(
+        client,
+        dto.userId,
+        'STAFF_ACCOUNT_LINK_CHANGED',
+      );
+      await this.platformActivityService.recordTx(client, {
+        eventType: 'STAFF_ACCOUNT_LINKED',
+        actorType: 'SCHOOL_STAFF',
+        actorUserId,
+        schoolId: dto.schoolId,
+        summary: 'A user account was linked to a staff record.',
+        payload: {
+          staffAccountId: staffId,
+          affectedUserId: dto.userId,
+          roleCode: dto.roleCode,
+        },
+      });
+      return {
+        linked: true,
+        staffAccountId: staffId,
+        userId: dto.userId,
+        roleCode: dto.roleCode,
+        rowVersion: updated.rows[0].row_version,
+        sessionsRevoked,
+        reauthenticationRequired: true,
+      };
+    });
+  }
+
+  async unlinkStaffUser(
+    staffId: string,
+    dto: UnlinkStaffUserDto,
+    actorUserId: string,
+  ) {
+    return this.db.withTransaction(async (client) => {
+      await this.assertSchoolAdministrator(client, dto.schoolId, actorUserId);
+      const staff = await this.lockStaff(client, dto.schoolId, staffId);
+      this.assertVersion(staff, dto.rowVersion);
+      if (!staff.user_id) {
+        throw new BadRequestException(
+          'This staff record does not have a linked account.',
+        );
+      }
+      const reason = dto.reason.trim();
+      if (!reason) {
+        throw new BadRequestException(
+          'A reason is required to unlink a staff account.',
+        );
+      }
+
+      let roleCode = staff.staff_type;
+      if (!roleCode) {
+        const roleResult = await client.query<{
+          role_code: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN';
+        }>(
+          `
+          SELECT role.role::TEXT AS role_code
+          FROM school_memberships membership
+          JOIN school_membership_roles role
+            ON role.school_membership_id = membership.id
+           AND role.role::TEXT IN (
+             'SCHOOL_ADMIN',
+             'TEACHER',
+             'FINANCE_ADMIN'
+           )
+           AND role.deleted_at IS NULL
+          WHERE membership.school_id = $1
+            AND membership.user_id = $2
+            AND membership.membership_status = 'ACTIVE'
+            AND membership.deleted_at IS NULL
+          ORDER BY role.role::TEXT
+          `,
+          [dto.schoolId, staff.user_id],
+        );
+        if (roleResult.rows.length !== 1) {
+          throw new BadRequestException(
+            'The linked staff role is ambiguous and must be reconciled before unlinking.',
+          );
+        }
+        roleCode = roleResult.rows[0].role_code;
+      }
+
+      await this.assertLifecycleSafety(client, staff, actorUserId, 'ARCHIVED');
+
+      const activeAssignments = await client.query(
+        `
+        SELECT id
+        FROM teacher_academic_assignments
+        WHERE school_id = $1
+          AND teacher_staff_account_id = $2
+          AND assignment_status = 'ACTIVE'
+          AND deleted_at IS NULL
+        LIMIT 1
+        `,
+        [dto.schoolId, staffId],
+      );
+      if (activeAssignments.rowCount) {
+        throw new BadRequestException(
+          'Archive or reassign active teaching assignments before unlinking this account.',
+        );
+      }
+
+      const activePayroll = await client.query(
+        `
+        SELECT id
+        FROM payroll_staff_profiles
+        WHERE school_id = $1
+          AND school_staff_account_id = $2
+          AND payroll_active = TRUE
+          AND deleted_at IS NULL
+        LIMIT 1
+        `,
+        [dto.schoolId, staffId],
+      );
+      if (activePayroll.rowCount) {
+        throw new BadRequestException(
+          'Disable the active payroll profile before unlinking this account.',
+        );
+      }
+
+      await client.query(
+        `
+        UPDATE school_membership_roles role
+        SET
+          deleted_at = NOW(),
+          updated_at = NOW()
+        FROM school_memberships membership
+        WHERE role.school_membership_id = membership.id
+          AND membership.school_id = $1
+          AND membership.user_id = $2
+          AND membership.deleted_at IS NULL
+          AND role.role::TEXT = $3
+          AND role.deleted_at IS NULL
+        `,
+        [dto.schoolId, staff.user_id, roleCode],
+      );
+      await client.query(
+        `
+        UPDATE school_user_roles
+        SET
+          deleted_at = NOW(),
+          updated_at = NOW()
+        WHERE school_id = $1
+          AND user_id = $2
+          AND role::TEXT = $3
+          AND deleted_at IS NULL
+        `,
+        [dto.schoolId, staff.user_id, roleCode],
+      );
+      if (roleCode === 'FINANCE_ADMIN') {
+        await client.query(
+          `
+          UPDATE school_user_permissions
+          SET
+            deleted_at = NOW(),
+            updated_at = NOW()
+          WHERE school_id = $1
+            AND user_id = $2
+            AND deleted_at IS NULL
+          `,
+          [dto.schoolId, staff.user_id],
+        );
+      }
+
+      await client.query(
+        `
+        UPDATE school_memberships membership
+        SET
+          membership_status = 'SUSPENDED',
+          suspended_at = NOW(),
+          updated_at = NOW()
+        WHERE membership.school_id = $1
+          AND membership.user_id = $2
+          AND membership.deleted_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1
+            FROM school_membership_roles role
+            WHERE role.school_membership_id = membership.id
+              AND role.deleted_at IS NULL
+          )
+        `,
+        [dto.schoolId, staff.user_id],
+      );
+
+      const updated = await client.query<{ row_version: number }>(
+        `
+        UPDATE school_staff_accounts
+        SET
+          user_id = NULL,
+          staff_type = NULL,
+          updated_at = NOW()
+        WHERE id = $1
+          AND school_id = $2
+          AND row_version = $3
+          AND deleted_at IS NULL
+        RETURNING row_version
+        `,
+        [staffId, dto.schoolId, dto.rowVersion],
+      );
+      if (!updated.rowCount) {
+        throw new ConflictException(
+          'This staff record was changed by another user. Refresh and try again.',
+        );
+      }
+
+      await client.query(
+        `
+        INSERT INTO staff_account_user_link_events (
+          school_id,
+          staff_account_id,
+          user_id,
+          event_type,
+          role_code,
+          actor_user_id,
+          reason
+        )
+        VALUES ($1, $2, $3, 'UNLINKED', $4, $5, $6)
+        `,
+        [dto.schoolId, staffId, staff.user_id, roleCode, actorUserId, reason],
+      );
+
+      const sessionsRevoked = await this.invalidateLinkedUserTx(
+        client,
+        staff.user_id,
+        'STAFF_ACCOUNT_UNLINKED',
+      );
+      const remainingSessions = await client.query<{ count: string }>(
+        `
+        SELECT COUNT(*)::TEXT AS count
+        FROM auth_sessions
+        WHERE user_id = $1
+          AND revoked_at IS NULL
+        `,
+        [staff.user_id],
+      );
+      if (Number(remainingSessions.rows[0]?.count ?? 0) !== 0) {
+        throw new ConflictException(
+          'The linked account still has active sessions and cannot be unlinked safely.',
+        );
+      }
+
+      /*
+       * Historical actor and record-owner references remain attached to the
+       * user. Only current school access is removed.
+       */
+      await this.platformActivityService.recordTx(client, {
+        eventType: 'STAFF_ACCOUNT_UNLINKED',
+        actorType: 'SCHOOL_STAFF',
+        actorUserId,
+        schoolId: dto.schoolId,
+        summary: 'A user account was unlinked from a staff record.',
+        payload: {
+          staffAccountId: staffId,
+          affectedUserId: staff.user_id,
+          roleCode,
+        },
+      });
+      return {
+        linked: false,
+        staffAccountId: staffId,
+        formerUserId: staff.user_id,
+        roleCode,
+        rowVersion: updated.rows[0].row_version,
+        sessionsRevoked,
+      };
+    });
+  }
+
   async getAssignments(staffId: string, schoolId: string, actorUserId: string) {
     await this.assertSchoolAdministrator(this.db, schoolId, actorUserId);
-    const staffResult = await this.db.query<{
-      user_id: string | null;
-    }>(
+    const staffResult = await this.db.query(
       `
-      SELECT user_id
+      SELECT id
       FROM school_staff_accounts
       WHERE id = $1
         AND school_id = $2
@@ -1458,9 +1972,8 @@ export class StaffManagementService {
       `,
       [staffId, schoolId],
     );
-    const staff = staffResult.rows[0];
-    if (!staff) throw new NotFoundException('Staff record not found.');
-    if (!staff.user_id) return { items: [] };
+    if (!staffResult.rowCount)
+      throw new NotFoundException('Staff record not found.');
 
     const result = await this.db.query(
       `
@@ -1491,11 +2004,11 @@ export class StaffManagementService {
        AND subject.school_id = assignment.school_id
        AND subject.deleted_at IS NULL
       WHERE assignment.school_id = $1
-        AND assignment.teacher_user_id = $2
+        AND assignment.teacher_staff_account_id = $2
         AND assignment.deleted_at IS NULL
       ORDER BY year.start_date DESC, section.code, subject.code
       `,
-      [schoolId, staff.user_id],
+      [schoolId, staffId],
     );
     return { items: result.rows };
   }
@@ -1598,7 +2111,6 @@ export class StaffManagementService {
     if (!staff.rowCount) throw new NotFoundException('Staff record not found.');
 
     const result = await this.db.query<StaffMedicalRecord>(
-
       `
       SELECT
         emergency_contact_name,
@@ -1619,8 +2131,7 @@ export class StaffManagementService {
     const row = result.rows[0];
     return {
       emergencyContactName: row?.emergency_contact_name ?? null,
-      emergencyContactRelationship:
-        row?.emergency_contact_relationship ?? null,
+      emergencyContactRelationship: row?.emergency_contact_relationship ?? null,
       emergencyContactPhone: row?.emergency_contact_phone ?? null,
       allergiesOrConditions: row?.allergies_or_conditions ?? null,
       accommodationNotes: row?.accommodation_notes ?? null,
@@ -1660,7 +2171,8 @@ export class StaffManagementService {
         `,
         [staffId, dto.schoolId],
       );
-      if (!staff.rows[0]) throw new NotFoundException('Staff record not found.');
+      if (!staff.rows[0])
+        throw new NotFoundException('Staff record not found.');
       if (staff.rows[0].employment_status === 'ARCHIVED') {
         throw new BadRequestException(
           'Archived staff medical information is read-only.',
@@ -1782,9 +2294,16 @@ export class StaffManagementService {
     actorUserId: string,
   ) {
     await this.assertSchoolAdministrator(this.db, schoolId, actorUserId);
-    const staff = await this.db.query<{ user_id: string | null }>(
+    const staff = await this.db.query<{
+      user_id: string | null;
+      staff_category: string;
+      employment_status: string;
+    }>(
       `
-      SELECT user_id
+      SELECT
+        user_id,
+        staff_category,
+        employment_status
       FROM school_staff_accounts
       WHERE id = $1
         AND school_id = $2
@@ -1795,25 +2314,7 @@ export class StaffManagementService {
     );
     if (!staff.rows[0]) throw new NotFoundException('Staff record not found.');
 
-    const [role, years, sections] = await Promise.all([
-      staff.rows[0].user_id
-        ? this.db.query(
-            `
-            SELECT role.id
-            FROM school_memberships membership
-            JOIN school_membership_roles role
-              ON role.school_membership_id = membership.id
-             AND role.role::TEXT = 'TEACHER'
-             AND role.deleted_at IS NULL
-            WHERE membership.school_id = $1
-              AND membership.user_id = $2
-              AND membership.membership_status = 'ACTIVE'
-              AND membership.deleted_at IS NULL
-            LIMIT 1
-            `,
-            [schoolId, staff.rows[0].user_id],
-          )
-        : Promise.resolve({ rowCount: 0, rows: [] }),
+    const [years, sections] = await Promise.all([
       this.db.query<{
         id: string;
         name_i18n: Record<string, string>;
@@ -1917,8 +2418,12 @@ export class StaffManagementService {
     }
 
     return {
+      staffAccountId: staffId,
       userId: staff.rows[0].user_id,
-      eligible: Boolean(role.rowCount),
+      eligible:
+        staff.rows[0].staff_category === 'TEACHING' &&
+        staff.rows[0].employment_status === 'ACTIVE',
+      loginAvailable: Boolean(staff.rows[0].user_id),
       academicYears: years.rows.map((year) => ({
         id: year.id,
         nameI18n: year.name_i18n,

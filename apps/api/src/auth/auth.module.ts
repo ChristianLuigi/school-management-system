@@ -18,15 +18,29 @@ import { SuperAdminGuard } from './super-admin.guard';
 @Global()
 @Module({
   imports: [
-    DbModule, InternalAuthModule, EmailModule, PlatformActivityModule,
+    DbModule,
+    InternalAuthModule,
+    EmailModule,
+    PlatformActivityModule,
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
   ],
   controllers: [AuthController, InvitationsController],
   providers: [
-    AuthService, SuperAdminGuard, SchoolMemberGuard, InvitationsService,
-    AuthTokenService, SessionTokenService, PasswordService,
+    AuthService,
+    SuperAdminGuard,
+    SchoolMemberGuard,
+    InvitationsService,
+    AuthTokenService,
+    SessionTokenService,
+    PasswordService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
-  exports: [AuthService, SuperAdminGuard, SchoolMemberGuard, PasswordService],
+  exports: [
+    AuthService,
+    InvitationsService,
+    SuperAdminGuard,
+    SchoolMemberGuard,
+    PasswordService,
+  ],
 })
 export class AuthModule {}

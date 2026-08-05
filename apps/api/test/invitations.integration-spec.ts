@@ -70,9 +70,7 @@ describe('secure invitation and membership integration', () => {
 
     expect(created.emailSent).toBe(true);
     expect(created).not.toHaveProperty('token');
-    const token = invitationToken(
-      harness.email.invitations[0]?.activationUrl,
-    );
+    const token = invitationToken(harness.email.invitations[0]?.activationUrl);
     const password = 'Night Harbor 94!Velvet Compass';
 
     const accepted = await invitations.acceptInvitation({
@@ -141,7 +139,7 @@ describe('secure invitation and membership integration', () => {
         'nadine.joseph@release.test',
         'TEACHING',
         'FULL_TIME',
-        'DRAFT'
+        'ACTIVE'
       )
       RETURNING id
       `,
@@ -162,9 +160,7 @@ describe('secure invitation and membership integration', () => {
       admin.id,
       null,
     );
-    const token = invitationToken(
-      harness.email.invitations[0]?.activationUrl,
-    );
+    const token = invitationToken(harness.email.invitations[0]?.activationUrl);
     const password = 'Copper Harbor 87!Quiet Lantern';
     const accepted = await invitations.acceptInvitation({
       token,
@@ -194,7 +190,7 @@ describe('secure invitation and membership integration', () => {
         id: staffAccountId,
         user_id: accepted.userId,
         staff_type: 'TEACHER',
-        employment_status: 'DRAFT',
+        employment_status: 'ACTIVE',
       },
     ]);
   });
@@ -295,9 +291,7 @@ describe('secure invitation and membership integration', () => {
       admin.id,
       null,
     );
-    const token = invitationToken(
-      harness.email.invitations[0]?.activationUrl,
-    );
+    const token = invitationToken(harness.email.invitations[0]?.activationUrl);
     const password = 'Cobalt Lantern 73!Ocean Bridge';
     const accepted = await invitations.acceptInvitation({
       token,
@@ -335,9 +329,7 @@ describe('secure invitation and membership integration', () => {
       admin.id,
       null,
     );
-    const token = invitationToken(
-      harness.email.invitations[0]?.activationUrl,
-    );
+    const token = invitationToken(harness.email.invitations[0]?.activationUrl);
     const password = 'Amber Current 82!Silver Compass';
     const accepted = await invitations.acceptInvitation({
       token,
@@ -510,11 +502,7 @@ describe('secure invitation and membership integration', () => {
       null,
     );
 
-    const result = await invitations.listSchoolUsers(
-      schoolId,
-      admin.id,
-      null,
-    );
+    const result = await invitations.listSchoolUsers(schoolId, admin.id, null);
     expect(JSON.stringify(result)).not.toMatch(
       /password|token_hash|sessionToken|authentication_version/i,
     );

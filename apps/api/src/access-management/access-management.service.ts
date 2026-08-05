@@ -123,6 +123,31 @@ export class AccessManagementService {
     }));
   }
 
+  private async resolveTeachingStaffForUser(
+    schoolId: string,
+    teacherUserId: string,
+  ) {
+    const result = await this.db.query<{ id: string }>(
+      `
+      SELECT staff.id
+      FROM school_staff_accounts staff
+      WHERE staff.school_id = $1
+        AND staff.user_id = $2
+        AND staff.staff_category = 'TEACHING'
+        AND staff.employment_status = 'ACTIVE'
+        AND staff.deleted_at IS NULL
+      LIMIT 1
+      `,
+      [schoolId, teacherUserId],
+    );
+    if (!result.rows[0]) {
+      throw new BadRequestException(
+        'The selected user is not linked to an active teaching staff record.',
+      );
+    }
+    return result.rows[0].id;
+  }
+
   async updateTeacherAssignments(
     teacherUserId: string,
     dto: UpdateTeacherAssignmentsDto,
@@ -130,7 +155,44 @@ export class AccessManagementService {
     platformRole: 'SUPER_ADMIN' | null,
   ) {
     await this.assertAdministrator(dto.schoolId, actorUserId, platformRole);
-    await this.assertUserRole(dto.schoolId, teacherUserId, 'TEACHER');
+    const staffAccountId = await this.resolveTeachingStaffForUser(
+      dto.schoolId,
+      teacherUserId,
+    );
+    return this.updateTeacherStaffAssignments(
+      staffAccountId,
+      dto,
+      actorUserId,
+      platformRole,
+    );
+  }
+
+  async updateTeacherStaffAssignments(
+    staffAccountId: string,
+    dto: UpdateTeacherAssignmentsDto,
+    actorUserId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+  ) {
+    await this.assertAdministrator(dto.schoolId, actorUserId, platformRole);
+    const staffResult = await this.db.query<{ user_id: string | null }>(
+      `
+      SELECT user_id
+      FROM school_staff_accounts
+      WHERE id = $1
+        AND school_id = $2
+        AND staff_category = 'TEACHING'
+        AND employment_status = 'ACTIVE'
+        AND deleted_at IS NULL
+      LIMIT 1
+      `,
+      [staffAccountId, dto.schoolId],
+    );
+    const staff = staffResult.rows[0];
+    if (!staff) {
+      throw new BadRequestException(
+        'Only active teaching staff can receive academic assignments.',
+      );
+    }
     const year = await this.db.query(
       `SELECT id FROM academic_years WHERE id=$1 AND school_id=$2 AND deleted_at IS NULL LIMIT 1`,
       [dto.academicYearId, dto.schoolId],
@@ -169,20 +231,21 @@ export class AccessManagementService {
       await client.query(
         `
         UPDATE teacher_academic_assignments SET deleted_at=NOW(),assignment_status='ARCHIVED',updated_at=NOW()
-        WHERE school_id=$1 AND teacher_user_id=$2 AND academic_year_id=$3 AND deleted_at IS NULL
+        WHERE school_id=$1 AND teacher_staff_account_id=$2 AND academic_year_id=$3 AND deleted_at IS NULL
       `,
-        [dto.schoolId, teacherUserId, dto.academicYearId],
+        [dto.schoolId, staffAccountId, dto.academicYearId],
       );
       for (const assignment of assignments) {
         await client.query(
           `
           INSERT INTO teacher_academic_assignments
-            (school_id,teacher_user_id,academic_year_id,section_id,subject_id,assignment_status,assigned_by_user_id)
-          VALUES ($1,$2,$3,$4,$5,'ACTIVE',$6)
+            (school_id,teacher_staff_account_id,teacher_user_id,academic_year_id,section_id,subject_id,assignment_status,assigned_by_user_id)
+          VALUES ($1,$2,$3,$4,$5,$6,'ACTIVE',$7)
         `,
           [
             dto.schoolId,
-            teacherUserId,
+            staffAccountId,
+            staff.user_id,
             dto.academicYearId,
             assignment.sectionId,
             assignment.subjectId,
@@ -190,11 +253,13 @@ export class AccessManagementService {
           ],
         );
       }
-      await this.invalidateSessionsTx(
-        client,
-        teacherUserId,
-        'TEACHER_ASSIGNMENTS_CHANGED',
-      );
+      if (staff.user_id) {
+        await this.invalidateSessionsTx(
+          client,
+          staff.user_id,
+          'TEACHER_ASSIGNMENTS_CHANGED',
+        );
+      }
       await this.activity.recordTx(client, {
         eventType: 'TEACHER_ASSIGNMENTS_CHANGED',
         actorType:
@@ -203,7 +268,8 @@ export class AccessManagementService {
         schoolId: dto.schoolId,
         summary: 'Teacher academic assignments updated.',
         payload: {
-          teacherUserId,
+          staffAccountId,
+          linkedTeacherUserId: staff.user_id,
           academicYearId: dto.academicYearId,
           assignments,
         },
@@ -211,9 +277,10 @@ export class AccessManagementService {
     });
     return {
       updated: true,
-      teacherUserId,
+      staffAccountId,
+      teacherUserId: staff.user_id,
       assignmentCount: assignments.length,
-      sessionsRevoked: true,
+      sessionsRevoked: Boolean(staff.user_id),
     };
   }
 
@@ -347,12 +414,13 @@ export class AccessManagementService {
       SELECT DISTINCT assignment.section_id,assignment.subject_id,subject.code AS subject_code
       FROM teacher_academic_assignments assignment
       JOIN school_subjects subject ON subject.id=assignment.subject_id AND subject.school_id=assignment.school_id AND subject.deleted_at IS NULL
-      JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=assignment.teacher_user_id
+      JOIN school_staff_accounts staff ON staff.id=assignment.teacher_staff_account_id AND staff.school_id=assignment.school_id
+        AND staff.user_id=$1 AND staff.staff_category='TEACHING'
+        AND staff.employment_status='ACTIVE' AND staff.deleted_at IS NULL
+      JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=staff.user_id
         AND sm.membership_status='ACTIVE' AND sm.deleted_at IS NULL
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id AND smr.role='TEACHER' AND smr.deleted_at IS NULL
-      JOIN school_staff_accounts staff ON staff.school_id=sm.school_id AND staff.user_id=sm.user_id
-        AND staff.employment_status IN ('ACTIVE','ON_LEAVE') AND staff.deleted_at IS NULL
-      WHERE assignment.teacher_user_id=$1 AND assignment.school_id=$2
+      WHERE assignment.school_id=$2
         AND assignment.assignment_status='ACTIVE' AND assignment.deleted_at IS NULL
     `,
       [teacherUserId, schoolId],
@@ -367,12 +435,13 @@ export class AccessManagementService {
     const result = await this.db.query<{ section_id: string }>(
       `
       SELECT DISTINCT assignment.section_id FROM teacher_academic_assignments assignment
-      JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=assignment.teacher_user_id
+      JOIN school_staff_accounts staff ON staff.id=assignment.teacher_staff_account_id AND staff.school_id=assignment.school_id
+        AND staff.user_id=$1 AND staff.staff_category='TEACHING'
+        AND staff.employment_status='ACTIVE' AND staff.deleted_at IS NULL
+      JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=staff.user_id
         AND sm.membership_status='ACTIVE' AND sm.deleted_at IS NULL
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id AND smr.role='TEACHER' AND smr.deleted_at IS NULL
-      JOIN school_staff_accounts staff ON staff.school_id=sm.school_id AND staff.user_id=sm.user_id
-        AND staff.employment_status IN ('ACTIVE','ON_LEAVE') AND staff.deleted_at IS NULL
-      WHERE assignment.teacher_user_id=$1 AND assignment.school_id=$2
+      WHERE assignment.school_id=$2
         AND assignment.assignment_status='ACTIVE' AND assignment.deleted_at IS NULL
     `,
       [teacherUserId, schoolId],
@@ -400,12 +469,13 @@ export class AccessManagementService {
     const result = await this.db.query(
       `
       SELECT assignment.id FROM teacher_academic_assignments assignment
-      JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=assignment.teacher_user_id
+      JOIN school_staff_accounts staff ON staff.id=assignment.teacher_staff_account_id AND staff.school_id=assignment.school_id
+        AND staff.user_id=$1 AND staff.staff_category='TEACHING'
+        AND staff.employment_status='ACTIVE' AND staff.deleted_at IS NULL
+      JOIN school_memberships sm ON sm.school_id=assignment.school_id AND sm.user_id=staff.user_id
         AND sm.membership_status='ACTIVE' AND sm.deleted_at IS NULL
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id AND smr.role='TEACHER' AND smr.deleted_at IS NULL
-      JOIN school_staff_accounts staff ON staff.school_id=sm.school_id AND staff.user_id=sm.user_id
-        AND staff.employment_status IN ('ACTIVE','ON_LEAVE') AND staff.deleted_at IS NULL
-      WHERE assignment.teacher_user_id=$1 AND assignment.school_id=$2 AND assignment.academic_year_id=$3
+      WHERE assignment.school_id=$2 AND assignment.academic_year_id=$3
         AND assignment.section_id=$4 ${subjectFilter} AND assignment.assignment_status='ACTIVE' AND assignment.deleted_at IS NULL LIMIT 1
     `,
       values,
@@ -636,17 +706,23 @@ export class AccessManagementService {
        AND enrollment.student_id = $3
        AND enrollment.enrollment_status = 'ACTIVE'
        AND enrollment.deleted_at IS NULL
+      JOIN school_staff_accounts staff
+        ON staff.id = assignment.teacher_staff_account_id
+       AND staff.school_id = assignment.school_id
+       AND staff.user_id = $1
+       AND staff.staff_category = 'TEACHING'
+       AND staff.employment_status = 'ACTIVE'
+       AND staff.deleted_at IS NULL
       JOIN school_memberships sm
         ON sm.school_id = assignment.school_id
-       AND sm.user_id = assignment.teacher_user_id
+       AND sm.user_id = staff.user_id
        AND sm.membership_status = 'ACTIVE'
        AND sm.deleted_at IS NULL
       JOIN school_membership_roles smr
         ON smr.school_membership_id = sm.id
        AND smr.role = 'TEACHER'
        AND smr.deleted_at IS NULL
-      WHERE assignment.teacher_user_id = $1
-        AND assignment.school_id = $2
+      WHERE assignment.school_id = $2
         AND assignment.assignment_status = 'ACTIVE'
         AND assignment.deleted_at IS NULL
       LIMIT 1

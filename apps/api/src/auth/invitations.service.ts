@@ -175,9 +175,9 @@ export class InvitationsService {
           'The selected staff record already has a linked account.',
         );
       }
-      if (['TERMINATED', 'ARCHIVED'].includes(record.employment_status)) {
+      if (!['ACTIVE', 'ON_LEAVE'].includes(record.employment_status)) {
         throw new BadRequestException(
-          'A terminated or archived staff record cannot receive an account invitation.',
+          'Only active or on-leave staff can receive an account invitation.',
         );
       }
       if (
@@ -188,7 +188,8 @@ export class InvitationsService {
           'The invitation email must match the staff record email.',
         );
       }
-    }    if (
+    }
+    if (
       dto.financePermissionCodes?.length &&
       dto.roleCode !== 'FINANCE_ADMIN'
     ) {
@@ -404,7 +405,12 @@ export class InvitationsService {
     await client.query(
       `
       INSERT INTO school_user_roles (school_id,user_id,role,is_primary)
-      VALUES ($1,$2,$3::school_role,TRUE) ON CONFLICT (school_id,user_id,role) DO NOTHING
+      VALUES ($1,$2,$3::school_role,TRUE)
+      ON CONFLICT (school_id,user_id,role)
+      DO UPDATE SET
+        deleted_at = NULL,
+        is_primary = EXCLUDED.is_primary,
+        updated_at = NOW()
     `,
       [invitation.school_id, userId, invitation.role_code],
     );
@@ -413,6 +419,7 @@ export class InvitationsService {
   private async applyOperationalAccessTx(
     client: PoolClient,
     input: {
+      invitationId: string;
       schoolId: string;
       userId: string;
       roleCode: SchoolRole;
@@ -453,9 +460,9 @@ export class InvitationsService {
             'The designated staff record is already linked to another account.',
           );
         }
-        if (['TERMINATED', 'ARCHIVED'].includes(staff.employment_status)) {
+        if (!['ACTIVE', 'ON_LEAVE'].includes(staff.employment_status)) {
           throw new BadRequestException(
-            'A terminated or archived staff record cannot be linked to an account.',
+            'Only active or on-leave staff can be linked to an account.',
           );
         }
         const duplicate = await client.query(
@@ -486,11 +493,43 @@ export class InvitationsService {
             AND school_id = $2
             AND deleted_at IS NULL
           `,
+          [input.staffAccountId, input.schoolId, input.userId, input.roleCode],
+        );
+        if (input.roleCode === 'TEACHER') {
+          await client.query(
+            `
+            UPDATE teacher_academic_assignments
+            SET
+              teacher_user_id = $3,
+              updated_at = NOW()
+            WHERE school_id = $1
+              AND teacher_staff_account_id = $2
+            `,
+            [input.schoolId, input.staffAccountId, input.userId],
+          );
+        }
+        await client.query(
+          `
+          INSERT INTO staff_account_user_link_events (
+            school_id,
+            staff_account_id,
+            user_id,
+            event_type,
+            role_code,
+            invitation_id,
+            actor_user_id,
+            reason
+          )
+          VALUES ($1, $2, $3, 'LINKED', $4, $5, $6, $7)
+          `,
           [
-            input.staffAccountId,
             input.schoolId,
+            input.staffAccountId,
             input.userId,
             input.roleCode,
+            input.invitationId,
+            input.invitedByUserId,
+            'Account linked through an accepted staff invitation.',
           ],
         );
       } else {
@@ -517,7 +556,8 @@ export class InvitationsService {
           ],
         );
       }
-    }    if (input.roleCode === 'PARENT') {
+    }
+    if (input.roleCode === 'PARENT') {
       if (!input.guardianId)
         throw new BadRequestException(
           'The parent invitation has no guardian record.',
@@ -569,6 +609,7 @@ export class InvitationsService {
 
   private operationalInput(invitation: InvitationRow, userId: string) {
     return {
+      invitationId: invitation.id,
       schoolId: invitation.school_id,
       userId,
       roleCode: invitation.role_code,

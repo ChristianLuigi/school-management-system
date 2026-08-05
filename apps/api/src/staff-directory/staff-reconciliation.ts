@@ -135,8 +135,8 @@ const REPORT_SQL = `
         AND NOT EXISTS (
           SELECT 1
           FROM school_staff_accounts staff
-          WHERE staff.school_id = assignment.school_id
-            AND staff.user_id = assignment.teacher_user_id
+          WHERE staff.id = assignment.teacher_staff_account_id
+            AND staff.school_id = assignment.school_id
             AND staff.deleted_at IS NULL
         )
     ) AS teacher_assignments_without_staff,
@@ -146,16 +146,13 @@ const REPORT_SQL = `
       WHERE staff.deleted_at IS NULL
         AND staff.employment_status = 'ACTIVE'
         AND staff.staff_category = 'TEACHING'
-        AND (
-          staff.user_id IS NULL
-          OR NOT EXISTS (
-            SELECT 1
-            FROM teacher_academic_assignments assignment
-            WHERE assignment.school_id = staff.school_id
-              AND assignment.teacher_user_id = staff.user_id
-              AND assignment.assignment_status = 'ACTIVE'
-              AND assignment.deleted_at IS NULL
-          )
+        AND NOT EXISTS (
+          SELECT 1
+          FROM teacher_academic_assignments assignment
+          WHERE assignment.school_id = staff.school_id
+            AND assignment.teacher_staff_account_id = staff.id
+            AND assignment.assignment_status = 'ACTIVE'
+            AND assignment.deleted_at IS NULL
         )
     ) AS active_teachers_without_assignments
 `;
@@ -198,10 +195,7 @@ export async function collectStaffReconciliation(
       'LINKED_STAFF_WITHOUT_ACTIVE_MEMBERSHIP',
       row.linked_staff_without_active_membership,
     ),
-    issue(
-      'PAYROLL_PROFILES_WITHOUT_STAFF',
-      row.payroll_profiles_without_staff,
-    ),
+    issue('PAYROLL_PROFILES_WITHOUT_STAFF', row.payroll_profiles_without_staff),
     issue(
       'ACTIVE_TEACHERS_WITHOUT_ASSIGNMENTS',
       row.active_teachers_without_assignments,

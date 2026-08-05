@@ -2,7 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PoolClient } from 'pg';
 import { DbService } from '../db/db.service';
-import { hashPassword } from '../internal-auth/password.util';
+import { canonicalizeEmail } from '../auth/security/email-identity';
+import { PasswordService } from '../auth/security/password.service';
 import { PlatformActivityService } from '../platform-activity/platform-activity.service';
 import { CreatePlatformStaffDto } from './dto/create-platform-staff.dto';
 import { ListPlatformStaffDto } from './dto/list-platform-staff.dto';
@@ -57,6 +58,7 @@ export class PlatformStaffService {
   constructor(
     private readonly db: DbService,
     private readonly platformActivityService: PlatformActivityService,
+    private readonly passwords: PasswordService,
   ) {}
 
   async list(query: ListPlatformStaffDto) {
@@ -153,15 +155,22 @@ export class PlatformStaffService {
   async create(dto: CreatePlatformStaffDto) {
     return this.db.withTransaction(async (client) => {
       const school = await this.findSchool(client, dto.schoolId);
-      const normalizedEmail = dto.email.trim().toLowerCase();
+      const email = canonicalizeEmail(dto.email);
       const firstName = dto.firstName.trim();
       const lastName = dto.lastName.trim();
       const jobTitle = dto.jobTitle?.trim() || null;
-      const temporaryPassword = this.generateTemporaryPassword();
-      const passwordHash = hashPassword(temporaryPassword);
+      const generatedPassword = this.generateTemporaryPassword();
+      const temporaryPassword = this.passwords.validate(generatedPassword, [
+        firstName,
+        lastName,
+        email.normalized.split('@')[0],
+        school.name,
+      ]);
+      const passwordHash = await this.passwords.hash(temporaryPassword);
 
       const user = await this.findOrCreateUser(client, {
-        email: normalizedEmail,
+        emailOriginal: email.original,
+        emailNormalized: email.normalized,
         firstName,
         lastName,
         passwordHash,
@@ -186,10 +195,10 @@ export class PlatformStaffService {
         actorType: 'SUPERADMIN',
         schoolId: dto.schoolId,
         membershipId: membership.id,
-        summary: `Staff account ${normalizedEmail} was created as ${dto.role}.`,
+        summary: `Staff account ${email.normalized} was created as ${dto.role}.`,
         payload: {
           role: dto.role,
-          email: normalizedEmail,
+          email: email.normalized,
         },
       });
 
@@ -269,19 +278,56 @@ export class PlatformStaffService {
   async resetTemporaryPassword(membershipId: string) {
     return this.db.withTransaction(async (client) => {
       const membership = await this.findMembershipLookup(client, membershipId);
-      const temporaryPassword = this.generateTemporaryPassword();
-      const passwordHash = hashPassword(temporaryPassword);
+      const email = canonicalizeEmail(membership.email);
+      const generatedPassword = this.generateTemporaryPassword();
+      const temporaryPassword = this.passwords.validate(generatedPassword, [
+        email.normalized.split('@')[0],
+      ]);
+      const passwordHash = await this.passwords.hash(temporaryPassword);
 
       await client.query(
         `
         UPDATE users
         SET
+          email_original = $3,
+          email_normalized = $4,
           password_hash = $2,
           status = 'ACTIVE',
+          account_status = 'ACTIVE',
+          email_verified_at = COALESCE(
+            email_verified_at,
+            NOW()
+          ),
+          password_changed_at = NOW(),
+          failed_login_count = 0,
+          locked_until = NULL,
+          authentication_version =
+            authentication_version + 1,
           updated_at = NOW()
         WHERE id = $1
         `,
-        [membership.user_id, passwordHash],
+        [
+          membership.user_id,
+          passwordHash,
+          email.original,
+          email.normalized,
+        ],
+      );
+
+      await client.query(
+        `
+        UPDATE auth_sessions
+        SET
+          revoked_at = COALESCE(revoked_at, NOW()),
+          revocation_reason = COALESCE(
+            revocation_reason,
+            'PLATFORM_PASSWORD_RESET'
+          ),
+          updated_at = NOW()
+        WHERE user_id = $1
+          AND revoked_at IS NULL
+        `,
+        [membership.user_id],
       );
 
       await this.platformActivityService.recordTx(client, {
@@ -330,7 +376,8 @@ export class PlatformStaffService {
   private async findOrCreateUser(
     client: PoolClient,
     input: {
-      email: string;
+      emailOriginal: string;
+      emailNormalized: string;
       firstName: string;
       lastName: string;
       passwordHash: string;
@@ -340,12 +387,15 @@ export class PlatformStaffService {
       `
       SELECT id, email, first_name, last_name
       FROM users
-      WHERE email = $1
+      WHERE (
+          email_normalized = $1
+          OR LOWER(BTRIM(email::TEXT)) = $1
+        )
         AND deleted_at IS NULL
       LIMIT 1
       FOR UPDATE
       `,
-      [input.email],
+      [input.emailNormalized],
     );
 
     if (existing.rows[0]) {
@@ -353,20 +403,50 @@ export class PlatformStaffService {
         `
         UPDATE users
         SET
-          first_name = COALESCE(first_name, $2),
-          last_name = COALESCE(last_name, $3),
-          password_hash = $4,
+          email_original = $2,
+          email_normalized = $3,
+          first_name = COALESCE(first_name, $4),
+          last_name = COALESCE(last_name, $5),
+          password_hash = $6,
           status = 'ACTIVE',
+          account_status = 'ACTIVE',
+          email_verified_at = COALESCE(
+            email_verified_at,
+            NOW()
+          ),
+          password_changed_at = NOW(),
+          failed_login_count = 0,
+          locked_until = NULL,
+          authentication_version =
+            authentication_version + 1,
           updated_at = NOW()
         WHERE id = $1
         RETURNING id, email, first_name, last_name
         `,
         [
           existing.rows[0].id,
+          input.emailOriginal,
+          input.emailNormalized,
           input.firstName,
           input.lastName,
           input.passwordHash,
         ],
+      );
+
+      await client.query(
+        `
+        UPDATE auth_sessions
+        SET
+          revoked_at = COALESCE(revoked_at, NOW()),
+          revocation_reason = COALESCE(
+            revocation_reason,
+            'PLATFORM_CREDENTIAL_REPROVISIONED'
+          ),
+          updated_at = NOW()
+        WHERE user_id = $1
+          AND revoked_at IS NULL
+        `,
+        [existing.rows[0].id],
       );
 
       return updated.rows[0];
@@ -376,21 +456,48 @@ export class PlatformStaffService {
       `
       INSERT INTO users (
         email,
+        email_original,
+        email_normalized,
         password_hash,
         preferred_locale,
         first_name,
         last_name,
-        status
+        status,
+        account_status,
+        email_verified_at,
+        password_changed_at,
+        failed_login_count,
+        locked_until
       )
-      VALUES ($1, $2, 'fr', $3, $4, 'ACTIVE')
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        'fr',
+        $5,
+        $6,
+        'ACTIVE',
+        'ACTIVE',
+        NOW(),
+        NOW(),
+        0,
+        NULL
+      )
       RETURNING id, email, first_name, last_name
       `,
-      [input.email, input.passwordHash, input.firstName, input.lastName],
+      [
+        input.emailOriginal,
+        input.emailOriginal,
+        input.emailNormalized,
+        input.passwordHash,
+        input.firstName,
+        input.lastName,
+      ],
     );
 
     return inserted.rows[0];
   }
-
   private async findOrCreateMembership(
     client: PoolClient,
     input: {

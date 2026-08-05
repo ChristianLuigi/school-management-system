@@ -18,6 +18,7 @@ import { PlatformActivityService } from '../../src/platform-activity/platform-ac
 import { SchoolStudentsService } from '../../src/school-students/school-students.service';
 import { StaffComplianceService } from '../../src/staff-management/staff-compliance.service';
 import { StaffManagementService } from '../../src/staff-management/staff-management.service';
+import { StaffSelfServiceService } from '../../src/staff-management/staff-self-service.service';
 import { CapturingEmailService } from './capturing-email.service';
 import { integrationDatabaseUrl } from './integration-database';
 
@@ -51,8 +52,9 @@ export async function createServiceHarness() {
   const reconciliation = new FinanceReconciliationService(db, activity);
   const gradebooks = new GradebooksService(db, activity);
   const schoolStudents = new SchoolStudentsService(db, activity);
-  const staffManagement = new StaffManagementService(db, activity);
+  const staffManagement = new StaffManagementService(db, activity, invitations);
   const staffCompliance = new StaffComplianceService(db, activity);
+  const staffSelfService = new StaffSelfServiceService(db, activity);
 
   return {
     access,
@@ -75,6 +77,7 @@ export async function createServiceHarness() {
     schoolStudents,
     staffManagement,
     staffCompliance,
+    staffSelfService,
     close: () => db.onModuleDestroy(),
   };
 }

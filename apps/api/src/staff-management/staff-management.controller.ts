@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Param,
@@ -10,11 +11,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InternalAuthService } from '../internal-auth/internal-auth.service';
+import { CreateStaffAccountInvitationDto } from './dto/create-staff-account-invitation.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
+import { LinkStaffUserDto } from './dto/link-staff-user.dto';
 import { ListStaffDto } from './dto/list-staff.dto';
 import { RehireStaffDto } from './dto/rehire-staff.dto';
 import { StaffLifecycleActionDto } from './dto/staff-lifecycle-action.dto';
 import { StaffSchoolQueryDto } from './dto/staff-school-query.dto';
+import { UnlinkStaffUserDto } from './dto/unlink-staff-user.dto';
 import { UpdateStaffMedicalDto } from './dto/update-staff-medical.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
 import { StaffManagementService } from './staff-management.service';
@@ -161,6 +165,48 @@ export class StaffManagementController {
   ) {
     const session = await this.requireSession(authorization);
     return this.staffManagementService.archive(staffId, body, session.user_id);
+  }
+
+  @Post('staff/:staffId/invitation')
+  async createInvitation(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('staffId') staffId: string,
+    @Body() body: CreateStaffAccountInvitationDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.staffManagementService.createStaffInvitation(
+      staffId,
+      body,
+      session.user_id,
+    );
+  }
+
+  @Post('staff/:staffId/link-user')
+  async linkUser(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('staffId') staffId: string,
+    @Body() body: LinkStaffUserDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.staffManagementService.linkStaffUser(
+      staffId,
+      body,
+      session.user_id,
+    );
+  }
+
+  @Delete('staff/:staffId/user-link')
+  async unlinkUser(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('staffId') staffId: string,
+    @Body() body: UnlinkStaffUserDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.staffManagementService.unlinkStaffUser(
+      staffId,
+      body,
+      session.user_id,
+    );
   }
 
   @Get('staff/:staffId/history')

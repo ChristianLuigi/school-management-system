@@ -150,6 +150,9 @@ export class StaffComplianceService {
       `
       SELECT membership.id
       FROM school_memberships membership
+      JOIN schools school
+        ON school.id = membership.school_id
+       AND school.deleted_at IS NULL
       JOIN school_membership_roles role
         ON role.school_membership_id = membership.id
        AND role.role::TEXT = 'SCHOOL_ADMIN'
@@ -206,7 +209,10 @@ export class StaffComplianceService {
     if (!staff) {
       throw new NotFoundException('Staff record not found.');
     }
-    if (!allowArchived && ['TERMINATED', 'ARCHIVED'].includes(staff.employment_status)) {
+    if (
+      !allowArchived &&
+      ['TERMINATED', 'ARCHIVED'].includes(staff.employment_status)
+    ) {
       throw new BadRequestException(
         'This operation is unavailable for terminated or archived staff.',
       );
@@ -231,11 +237,7 @@ export class StaffComplianceService {
     throw error;
   }
 
-  async listDocuments(
-    staffId: string,
-    schoolId: string,
-    actorUserId: string,
-  ) {
+  async listDocuments(staffId: string, schoolId: string, actorUserId: string) {
     await this.assertSchoolAdministrator(this.db, schoolId, actorUserId);
     await this.assertStaff(this.db, staffId, schoolId);
     const result = await this.db.query<DocumentRow>(
@@ -289,22 +291,14 @@ export class StaffComplianceService {
     ) {
       throw new BadRequestException('Invalid staff document storage key.');
     }
-    if (
-      dto.issuedOn &&
-      dto.expiresOn &&
-      dto.expiresOn < dto.issuedOn
-    ) {
+    if (dto.issuedOn && dto.expiresOn && dto.expiresOn < dto.issuedOn) {
       throw new BadRequestException(
         'The document expiry date cannot precede its issue date.',
       );
     }
     try {
       return await this.db.withTransaction(async (client) => {
-        await this.assertSchoolAdministrator(
-          client,
-          dto.schoolId,
-          actorUserId,
-        );
+        await this.assertSchoolAdministrator(client, dto.schoolId, actorUserId);
         await this.assertStaff(client, staffId, dto.schoolId, false);
         const result = await client.query<DocumentRow>(
           `
@@ -455,11 +449,7 @@ export class StaffComplianceService {
     }
     try {
       return await this.db.withTransaction(async (client) => {
-        await this.assertSchoolAdministrator(
-          client,
-          dto.schoolId,
-          actorUserId,
-        );
+        await this.assertSchoolAdministrator(client, dto.schoolId, actorUserId);
         const result = await client.query<DocumentRow>(
           `
           SELECT
@@ -660,11 +650,7 @@ export class StaffComplianceService {
     }
     try {
       return await this.db.withTransaction(async (client) => {
-        await this.assertSchoolAdministrator(
-          client,
-          dto.schoolId,
-          actorUserId,
-        );
+        await this.assertSchoolAdministrator(client, dto.schoolId, actorUserId);
         const staff = await this.assertStaff(
           client,
           staffId,
@@ -757,10 +743,7 @@ export class StaffComplianceService {
     }
   }
 
-  private async activeAdministratorCount(
-    client: PoolClient,
-    schoolId: string,
-  ) {
+  private async activeAdministratorCount(client: PoolClient, schoolId: string) {
     const result = await client.query<{ count: string }>(
       `
       SELECT COUNT(DISTINCT membership.user_id)::TEXT AS count
@@ -795,11 +778,7 @@ export class StaffComplianceService {
     }
     try {
       return await this.db.withTransaction(async (client) => {
-        await this.assertSchoolAdministrator(
-          client,
-          dto.schoolId,
-          actorUserId,
-        );
+        await this.assertSchoolAdministrator(client, dto.schoolId, actorUserId);
         const result = await client.query<LeaveRow>(
           `
           SELECT
@@ -838,8 +817,7 @@ export class StaffComplianceService {
         }
         const allowed =
           leave.request_status === 'SUBMITTED' ||
-          (leave.request_status === 'APPROVED' &&
-            nextStatus === 'CANCELLED');
+          (leave.request_status === 'APPROVED' && nextStatus === 'CANCELLED');
         if (!allowed) {
           throw new BadRequestException(
             `The leave request cannot move from ${leave.request_status} to ${nextStatus}.`,
@@ -882,13 +860,7 @@ export class StaffComplianceService {
             created_at,
             updated_at
           `,
-          [
-            leaveRequestId,
-            dto.schoolId,
-            nextStatus,
-            actorUserId,
-            note,
-          ],
+          [leaveRequestId, dto.schoolId, nextStatus, actorUserId, note],
         );
         await client.query(
           `
@@ -963,10 +935,7 @@ export class StaffComplianceService {
     );
   }
 
-  async getOperationalReport(
-    query: StaffReportQueryDto,
-    actorUserId: string,
-  ) {
+  async getOperationalReport(query: StaffReportQueryDto, actorUserId: string) {
     await this.assertSchoolAdministrator(this.db, query.schoolId, actorUserId);
     const credentialWindowDays = query.credentialWindowDays ?? 60;
     const [
@@ -1016,8 +985,8 @@ export class StaffComplianceService {
               AND payroll.id IS NULL
           )::TEXT AS missing_payroll_profiles,
           COUNT(*) FILTER (
-            WHERE staff.staff_type = 'TEACHER'
-              AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+            WHERE staff.staff_category = 'TEACHING'
+              AND staff.employment_status = 'ACTIVE'
               AND assignment.id IS NULL
           )::TEXT AS teachers_without_assignments
         FROM school_staff_accounts staff
@@ -1029,7 +998,7 @@ export class StaffComplianceService {
           SELECT assignment.id
           FROM teacher_academic_assignments assignment
           WHERE assignment.school_id = staff.school_id
-            AND assignment.teacher_user_id = staff.user_id
+            AND assignment.teacher_staff_account_id = staff.id
             AND assignment.assignment_status = 'ACTIVE'
             AND assignment.deleted_at IS NULL
           LIMIT 1

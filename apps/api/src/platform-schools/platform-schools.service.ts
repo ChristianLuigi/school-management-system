@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { PoolClient } from 'pg';
 import { DbService } from '../db/db.service';
-import { hashPassword } from '../internal-auth/password.util';
+import { canonicalizeEmail } from '../auth/security/email-identity';
+import { PasswordService } from '../auth/security/password.service';
 import { PlatformActivityService } from '../platform-activity/platform-activity.service';
 import { CreatePlatformSchoolDto } from './dto/create-platform-school.dto';
 import { CreateSchoolStaffDto } from './dto/create-school-staff.dto';
@@ -62,6 +63,7 @@ export class PlatformSchoolsService {
   constructor(
     private readonly db: DbService,
     private readonly platformActivityService: PlatformActivityService,
+    private readonly passwords: PasswordService,
   ) {}
 
   async findAll(): Promise<SchoolRow[]> {
@@ -488,24 +490,99 @@ export class PlatformSchoolsService {
       role: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN';
     },
   ): Promise<UserRow> {
-    const passwordHash = hashPassword(input.temporaryPassword);
+    const email = canonicalizeEmail(input.email);
+    const password = this.passwords.validate(input.temporaryPassword, [
+      input.firstName ?? '',
+      input.lastName ?? '',
+      email.normalized.split('@')[0],
+    ]);
+    const passwordHash = await this.passwords.hash(password);
 
     const userResult = await client.query<UserRow>(
       `
-      INSERT INTO users (email, password_hash, preferred_locale, status, first_name, last_name)
-      VALUES ($1, $2, 'fr', 'ACTIVE', $3, $4)
+      INSERT INTO users (
+        email,
+        email_original,
+        email_normalized,
+        password_hash,
+        preferred_locale,
+        status,
+        account_status,
+        email_verified_at,
+        password_changed_at,
+        failed_login_count,
+        locked_until,
+        first_name,
+        last_name
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        'fr',
+        'ACTIVE',
+        'ACTIVE',
+        NOW(),
+        NOW(),
+        0,
+        NULL,
+        $5,
+        $6
+      )
       ON CONFLICT (email) DO UPDATE
-        SET password_hash = EXCLUDED.password_hash,
-            status        = 'ACTIVE',
-            first_name    = COALESCE(users.first_name, EXCLUDED.first_name),
-            last_name     = COALESCE(users.last_name,  EXCLUDED.last_name),
-            updated_at    = NOW()
+        SET email_original = EXCLUDED.email_original,
+            email_normalized = EXCLUDED.email_normalized,
+            password_hash = EXCLUDED.password_hash,
+            status = 'ACTIVE',
+            account_status = 'ACTIVE',
+            email_verified_at = COALESCE(
+              users.email_verified_at,
+              NOW()
+            ),
+            password_changed_at = NOW(),
+            failed_login_count = 0,
+            locked_until = NULL,
+            authentication_version =
+              users.authentication_version + 1,
+            first_name = COALESCE(
+              users.first_name,
+              EXCLUDED.first_name
+            ),
+            last_name = COALESCE(
+              users.last_name,
+              EXCLUDED.last_name
+            ),
+            updated_at = NOW()
       RETURNING id, email, first_name, last_name
       `,
-      [input.email, passwordHash, input.firstName, input.lastName],
+      [
+        email.original,
+        email.original,
+        email.normalized,
+        passwordHash,
+        input.firstName,
+        input.lastName,
+      ],
     );
 
     const user = userResult.rows[0];
+
+    await client.query(
+      `
+      UPDATE auth_sessions
+      SET
+        revoked_at = COALESCE(revoked_at, NOW()),
+        revocation_reason = COALESCE(
+          revocation_reason,
+          'PLATFORM_CREDENTIAL_REPROVISIONED'
+        ),
+        updated_at = NOW()
+      WHERE user_id = $1
+        AND revoked_at IS NULL
+      `,
+      [user.id],
+    );
 
     const existingMembership = await client.query<{ id: string }>(
       `
@@ -598,7 +675,7 @@ export class PlatformSchoolsService {
         $5,
         $6,
         $7,
-        LOWER($7)
+        $8
       )
       ON CONFLICT (
         school_id,
@@ -648,7 +725,8 @@ export class PlatformSchoolsService {
         staffCategory,
         input.firstName,
         input.lastName,
-        input.email,
+        email.original,
+        email.normalized,
       ],
     );
 

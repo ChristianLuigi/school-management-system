@@ -246,12 +246,11 @@ describe('database migration runner integration', () => {
       .filter((name) => name.endsWith('.sql'))
       .sort((left, right) => left.localeCompare(right));
 
-    for (const migrationName of migrationNames) {
-      if (
-        migrationName === '067_staff_directory_foundation.sql' ||
-        migrationName === '068_staff_employment_lifecycle.sql'
-      )
-        continue;
+    const legacyBaseMigrationNames = migrationNames.filter(
+      (name) => name.localeCompare('067_staff_directory_foundation.sql') < 0,
+    );
+
+    for (const migrationName of legacyBaseMigrationNames) {
       await copyFile(
         path.join(productionDirectory, migrationName),
         path.join(directory, migrationName),
@@ -267,8 +266,8 @@ describe('database migration runner integration', () => {
 
     try {
       await expect(runner.up()).resolves.toMatchObject({
-        appliedCount: 70,
-        totalCount: 70,
+        appliedCount: legacyBaseMigrationNames.length,
+        totalCount: legacyBaseMigrationNames.length,
       });
       const schoolId = randomUUID();
       const userId = randomUUID();
@@ -362,7 +361,7 @@ describe('database migration runner integration', () => {
       await expect(runner.up()).resolves.toMatchObject({
         applied: ['067_staff_directory_foundation.sql'],
         appliedCount: 1,
-        totalCount: 71,
+        totalCount: legacyBaseMigrationNames.length + 1,
       });
 
       const staff = await pool.query<{
@@ -418,6 +417,15 @@ describe('database migration runner integration', () => {
       __dirname,
       '../../../infra/db/migrations',
     );
+    const migrationNames = (await readdir(migrationsDirectory))
+      .filter((name) => name.endsWith('.sql'))
+      .sort((left, right) => left.localeCompare(right));
+    const migrationCount = migrationNames.length;
+    const baselineThrough = '058_operational_user_access.sql';
+    const baselineCount = migrationNames.filter(
+      (name) => name.localeCompare(baselineThrough) <= 0,
+    ).length;
+    const postBaselineMigrations = migrationNames.slice(baselineCount);
     const runner = new MigrationRunner({
       databaseUrl: database.url,
       migrationsDirectory,
@@ -426,12 +434,12 @@ describe('database migration runner integration', () => {
 
     try {
       await expect(runner.up()).resolves.toMatchObject({
-        appliedCount: 72,
-        totalCount: 72,
+        appliedCount: migrationCount,
+        totalCount: migrationCount,
       });
       await expect(runner.verify()).resolves.toMatchObject({
         verified: true,
-        migrationCount: 72,
+        migrationCount,
       });
 
       const pool = new Pool({ connectionString: database.url });
@@ -487,28 +495,17 @@ describe('database migration runner integration', () => {
           confirmation: MigrationRunner.baselineConfirmation(),
         }),
       ).resolves.toMatchObject({
-        baselineCount: 62,
+        baselineCount,
         through: '058_operational_user_access.sql',
       });
       await expect(runner.up()).resolves.toMatchObject({
-        applied: [
-          '059_disable_legacy_seed_super_admin.sql',
-          '060_finance_core_integrity.sql',
-          '061_finance_cashier_workflow.sql',
-          '062_finance_controlled_corrections.sql',
-          '063_finance_billing_plans.sql',
-          '064_finance_reconciliation_and_period_close.sql',
-          '065_payroll_hardening.sql',
-          '066_payroll_school_admin_approval.sql',
-          '067_staff_directory_foundation.sql',
-          '068_staff_employment_lifecycle.sql',
-        ],
-        appliedCount: 10,
+        applied: postBaselineMigrations,
+        appliedCount: postBaselineMigrations.length,
       });
       await expect(runner.verify()).resolves.toMatchObject({
         verified: true,
-        migrationCount: 72,
-        baselineCount: 62,
+        migrationCount,
+        baselineCount,
       });
     } finally {
       await runner.close();
