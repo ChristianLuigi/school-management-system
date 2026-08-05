@@ -1,3 +1,5 @@
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -46,13 +48,26 @@ export default async function SchoolWorkspaceLayout({
 
   return (
     <AppShell
-      navigation={getSchoolNavigation(roles, locale)}
+      navigation={getSchoolNavigation(roles, locale).filter(
+        (item) => !operatorAccess || item.href !== "/my-staff-profile",
+      )}
       workspaceLabel="School workspace"
       workspaceName={schoolName}
       workspaceCode={schoolCode}
       user={{ name: userName, email: context.user.email }}
       actions={
         <div className="flex items-center gap-2">
+          {context.isSuperAdmin && operatorAccess ? (
+            <Link
+              href={`/platform/schools/${currentSchoolId}`}
+              aria-label="Return to Super Admin"
+              title="Return to Super Admin"
+              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted"
+            >
+              <ArrowLeft aria-hidden="true" size={16} />
+              <span className="hidden md:inline">Super Admin</span>
+            </Link>
+          ) : null}
           <LanguageSwitcher />
           {context.availableSchools.length > 0 ? (
             <SchoolSwitcher

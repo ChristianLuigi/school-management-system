@@ -246,8 +246,7 @@ const COPY = {
     terminate: "Terminate employment",
     rehire: "Rehire",
     archive: "Archive",
-    destructiveConfirm:
-      "Confirm this action? Active sessions will be revoked.",
+    destructiveConfirm: "Confirm this action? Active sessions will be revoked.",
   },
 } as const;
 
@@ -293,8 +292,9 @@ export function StaffDetailClient({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [selectedAction, setSelectedAction] =
-    useState<LifecycleAction | null>(null);
+  const [selectedAction, setSelectedAction] = useState<LifecycleAction | null>(
+    null,
+  );
   const [actionReason, setActionReason] = useState("");
   const [actionDate, setActionDate] = useState(today());
 
@@ -310,8 +310,7 @@ export function StaffDetailClient({
   const [addressPostalCode, setAddressPostalCode] = useState("");
   const [addressCountryCode, setAddressCountryCode] = useState("HT");
   const [staffCode, setStaffCode] = useState("");
-  const [staffCategory, setStaffCategory] =
-    useState<StaffCategory>("OTHER");
+  const [staffCategory, setStaffCategory] = useState<StaffCategory>("OTHER");
   const [employmentType, setEmploymentType] =
     useState<EmploymentType>("FULL_TIME");
   const [hireDate, setHireDate] = useState("");
@@ -960,8 +959,6 @@ export function StaffDetailClient({
         <StaffOperationalWorkspaceClient
           schoolId={schoolId}
           staffId={staffId}
-          firstName={staff.firstName}
-          lastName={staff.lastName}
           email={staff.email}
           section={tab}
         />
@@ -1020,7 +1017,8 @@ function Timeline({
   }>;
   empty: string;
 }) {
-  if (!items.length) return <div className="text-sm text-slate-500">{empty}</div>;
+  if (!items.length)
+    return <div className="text-sm text-slate-500">{empty}</div>;
   return (
     <ol className="space-y-4">
       {items.map((item) => (

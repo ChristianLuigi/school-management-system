@@ -8,6 +8,7 @@ type Section = "access" | "assignments" | "payroll" | "medical";
 
 type AccessResponse = {
   linked: boolean;
+  rowVersion: number;
   accessEnabled?: boolean;
   employmentStatus: string;
   account: {
@@ -47,8 +48,10 @@ type AssignmentResponse = {
 };
 
 type AssignmentOptions = {
+  staffAccountId: string;
   userId: string | null;
   eligible: boolean;
+  loginAvailable: boolean;
   academicYears: Array<{
     id: string;
     nameI18n: Record<string, string>;
@@ -158,7 +161,9 @@ const COPY = {
     assignments: "Affectations d’enseignement",
     noAssignments: "Aucune affectation académique.",
     teacherRequired:
-      "Un compte actif avec le rôle Enseignant est requis avant d’attribuer des classes.",
+      "Seul un membre actif du personnel enseignant peut recevoir des affectations.",
+    loginRequired:
+      "Les affectations peuvent être préparées maintenant. Un compte Enseignant actif devra être lié pour accéder aux modules pédagogiques.",
     academicYear: "Année académique",
     saveAssignments: "Enregistrer les affectations",
     noAcademicSetup:
@@ -185,6 +190,10 @@ const COPY = {
     invitationEmailFailed:
       "Invitation créée, mais le courriel n’a pas pu être livré.",
     confirmRevoke: "Révoquer cette invitation ?",
+    unlink: "Dissocier le compte",
+    confirmUnlink: "Dissocier ce compte du dossier du personnel ?",
+    unlinkReason: "Indiquez la raison de cette dissociation :",
+    unlinked: "Le compte a été dissocié du dossier du personnel.",
     saving: "Enregistrement…",
     active: "Actif",
     inactive: "Inactif",
@@ -217,11 +226,12 @@ const COPY = {
     assignments: "Teaching assignments",
     noAssignments: "No academic assignments.",
     teacherRequired:
-      "An active account with the Teacher role is required before assigning classes.",
+      "Only active teaching staff can receive academic assignments.",
+    loginRequired:
+      "Assignments can be prepared now. An active linked Teacher account is required to use teaching modules.",
     academicYear: "Academic year",
     saveAssignments: "Save assignments",
-    noAcademicSetup:
-      "No sections with configured subjects are available.",
+    noAcademicSetup: "No sections with configured subjects are available.",
     payroll: "Payroll profile",
     noPayroll: "No payroll profile is linked.",
     createPayroll: "Create payroll profile",
@@ -244,6 +254,10 @@ const COPY = {
     invitationEmailFailed:
       "Invitation created, but the email could not be delivered.",
     confirmRevoke: "Revoke this invitation?",
+    unlink: "Unlink account",
+    confirmUnlink: "Unlink this account from the staff record?",
+    unlinkReason: "Enter the reason for unlinking this account:",
+    unlinked: "The account was unlinked from the staff record.",
     saving: "Saving…",
     active: "Active",
     inactive: "Inactive",
@@ -264,15 +278,11 @@ async function responseBody(response: Response) {
 export function StaffOperationalWorkspaceClient({
   schoolId,
   staffId,
-  firstName,
-  lastName,
   email,
   section,
 }: {
   schoolId: string;
   staffId: string;
-  firstName: string | null;
-  lastName: string | null;
   email: string | null;
   section: Section;
 }) {
@@ -282,13 +292,16 @@ export function StaffOperationalWorkspaceClient({
   const [assignments, setAssignments] = useState<AssignmentResponse>({
     items: [],
   });
-  const [assignmentOptions, setAssignmentOptions] =
-    useState<AssignmentOptions>({
+  const [assignmentOptions, setAssignmentOptions] = useState<AssignmentOptions>(
+    {
+      staffAccountId: staffId,
       userId: null,
       eligible: false,
+      loginAvailable: false,
       academicYears: [],
       sections: [],
-    });
+    },
+  );
   const [payroll, setPayroll] = useState<PayrollResponse>({
     hasProfile: false,
     profile: null,
@@ -307,7 +320,6 @@ export function StaffOperationalWorkspaceClient({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const [inviteEmail, setInviteEmail] = useState(email ?? "");
   const [inviteRole, setInviteRole] = useState<"TEACHER" | "FINANCE_ADMIN">(
     "TEACHER",
   );
@@ -372,9 +384,7 @@ export function StaffOperationalWorkspaceClient({
       setMedical(nextMedical);
       setFinancePermissions(nextAccess.financePermissions);
       setEmergencyName(nextMedical.emergencyContactName ?? "");
-      setEmergencyRelationship(
-        nextMedical.emergencyContactRelationship ?? "",
-      );
+      setEmergencyRelationship(nextMedical.emergencyContactRelationship ?? "");
       setEmergencyPhone(nextMedical.emergencyContactPhone ?? "");
       setAllergies(nextMedical.allergiesOrConditions ?? "");
       setAccommodations(nextMedical.accommodationNotes ?? "");
@@ -383,7 +393,9 @@ export function StaffOperationalWorkspaceClient({
         nextOptions.academicYears.some((year) => year.id === selectedYear)
           ? selectedYear
           : (nextOptions.academicYears.find((year) => year.status === "ACTIVE")
-              ?.id ?? nextOptions.academicYears[0]?.id ?? "");
+              ?.id ??
+            nextOptions.academicYears[0]?.id ??
+            "");
       selectYear(nextYear, nextAssignments.items);
     } catch (caught) {
       setError(
@@ -406,23 +418,22 @@ export function StaffOperationalWorkspaceClient({
     setMessage("");
     setError("");
     try {
-      const response = await fetch("/api/auth/invitations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schoolId,
-          staffAccountId: staffId,
-          email: inviteEmail,
-          firstName: firstName ?? undefined,
-          lastName: lastName ?? undefined,
-          roleCode: inviteRole,
-          locale: inviteLocale,
-          financePermissionCodes:
-            inviteRole === "FINANCE_ADMIN"
-              ? inviteFinancePermissions
-              : undefined,
-        }),
-      });
+      const response = await fetch(
+        `/api/staff-management/staff/${encodeURIComponent(staffId)}/invitation`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            schoolId,
+            roleCode: inviteRole,
+            locale: inviteLocale,
+            financePermissionCodes:
+              inviteRole === "FINANCE_ADMIN"
+                ? inviteFinancePermissions
+                : undefined,
+          }),
+        },
+      );
       const body = await responseBody(response);
       if (!response.ok) {
         throw new Error(body?.message ?? "Unable to create invitation.");
@@ -483,6 +494,43 @@ export function StaffOperationalWorkspaceClient({
     }
   }
 
+  async function unlinkAccount() {
+    if (!access?.linked) return;
+    if (!window.confirm(copy.confirmUnlink)) return;
+    const reason = window.prompt(copy.unlinkReason)?.trim();
+    if (!reason) return;
+
+    setSaving(true);
+    setMessage("");
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/staff-management/staff/${encodeURIComponent(staffId)}/user-link`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            schoolId,
+            rowVersion: access.rowVersion,
+            reason,
+          }),
+        },
+      );
+      const body = await responseBody(response);
+      if (!response.ok) {
+        throw new Error(body?.message ?? "Unable to unlink account.");
+      }
+      setMessage(copy.unlinked);
+      await load();
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to unlink account.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function saveFinancePermissions() {
     if (!access?.account) return;
     setSaving(true);
@@ -494,7 +542,10 @@ export function StaffOperationalWorkspaceClient({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ schoolId, permissionCodes: financePermissions }),
+          body: JSON.stringify({
+            schoolId,
+            permissionCodes: financePermissions,
+          }),
         },
       );
       const body = await responseBody(response);
@@ -515,13 +566,13 @@ export function StaffOperationalWorkspaceClient({
   }
 
   async function saveAssignments() {
-    if (!assignmentOptions.userId || !selectedYear) return;
+    if (!assignmentOptions.eligible || !selectedYear) return;
     setSaving(true);
     setMessage("");
     setError("");
     try {
       const response = await fetch(
-        `/api/access-management/teachers/${encodeURIComponent(assignmentOptions.userId)}/assignments`,
+        `/api/access-management/teachers/staff/${encodeURIComponent(assignmentOptions.staffAccountId)}/assignments`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -708,6 +759,14 @@ export function StaffOperationalWorkspaceClient({
                       ))}
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => void unlinkAccount()}
+                    className="mt-4 rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 disabled:opacity-60"
+                  >
+                    {copy.unlink}
+                  </button>
                 </>
               ) : null}
             </div>
@@ -715,9 +774,7 @@ export function StaffOperationalWorkspaceClient({
 
           {!access?.linked ? (
             <Panel
-              title={
-                access?.pendingInvitation ? copy.pending : copy.invite
-              }
+              title={access?.pendingInvitation ? copy.pending : copy.invite}
             >
               {access?.pendingInvitation ? (
                 <div className="space-y-4 text-sm">
@@ -764,24 +821,14 @@ export function StaffOperationalWorkspaceClient({
               ) : (
                 <form onSubmit={sendInvitation} className="space-y-4">
                   <p className="text-sm text-slate-600">{copy.inviteHelp}</p>
-                  <Field label={copy.email}>
-                    <input
-                      required
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(event) => setInviteEmail(event.target.value)}
-                      className="staff-input"
-                    />
-                  </Field>
+                  <Row label={copy.email} value={email ?? "-"} />
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label={copy.role}>
                       <select
                         value={inviteRole}
                         onChange={(event) =>
                           setInviteRole(
-                            event.target.value as
-                              | "TEACHER"
-                              | "FINANCE_ADMIN",
+                            event.target.value as "TEACHER" | "FINANCE_ADMIN",
                           )
                         }
                         className="staff-input"
@@ -829,11 +876,7 @@ export function StaffOperationalWorkspaceClient({
               <PermissionGrid
                 values={financePermissions}
                 onToggle={(permission) =>
-                  toggle(
-                    permission,
-                    financePermissions,
-                    setFinancePermissions,
-                  )
+                  toggle(permission, financePermissions, setFinancePermissions)
                 }
               />
               <button
@@ -896,6 +939,11 @@ export function StaffOperationalWorkspaceClient({
               </div>
             ) : (
               <div className="space-y-4">
+                {!assignmentOptions.loginAvailable ? (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                    {copy.loginRequired}
+                  </div>
+                ) : null}
                 <Field label={copy.academicYear}>
                   <select
                     value={selectedYear}
@@ -1056,10 +1104,7 @@ export function StaffOperationalWorkspaceClient({
           <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
             {copy.medicalWarning}
           </div>
-          <form
-            onSubmit={saveMedical}
-            className="grid gap-4 md:grid-cols-2"
-          >
+          <form onSubmit={saveMedical} className="grid gap-4 md:grid-cols-2">
             <Field label={copy.emergencyName}>
               <input
                 value={emergencyName}

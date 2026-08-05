@@ -18,6 +18,8 @@ const LIFECYCLE_OPERATIONS = new Set([
   "terminate",
   "rehire",
   "archive",
+  "invitation",
+  "link-user",
 ]);
 
 type RouteContext = {
@@ -47,9 +49,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   }
   return proxyAuthenticated(request, {
     method: "POST",
-    path:
-      `/staff-management/staff/${encodeURIComponent(staffId)}/` +
-      operation,
+    path: `/staff-management/staff/${encodeURIComponent(staffId)}/` + operation,
   });
 }
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
@@ -59,8 +59,16 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
   return proxyAuthenticated(request, {
     method: "PATCH",
-    path:
-      `/staff-management/staff/${encodeURIComponent(staffId)}/` +
-      operation,
+    path: `/staff-management/staff/${encodeURIComponent(staffId)}/` + operation,
+  });
+}
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
+  const { staffId, operation } = await params;
+  if (operation !== "user-link") {
+    return NextResponse.json({ message: "Not found." }, { status: 404 });
+  }
+  return proxyAuthenticated(request, {
+    method: "DELETE",
+    path: `/staff-management/staff/${encodeURIComponent(staffId)}/` + operation,
   });
 }

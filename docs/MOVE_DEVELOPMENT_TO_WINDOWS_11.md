@@ -82,4 +82,3 @@ Open `http://localhost:3000`. The API normally listens on
 After confirming that logins, records, and uploads work, securely erase the private
 transfer bundle from any unencrypted temporary location. Keep the original PC
 unchanged until the new environment has been verified.
-

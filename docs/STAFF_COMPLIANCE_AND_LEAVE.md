@@ -1,8 +1,8 @@
-# Staff Compliance, Credentials, and Leave (S6)
+# Staff Compliance and Leave (S8) with Operational Reporting (S9)
 
 ## Scope
 
-S6 adds four operational capabilities to the School Administrator staff
+This implementation adds four capabilities to the School Administrator staff
 workspace:
 
 - private staff documents;
@@ -10,8 +10,8 @@ workspace:
 - auditable leave requests; and
 - a school-scoped operational staff report with CSV export.
 
-Medical information remains in its separate S5 table and never appears in S6
-documents, reports, exports, or activity payloads.
+Medical information remains in its separate protected table and never appears
+in documents, reports, exports, or activity payloads.
 
 ## Private document storage
 
@@ -32,7 +32,7 @@ revoked records, use `nosniff`, and disable caching. Storage keys are never
 returned by normal document-list endpoints or rendered in the browser.
 
 Document types are identity, contract, certification, license, background
-check, work permit, and other. Documents may be standard or restricted. In S6,
+check, work permit, and other. Documents may be standard or restricted. In S8,
 both classifications require active School Administrator access; the
 classification is retained so a narrower restricted-document permission can be
 introduced later without migrating the data.
@@ -116,7 +116,7 @@ All endpoints require an active same-school School Administrator:
 
 ## Privacy decision
 
-S6 preserves the S5 medical policy: active same-school School Administrators
+S8 preserves the existing medical policy: active same-school School Administrators
 may access the small medical panel. A narrower medical permission is not
 enabled automatically because the project currently has no safe grant owner
 for a one-administrator school. Enabling a permission that nobody can grant

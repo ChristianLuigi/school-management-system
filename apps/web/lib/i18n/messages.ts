@@ -71,6 +71,9 @@ export const messages = {
       settings: "Paramètres",
       schools: "Écoles",
       staff: "Personnel",
+      myStaffProfile: "Mon dossier",
+      myStaffProfileDescription:
+        "Consultez vos informations d'emploi, vos documents et vos demandes de cong\u00e9.",
       onboarding: "Intégration",
       activity: "Activité",
     },
@@ -437,6 +440,9 @@ export const messages = {
       settings: "Settings",
       schools: "Schools",
       staff: "Staff",
+      myStaffProfile: "My Staff Profile",
+      myStaffProfileDescription:
+        "Review your employment information, documents, and leave requests.",
       onboarding: "Onboarding",
       activity: "Activity",
     },

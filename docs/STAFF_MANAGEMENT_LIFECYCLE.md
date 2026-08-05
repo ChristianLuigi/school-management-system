@@ -1,4 +1,4 @@
-# Staff Management Lifecycle (S2-S6)
+# Staff Management Lifecycle and Workspace
 
 ## Purpose
 
@@ -6,8 +6,8 @@ The staff directory is the canonical employment record for school personnel.
 A login role answers which module a user may enter; the staff record determines
 whether the employee's staff access is currently usable.
 
-The backend deliberately supports staff without login accounts. S5 adds an
-intentional invitation/linking workflow that connects an activated account to
+The backend deliberately supports staff without login accounts. The
+invitation/linking workflow connects an activated account to
 the selected existing staff record without creating a duplicate employee.
 
 ## Employment lifecycle
@@ -63,6 +63,9 @@ Administrator access.
 - `POST /staff-management/staff`
 - `GET /staff-management/staff/:staffId`
 - `PATCH /staff-management/staff/:staffId`
+- `POST /staff-management/staff/:staffId/invitation`
+- `POST /staff-management/staff/:staffId/link-user`
+- `DELETE /staff-management/staff/:staffId/user-link`
 - `POST /staff-management/staff/:staffId/activate`
 - `POST /staff-management/staff/:staffId/leave`
 - `POST /staff-management/staff/:staffId/suspend`
@@ -88,7 +91,7 @@ authentication versions, reset/invitation tokens, and raw database errors.
 
 ## School Administrator workspace
 
-S4 adds a role-protected workspace at `/staff` with authenticated same-origin
+The administrator workspace provides a role-protected `/staff` route with authenticated same-origin
 proxy routes under `/api/staff-management`.
 
 The directory supports:
@@ -111,7 +114,7 @@ The detail workspace supports:
 Browser controls improve operator flow, but all lifecycle and school-scope
 rules remain enforced by the API and database.
 
-### S5 operational workspace
+### Operational workspace
 
 The staff detail page now provides role-aware operational editors:
 
@@ -161,8 +164,12 @@ Migration `069_staff_operational_workspace.sql` adds:
 Do not edit migration 069 after it has been applied. Its full filename and
 checksum are part of migration history.
 
-## Next boundary
+## Canonical roadmap
 
-S7 should add employee self-service, managed leave balances and accrual rules,
-document-retention jobs, scheduled credential reminders, and the governance
-model required for narrower medical and restricted-document permissions.
+S10 adds employee self-service for safe profile review, standard-document
+downloads, leave submission, and pending-request withdrawal. Its security
+boundary is documented in `STAFF_SELF_SERVICE.md`.
+
+The authoritative S5-S10 mapping, completion state, remaining gaps, and
+recommended implementation order are documented in
+`STAFF_ROADMAP_RECONCILIATION.md`.

@@ -63,6 +63,12 @@ const schoolNavigation: SchoolNavigationItem[] = [
     roles: ["SCHOOL_ADMIN", "FINANCE_ADMIN"],
   },
   {
+    href: "/my-staff-profile",
+    labelKey: "nav.myStaffProfile",
+    icon: "students",
+    roles: ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"],
+  },
+  {
     href: "/staff",
     labelKey: "nav.staff",
     icon: "students",
