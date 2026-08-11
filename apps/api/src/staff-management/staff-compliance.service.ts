@@ -393,48 +393,64 @@ export class StaffComplianceService {
     schoolId: string,
     actorUserId: string,
   ) {
-    await this.assertSchoolAdministrator(this.db, schoolId, actorUserId);
-    const result = await this.db.query<DocumentRow>(
-      `
-      SELECT
-        id,
-        school_id,
-        staff_account_id,
-        document_type,
-        display_name,
-        storage_key,
-        original_file_name,
-        mime_type,
-        file_size_bytes::TEXT,
-        issued_on::TEXT,
-        expires_on::TEXT,
-        confidentiality,
-        document_status,
-        row_version,
-        revoked_at,
-        revocation_reason,
-        created_at,
-        updated_at
-      FROM staff_documents
-      WHERE id = $1
-        AND staff_account_id = $2
-        AND school_id = $3
-        AND document_status = 'ACTIVE'
-        AND deleted_at IS NULL
-      LIMIT 1
-      `,
-      [documentId, staffId, schoolId],
-    );
-    const document = result.rows[0];
-    if (!document) {
-      throw new NotFoundException('Staff document not found.');
-    }
-    return {
-      storageKey: document.storage_key,
-      originalFileName: document.original_file_name,
-      mimeType: document.mime_type,
-      fileSizeBytes: Number(document.file_size_bytes),
-    };
+    return this.db.withTransaction(async (client) => {
+      await this.assertSchoolAdministrator(client, schoolId, actorUserId);
+      const result = await client.query<DocumentRow>(
+        `
+        SELECT
+          id,
+          school_id,
+          staff_account_id,
+          document_type,
+          display_name,
+          storage_key,
+          original_file_name,
+          mime_type,
+          file_size_bytes::TEXT,
+          issued_on::TEXT,
+          expires_on::TEXT,
+          confidentiality,
+          document_status,
+          row_version,
+          revoked_at,
+          revocation_reason,
+          created_at,
+          updated_at
+        FROM staff_documents
+        WHERE id = $1
+          AND staff_account_id = $2
+          AND school_id = $3
+          AND document_status = 'ACTIVE'
+          AND deleted_at IS NULL
+        LIMIT 1
+        `,
+        [documentId, staffId, schoolId],
+      );
+      const document = result.rows[0];
+      if (!document) {
+        throw new NotFoundException('Staff document not found.');
+      }
+      await this.platformActivityService.recordTx(client, {
+        eventType: 'STAFF_DOCUMENT_DOWNLOAD_AUTHORIZED',
+        actorType: 'SCHOOL_STAFF',
+        actorUserId,
+        schoolId,
+        summary: 'Staff document download authorized.',
+        payload: {
+          staffId,
+          documentId,
+          documentType: document.document_type,
+          confidentiality: document.confidentiality,
+          accessChannel: 'ADMINISTRATION',
+        },
+      });
+      return {
+        storageKey: document.storage_key,
+        originalFileName: document.original_file_name,
+        mimeType: document.mime_type,
+        fileSizeBytes: Number(document.file_size_bytes),
+      };
+    });
   }
 
   async revokeDocument(
@@ -1088,6 +1104,219 @@ export class StaffComplianceService {
         [query.schoolId],
       ),
     ]);
+    const [payrollEligibilityResult, accessReconciliationResult] =
+      await Promise.all([
+        this.db.query<{
+          staff_id: string;
+          staff_code: string | null;
+          first_name: string | null;
+          last_name: string | null;
+          employment_status: string;
+          payroll_profile_id: string | null;
+          payroll_active: boolean | null;
+          currency_code: string | null;
+          pay_frequency: string | null;
+          compensation_effective_from: string | null;
+        }>(
+          `
+          SELECT
+            staff.id AS staff_id,
+            staff.staff_code,
+            staff.first_name,
+            staff.last_name,
+            staff.employment_status,
+            profile.id AS payroll_profile_id,
+            profile.payroll_active,
+            compensation.currency_code,
+            compensation.pay_frequency,
+            compensation.effective_from::TEXT AS compensation_effective_from
+          FROM school_staff_accounts staff
+          LEFT JOIN payroll_staff_profiles profile
+            ON profile.school_id = staff.school_id
+           AND profile.school_staff_account_id = staff.id
+           AND profile.deleted_at IS NULL
+          LEFT JOIN LATERAL (
+            SELECT
+              version.currency_code,
+              version.pay_frequency,
+              version.effective_from
+            FROM payroll_compensation_versions version
+            WHERE version.school_id = staff.school_id
+              AND version.staff_account_id = staff.id
+              AND version.effective_from <= CURRENT_DATE
+            ORDER BY version.effective_from DESC, version.created_at DESC
+            LIMIT 1
+          ) compensation ON TRUE
+          WHERE staff.school_id = $1
+            AND staff.deleted_at IS NULL
+          ORDER BY staff.last_name NULLS LAST, staff.first_name NULLS LAST,
+            staff.staff_code
+          `,
+          [query.schoolId],
+        ),
+        this.db.query<{
+          staff_id: string;
+          staff_code: string | null;
+          first_name: string | null;
+          last_name: string | null;
+          staff_type: string | null;
+          employment_status: string;
+          user_id: string | null;
+          account_user_id: string | null;
+          account_status: string | null;
+          email_verified_at: string | null;
+          membership_status: string | null;
+          active_roles: string[] | null;
+          active_session_count: string;
+        }>(
+          `
+          SELECT
+            staff.id AS staff_id,
+            staff.staff_code,
+            staff.first_name,
+            staff.last_name,
+            staff.staff_type,
+            staff.employment_status,
+            staff.user_id,
+            usr.id AS account_user_id,
+            usr.account_status,
+            usr.email_verified_at,
+            membership_access.membership_status,
+            membership_access.active_roles,
+            COALESCE(session_count.active_session_count, 0)::TEXT
+              AS active_session_count
+          FROM school_staff_accounts staff
+          LEFT JOIN users usr
+            ON usr.id = staff.user_id
+           AND usr.deleted_at IS NULL
+          LEFT JOIN LATERAL (
+            SELECT
+              membership.membership_status::TEXT AS membership_status,
+              COALESCE(
+                ARRAY_AGG(
+                  membership_role.role::TEXT
+                  ORDER BY membership_role.role::TEXT
+                ) FILTER (WHERE membership_role.deleted_at IS NULL),
+                ARRAY[]::TEXT[]
+              ) AS active_roles
+            FROM school_memberships membership
+            LEFT JOIN school_membership_roles membership_role
+              ON membership_role.school_membership_id = membership.id
+             AND membership_role.deleted_at IS NULL
+            WHERE membership.school_id = staff.school_id
+              AND membership.user_id = staff.user_id
+              AND membership.deleted_at IS NULL
+            GROUP BY membership.id
+            ORDER BY membership.created_at DESC, membership.id DESC
+            LIMIT 1
+          ) membership_access ON TRUE
+          LEFT JOIN LATERAL (
+            SELECT COUNT(*) AS active_session_count
+            FROM auth_sessions session
+            WHERE session.user_id = staff.user_id
+              AND session.revoked_at IS NULL
+              AND session.expires_at > NOW()
+          ) session_count ON TRUE
+          WHERE staff.school_id = $1
+            AND staff.deleted_at IS NULL
+          ORDER BY staff.last_name NULLS LAST, staff.first_name NULLS LAST,
+            staff.staff_code
+          `,
+          [query.schoolId],
+        ),
+      ]);
+    const [departmentHeadcountResult, teacherCoverageResult] =
+      await Promise.all([
+        this.db.query<{
+          department: string | null;
+          active_count: string;
+          total_count: string;
+        }>(
+          `
+          SELECT
+            NULLIF(BTRIM(department), '') AS department,
+            COUNT(*) FILTER (
+              WHERE employment_status IN ('ACTIVE', 'ON_LEAVE')
+            )::TEXT AS active_count,
+            COUNT(*)::TEXT AS total_count
+          FROM school_staff_accounts
+          WHERE school_id = $1
+            AND deleted_at IS NULL
+          GROUP BY NULLIF(BTRIM(department), '')
+          ORDER BY COUNT(*) FILTER (
+            WHERE employment_status IN ('ACTIVE', 'ON_LEAVE')
+          ) DESC, department NULLS LAST
+          `,
+          [query.schoolId],
+        ),
+        this.db.query<{
+          staff_id: string;
+          staff_code: string | null;
+          first_name: string | null;
+          last_name: string | null;
+          employment_status: string;
+          user_id: string | null;
+          assignment_id: string | null;
+          academic_year_id: string | null;
+          academic_year_name_i18n: Record<string, string> | null;
+          section_id: string | null;
+          section_code: string | null;
+          section_name_i18n: Record<string, string> | null;
+          subject_id: string | null;
+          subject_code: string | null;
+          subject_name_i18n: Record<string, string> | null;
+        }>(
+          `
+          SELECT
+            staff.id AS staff_id,
+            staff.staff_code,
+            staff.first_name,
+            staff.last_name,
+            staff.employment_status,
+            staff.user_id,
+            assignment.id AS assignment_id,
+            academic_year.id AS academic_year_id,
+            academic_year.name_i18n AS academic_year_name_i18n,
+            section.id AS section_id,
+            section.code AS section_code,
+            section.name_i18n AS section_name_i18n,
+            subject.id AS subject_id,
+            subject.code AS subject_code,
+            subject.name_i18n AS subject_name_i18n
+          FROM school_staff_accounts staff
+          LEFT JOIN teacher_academic_assignments assignment
+            ON assignment.school_id = staff.school_id
+           AND assignment.teacher_staff_account_id = staff.id
+           AND assignment.assignment_status = 'ACTIVE'
+           AND assignment.deleted_at IS NULL
+          LEFT JOIN academic_years academic_year
+            ON academic_year.id = assignment.academic_year_id
+           AND academic_year.school_id = assignment.school_id
+           AND academic_year.deleted_at IS NULL
+          LEFT JOIN sections section
+            ON section.id = assignment.section_id
+           AND section.school_id = assignment.school_id
+           AND section.deleted_at IS NULL
+          LEFT JOIN school_subjects subject
+            ON subject.id = assignment.subject_id
+           AND subject.school_id = assignment.school_id
+           AND subject.deleted_at IS NULL
+          WHERE staff.school_id = $1
+            AND staff.deleted_at IS NULL
+            AND (
+              staff.staff_category = 'TEACHING'
+              OR staff.staff_type = 'TEACHER'
+            )
+          ORDER BY
+            staff.last_name NULLS LAST,
+            staff.first_name NULLS LAST,
+            academic_year.start_date DESC NULLS LAST,
+            section.code NULLS LAST,
+            subject.code NULLS LAST
+          `,
+          [query.schoolId],
+        ),
+      ]);
     const gaps = gapResult.rows[0];
     const statusCounts = Object.fromEntries(
       statusResult.rows.map((row) => [row.label, Number(row.count)]),
@@ -1096,7 +1325,157 @@ export class StaffComplianceService {
       categoryResult.rows.map((row) => [row.label, Number(row.count)]),
     );
     const today = new Date().toISOString().slice(0, 10);
-    return {
+    const payrollEligibility = payrollEligibilityResult.rows.map((row) => {
+      let eligibilityStatus = 'READY';
+      if (!['ACTIVE', 'ON_LEAVE'].includes(row.employment_status)) {
+        eligibilityStatus = 'NOT_CURRENTLY_EMPLOYED';
+      } else if (!row.payroll_profile_id) {
+        eligibilityStatus = 'MISSING_PROFILE';
+      } else if (!row.payroll_active) {
+        eligibilityStatus = 'PROFILE_INACTIVE';
+      } else if (!row.compensation_effective_from) {
+        eligibilityStatus = 'MISSING_COMPENSATION';
+      }
+      return {
+        staffId: row.staff_id,
+        staffCode: row.staff_code,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        employmentStatus: row.employment_status,
+        eligibilityStatus,
+        currencyCode: row.currency_code,
+        payFrequency: row.pay_frequency,
+        compensationEffectiveFrom: row.compensation_effective_from,
+      };
+    });
+    const accessReconciliation = accessReconciliationResult.rows.map((row) => {
+      const activeRoles = row.active_roles ?? [];
+      const activeSessionCount = Number(row.active_session_count);
+      const employmentAllowsAccess = ['ACTIVE', 'ON_LEAVE'].includes(
+        row.employment_status,
+      );
+      let accessStatus = 'ALIGNED';
+      if (!row.user_id) {
+        accessStatus = 'NO_LOGIN';
+      } else if (!row.account_user_id || row.account_status !== 'ACTIVE') {
+        accessStatus = 'ACCOUNT_INACTIVE';
+      } else if (!employmentAllowsAccess) {
+        accessStatus =
+          row.membership_status === 'ACTIVE'
+            ? 'ACCESS_SHOULD_BE_DISABLED'
+            : 'ACCESS_DISABLED';
+      } else if (row.membership_status !== 'ACTIVE') {
+        accessStatus = 'MISSING_ACTIVE_MEMBERSHIP';
+      } else if (row.staff_type && !activeRoles.includes(row.staff_type)) {
+        accessStatus = 'ROLE_MISMATCH';
+      }
+      return {
+        staffId: row.staff_id,
+        staffCode: row.staff_code,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        staffType: row.staff_type,
+        employmentStatus: row.employment_status,
+        linked: Boolean(row.user_id),
+        accountStatus: row.account_status,
+        emailVerified: Boolean(row.email_verified_at),
+        membershipStatus: row.membership_status,
+        activeRoles,
+        activeSessionCount,
+        accessStatus,
+        requiresAttention: [
+          'ACCOUNT_INACTIVE',
+          'ACCESS_SHOULD_BE_DISABLED',
+          'MISSING_ACTIVE_MEMBERSHIP',
+          'ROLE_MISMATCH',
+        ].includes(accessStatus),
+      };
+    });
+    const departmentHeadcount = departmentHeadcountResult.rows.map((row) => ({
+      department: row.department,
+      currentHeadcount: Number(row.active_count),
+      staffRecordCount: Number(row.total_count),
+    }));
+    const teacherCoverageByStaff = new Map<
+      string,
+      {
+        staffId: string;
+        staffCode: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        employmentStatus: string;
+        linked: boolean;
+        assignments: Array<{
+          assignmentId: string;
+          academicYearId: string;
+          academicYearNameI18n: Record<string, string> | null;
+          sectionId: string;
+          sectionCode: string | null;
+          sectionNameI18n: Record<string, string> | null;
+          subjectId: string;
+          subjectCode: string | null;
+          subjectNameI18n: Record<string, string> | null;
+        }>;
+      }
+    >();
+    for (const row of teacherCoverageResult.rows) {
+      if (!teacherCoverageByStaff.has(row.staff_id)) {
+        teacherCoverageByStaff.set(row.staff_id, {
+          staffId: row.staff_id,
+          staffCode: row.staff_code,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          employmentStatus: row.employment_status,
+          linked: Boolean(row.user_id),
+          assignments: [],
+        });
+      }
+      if (
+        row.assignment_id &&
+        row.academic_year_id &&
+        row.section_id &&
+        row.subject_id
+      ) {
+        teacherCoverageByStaff.get(row.staff_id)!.assignments.push({
+          assignmentId: row.assignment_id,
+          academicYearId: row.academic_year_id,
+          academicYearNameI18n: row.academic_year_name_i18n,
+          sectionId: row.section_id,
+          sectionCode: row.section_code,
+          sectionNameI18n: row.section_name_i18n,
+          subjectId: row.subject_id,
+          subjectCode: row.subject_code,
+          subjectNameI18n: row.subject_name_i18n,
+        });
+      }
+    }
+    const teacherAssignmentCoverage = Array.from(
+      teacherCoverageByStaff.values(),
+    ).map((teacher) => {
+      let coverageStatus = 'ASSIGNED';
+      if (teacher.employmentStatus !== 'ACTIVE') {
+        coverageStatus = 'NOT_ACTIVE';
+      } else if (!teacher.assignments.length) {
+        coverageStatus = 'NO_ASSIGNMENTS';
+      } else if (!teacher.linked) {
+        coverageStatus = 'ASSIGNED_NO_LOGIN';
+      }
+      return {
+        ...teacher,
+        assignmentCount: teacher.assignments.length,
+        sectionCount: new Set(
+          teacher.assignments.map((assignment) => assignment.sectionId),
+        ).size,
+        subjectCount: new Set(
+          teacher.assignments.map((assignment) => assignment.subjectId),
+        ).size,
+        coverageStatus,
+        requiresAttention: [
+          'NO_ASSIGNMENTS',
+          'ASSIGNED_NO_LOGIN',
+        ].includes(coverageStatus),
+      };
+    });    return {
       generatedAt: new Date().toISOString(),
       credentialWindowDays,
       totals: {
@@ -1115,9 +1494,35 @@ export class StaffComplianceService {
         pendingLeaveRequests: leaveResult.rows.filter(
           (row) => row.request_status === 'SUBMITTED',
         ).length,
+        payrollReady: payrollEligibility.filter(
+          (item) => item.eligibilityStatus === 'READY',
+        ).length,
+        payrollBlocked: payrollEligibility.filter(
+          (item) =>
+            !['READY', 'NOT_CURRENTLY_EMPLOYED'].includes(
+              item.eligibilityStatus,
+            ),
+        ).length,
+        accessIssues: accessReconciliation.filter(
+          (item) => item.requiresAttention,
+        ).length,
+        currentHeadcount: departmentHeadcount.reduce(
+          (total, department) => total + department.currentHeadcount,
+          0,
+        ),
+        teachersAssigned: teacherAssignmentCoverage.filter(
+          (teacher) => teacher.coverageStatus === 'ASSIGNED',
+        ).length,
+        teacherCoverageIssues: teacherAssignmentCoverage.filter(
+          (teacher) => teacher.requiresAttention,
+        ).length,
       },
       statusCounts,
       categoryCounts,
+      payrollEligibility,
+      accessReconciliation,
+      departmentHeadcount,
+      teacherAssignmentCoverage,
       credentialAlerts: credentialResult.rows.map((row) => ({
         documentId: row.document_id,
         staffId: row.staff_id,

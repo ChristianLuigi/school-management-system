@@ -314,46 +314,62 @@ export class StaffSelfServiceService {
     schoolId: string,
     actorUserId: string,
   ) {
-    const staff = await this.requireOwnActiveStaff(
-      this.db,
-      schoolId,
-      actorUserId,
-    );
-    const result = await this.db.query<SelfDocumentRow>(
-      `
-      SELECT
-        id,
-        document_type,
-        display_name,
-        storage_key,
-        original_file_name,
-        mime_type,
-        file_size_bytes::TEXT,
-        issued_on::TEXT,
-        expires_on::TEXT,
-        created_at
-      FROM staff_documents
-      WHERE id = $1
-        AND school_id = $2
-        AND staff_account_id = $3
-        AND confidentiality = 'STANDARD'
-        AND document_status = 'ACTIVE'
-        AND deleted_at IS NULL
-      LIMIT 1
-      `,
-      [documentId, schoolId, staff.id],
-    );
-    const document = result.rows[0];
-    if (!document) {
-      throw new NotFoundException('Staff document not found.');
-    }
-    return {
-      staffAccountId: staff.id,
-      storageKey: document.storage_key,
-      originalFileName: document.original_file_name,
-      mimeType: document.mime_type,
-      fileSizeBytes: Number(document.file_size_bytes),
-    };
+    return this.db.withTransaction(async (client) => {
+      const staff = await this.requireOwnActiveStaff(
+        client,
+        schoolId,
+        actorUserId,
+      );
+      const result = await client.query<SelfDocumentRow>(
+        `
+        SELECT
+          id,
+          document_type,
+          display_name,
+          storage_key,
+          original_file_name,
+          mime_type,
+          file_size_bytes::TEXT,
+          issued_on::TEXT,
+          expires_on::TEXT,
+          created_at
+        FROM staff_documents
+        WHERE id = $1
+          AND school_id = $2
+          AND staff_account_id = $3
+          AND confidentiality = 'STANDARD'
+          AND document_status = 'ACTIVE'
+          AND deleted_at IS NULL
+        LIMIT 1
+        `,
+        [documentId, schoolId, staff.id],
+      );
+      const document = result.rows[0];
+      if (!document) {
+        throw new NotFoundException('Staff document not found.');
+      }
+      await this.platformActivityService.recordTx(client, {
+        eventType: 'STAFF_DOCUMENT_DOWNLOAD_AUTHORIZED',
+        actorType: 'SCHOOL_STAFF',
+        actorUserId,
+        schoolId,
+        summary: 'Staff document download authorized.',
+        payload: {
+          staffId: staff.id,
+          documentId,
+          documentType: document.document_type,
+          confidentiality: 'STANDARD',
+          accessChannel: 'SELF_SERVICE',
+        },
+      });
+      return {
+        staffAccountId: staff.id,
+        storageKey: document.storage_key,
+        originalFileName: document.original_file_name,
+        mimeType: document.mime_type,
+        fileSizeBytes: Number(document.file_size_bytes),
+      };
+    });
   }
 
   async listLeaveRequests(schoolId: string, actorUserId: string) {

@@ -107,6 +107,28 @@ describe('staff documents, leave workflow, and reporting integration', () => {
       storageKey,
       mimeType: 'application/pdf',
     });
+    const downloadActivity = await pool.query<{
+      payload: Record<string, unknown>;
+    }>(
+      `
+      SELECT payload
+      FROM platform_activity_logs
+      WHERE school_id = $1
+        AND actor_user_id = $2
+        AND event_type = 'STAFF_DOCUMENT_DOWNLOAD_AUTHORIZED'
+      `,
+      [schoolId, admin.id],
+    );
+    expect(downloadActivity.rows).toHaveLength(1);
+    expect(downloadActivity.rows[0].payload).toMatchObject({
+      staffId: staff.staffId,
+      documentId: document.id,
+      documentType: 'LICENSE',
+      confidentiality: 'RESTRICTED',
+      accessChannel: 'ADMINISTRATION',
+    });
+    expect(JSON.stringify(downloadActivity.rows)).not.toContain(storageKey);
+    expect(JSON.stringify(downloadActivity.rows)).not.toContain('license.pdf');
 
     const revoked = await harness.staffCompliance.revokeDocument(
       staff.staffId,
@@ -447,6 +469,99 @@ describe('staff documents, leave workflow, and reporting integration', () => {
         secondAdmin.id,
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+  it('reports payroll eligibility and reconciles staff access safely', async () => {
+    const schoolId = await factory.school();
+    const admin = await administrator(schoolId);
+    const staff = await employee(schoolId, admin.id);
+    await harness.payroll.createPayrollProfile(
+      {
+        schoolId,
+        staffAccountId: staff.staffId,
+        baseSalary: 42_000,
+        currencyCode: 'HTG',
+        effectiveFrom: '2026-01-01',
+        payFrequency: 'MONTHLY',
+        compensationType: 'SALARY',
+        changeReason: 'Initial pilot compensation.',
+      },
+      admin.id,
+      null,
+    );
+
+    const scope = await factory.academicScope(schoolId);
+    await factory.teacherAssignment(schoolId, staff.id, scope, admin.id);
+
+    const report = await harness.staffCompliance.getOperationalReport(
+      { schoolId },
+      admin.id,
+    );
+    expect(report.totals.payrollReady).toBe(1);
+    expect(report.totals.payrollBlocked).toBe(1);
+    expect(report.totals.accessIssues).toBe(1);
+    expect(report.totals.currentHeadcount).toBe(2);
+    expect(report.totals.teachersAssigned).toBe(1);
+    expect(report.totals.teacherCoverageIssues).toBe(0);
+    expect(report.departmentHeadcount).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          department: 'Academics',
+          currentHeadcount: 1,
+        }),
+        expect.objectContaining({
+          department: 'Administration',
+          currentHeadcount: 1,
+        }),
+      ]),
+    );
+    expect(report.teacherAssignmentCoverage).toEqual([
+      expect.objectContaining({
+        staffId: staff.staffId,
+        coverageStatus: 'ASSIGNED',
+        assignmentCount: 1,
+        sectionCount: 1,
+        subjectCount: 1,
+        requiresAttention: false,
+        assignments: [
+          expect.objectContaining({
+            academicYearId: scope.academicYearId,
+            sectionId: scope.sectionId,
+            subjectId: scope.subjectId,
+          }),
+        ],
+      }),
+    ]);
+    expect(report.payrollEligibility).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          staffId: staff.staffId,
+          eligibilityStatus: 'READY',
+          currencyCode: 'HTG',
+          payFrequency: 'MONTHLY',
+          compensationEffectiveFrom: '2026-01-01',
+        }),
+      ]),
+    );
+    const payrollEntry = report.payrollEligibility.find(
+      (item) => item.staffId === staff.staffId,
+    );
+    expect(payrollEntry).not.toHaveProperty('baseAmount');
+    expect(report.accessReconciliation).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          staffId: staff.staffId,
+          linked: true,
+          accessStatus: 'MISSING_ACTIVE_MEMBERSHIP',
+          requiresAttention: true,
+          activeRoles: [],
+        }),
+        expect.objectContaining({
+          staffId: admin.staffId,
+          accessStatus: 'ALIGNED',
+          requiresAttention: false,
+        }),
+      ]),
+    );
   });
   it('returns operational alerts without medical information', async () => {
     const schoolId = await factory.school();

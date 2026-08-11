@@ -136,6 +136,30 @@ describe('staff self-service integration', () => {
       staffAccountId: employee.staffId,
       storageKey: standardStorageKey,
     });
+    const downloadActivity = await pool.query<{
+      payload: Record<string, unknown>;
+    }>(
+      `
+      SELECT payload
+      FROM platform_activity_logs
+      WHERE school_id = $1
+        AND actor_user_id = $2
+        AND event_type = 'STAFF_DOCUMENT_DOWNLOAD_AUTHORIZED'
+      `,
+      [schoolId, employee.id],
+    );
+    expect(downloadActivity.rows).toHaveLength(1);
+    expect(downloadActivity.rows[0].payload).toMatchObject({
+      staffId: employee.staffId,
+      documentId: standard.id,
+      documentType: 'CONTRACT',
+      confidentiality: 'STANDARD',
+      accessChannel: 'SELF_SERVICE',
+    });
+    expect(JSON.stringify(downloadActivity.rows)).not.toContain(
+      standardStorageKey,
+    );
+    expect(JSON.stringify(downloadActivity.rows)).not.toContain('contract.pdf');
     await expect(
       harness.staffSelfService.getDocumentDownload(
         restricted.id,
