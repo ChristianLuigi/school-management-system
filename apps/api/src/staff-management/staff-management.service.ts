@@ -13,6 +13,7 @@ import { CreateStaffAccountInvitationDto } from './dto/create-staff-account-invi
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { LinkStaffUserDto } from './dto/link-staff-user.dto';
 import { ListStaffDto } from './dto/list-staff.dto';
+import { PreviewStaffImportDto } from './dto/preview-staff-import.dto';
 import { RehireStaffDto } from './dto/rehire-staff.dto';
 import { StaffLifecycleActionDto } from './dto/staff-lifecycle-action.dto';
 import { UnlinkStaffUserDto } from './dto/unlink-staff-user.dto';
@@ -84,6 +85,25 @@ const POSITION_FIELDS = [
   'supervisorStaffAccountId',
   'workLocation',
 ] as const;
+
+const STAFF_CATEGORIES = new Set([
+  'SCHOOL_LEADERSHIP',
+  'TEACHING',
+  'FINANCE',
+  'ADMINISTRATIVE',
+  'STUDENT_SERVICES',
+  'SUPPORT',
+  'CONTRACTOR',
+  'OTHER',
+]);
+
+const EMPLOYMENT_TYPES = new Set([
+  'FULL_TIME',
+  'PART_TIME',
+  'CONTRACT',
+  'TEMPORARY',
+  'VOLUNTEER',
+]);
 
 @Injectable()
 export class StaffManagementService {
@@ -335,6 +355,255 @@ export class StaffManagementService {
       );
     }
     throw error;
+  }
+
+  async previewStaffImport(
+    dto: PreviewStaffImportDto,
+    actorUserId: string,
+  ) {
+    await this.assertSchoolAdministrator(this.db, dto.schoolId, actorUserId);
+
+    type ImportIssue = {
+      code: string;
+      field: string;
+      message: string;
+    };
+    const addIssue = (issues: ImportIssue[], issue: ImportIssue) => {
+      if (
+        !issues.some(
+          (existing) =>
+            existing.code === issue.code && existing.field === issue.field,
+        )
+      ) {
+        issues.push(issue);
+      }
+    };
+    const rowNumberCounts = new Map<number, number>();
+    for (const row of dto.rows) {
+      rowNumberCounts.set(
+        row.rowNumber,
+        (rowNumberCounts.get(row.rowNumber) ?? 0) + 1,
+      );
+    }
+
+    const rows = dto.rows.map((row) => {
+      const errors: ImportIssue[] = [];
+      const warnings: ImportIssue[] = [];
+      const firstName = this.trim(row.firstName);
+      const lastName = this.trim(row.lastName);
+      const email = this.trim(row.email)?.toLowerCase() ?? null;
+      const staffCode = this.trim(row.staffCode)?.toUpperCase() ?? null;
+      const staffCategory =
+        this.trim(row.staffCategory)?.toUpperCase() ?? null;
+      const employmentType =
+        this.trim(row.employmentType)?.toUpperCase() ?? null;
+      const hireDate = this.trim(row.hireDate);
+
+      if (!firstName) {
+        addIssue(errors, {
+          code: 'FIRST_NAME_REQUIRED',
+          field: 'firstName',
+          message: 'First name is required.',
+        });
+      }
+      if (!lastName) {
+        addIssue(errors, {
+          code: 'LAST_NAME_REQUIRED',
+          field: 'lastName',
+          message: 'Last name is required.',
+        });
+      }
+      if (!staffCategory || !STAFF_CATEGORIES.has(staffCategory)) {
+        addIssue(errors, {
+          code: 'INVALID_STAFF_CATEGORY',
+          field: 'staffCategory',
+          message: 'Staff category is not supported.',
+        });
+      }
+      if (!employmentType || !EMPLOYMENT_TYPES.has(employmentType)) {
+        addIssue(errors, {
+          code: 'INVALID_EMPLOYMENT_TYPE',
+          field: 'employmentType',
+          message: 'Employment type is not supported.',
+        });
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        addIssue(errors, {
+          code: 'INVALID_EMAIL',
+          field: 'email',
+          message: 'Email address is invalid.',
+        });
+      }
+      if (staffCode && !/^[A-Z0-9][A-Z0-9._-]{0,39}$/.test(staffCode)) {
+        addIssue(errors, {
+          code: 'INVALID_STAFF_CODE',
+          field: 'staffCode',
+          message:
+            'Staff code may contain only letters, numbers, dots, underscores, and hyphens.',
+        });
+      }
+      if (hireDate) {
+        const parsed = /^\d{4}-\d{2}-\d{2}$/.test(hireDate)
+          ? new Date(`${hireDate}T00:00:00.000Z`)
+          : null;
+        if (
+          !parsed ||
+          Number.isNaN(parsed.getTime()) ||
+          parsed.toISOString().slice(0, 10) !== hireDate
+        ) {
+          addIssue(errors, {
+            code: 'INVALID_HIRE_DATE',
+            field: 'hireDate',
+            message: 'Hire date must be a valid YYYY-MM-DD date.',
+          });
+        } else if (hireDate > this.today()) {
+          addIssue(errors, {
+            code: 'FUTURE_HIRE_DATE',
+            field: 'hireDate',
+            message: 'Hire date cannot be in the future.',
+          });
+        }
+      }
+      if ((rowNumberCounts.get(row.rowNumber) ?? 0) > 1) {
+        addIssue(errors, {
+          code: 'DUPLICATE_ROW_NUMBER',
+          field: 'rowNumber',
+          message: 'CSV row number is duplicated in this request.',
+        });
+      }
+      if (!staffCode) {
+        addIssue(warnings, {
+          code: 'STAFF_CODE_WILL_BE_GENERATED',
+          field: 'staffCode',
+          message: 'A staff code will be generated during import.',
+        });
+      }
+      if (!email) {
+        addIssue(warnings, {
+          code: 'NO_EMAIL',
+          field: 'email',
+          message: 'No email address was provided for this staff record.',
+        });
+      }
+
+      return {
+        rowNumber: row.rowNumber,
+        normalized: {
+          firstName,
+          lastName,
+          preferredName: this.trim(row.preferredName),
+          email,
+          phone: this.trim(row.phone),
+          staffCode,
+          staffCategory,
+          employmentType,
+          hireDate,
+          jobTitle: this.trim(row.jobTitle),
+          department: this.trim(row.department),
+          workLocation: this.trim(row.workLocation),
+          employmentStatus: 'DRAFT' as const,
+        },
+        valid: false,
+        errors,
+        warnings,
+      };
+    });
+
+    const emailCounts = new Map<string, number>();
+    const staffCodeCounts = new Map<string, number>();
+    for (const row of rows) {
+      if (row.normalized.email) {
+        emailCounts.set(
+          row.normalized.email,
+          (emailCounts.get(row.normalized.email) ?? 0) + 1,
+        );
+      }
+      if (row.normalized.staffCode) {
+        staffCodeCounts.set(
+          row.normalized.staffCode,
+          (staffCodeCounts.get(row.normalized.staffCode) ?? 0) + 1,
+        );
+      }
+    }
+
+    const emailValues = [...emailCounts.keys()];
+    const staffCodeValues = [...staffCodeCounts.keys()];
+    const existingResult = await this.db.query<{
+      staff_code: string | null;
+      email_normalized: string | null;
+    }>(
+      `
+      SELECT
+        UPPER(staff_code) AS staff_code,
+        LOWER(email_normalized) AS email_normalized
+      FROM school_staff_accounts
+      WHERE school_id = $1
+        AND deleted_at IS NULL
+        AND (
+          UPPER(COALESCE(staff_code, '')) = ANY($2::TEXT[])
+          OR LOWER(COALESCE(email_normalized, '')) = ANY($3::TEXT[])
+        )
+      `,
+      [dto.schoolId, staffCodeValues, emailValues],
+    );
+    const existingStaffCodes = new Set(
+      existingResult.rows
+        .map((row) => row.staff_code)
+        .filter((value): value is string => Boolean(value)),
+    );
+    const existingEmails = new Set(
+      existingResult.rows
+        .map((row) => row.email_normalized)
+        .filter((value): value is string => Boolean(value)),
+    );
+
+    for (const row of rows) {
+      const email = row.normalized.email;
+      const staffCode = row.normalized.staffCode;
+      if (email && (emailCounts.get(email) ?? 0) > 1) {
+        addIssue(row.errors, {
+          code: 'DUPLICATE_EMAIL_IN_FILE',
+          field: 'email',
+          message: 'Email address appears more than once in this file.',
+        });
+      }
+      if (staffCode && (staffCodeCounts.get(staffCode) ?? 0) > 1) {
+        addIssue(row.errors, {
+          code: 'DUPLICATE_STAFF_CODE_IN_FILE',
+          field: 'staffCode',
+          message: 'Staff code appears more than once in this file.',
+        });
+      }
+      if (email && existingEmails.has(email)) {
+        addIssue(row.errors, {
+          code: 'EMAIL_ALREADY_EXISTS',
+          field: 'email',
+          message: 'Email address is already used by staff in this school.',
+        });
+      }
+      if (staffCode && existingStaffCodes.has(staffCode)) {
+        addIssue(row.errors, {
+          code: 'STAFF_CODE_ALREADY_EXISTS',
+          field: 'staffCode',
+          message: 'Staff code is already used in this school.',
+        });
+      }
+      row.valid = row.errors.length === 0;
+    }
+
+    const validRows = rows.filter((row) => row.valid).length;
+    const warningRows = rows.filter((row) => row.warnings.length > 0).length;
+    return {
+      importMode: 'DRAFT_ONLY' as const,
+      summary: {
+        totalRows: rows.length,
+        validRows,
+        invalidRows: rows.length - validRows,
+        warningRows,
+      },
+      readyForImport: validRows === rows.length,
+      rows,
+    };
   }
 
   async listStaff(query: ListStaffDto, actorUserId: string) {

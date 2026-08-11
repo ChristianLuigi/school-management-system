@@ -15,6 +15,7 @@ import { CreateStaffAccountInvitationDto } from './dto/create-staff-account-invi
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { LinkStaffUserDto } from './dto/link-staff-user.dto';
 import { ListStaffDto } from './dto/list-staff.dto';
+import { PreviewStaffImportDto } from './dto/preview-staff-import.dto';
 import { RehireStaffDto } from './dto/rehire-staff.dto';
 import { StaffLifecycleActionDto } from './dto/staff-lifecycle-action.dto';
 import { StaffSchoolQueryDto } from './dto/staff-school-query.dto';
@@ -46,6 +47,18 @@ export class StaffManagementController {
   ) {
     const session = await this.requireSession(authorization);
     return this.staffManagementService.listStaff(query, session.user_id);
+  }
+
+  @Post('staff-import/preview')
+  async previewStaffImport(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: PreviewStaffImportDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.staffManagementService.previewStaffImport(
+      body,
+      session.user_id,
+    );
   }
 
   @Post('staff')

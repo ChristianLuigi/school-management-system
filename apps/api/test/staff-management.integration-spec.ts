@@ -441,6 +441,163 @@ describe('staff employment lifecycle and management integration', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it('previews CSV staff imports without mutation and rejects school-scope bypasses', async () => {
+    const schoolId = await factory.school();
+    const admin = await administrator(schoolId);
+    await harness.staffManagement.createStaff(
+      {
+        schoolId,
+        firstName: 'Existing',
+        lastName: 'Employee',
+        email: 'existing@example.test',
+        staffCode: 'existing-001',
+        staffCategory: 'ADMINISTRATIVE',
+        employmentType: 'FULL_TIME',
+        employmentStatus: 'DRAFT',
+      },
+      admin.id,
+    );
+    const before = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::TEXT AS count FROM school_staff_accounts WHERE school_id = $1`,
+      [schoolId],
+    );
+    const futureDate = new Date(Date.now() + 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
+    const preview = await harness.staffManagement.previewStaffImport(
+      {
+        schoolId,
+        rows: [
+          {
+            rowNumber: 2,
+            firstName: '  Jean ',
+            lastName: ' Pierre  ',
+            email: ' JEAN.PIERRE@EXAMPLE.TEST ',
+            staffCategory: ' teaching ',
+            employmentType: ' full_time ',
+            jobTitle: 'Teacher',
+          },
+          {
+            rowNumber: 3,
+            firstName: 'Duplicate',
+            lastName: 'One',
+            email: 'duplicate@example.test',
+            staffCode: 'DUP-001',
+            staffCategory: 'SUPPORT',
+            employmentType: 'PART_TIME',
+          },
+          {
+            rowNumber: 4,
+            firstName: 'Duplicate',
+            lastName: 'Two',
+            email: 'DUPLICATE@EXAMPLE.TEST',
+            staffCode: 'DUP-002',
+            staffCategory: 'SUPPORT',
+            employmentType: 'PART_TIME',
+          },
+          {
+            rowNumber: 5,
+            firstName: 'Existing',
+            lastName: 'Conflict',
+            email: 'existing@example.test',
+            staffCode: 'EXISTING-001',
+            staffCategory: 'FINANCE',
+            employmentType: 'FULL_TIME',
+          },
+          {
+            rowNumber: 6,
+            firstName: ' ',
+            lastName: '',
+            email: 'not-an-email',
+            staffCode: 'invalid code',
+            staffCategory: 'UNSUPPORTED',
+            employmentType: 'PERMANENT',
+            hireDate: futureDate,
+          },
+        ],
+      },
+      admin.id,
+    );
+
+    expect(preview).toMatchObject({
+      importMode: 'DRAFT_ONLY',
+      readyForImport: false,
+      summary: {
+        totalRows: 5,
+        validRows: 1,
+        invalidRows: 4,
+      },
+    });
+    expect(preview.rows[0]).toMatchObject({
+      rowNumber: 2,
+      valid: true,
+      normalized: {
+        firstName: 'Jean',
+        lastName: 'Pierre',
+        email: 'jean.pierre@example.test',
+        staffCode: null,
+        staffCategory: 'TEACHING',
+        employmentType: 'FULL_TIME',
+        employmentStatus: 'DRAFT',
+      },
+    });
+    expect(preview.rows[0].warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'STAFF_CODE_WILL_BE_GENERATED' }),
+      ]),
+    );
+    for (const index of [1, 2]) {
+      expect(preview.rows[index].errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ code: 'DUPLICATE_EMAIL_IN_FILE' }),
+        ]),
+      );
+    }
+    expect(preview.rows[3].errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'EMAIL_ALREADY_EXISTS' }),
+        expect.objectContaining({ code: 'STAFF_CODE_ALREADY_EXISTS' }),
+      ]),
+    );
+    expect(preview.rows[4].errors.map((error) => error.code)).toEqual(
+      expect.arrayContaining([
+        'FIRST_NAME_REQUIRED',
+        'LAST_NAME_REQUIRED',
+        'INVALID_EMAIL',
+        'INVALID_STAFF_CODE',
+        'INVALID_STAFF_CATEGORY',
+        'INVALID_EMPLOYMENT_TYPE',
+        'FUTURE_HIRE_DATE',
+      ]),
+    );
+
+    const after = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::TEXT AS count FROM school_staff_accounts WHERE school_id = $1`,
+      [schoolId],
+    );
+    expect(after.rows[0].count).toBe(before.rows[0].count);
+
+    const otherSchoolId = await factory.school();
+    await expect(
+      harness.staffManagement.previewStaffImport(
+        {
+          schoolId: otherSchoolId,
+          rows: [
+            {
+              rowNumber: 2,
+              firstName: 'Cross',
+              lastName: 'School',
+              staffCategory: 'SUPPORT',
+              employmentType: 'FULL_TIME',
+            },
+          ],
+        },
+        admin.id,
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
   it('enforces the transition matrix and append-only lifecycle history', async () => {
     const schoolId = await factory.school();
     const admin = await administrator(schoolId);

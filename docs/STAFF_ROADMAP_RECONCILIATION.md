@@ -22,9 +22,9 @@ renamed to match product batch numbers.
 | --- | --- | --- |
 | S5 account lifecycle | Implemented | Staff can be created before login access, invited or linked later, and safely unlinked with audit and session protections. |
 | S6 academic assignments | Implemented | Teaching responsibility is attached to the staff record; application authorization resolves the active linked user. |
-| S7 payroll integration | Partial | Runs and profiles reference staff records and snapshot payroll values, but offline staff cannot yet be paid and effective-dated compensation versions are missing. |
-| S8 documents/compliance | Substantially complete | Pilot document storage, validation, school scope, revocation, and expiry monitoring exist; download auditing and optional malware scanning remain. |
-| S9 reports/bulk operations | Partial | An operational report and safe CSV export exist; import preview, directory export, complete reports, and reviewed bulk operations do not. |
+| S7 payroll integration | Pilot-ready for salaried staff | Offline staff can be enrolled and paid from immutable effective-dated compensation; hourly/daily work-unit calculation remains deliberately disabled. |
+| S8 documents/compliance | Pilot-ready | Private document storage, validation, school scope, revocation, expiry monitoring, and download authorization auditing are enforced. |
+| S9 reports/bulk operations | Partial | Operational reports, safe CSV exports, and a read-only staff import validation preview exist; reviewed import execution and safe bulk mutations remain deferred. |
 | S10 employee self-service | Implemented | Active linked employees can safely review their own record/documents and submit or withdraw pending leave. |
 
 ## S5 - Account invitation, linking, and unlinking
@@ -89,33 +89,35 @@ employment while interactive authorization remains attached to users.
 
 ## S7 - Payroll integration and compensation history
 
-Implemented payroll hardening includes:
+Implemented:
 
-- payroll profiles linked by `school_staff_account_id`;
-- payroll run items linked by `staff_account_id`;
-- duplicate-period prevention;
-- one currency per run;
-- immutable employee and salary snapshots;
-- draft, reviewed, approved, processing, paid, and closed states;
-- School Administrator approval and preparer/approver separation;
-- item allowances, deductions, corrections, payment reversals, closed-run
-  locking, summaries, payslips, and payment registers.
+- payroll profiles and run items use the canonical staff account and no longer
+  require a linked user or active application membership;
+- active and on-leave offline staff appear in payroll enrollment options;
+- `payroll_compensation_versions` stores immutable, effective-dated salary,
+  currency, pay frequency, standard allowances/deductions, reason, and approver;
+- initial payroll enrollment creates the first compensation version;
+- only an active School Administrator can create or change compensation;
+- a payroll run selects the latest version effective on its period start;
+- standard allowances and deductions are copied into the draft run and totals;
+- every run item references the exact compensation version used;
+- historical run snapshots remain unchanged after later compensation changes;
+- legacy payroll profiles are reconciled to offline staff accounts, and their
+  historical run items gain canonical references without changing money;
+- School Administrators can review compensation history and schedule the next
+  immutable salary version from the payroll profile screen;
+- termination and hire dates determine whether staff belong in a pay period; and
+- duplicate effective dates and mutation of compensation history are rejected.
 
-Remaining canonical gaps:
+Controlled-pilot boundary:
 
-- payroll option/profile creation joins `users` and active memberships, so a
-  staff record without a login cannot be enrolled or paid;
-- `payroll_compensation_versions` or an equivalent effective-dated history
-  does not exist;
-- `salary_effective_from` exists but is not part of the active profile
-  creation workflow;
-- pay frequency is hardcoded to monthly in profile creation;
-- standard profile-level allowances and deductions are not versioned; and
-- there is no privileged, audited compensation-change workflow selecting the
-  version effective for a pay period.
+- the automated workflow currently supports salaried compensation only;
+- hourly and daily types are stored for forward compatibility but rejected by
+  the service until approved hours/days and rate calculations exist.
 
-The immutable run snapshot is strong, but it is not a substitute for
-effective-dated compensation history. S7 remains open.
+S7 meets the original exit criterion for salaried pilot staff: employees without
+login accounts can be enrolled and paid correctly from staff-owned compensation
+history. Hourly/daily payroll is explicitly out of pilot scope.
 
 ## S8 - Documents and compliance
 
@@ -128,13 +130,12 @@ Implemented:
 - active same-school administrator authorization;
 - standard and restricted classifications;
 - versioned revocation without physical audit destruction;
-- activity events for add and revoke;
+- activity events for add, revoke, and authorized downloads without storage keys or filenames;
 - optional issue/expiration dates; and
 - expired/expiring credential reporting.
 
 Remaining:
 
-- record a document-level audit event for successful download/access;
 - add malware scanning when deployment infrastructure supports it; and
 - introduce narrower restricted-document permissions only after grant
   governance is defined.
@@ -149,18 +150,23 @@ Implemented:
 - operational totals for headcount, unlinked accounts, missing payroll
   profiles, teachers without assignments, credential expiry, and pending leave;
 - employment-status and staff-category breakdowns;
+- current headcount by normalized department;
+- teacher assignment coverage with academic year, section, subject, and login readiness;
+- current payroll-eligibility detail without compensation amounts;
+- staff-access reconciliation covering account, membership, and role alignment
+  with active-session visibility while treating offline staff as supported;
 - credential and leave queues; and
-- a safe CSV export that excludes salary, medical information, leave reasons,
-  tokens, and storage keys.
+- safe operational and filtered-directory CSV exports that exclude salary,
+  medical information, leave reasons, tokens, storage keys, internal IDs, and
+  row versions while neutralizing spreadsheet formulas; and
+- CSV staff import upload, strict UTF-8 parsing, a downloadable template, and
+  a server-authorized read-only validation preview covering formats,
+  duplicate file values, and conflicts with existing school records. The
+  preview is limited to 500 rows and never creates staff records.
 
 Missing:
 
-- CSV staff import with preview and validation report;
-- filtered staff-directory export;
-- headcount by department;
-- detailed teacher assignment coverage;
-- a complete payroll-eligibility report;
-- detailed staff-access reconciliation;
+- reviewed execution of a validated staff import preview;
 - reviewed safe bulk actions; and
 - specialized approval workflows before any high-risk bulk change.
 
@@ -173,9 +179,8 @@ security rules are documented in `STAFF_SELF_SERVICE.md`.
 
 ## Recommended implementation order
 
-1. Add effective-dated compensation versions and remove login dependence from
-   payroll enrollment under S7.
-2. Add S8 download audit events; treat malware scanning as deployment work.
+1. Keep hourly/daily payroll out of scope until approved work-unit data exists.
+2. Treat optional document malware scanning as deployment work.
 3. Complete S9 reports before introducing any bulk mutation.
 4. Run database-backed integration tests and UAT after each batch before
    declaring its exit criterion closed.

@@ -5,6 +5,8 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/components/i18n-provider";
 import { SchoolBadge } from "@/components/school-ui";
+import { StaffImportPreviewClient } from "@/components/staff-import-preview-client";
+import { createSafeCsv } from "@/lib/csv/safe-csv";
 import {
   categoryLabel,
   employmentTypeLabel,
@@ -26,6 +28,11 @@ const COPY = {
       "Gérez les dossiers d’emploi, les statuts et les liens opérationnels du personnel.",
     add: "Ajouter un membre",
     reports: "Rapport opérationnel",
+    exportDirectory: "Exporter le répertoire",
+    importPreview: "Importer un CSV",
+    exportingDirectory: "Exportation…",
+    exportLimit:
+      "L’exportation est limitée à 5 000 membres. Affinez les filtres.",
     close: "Fermer",
     search: "Nom, code, courriel, poste…",
     searchButton: "Rechercher",
@@ -85,6 +92,10 @@ const COPY = {
       "Manage employment records, statuses, and operational links for school staff.",
     add: "Add staff member",
     reports: "Operational report",
+    exportDirectory: "Export directory",
+    importPreview: "Import CSV",
+    exportingDirectory: "Exporting…",
+    exportLimit: "Export is limited to 5,000 staff. Refine the filters.",
     close: "Close",
     search: "Name, code, email, position…",
     searchButton: "Search",
@@ -187,7 +198,9 @@ export function StaffDirectoryClient({ schoolId }: { schoolId: string }) {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
 
   const [firstName, setFirstName] = useState("");
@@ -281,6 +294,111 @@ export function StaffDirectoryClient({ schoolId }: { schoolId: string }) {
     setAppliedFilters(EMPTY_FILTERS);
     setPage(1);
   }
+  async function exportDirectory() {
+    setExporting(true);
+    setError("");
+    try {
+      const items: StaffListResponse["items"] = [];
+      let exportPage = 1;
+      while (true) {
+        const query = new URLSearchParams({
+          schoolId,
+          page: String(exportPage),
+          pageSize: "100",
+        });
+        for (const [key, value] of Object.entries(appliedFilters)) {
+          if (value.trim()) query.set(key, value.trim());
+        }
+        const response = await fetch(
+          `/api/staff-management/staff?${query.toString()}`,
+          { cache: "no-store" },
+        );
+        const body = await responseBody(response);
+        if (!response.ok) {
+          throw new Error(body?.message ?? "Unable to export staff.");
+        }
+        const pageData = body as StaffListResponse;
+        if (pageData.pagination.total > 5_000) {
+          throw new Error(copy.exportLimit);
+        }
+        items.push(...pageData.items);
+        if (
+          items.length >= pageData.pagination.total ||
+          exportPage >= pageData.pagination.pageCount
+        ) {
+          break;
+        }
+        exportPage += 1;
+      }
+
+      const rows: Array<Array<string | number | boolean>> = [
+        [
+          "staff_code",
+          "first_name",
+          "last_name",
+          "preferred_name",
+          "email",
+          "phone",
+          "staff_category",
+          "employment_type",
+          "employment_status",
+          "hire_date",
+          "termination_date",
+          "job_title",
+          "department",
+          "work_location",
+          "account_link",
+          "account_status",
+          "email_verified",
+          "payroll_profile",
+          "active_assignment_count",
+        ],
+        ...items.map((staff) => [
+          staff.staffCode ?? "",
+          staff.firstName ?? "",
+          staff.lastName ?? "",
+          staff.preferredName ?? "",
+          staff.email ?? "",
+          staff.phone ?? "",
+          staff.staffCategory,
+          staff.employmentType,
+          staff.employmentStatus,
+          staff.hireDate ?? "",
+          staff.terminationDate ?? "",
+          staff.jobTitle ?? "",
+          staff.department ?? "",
+          staff.workLocation ?? "",
+          staff.account.linked ? "LINKED" : "UNLINKED",
+          staff.account.status ?? "",
+          staff.account.emailVerified,
+          !staff.payroll.hasProfile
+            ? "NONE"
+            : staff.payroll.active
+              ? "ACTIVE"
+              : "INACTIVE",
+          staff.activeAssignmentCount,
+        ]),
+      ];
+      const url = URL.createObjectURL(
+        new Blob(["\uFEFF", createSafeCsv(rows)], {
+          type: "text/csv;charset=utf-8",
+        }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `staff-directory-${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Unable to export staff.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
 
   async function createStaff(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -351,13 +469,41 @@ phone: phone.trim() || undefined,
           </Link>
           <button
             type="button"
-            onClick={() => setShowCreate((value) => !value)}
+            disabled={exporting}
+            onClick={() => void exportDirectory()}
+            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 disabled:opacity-60"
+          >
+            {exporting ? copy.exportingDirectory : copy.exportDirectory}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowImport((value) => !value);
+              setShowCreate(false);
+            }}
+            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700"
+          >
+            {showImport ? copy.close : copy.importPreview}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowCreate((value) => !value);
+              setShowImport(false);
+            }}
             className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white"
           >
             {showCreate ? copy.close : copy.add}
           </button>
         </div>
       </div>
+
+      {showImport ? (
+        <StaffImportPreviewClient
+          schoolId={schoolId}
+          onClose={() => setShowImport(false)}
+        />
+      ) : null}
 
       {showCreate ? (
         <form
