@@ -1,5 +1,7 @@
 import {
   IsBoolean,
+  IsDateString,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
@@ -30,4 +32,20 @@ export class CreatePayrollProfileDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsDateString({ strict: true })
+  effectiveFrom?: string;
+
+  @IsOptional()
+  @IsIn(['SALARY', 'HOURLY', 'DAILY'])
+  compensationType?: 'SALARY' | 'HOURLY' | 'DAILY';
+
+  @IsOptional()
+  @IsIn(['MONTHLY', 'SEMI_MONTHLY', 'BIWEEKLY', 'WEEKLY'])
+  payFrequency?: 'MONTHLY' | 'SEMI_MONTHLY' | 'BIWEEKLY' | 'WEEKLY';
+
+  @IsOptional()
+  @IsString()
+  changeReason?: string;
 }

@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
+import { PayrollCompensationEditor } from "@/components/payroll-compensation-editor";
 
 type StaffOption = {
   id: string;
   fullName: string;
-  email: string;
+  email: string | null;
   staffCode: string | null;
   jobTitle: string | null;
   department: string | null;
@@ -27,6 +28,7 @@ type PayrollProfile = {
   baseSalary: number;
   currencyCode: string;
   payrollActive: boolean;
+  effectiveFrom?: string | null;
 };
 
 type PayrollRun = {
@@ -299,18 +301,54 @@ export function PayrollLiteClient({
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold text-slate-900">Linked staff payroll profiles</h2><p className="mt-1 text-sm text-slate-600">Names and positions come from active school staff records.</p></div><button type="button" onClick={() => setShowProfile((value) => !value)} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white">{showProfile ? "Close" : "Link staff profile"}</button></div>
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-semibold text-slate-900">Linked staff payroll profiles</h2><p className="mt-1 text-sm text-slate-600">Names and positions come from active school staff records.</p></div>{isSchoolAdmin ? <button type="button" onClick={() => setShowProfile((value) => !value)} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white">{showProfile ? "Close" : "Link staff profile"}</button> : null}</div>
         {showProfile ? (
           <div className="mt-5 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <label className="block text-sm"><span className="font-medium">Staff account</span><select className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={staffAccountId} onChange={(event) => setStaffAccountId(event.target.value)}><option value="">Select eligible staff</option>{availableStaff.map((staff) => <option key={staff.id} value={staff.id}>{staff.fullName}{staff.staffCode ? ` · ${staff.staffCode}` : ""}{staff.jobTitle ? ` · ${staff.jobTitle}` : ""}</option>)}</select>{!availableStaff.length ? <span className="mt-1 block text-xs text-slate-500">All eligible staff already have profiles.</span> : null}</label>
-            <div className="grid gap-4 md:grid-cols-2"><label className="text-sm"><span className="font-medium">Base salary</span><input type="number" min="0" step="0.01" className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={baseSalary} onChange={(event) => setBaseSalary(event.target.value)} /></label><label className="text-sm"><span className="font-medium">Currency</span><select className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={profileCurrency} onChange={(event) => setProfileCurrency(event.target.value)}><option value="HTG">HTG</option><option value="USD">USD</option></select></label></div>
+            <div className="grid gap-4 md:grid-cols-2"><label className="text-sm"><span className="font-medium">Base salary per pay period</span><input type="number" min="0" step="0.01" className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={baseSalary} onChange={(event) => setBaseSalary(event.target.value)} /></label><label className="text-sm"><span className="font-medium">Currency</span><select className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2" value={profileCurrency} onChange={(event) => setProfileCurrency(event.target.value)}><option value="HTG">HTG</option><option value="USD">USD</option></select></label></div>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={profileActive} onChange={(event) => setProfileActive(event.target.checked)} />Include in new payroll runs</label>
             <textarea className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Payroll notes (optional)" value={profileNotes} onChange={(event) => setProfileNotes(event.target.value)} />
             <button type="button" disabled={savingProfile || !availableStaff.length} onClick={() => void createProfile()} className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white disabled:opacity-60">{savingProfile ? "Saving..." : "Save linked profile"}</button>
           </div>
         ) : null}
         <div className="mt-5 grid gap-3 lg:grid-cols-2">
-          {profiles.map((profile) => <article key={profile.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="font-semibold text-slate-900">{profile.fullName}</div><div className="mt-1 text-sm text-slate-600">{profile.positionTitle ?? profile.jobTitle ?? "School staff member"}{profile.department ? ` · ${profile.department}` : ""}</div><div className="mt-1 text-xs text-slate-500">{profile.staffCode ? `Code ${profile.staffCode} · ` : ""}{profile.payFrequency?.replaceAll("_", " ") || "Monthly"}</div></div><SchoolBadge tone={profile.payrollActive ? "green" : "neutral"}>{profile.payrollActive ? "ACTIVE" : "INACTIVE"}</SchoolBadge></div><div className="mt-3 text-sm"><span className="text-slate-500">Base salary: </span><span className="font-semibold">{money(profile.baseSalary, profile.currencyCode)}</span></div></article>)}
+          {profiles.map((profile) => (
+            <article
+              key={profile.id}
+              className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="font-semibold text-slate-900">{profile.fullName}</div>
+                  <div className="mt-1 text-sm text-slate-600">
+                    {profile.positionTitle ?? profile.jobTitle ?? "School staff member"}
+                    {profile.department ? ` · ${profile.department}` : ""}
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    {profile.staffCode ? `Code ${profile.staffCode} · ` : ""}
+                    {profile.payFrequency?.replaceAll("_", " ") || "Monthly"}
+                    {profile.effectiveFrom ? ` · Effective ${profile.effectiveFrom}` : ""}
+                  </div>
+                </div>
+                <SchoolBadge tone={profile.payrollActive ? "green" : "neutral"}>
+                  {profile.payrollActive ? "ACTIVE" : "INACTIVE"}
+                </SchoolBadge>
+              </div>
+              <div className="mt-3 text-sm">
+                <span className="text-slate-500">Base salary per pay period: </span>
+                <span className="font-semibold">
+                  {money(profile.baseSalary, profile.currencyCode)}
+                </span>
+              </div>
+              {isSchoolAdmin ? (
+                <PayrollCompensationEditor
+                  schoolId={schoolId}
+                  profile={profile}
+                  onUpdated={load}
+                />
+              ) : null}
+            </article>
+          ))}
           {!profiles.length && !loading ? <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">No linked payroll profiles yet.</div> : null}
         </div>
       </section>

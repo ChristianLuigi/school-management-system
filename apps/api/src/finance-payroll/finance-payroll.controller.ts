@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AccessManagementService } from '../access-management/access-management.service';
+import { CreatePayrollCompensationVersionDto } from './dto/create-payroll-compensation-version.dto';
 import { CreatePayrollProfileDto } from '../finance-operations/dto/create-payroll-profile.dto';
 import { CreatePayrollRunDto } from '../finance-operations/dto/create-payroll-run.dto';
 import { InternalAuthService } from '../internal-auth/internal-auth.service';
@@ -100,6 +101,36 @@ export class FinancePayrollController {
     );
   }
 
+  @Get('profiles/:profileId/compensation-versions')
+  async listPayrollCompensationVersions(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('profileId') profileId: string,
+    @Query('schoolId') schoolId: string,
+  ) {
+    const session = await this.requireSession(authorization);
+    await this.assertPermission(session, schoolId, 'PAYROLL_VIEW');
+    return this.financePayrollService.listPayrollCompensationVersions(
+      profileId,
+      schoolId,
+      session.user_id,
+      this.platformRole(session),
+    );
+  }
+
+  @Post('profiles/:profileId/compensation-versions')
+  async createPayrollCompensationVersion(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('profileId') profileId: string,
+    @Body() body: CreatePayrollCompensationVersionDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.financePayrollService.createPayrollCompensationVersion(
+      profileId,
+      body,
+      session.user_id,
+      this.platformRole(session),
+    );
+  }
   @Post('profiles')
   async createPayrollProfile(
     @Headers('authorization') authorization: string | undefined,

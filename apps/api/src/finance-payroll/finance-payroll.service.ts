@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { DbService } from '../db/db.service';
 import { CreatePayrollProfileDto } from '../finance-operations/dto/create-payroll-profile.dto';
+import { CreatePayrollCompensationVersionDto } from './dto/create-payroll-compensation-version.dto';
 import { CreatePayrollRunDto } from '../finance-operations/dto/create-payroll-run.dto';
 import { PlatformActivityService } from '../platform-activity/platform-activity.service';
 import { MarkPayrollItemPaidDto } from './dto/mark-payroll-item-paid.dto';
@@ -151,6 +152,35 @@ export class FinancePayrollService {
       );
     }
     return normalized;
+  }
+
+  private standardCompensationLines(
+    values: Array<{ code: string; description: string; amount: number }>,
+    label: string,
+  ) {
+    if (values.length > 50) {
+      throw new BadRequestException(`${label} cannot contain more than 50 lines.`);
+    }
+    const codes = new Set<string>();
+    return values.map((value) => {
+      const code = value.code.trim().toUpperCase();
+      const description = value.description.trim();
+      const amount = money(Number(value.amount));
+      if (!/^[A-Z0-9][A-Z0-9_-]{0,39}$/.test(code)) {
+        throw new BadRequestException(`Invalid ${label.toLowerCase()} code.`);
+      }
+      if (!description) {
+        throw new BadRequestException(`${label} description is required.`);
+      }
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new BadRequestException(`${label} amount must be greater than zero.`);
+      }
+      if (codes.has(code)) {
+        throw new BadRequestException(`Duplicate ${label.toLowerCase()} code: ${code}.`);
+      }
+      codes.add(code);
+      return { code, description, amount };
+    });
   }
 
   private async getPayrollActorContext(
@@ -330,7 +360,7 @@ export class FinancePayrollService {
     id: string;
     school_id: string;
     school_staff_account_id: string;
-    user_id: string;
+    user_id: string | null;
     full_name: string;
     staff_code: string | null;
     job_title: string | null;
@@ -342,6 +372,10 @@ export class FinancePayrollService {
     currency_code: string;
     payroll_active: boolean;
     notes: string | null;
+    effective_from: string | null;
+    compensation_type: string;
+    standard_allowances: unknown[];
+    standard_deductions: unknown[];
     created_at: string;
   }) {
     return {
@@ -360,6 +394,10 @@ export class FinancePayrollService {
       currencyCode: row.currency_code,
       payrollActive: row.payroll_active,
       notes: row.notes,
+      effectiveFrom: row.effective_from,
+      compensationType: row.compensation_type,
+      standardAllowances: row.standard_allowances,
+      standardDeductions: row.standard_deductions,
       createdAt: row.created_at,
     };
   }
@@ -376,13 +414,13 @@ export class FinancePayrollService {
     );
     const result = await this.db.query<{
       id: string;
-      user_id: string;
+      user_id: string | null;
       full_name: string;
-      email_original: string;
+      email_original: string | null;
       staff_code: string | null;
       job_title: string | null;
       department: string | null;
-      staff_type: string;
+      staff_type: string | null;
       employment_status: string;
       payroll_profile_id: string | null;
     }>(
@@ -391,10 +429,18 @@ export class FinancePayrollService {
         staff.id,
         staff.user_id,
         COALESCE(
+          NULLIF(BTRIM(CONCAT_WS(
+            ' ',
+            COALESCE(staff.preferred_name, staff.first_name),
+            staff.last_name
+          )), ''),
           NULLIF(BTRIM(CONCAT_WS(' ', usr.first_name, usr.last_name)), ''),
-          usr.email_original
+          staff.email_original,
+          usr.email_original,
+          staff.staff_code,
+          'Unnamed staff member'
         ) AS full_name,
-        usr.email_original,
+        COALESCE(staff.email_original, usr.email_original) AS email_original,
         staff.staff_code,
         staff.job_title,
         staff.department,
@@ -402,14 +448,9 @@ export class FinancePayrollService {
         staff.employment_status,
         profile.id AS payroll_profile_id
       FROM school_staff_accounts staff
-      JOIN users usr
+      LEFT JOIN users usr
         ON usr.id = staff.user_id
        AND usr.deleted_at IS NULL
-      JOIN school_memberships membership
-        ON membership.school_id = staff.school_id
-       AND membership.user_id = staff.user_id
-       AND membership.membership_status = 'ACTIVE'
-       AND membership.deleted_at IS NULL
       LEFT JOIN payroll_staff_profiles profile
         ON profile.school_staff_account_id = staff.id
        AND profile.school_id = staff.school_id
@@ -446,24 +487,7 @@ export class FinancePayrollService {
       query.schoolId,
       platformRole,
     );
-    const result = await this.db.query<{
-      id: string;
-      school_id: string;
-      school_staff_account_id: string;
-      user_id: string;
-      full_name: string;
-      staff_code: string | null;
-      job_title: string | null;
-      position_title: string | null;
-      department: string | null;
-      employment_type: string;
-      pay_frequency: string;
-      base_salary: string;
-      currency_code: string;
-      payroll_active: boolean;
-      notes: string | null;
-      created_at: string;
-    }>(
+    const result = await this.db.query<Parameters<FinancePayrollService['mapProfile']>[0]>(
       `
       SELECT
         profile.id,
@@ -476,17 +500,30 @@ export class FinancePayrollService {
         profile.position_title,
         profile.department,
         profile.employment_type,
-        profile.pay_frequency,
-        profile.base_salary::text AS base_salary,
-        profile.currency_code,
+        COALESCE(version.pay_frequency, profile.pay_frequency) AS pay_frequency,
+        COALESCE(version.base_amount, profile.base_salary)::text AS base_salary,
+        COALESCE(version.currency_code, profile.currency_code) AS currency_code,
         profile.payroll_active,
         profile.notes,
+        COALESCE(version.effective_from, profile.salary_effective_from)::text AS effective_from,
+        COALESCE(version.compensation_type, 'SALARY') AS compensation_type,
+        COALESCE(version.standard_allowances, '[]'::jsonb) AS standard_allowances,
+        COALESCE(version.standard_deductions, '[]'::jsonb) AS standard_deductions,
         profile.created_at::text AS created_at
       FROM payroll_staff_profiles profile
       JOIN school_staff_accounts staff
         ON staff.id = profile.school_staff_account_id
        AND staff.school_id = profile.school_id
        AND staff.deleted_at IS NULL
+      LEFT JOIN LATERAL (
+        SELECT compensation.*
+        FROM payroll_compensation_versions compensation
+        WHERE compensation.school_id = profile.school_id
+          AND compensation.payroll_staff_profile_id = profile.id
+          AND compensation.effective_from <= CURRENT_DATE
+        ORDER BY compensation.effective_from DESC, compensation.created_at DESC
+        LIMIT 1
+      ) version ON TRUE
       WHERE profile.school_id = $1
         AND profile.deleted_at IS NULL
       ORDER BY profile.payroll_active DESC, profile.full_name ASC
@@ -507,21 +544,33 @@ export class FinancePayrollService {
       dto.schoolId,
       platformRole,
     );
-    this.assertCanPrepare(actor);
+    this.assertActiveSchoolAdmin(actor);
     const baseSalary = money(Number(dto.baseSalary));
     if (!Number.isFinite(baseSalary) || baseSalary < 0) {
       throw new BadRequestException('Base salary must be zero or greater.');
     }
     const currencyCode = this.currency(dto.currencyCode);
+    const effectiveFrom =
+      dto.effectiveFrom ?? `${new Date().toISOString().slice(0, 7)}-01`;
+    const payFrequency = dto.payFrequency ?? 'MONTHLY';
+    const compensationType = dto.compensationType ?? 'SALARY';
+    if (compensationType !== 'SALARY') {
+      throw new BadRequestException(
+        'Hourly and daily compensation require approved work-unit data and are not enabled yet.',
+      );
+    }
+    const changeReason =
+      dto.changeReason?.trim() || 'Initial payroll enrollment.';
     try {
-      const created = await this.db.withTransaction(async (client) => {
+      return await this.db.withTransaction(async (client) => {
         const staffResult = await client.query<{
           id: string;
-          user_id: string;
+          user_id: string | null;
           staff_code: string | null;
-          staff_type: string;
+          staff_type: string | null;
           job_title: string | null;
           department: string | null;
+          employment_type: string;
           full_name: string;
         }>(
           `
@@ -532,19 +581,23 @@ export class FinancePayrollService {
             staff.staff_type,
             staff.job_title,
             staff.department,
+            staff.employment_type,
             COALESCE(
+              NULLIF(BTRIM(CONCAT_WS(
+                ' ',
+                COALESCE(staff.preferred_name, staff.first_name),
+                staff.last_name
+              )), ''),
               NULLIF(BTRIM(CONCAT_WS(' ', usr.first_name, usr.last_name)), ''),
-              usr.email_original
+              staff.email_original,
+              usr.email_original,
+              staff.staff_code,
+              'Unnamed staff member'
             ) AS full_name
           FROM school_staff_accounts staff
-          JOIN users usr
+          LEFT JOIN users usr
             ON usr.id = staff.user_id
            AND usr.deleted_at IS NULL
-          JOIN school_memberships membership
-            ON membership.school_id = staff.school_id
-           AND membership.user_id = staff.user_id
-           AND membership.membership_status = 'ACTIVE'
-           AND membership.deleted_at IS NULL
           WHERE staff.id = $1
             AND staff.school_id = $2
             AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
@@ -560,40 +613,7 @@ export class FinancePayrollService {
             'The selected active staff account does not belong to this school.',
           );
         }
-        const existing = await client.query(
-          `
-          SELECT id
-          FROM payroll_staff_profiles
-          WHERE school_id = $1
-            AND school_staff_account_id = $2
-            AND deleted_at IS NULL
-          LIMIT 1
-          `,
-          [dto.schoolId, dto.staffAccountId],
-        );
-        if (existing.rowCount) {
-          throw new ConflictException(
-            'This staff account already has a payroll profile.',
-          );
-        }
-        const result = await client.query<{
-          id: string;
-          school_id: string;
-          school_staff_account_id: string;
-          user_id: string;
-          full_name: string;
-          staff_code: string | null;
-          job_title: string | null;
-          position_title: string | null;
-          department: string | null;
-          employment_type: string;
-          pay_frequency: string;
-          base_salary: string;
-          currency_code: string;
-          payroll_active: boolean;
-          notes: string | null;
-          created_at: string;
-        }>(
+        const result = await client.query<Parameters<FinancePayrollService['mapProfile']>[0]>(
           `
           INSERT INTO payroll_staff_profiles (
             school_id,
@@ -609,14 +629,15 @@ export class FinancePayrollService {
             currency_code,
             payroll_active,
             notes,
+            salary_effective_from,
             created_by_user_id
           )
-          VALUES ($1,$2,$3,$4,$5,$5,$6,$7,'MONTHLY',$8,$9,$10,$11,$12)
+          VALUES ($1,$2,$3,$4,$5,$5,$6,$7,$8,$9,$10,$11,$12,$13::date,$14)
           RETURNING
             id,
             school_id,
             school_staff_account_id,
-            $13::uuid AS user_id,
+            $15::uuid AS user_id,
             full_name,
             staff_code,
             job_title,
@@ -628,6 +649,10 @@ export class FinancePayrollService {
             currency_code,
             payroll_active,
             notes,
+            salary_effective_from::text AS effective_from,
+            $16::text AS compensation_type,
+            '[]'::jsonb AS standard_allowances,
+            '[]'::jsonb AS standard_deductions,
             created_at::text AS created_at
           `,
           [
@@ -637,16 +662,51 @@ export class FinancePayrollService {
             staff.staff_code,
             staff.job_title,
             staff.department,
-            staff.staff_type,
+            staff.employment_type,
+            payFrequency,
             baseSalary,
             currencyCode,
             dto.payrollActive ?? true,
             dto.notes?.trim() || null,
+            effectiveFrom,
             actorUserId,
             staff.user_id,
+            compensationType,
           ],
         );
         const row = result.rows[0];
+        await client.query(
+          `
+          INSERT INTO payroll_compensation_versions (
+            school_id,
+            payroll_staff_profile_id,
+            staff_account_id,
+            effective_from,
+            compensation_type,
+            base_amount,
+            currency_code,
+            pay_frequency,
+            standard_allowances,
+            standard_deductions,
+            change_reason,
+            approved_by_user_id,
+            created_by_user_id
+          )
+          VALUES ($1,$2,$3,$4::date,$5,$6,$7,$8,'[]'::jsonb,'[]'::jsonb,$9,$10,$10)
+          `,
+          [
+            dto.schoolId,
+            row.id,
+            staff.id,
+            effectiveFrom,
+            compensationType,
+            baseSalary,
+            currencyCode,
+            payFrequency,
+            changeReason,
+            actorUserId,
+          ],
+        );
         await this.platformActivityService.recordTx(client, {
           eventType: 'PAYROLL_PROFILE_CREATED',
           actorType: this.actorType(platformRole),
@@ -657,23 +717,239 @@ export class FinancePayrollService {
             payrollStaffProfileId: row.id,
             staffAccountId: staff.id,
             affectedUserId: staff.user_id,
-            baseSalary,
+            effectiveFrom,
+            compensationType,
+            payFrequency,
             currencyCode,
           },
         });
         return this.mapProfile(row);
       });
-      return created;
     } catch (error) {
       if ((error as { code?: string }).code === '23505') {
         throw new ConflictException(
-          'This staff account already has a payroll profile.',
+          'This staff account already has a payroll profile or compensation on that effective date.',
         );
       }
       throw error;
     }
   }
 
+  async listPayrollCompensationVersions(
+    profileId: string,
+    schoolId: string,
+    actorUserId: string,
+    platformRole: PlatformRole,
+  ) {
+    await this.assertUserCanAccessFinance(actorUserId, schoolId, platformRole);
+    const result = await this.db.query<{
+      id: string;
+      effective_from: string;
+      compensation_type: string;
+      base_amount: string;
+      currency_code: string;
+      pay_frequency: string;
+      standard_allowances: unknown[];
+      standard_deductions: unknown[];
+      change_reason: string;
+      approved_by_user_id: string;
+      created_at: string;
+    }>(
+      `
+      SELECT
+        id,
+        effective_from::text AS effective_from,
+        compensation_type,
+        base_amount::text AS base_amount,
+        currency_code,
+        pay_frequency,
+        standard_allowances,
+        standard_deductions,
+        change_reason,
+        approved_by_user_id,
+        created_at::text AS created_at
+      FROM payroll_compensation_versions
+      WHERE school_id = $1
+        AND payroll_staff_profile_id = $2
+      ORDER BY effective_from DESC, created_at DESC
+      `,
+      [schoolId, profileId],
+    );
+    return result.rows.map((row) => ({
+      id: row.id,
+      effectiveFrom: row.effective_from,
+      compensationType: row.compensation_type,
+      baseAmount: Number(row.base_amount),
+      currencyCode: row.currency_code,
+      payFrequency: row.pay_frequency,
+      standardAllowances: row.standard_allowances,
+      standardDeductions: row.standard_deductions,
+      changeReason: row.change_reason,
+      approvedByUserId: row.approved_by_user_id,
+      createdAt: row.created_at,
+    }));
+  }
+
+  async createPayrollCompensationVersion(
+    profileId: string,
+    dto: CreatePayrollCompensationVersionDto,
+    actorUserId: string,
+    platformRole: PlatformRole,
+  ) {
+    const actor = await this.assertUserCanAccessFinance(
+      actorUserId,
+      dto.schoolId,
+      platformRole,
+    );
+    this.assertActiveSchoolAdmin(actor);
+    const baseAmount = money(Number(dto.baseAmount));
+    if (!Number.isFinite(baseAmount) || baseAmount < 0) {
+      throw new BadRequestException('Base amount must be zero or greater.');
+    }
+    const reason = dto.changeReason.trim();
+    if (!reason) throw new BadRequestException('A compensation change reason is required.');
+    const currencyCode = this.currency(dto.currencyCode);
+    if (dto.compensationType !== 'SALARY') {
+      throw new BadRequestException(
+        'Hourly and daily compensation require approved work-unit data and are not enabled yet.',
+      );
+    }
+    const standardAllowances = this.standardCompensationLines(
+      dto.standardAllowances,
+      'Allowance',
+    );
+    const standardDeductions = this.standardCompensationLines(
+      dto.standardDeductions,
+      'Deduction',
+    );
+    try {
+      return await this.db.withTransaction(async (client) => {
+        const profileResult = await client.query<{
+          id: string;
+          staff_account_id: string;
+        }>(
+          `
+          SELECT profile.id, profile.school_staff_account_id AS staff_account_id
+          FROM payroll_staff_profiles profile
+          JOIN school_staff_accounts staff
+            ON staff.id = profile.school_staff_account_id
+           AND staff.school_id = profile.school_id
+           AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+           AND staff.deleted_at IS NULL
+          WHERE profile.id = $1
+            AND profile.school_id = $2
+            AND profile.deleted_at IS NULL
+          LIMIT 1
+          FOR UPDATE OF profile, staff
+          `,
+          [profileId, dto.schoolId],
+        );
+        const profile = profileResult.rows[0];
+        if (!profile) throw new NotFoundException('Active payroll profile not found.');
+        const created = await client.query<{
+          id: string;
+          created_at: string;
+        }>(
+          `
+          INSERT INTO payroll_compensation_versions (
+            school_id,
+            payroll_staff_profile_id,
+            staff_account_id,
+            effective_from,
+            compensation_type,
+            base_amount,
+            currency_code,
+            pay_frequency,
+            standard_allowances,
+            standard_deductions,
+            change_reason,
+            approved_by_user_id,
+            created_by_user_id
+          )
+          VALUES ($1,$2,$3,$4::date,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$12)
+          RETURNING id, created_at::text AS created_at
+          `,
+          [
+            dto.schoolId,
+            profileId,
+            profile.staff_account_id,
+            dto.effectiveFrom,
+            dto.compensationType,
+            baseAmount,
+            currencyCode,
+            dto.payFrequency,
+            JSON.stringify(standardAllowances),
+            JSON.stringify(standardDeductions),
+            reason,
+            actorUserId,
+          ],
+        );
+        await client.query(
+          `
+          UPDATE payroll_staff_profiles
+          SET
+            base_salary = $3,
+            currency_code = $4,
+            pay_frequency = $5,
+            salary_effective_from = $6::date,
+            updated_at = NOW()
+          WHERE id = $1
+            AND school_id = $2
+            AND (
+              salary_effective_from IS NULL
+              OR salary_effective_from <= $6::date
+            )
+          `,
+          [
+            profileId,
+            dto.schoolId,
+            baseAmount,
+            currencyCode,
+            dto.payFrequency,
+            dto.effectiveFrom,
+          ],
+        );
+        await this.platformActivityService.recordTx(client, {
+          eventType: 'PAYROLL_COMPENSATION_VERSION_CREATED',
+          actorType: this.actorType(platformRole),
+          actorUserId,
+          schoolId: dto.schoolId,
+          summary: 'An effective-dated payroll compensation version was created.',
+          payload: {
+            payrollStaffProfileId: profileId,
+            staffAccountId: profile.staff_account_id,
+            compensationVersionId: created.rows[0].id,
+            effectiveFrom: dto.effectiveFrom,
+            compensationType: dto.compensationType,
+            payFrequency: dto.payFrequency,
+            currencyCode,
+          },
+        });
+        return {
+          id: created.rows[0].id,
+          profileId,
+          staffAccountId: profile.staff_account_id,
+          effectiveFrom: dto.effectiveFrom,
+          compensationType: dto.compensationType,
+          baseAmount,
+          currencyCode,
+          payFrequency: dto.payFrequency,
+          standardAllowances,
+          standardDeductions,
+          changeReason: reason,
+          approvedByUserId: actorUserId,
+          createdAt: created.rows[0].created_at,
+        };
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === '23505') {
+        throw new ConflictException(
+          'A compensation version already exists on that effective date.',
+        );
+      }
+      throw error;
+    }
+  }
   private mapRun(row: PayrollRunRow) {
     return {
       id: row.id,
@@ -960,6 +1236,8 @@ export class FinancePayrollService {
         const profiles = await client.query<{
           id: string;
           staff_account_id: string;
+          compensation_version_id: string;
+          compensation_type: 'SALARY' | 'HOURLY' | 'DAILY';
           full_name: string;
           staff_code: string | null;
           position_title: string | null;
@@ -968,41 +1246,64 @@ export class FinancePayrollService {
           pay_frequency: string;
           base_salary: string;
           currency_code: string;
+          standard_allowances: Array<{
+            code: string;
+            description: string;
+            amount: number;
+          }>;
+          standard_deductions: Array<{
+            code: string;
+            description: string;
+            amount: number;
+          }>;
         }>(
           `
           SELECT
             profile.id,
             profile.school_staff_account_id AS staff_account_id,
+            compensation.id AS compensation_version_id,
+            compensation.compensation_type,
             profile.full_name,
             profile.staff_code,
             COALESCE(profile.position_title, profile.job_title) AS position_title,
             profile.department,
             profile.employment_type,
-            profile.pay_frequency,
-            profile.base_salary::text AS base_salary,
-            profile.currency_code
+            compensation.pay_frequency,
+            compensation.base_amount::text AS base_salary,
+            compensation.currency_code,
+            compensation.standard_allowances,
+            compensation.standard_deductions
           FROM payroll_staff_profiles profile
           JOIN school_staff_accounts staff
             ON staff.id = profile.school_staff_account_id
            AND staff.school_id = profile.school_id
-           AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE')
+           AND staff.employment_status IN ('ACTIVE', 'ON_LEAVE', 'TERMINATED')
            AND staff.deleted_at IS NULL
-          JOIN school_memberships membership
-            ON membership.school_id = staff.school_id
-           AND membership.user_id = staff.user_id
-           AND membership.membership_status = 'ACTIVE'
-           AND membership.deleted_at IS NULL
+           AND (staff.hire_date IS NULL OR staff.hire_date <= $3::date)
+           AND (
+             staff.termination_date IS NULL
+             OR staff.termination_date >= $2::date
+           )
+          JOIN LATERAL (
+            SELECT version.*
+            FROM payroll_compensation_versions version
+            WHERE version.school_id = profile.school_id
+              AND version.payroll_staff_profile_id = profile.id
+              AND version.effective_from <= $2::date
+            ORDER BY version.effective_from DESC, version.created_at DESC
+            LIMIT 1
+          ) compensation ON TRUE
           WHERE profile.school_id = $1
             AND profile.payroll_active = TRUE
             AND profile.deleted_at IS NULL
           ORDER BY profile.full_name ASC
           FOR UPDATE OF profile
           `,
-          [dto.schoolId],
+          [dto.schoolId, dto.periodStart, dto.periodEnd],
         );
         if (!profiles.rows.length) {
           throw new BadRequestException(
-            'No active, staff-linked payroll profiles are available.',
+            'No payroll-eligible staff have compensation effective for this period.',
           );
         }
         const currencies = [
@@ -1012,10 +1313,9 @@ export class FinancePayrollService {
         ];
         if (currencies.length !== 1 || currencies[0] !== currencyCode) {
           throw new BadRequestException(
-            `All active payroll profiles must use the requested ${currencyCode} currency.`,
+            `All included compensation versions must use the requested ${currencyCode} currency.`,
           );
-        }
-        const numberResult = await client.query<{ payroll_number: string }>(
+        }        const numberResult = await client.query<{ payroll_number: string }>(
           'SELECT next_payroll_number($1) AS payroll_number',
           [dto.schoolId],
         );
@@ -1081,16 +1381,41 @@ export class FinancePayrollService {
         );
         const run = runResult.rows[0];
         let totalGross = 0;
+        let totalAllowances = 0;
+        let totalDeductions = 0;
+        let totalNet = 0;
         for (const profile of profiles.rows) {
           const grossSalary = money(Number(profile.base_salary));
+          const allowances = money(
+            profile.standard_allowances.reduce(
+              (sum, line) => sum + Number(line.amount),
+              0,
+            ),
+          );
+          const deductions = money(
+            profile.standard_deductions.reduce(
+              (sum, line) => sum + Number(line.amount),
+              0,
+            ),
+          );
+          const netSalary = money(grossSalary + allowances - deductions);
+          if (netSalary < 0) {
+            throw new BadRequestException(
+              `Standard deductions exceed compensation for ${profile.full_name}.`,
+            );
+          }
           totalGross = money(totalGross + grossSalary);
-          await client.query(
+          totalAllowances = money(totalAllowances + allowances);
+          totalDeductions = money(totalDeductions + deductions);
+          totalNet = money(totalNet + netSalary);
+          const itemResult = await client.query<{ id: string }>(
             `
             INSERT INTO payroll_run_items (
               school_id,
               payroll_run_id,
               payroll_staff_profile_id,
               staff_account_id,
+              compensation_version_id,
               currency_code,
               snapshot_full_name,
               snapshot_staff_code,
@@ -1098,6 +1423,7 @@ export class FinancePayrollService {
               snapshot_department,
               snapshot_employment_type,
               snapshot_pay_frequency,
+              snapshot_compensation_type,
               snapshot_base_salary,
               gross_salary,
               allowances,
@@ -1105,13 +1431,18 @@ export class FinancePayrollService {
               net_salary,
               payment_status
             )
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12,0,0,$12,'PENDING')
+            VALUES (
+              $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+              $14,$14,$15,$16,$17,'PENDING'
+            )
+            RETURNING id
             `,
             [
               dto.schoolId,
               run.id,
               profile.id,
               profile.staff_account_id,
+              profile.compensation_version_id,
               currencyCode,
               profile.full_name,
               profile.staff_code,
@@ -1119,17 +1450,63 @@ export class FinancePayrollService {
               profile.department,
               profile.employment_type,
               profile.pay_frequency,
+              profile.compensation_type,
               grossSalary,
+              allowances,
+              deductions,
+              netSalary,
             ],
           );
+          for (const [type, lines] of [
+            ['ALLOWANCE', profile.standard_allowances],
+            ['DEDUCTION', profile.standard_deductions],
+          ] as const) {
+            for (const line of lines) {
+              await client.query(
+                `
+                INSERT INTO payroll_item_adjustments (
+                  school_id,
+                  payroll_run_item_id,
+                  adjustment_type,
+                  adjustment_code,
+                  description,
+                  amount,
+                  created_by_user_id
+                )
+                VALUES ($1,$2,$3,$4,$5,$6,$7)
+                `,
+                [
+                  dto.schoolId,
+                  itemResult.rows[0].id,
+                  type,
+                  line.code.toUpperCase(),
+                  line.description,
+                  money(Number(line.amount)),
+                  actorUserId,
+                ],
+              );
+            }
+          }
         }
         await client.query(
           `
           UPDATE payroll_runs
-          SET total_gross=$3,total_allowances=0,total_deductions=0,total_net=$3,updated_at=NOW()
-          WHERE id=$1 AND school_id=$2
+          SET
+            total_gross = $3,
+            total_allowances = $4,
+            total_deductions = $5,
+            total_net = $6,
+            updated_at = NOW()
+          WHERE id = $1 AND school_id = $2
           `,
-          [run.id, dto.schoolId, totalGross],
+          [
+            run.id,
+            dto.schoolId,
+            totalGross,
+            totalAllowances,
+            totalDeductions,
+            totalNet,
+          ],
         );
         await this.recordRunEventTx(client, {
           schoolId: dto.schoolId,
@@ -1145,6 +1522,9 @@ export class FinancePayrollService {
             currencyCode,
             staffCount: profiles.rows.length,
             totalGross,
+            totalAllowances,
+            totalDeductions,
+            totalNet,
           },
         });
         await this.platformActivityService.recordTx(client, {
@@ -1166,9 +1546,9 @@ export class FinancePayrollService {
           ...this.mapRun({
             ...run,
             total_gross: String(totalGross),
-            total_allowances: '0',
-            total_deductions: '0',
-            total_net: String(totalGross),
+            total_allowances: String(totalAllowances),
+            total_deductions: String(totalDeductions),
+            total_net: String(totalNet),
           }),
           staffCount: profiles.rows.length,
         };

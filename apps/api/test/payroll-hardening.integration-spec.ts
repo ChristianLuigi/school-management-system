@@ -75,12 +75,21 @@ describe('payroll hardening integration', () => {
         createdByUserId: actor.id,
       },
     );
+    await pool.query(
+      `
+      UPDATE school_staff_accounts
+      SET first_name = $2, last_name = $3, hire_date = '2026-01-01', updated_at = NOW()
+      WHERE id = $1
+      `,
+      [staffAccountId, input?.firstName ?? 'Marie', input?.lastName ?? 'Payroll'],
+    );
     const profile = await harness.payroll.createPayrollProfile(
       {
         schoolId,
         staffAccountId,
         baseSalary: input?.baseSalary ?? 1000,
         currencyCode: input?.currencyCode ?? 'HTG',
+        effectiveFrom: '2026-01-01',
       },
       actor.id,
       null,
