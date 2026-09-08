@@ -2,8 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { SectionSelectorClient } from "@/components/section-selector-client";
+import {
+  ArrowLeft,
+  FileCheck2,
+  HeartPulse,
+  RefreshCw,
+  Save,
+  UserRound,
+} from "lucide-react";
 
+const EDIT_SECTIONS = [
+  { id: "identity", label: "Identity", icon: UserRound },
+  { id: "documents", label: "Documents", icon: FileCheck2 },
+  { id: "health", label: "Health", icon: HeartPulse },
+] as const;
+
+type EditSection = (typeof EDIT_SECTIONS)[number]["id"];
 type StudentProfile = {
   schoolId: string;
   student: {
@@ -18,9 +32,6 @@ type StudentProfile = {
     previousSchoolName: string | null;
     previousSchoolAddress: string | null;
     createdAt: string;
-  };
-  currentEnrollment: {
-    sectionId: string | null;
   };
   documents: {
     photoReceived: boolean;
@@ -44,6 +55,7 @@ export function StudentProfileEditClient({
   studentId: string;
 }) {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [activeSection, setActiveSection] = useState<EditSection>("identity");
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -54,9 +66,6 @@ export function StudentProfileEditClient({
   const [photoUrl, setPhotoUrl] = useState("");
   const [previousSchoolName, setPreviousSchoolName] = useState("");
   const [previousSchoolAddress, setPreviousSchoolAddress] = useState("");
-  const [sectionId, setSectionId] = useState("");
-  const [clearSection, setClearSection] = useState(false);
-
   const [photoReceived, setPhotoReceived] = useState(false);
   const [birthCertificateReceived, setBirthCertificateReceived] =
     useState(false);
@@ -87,9 +96,6 @@ export function StudentProfileEditClient({
     setPhotoUrl(body.student.photoUrl ?? "");
     setPreviousSchoolName(body.student.previousSchoolName ?? "");
     setPreviousSchoolAddress(body.student.previousSchoolAddress ?? "");
-    setSectionId(body.currentEnrollment.sectionId ?? "");
-    setClearSection(false);
-
     setPhotoReceived(body.documents.photoReceived);
     setBirthCertificateReceived(body.documents.birthCertificateReceived);
     setVaccinationCardReceived(body.documents.vaccinationCardReceived);
@@ -157,8 +163,6 @@ export function StudentProfileEditClient({
           photoUrl,
           previousSchoolName,
           previousSchoolAddress,
-          sectionId: clearSection ? undefined : sectionId || undefined,
-          clearSection,
           photoReceived,
           birthCertificateReceived,
           vaccinationCardReceived,
@@ -230,18 +234,22 @@ export function StudentProfileEditClient({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href={`/students/${studentId}`}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
-          Back to Profile
+          <ArrowLeft className="h-4 w-4" />
+          Profile
         </Link>
 
         <button
           type="button"
           onClick={loadProfile}
           disabled={loading}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+          aria-label="Reload student profile"
+          title="Reload student profile"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
         >
-          {loading ? "Loading..." : "Reload"}
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          Reload
         </button>
       </div>
 
@@ -264,8 +272,39 @@ export function StudentProfileEditClient({
       ) : null}
 
       {profile ? (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="space-y-5">
+          <nav
+            className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-4"
+            aria-label="Student edit sections"
+          >
+            {EDIT_SECTIONS.map((item) => {
+              const Icon = item.icon;
+              const active = activeSection === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveSection(item.id)}
+                  aria-current={active ? "page" : undefined}
+                  className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                    active
+                      ? "bg-slate-950 text-white"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
+          <div
+            className={
+              activeSection === "identity"
+                ? "rounded-2xl border border-slate-200 bg-white p-5"
+                : "hidden"
+            }
+          >
             <h3 className="text-lg font-semibold text-slate-900">
               Identity Information
             </h3>
@@ -304,6 +343,7 @@ export function StudentProfileEditClient({
 
               <input
                 type="date"
+                max={new Date().toISOString().slice(0, 10)}
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
                 value={dateOfBirth}
                 onChange={(event) => setDateOfBirth(event.target.value)}
@@ -386,35 +426,13 @@ export function StudentProfileEditClient({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Enrollment / Class
-            </h3>
-
-            <div className="mt-5 space-y-4">
-              <SectionSelectorClient
-                schoolId={schoolId}
-                sectionId={sectionId}
-                onSectionIdChange={(value) => {
-                  setSectionId(value);
-                  setClearSection(false);
-                }}
-                label="Current section"
-                allowEmpty
-              />
-
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={clearSection}
-                  onChange={(event) => setClearSection(event.target.checked)}
-                />
-                Remove current class assignment
-              </label>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div
+            className={
+              activeSection === "documents"
+                ? "rounded-2xl border border-slate-200 bg-white p-5"
+                : "hidden"
+            }
+          >
             <h3 className="text-lg font-semibold text-slate-900">
               Document Checklist
             </h3>
@@ -464,7 +482,13 @@ export function StudentProfileEditClient({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div
+            className={
+              activeSection === "health"
+                ? "rounded-2xl border border-slate-200 bg-white p-5"
+                : "hidden"
+            }
+          >
             <h3 className="text-lg font-semibold text-slate-900">
               Health Information
             </h3>
@@ -502,9 +526,7 @@ export function StudentProfileEditClient({
 
           <div className="sticky bottom-4 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="text-sm text-slate-600">
-                Save changes to update the student profile.
-              </div>
+              <div />
 
               <button
                 type="button"
@@ -512,7 +534,8 @@ export function StudentProfileEditClient({
                 onClick={saveProfile}
                 className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
               >
-                {saving ? "Saving..." : "Save Student Profile"}
+                <Save className="mr-2 inline h-4 w-4" />
+                {saving ? "Saving…" : "Save changes"}
               </button>
             </div>
           </div>

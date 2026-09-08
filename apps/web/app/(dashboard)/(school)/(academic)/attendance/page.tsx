@@ -1,39 +1,66 @@
 import { AttendanceSessionClient } from "@/components/attendance-session-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
-import { getMeContext, resolveCurrentSchoolId } from "@/lib/server-context";
+import {
+  getMeContext,
+  resolveCurrentSchoolId,
+  resolveEffectiveRoles,
+} from "@/lib/server-context";
 
-export default async function AttendancePage() {
-  const context = await getMeContext();
+function queryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function AttendancePage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    sectionId?: string | string[];
+    date?: string | string[];
+    slot?: string | string[];
+  }>;
+}) {
+  const [context, query] = await Promise.all([getMeContext(), searchParams]);
   const currentSchoolId = resolveCurrentSchoolId(context);
+  const roles = resolveEffectiveRoles(context);
+  const canManageStructure = roles.includes("SCHOOL_ADMIN");
+  const slot = queryValue(query.slot);
 
   return (
     <SchoolModuleWorkspace
+      compact
       title="Attendance"
-      description="Take morning and afternoon attendance by class/section."
+      description="Record the daily class register."
       quickActions={[
         {
-          href: "/academic-structure",
-          title: "Classes & Sections",
-          description: "Configure classes before taking attendance.",
+          href: "/academics",
+          title: "Academics",
+          icon: "academics",
         },
         {
-          href: "/students",
-          title: "Students",
-          description: "Assign students to classes and sections.",
+          href: "/gradebooks",
+          title: "Gradebooks",
+          icon: "gradebooks",
         },
+        ...(canManageStructure
+          ? [
+              {
+                href: "/students",
+                title: "Students",
+                icon: "students" as const,
+              },
+            ]
+          : []),
       ]}
-      attentionItems={[
-        {
-          tone: "blue",
-          title: "Attendance MVP",
-          description:
-            "This version records daily attendance by class, date, and morning/afternoon slot.",
-        },
-      ]}
-      mainTitle="Class Attendance"
-      mainSubtitle="Select a class, date, and slot, then submit attendance."
+      attentionItems={[]}
+      mainTitle="Attendance"
     >
-      <AttendanceSessionClient schoolId={currentSchoolId} />
+      <AttendanceSessionClient
+        schoolId={currentSchoolId}
+        initialSectionId={queryValue(query.sectionId)}
+        initialAttendanceDate={queryValue(query.date)}
+        initialSlot={slot === "AFTERNOON" ? "AFTERNOON" : "MORNING"}
+        canManageStructure={canManageStructure}
+      />
     </SchoolModuleWorkspace>
   );
 }

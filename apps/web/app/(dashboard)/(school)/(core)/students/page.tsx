@@ -1,4 +1,4 @@
-﻿import { StudentsManagementClient } from "@/components/students-management-client";
+import { StudentsManagementClient } from "@/components/students-management-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import {
   getMeContext,
@@ -14,35 +14,31 @@ export default async function StudentsPage() {
 
   return (
       <SchoolModuleWorkspace
-        title="Students Workspace"
-        description="Manage student records and enrollment visibility."
+        title="Students"
+        description="Directory, enrollment, and student records."
+        compact
         quickActions={[
           {
             href: "/attendance",
             title: "Attendance",
             description: "Review student attendance by section.",
+            icon: "attendance",
           },
           {
             href: "/gradebooks",
             title: "Gradebooks",
             description: "Review student academic records.",
+            icon: "gradebooks",
           },
           {
             href: "/finance",
             title: "Finance",
             description: "Review student billing and payments.",
+            icon: "finance",
           },
         ]}
-        attentionItems={[
-          {
-            tone: "blue",
-            title: "Student records are school-specific",
-            description:
-              "Students created here belong to the currently selected school workspace.",
-          },
-        ]}
+        attentionItems={[]}
         mainTitle="Student Records"
-        mainSubtitle="Create and search students using human-friendly student codes."
       >
         <StudentsManagementClient
           schoolId={currentSchoolId}

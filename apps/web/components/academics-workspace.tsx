@@ -1,4 +1,4 @@
-﻿import { ReactNode } from "react";
+import { ReactNode } from "react";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
 import { getServerTranslator } from "@/lib/i18n";
 
@@ -11,31 +11,39 @@ export async function AcademicsWorkspace({
 }) {
   const { t } = await getServerTranslator();
   const isSchoolAdmin = currentRoles.includes("SCHOOL_ADMIN");
-  const isTeacher = currentRoles.includes("TEACHER");
 
-  const quickActions = [
-    {
-      href: "/academic-structure",
-      title: t("academic.quickActionStructureTitle"),
-      description: t("academic.quickActionStructureDescription"),
-    },
+  const quickActions: Array<{
+    href: string;
+    title: string;
+    description: string;
+    icon: "academics" | "attendance" | "gradebooks" | "settings";
+  }> = [
     {
       href: "/attendance",
       title: t("academic.quickActionAttendanceTitle"),
       description: t("academic.quickActionAttendanceDescription"),
+      icon: "attendance" as const,
     },
     {
       href: "/gradebooks",
       title: t("academic.quickActionGradebookTitle"),
       description: t("academic.quickActionGradebookDescription"),
+      icon: "gradebooks" as const,
     },
   ];
 
   if (isSchoolAdmin) {
+    quickActions.unshift({
+      href: "/academic-structure",
+      title: t("academic.quickActionStructureTitle"),
+      description: t("academic.quickActionStructureDescription"),
+      icon: "academics" as const,
+    });
     quickActions.push({
       href: "/setup",
       title: t("academic.quickActionSettingsTitle"),
       description: t("academic.quickActionSettingsDescription"),
+      icon: "settings" as const,
     });
   }
 
@@ -43,39 +51,13 @@ export async function AcademicsWorkspace({
     tone: "green" | "amber" | "red" | "blue" | "neutral";
     title: string;
     description: string;
-  }> = [
-    {
-      tone: "blue" as const,
-      title: t("academic.attentionStructureTitle"),
-      description: t("academic.attentionStructureDescription"),
-    },
-    {
-      tone: "amber" as const,
-      title: t("academic.attentionTeacherSubjectTitle"),
-      description: t("academic.attentionTeacherSubjectDescription"),
-    },
-  ];
-
-  if (isTeacher) {
-    attentionItems.push({
-      tone: "green" as const,
-      title: t("academic.attentionTeacherPriorityTitle"),
-      description: t("academic.attentionTeacherPriorityDescription"),
-    });
-  }
-
-  if (isSchoolAdmin) {
-    attentionItems.push({
-      tone: "amber" as const,
-      title: t("academic.attentionAdminPriorityTitle"),
-      description: t("academic.attentionAdminPriorityDescription"),
-    });
-  }
+  }> = [];
 
   return (
     <SchoolModuleWorkspace
       title={t("academic.workspaceTitle")}
       description={t("academic.workspaceDescription")}
+      compact
       quickActions={quickActions}
       attentionItems={attentionItems}
       mainTitle={t("academic.academicOperations")}

@@ -3,6 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  ArrowLeft,
+  CalendarDays,
+  ClipboardCheck,
+  FileText,
+  FolderOpen,
+  GraduationCap,
+  Hash,
+  LayoutDashboard,
+  Pencil,
+  RefreshCw,
+  UsersRound,
+  WalletCards,
+} from "lucide-react";
+import {
   admissionStatusLabel,
   admissionStatusTone,
 } from "@/components/admission-status-panel-client";
@@ -11,16 +25,36 @@ import {
   StudentDocumentsPanelClient,
 } from "@/components/student-documents-panel-client";
 import { StudentAttendanceHistoryPanelClient } from "@/components/student-attendance-history-panel-client";
+import { StudentEnrollmentWorkspaceClient } from "@/components/student-enrollment-workspace-client";
 import { StudentCreateInvoicePanelClient } from "@/components/student-create-invoice-panel-client";
 import { StudentFinanceSummaryPanelClient } from "@/components/student-finance-summary-panel-client";
 import { StudentProfileEditPanelClient } from "@/components/student-profile-edit-panel-client";
-import { StudentStatusPanelClient } from "@/components/student-status-panel-client";
-import { StudentSectionAssignmentPanelClient } from "@/components/student-section-assignment-panel-client";
 import { StudentGuardiansManagementPanelClient } from "@/components/student-guardians-management-panel-client";
 import { StudentGuardianRow } from "@/components/student-guardians-panel-client";
 import { SchoolBadge } from "@/components/school-ui";
+import { useI18n } from "@/components/i18n-provider";
 
 type BadgeTone = "neutral" | "green" | "amber" | "red" | "blue";
+type StudentProfileTab =
+  | "overview"
+  | "enrollment"
+  | "guardians"
+  | "documents"
+  | "attendance"
+  | "finance";
+
+const PROFILE_TABS = [
+  { id: "overview", labelKey: "students.overview", icon: LayoutDashboard },
+  { id: "enrollment", labelKey: "students.enrollment", icon: GraduationCap },
+  { id: "guardians", labelKey: "students.guardians", icon: UsersRound },
+  { id: "documents", labelKey: "students.documents", icon: FolderOpen },
+  { id: "attendance", labelKey: "attendance.title", icon: ClipboardCheck },
+  { id: "finance", labelKey: "students.finance", icon: WalletCards },
+] as const;
+
+function isStudentProfileTab(value: string | null): value is StudentProfileTab {
+  return PROFILE_TABS.some((tab) => tab.id === value);
+}
 
 type StudentProfile = {
   schoolId: string;
@@ -72,6 +106,12 @@ type StudentProfile = {
       nameI18n: Record<string, string> | null;
       academicDivision: string | null;
     };
+    academicYear: {
+      id: string;
+      nameI18n: Record<string, string> | null;
+      status: string;
+    };
+    startDate: string;
   } | null;
   enrollmentHistory: Array<{
     enrollmentId: string;
@@ -87,9 +127,17 @@ type StudentProfile = {
       nameI18n: Record<string, string> | null;
       academicDivision: string | null;
     };
+    academicYear: {
+      id: string;
+      nameI18n: Record<string, string> | null;
+      status: string;
+    };
+    startDate: string;
+    endDate: string | null;
     createdAt: string;
     updatedAt: string | null;
     endedAt: string | null;
+    endReason: string | null;
   }>;
   statusHistory: Array<{
     id: string;
@@ -151,23 +199,22 @@ type StudentProfile = {
 function i18nName(
   value: Record<string, string> | null | undefined,
   fallback: string,
+  locale: "fr" | "en",
 ) {
-  return value?.fr ?? value?.en ?? fallback;
+  return value?.[locale] ?? value?.fr ?? value?.en ?? fallback;
 }
 
-function studentStatusLabel(status: string | null) {
-  const labels: Record<string, string> = {
-    PRE_REGISTERED: "Préinscrit",
-    REGISTERED: "Inscrit",
-    ACTIVE: "Actif",
-    SUSPENDED: "Suspendu",
-    WITHDRAWN: "Retiré",
-    TRANSFERRED: "Transféré",
-    GRADUATED: "Diplômé",
-    ARCHIVED: "Archivé",
-  };
-
-  return status ? (labels[status] ?? status) : "Status pending";
+function studentStatusLabel(
+  status: string | null,
+  translate: (key: string) => string,
+) {
+  if (!status) return translate("students.statusPending");
+  const key =
+    status === "PRE_REGISTERED"
+      ? "preRegistered"
+      : status.toLowerCase();
+  const label = translate(`students.${key}`);
+  return label.startsWith("students.") ? status : label;
 }
 
 function studentStatusTone(status: string | null): BadgeTone {
@@ -180,17 +227,21 @@ function studentStatusTone(status: string | null): BadgeTone {
   return "neutral";
 }
 
-function studentName(profile: StudentProfile) {
+function studentName(profile: StudentProfile, unnamedLabel: string) {
   const name = `${profile.student.firstName ?? ""} ${
     profile.student.lastName ?? ""
   }`.trim();
-  return name || profile.student.studentCode || "Student";
+  return name || profile.student.studentCode || unnamedLabel;
 }
 
-function currentEnrollmentLabel(profile: StudentProfile) {
-  if (!profile.currentEnrollment) return "No class assigned";
+function currentEnrollmentLabel(
+  profile: StudentProfile,
+  locale: "fr" | "en",
+  noClassLabel: string,
+) {
+  if (!profile.currentEnrollment) return noClassLabel;
 
-  return enrollmentLabel(profile.currentEnrollment);
+  return enrollmentLabel(profile.currentEnrollment, locale, noClassLabel);
 }
 
 function enrollmentLabel(row: {
@@ -202,24 +253,23 @@ function enrollmentLabel(row: {
     code: string | null;
     nameI18n: Record<string, string> | null;
   };
-}) {
-  const grade = i18nName(row.gradeLevel.nameI18n, row.gradeLevel.code ?? "");
-  const section = i18nName(row.section.nameI18n, row.section.code ?? "");
+}, locale: "fr" | "en", unknownClassLabel: string) {
+  const grade = i18nName(
+    row.gradeLevel.nameI18n,
+    row.gradeLevel.code ?? "",
+    locale,
+  );
+  const section = i18nName(
+    row.section.nameI18n,
+    row.section.code ?? "",
+    locale,
+  );
 
   if (section.toLowerCase().includes(grade.toLowerCase())) {
     return section;
   }
 
-  return [grade, section].filter(Boolean).join(" - ") || "Unknown class";
-}
-
-function enrollmentStatusTone(
-  status: string,
-  endedAt: string | null,
-): BadgeTone {
-  if (!endedAt && status === "ACTIVE") return "green";
-  if (status === "TRANSFERRED") return "amber";
-  return "neutral";
+  return [grade, section].filter(Boolean).join(" - ") || unknownClassLabel;
 }
 
 export function StudentProfileClient({
@@ -229,7 +279,9 @@ export function StudentProfileClient({
   schoolId: string;
   studentId: string;
 }) {
+  const { locale, t } = useI18n();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [activeTab, setActiveTab] = useState<StudentProfileTab>("overview");
   const [financeRefreshKey, setFinanceRefreshKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -249,13 +301,13 @@ export function StudentProfileClient({
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to load student profile.");
+        throw new Error(body?.message ?? t("students.failedToLoadProfile"));
       }
 
       setProfile(body);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load student profile.",
+        err instanceof Error ? err.message : t("students.failedToLoadProfile"),
       );
     } finally {
       setLoading(false);
@@ -266,50 +318,95 @@ export function StudentProfileClient({
     loadProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId, studentId]);
+  useEffect(() => {
+    const syncTabFromUrl = () => {
+      const value = new URLSearchParams(window.location.search).get("tab");
+      setActiveTab(isStudentProfileTab(value) ? value : "overview");
+    };
+    syncTabFromUrl();
+    window.addEventListener("popstate", syncTabFromUrl);
+    return () => window.removeEventListener("popstate", syncTabFromUrl);
+  }, []);
+
+  function selectTab(tab: StudentProfileTab) {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    if (tab === "overview") {
+      url.searchParams.delete("tab");
+    } else {
+      url.searchParams.set("tab", tab);
+    }
+    window.history.pushState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  const selectedTab =
+    activeTab === "finance" && profile && !profile.capabilities.canViewFinance
+      ? "overview"
+      : activeTab;
+  useEffect(() => {
+    if (
+      profile &&
+      activeTab === "finance" &&
+      !profile.capabilities.canViewFinance
+    ) {
+      setActiveTab("overview");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("tab");
+      window.history.replaceState(
+        {},
+        "",
+        `${url.pathname}${url.search}${url.hash}`,
+      );
+    }
+  }, [activeTab, profile]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/students"
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-          >
-            Back to Students
-          </Link>
+        <Link
+          href="/students"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t("students.backToStudents")}
+        </Link>
 
-          <Link
-            href={`/students/${studentId}/edit`}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-          >
-            Edit Profile
-          </Link>
-
+        <div className="flex items-center gap-2">
           <Link
             href={`/students/${studentId}/report-card`}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
           >
-            Report Card
+            <FileText className="h-4 w-4" />
+            {t("students.reportCard")}
           </Link>
+          <Link
+            href={`/students/${studentId}/edit`}
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            <Pencil className="h-4 w-4" />
+            {t("common.edit")}
+          </Link>
+          <button
+            type="button"
+            onClick={() => void loadProfile()}
+            disabled={loading}
+            title={t("students.refreshProfile")}
+            aria-label={t("students.refreshProfile")}
+            className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={loadProfile}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-        >
-          Refresh
-        </button>
       </div>
 
       {loading ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-          Loading student profile...
+        <div role="status" className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+          {t("students.loadingProfile")}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
@@ -323,26 +420,24 @@ export function StudentProfileClient({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={profile.student.photoUrl}
-                    alt={studentName(profile)}
+                    alt={studentName(profile, t("students.unnamedStudent"))}
                     className="h-28 w-28 rounded-2xl border border-slate-200 object-cover"
                   />
                 ) : (
                   <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-3xl font-bold text-slate-400">
-                    {studentName(profile).slice(0, 2).toUpperCase()}
+                    {studentName(profile, t("students.unnamedStudent"))
+                      .slice(0, 2)
+                      .toUpperCase()}
                   </div>
                 )}
 
                 <div>
-                  <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                    Student Profile
-                  </div>
-
-                  <h2 className="mt-2 text-3xl font-bold text-slate-900">
-                    {studentName(profile)}
-                  </h2>
+                  <h1 className="text-3xl font-bold text-slate-900">
+                    {studentName(profile, t("students.unnamedStudent"))}
+                  </h1>
 
                   <div className="mt-1 text-sm text-slate-500">
-                    {profile.student.studentCode ?? "Code pending"}
+                    {profile.student.studentCode ?? t("students.codePending")}
                   </div>
                 </div>
               </div>
@@ -350,184 +445,187 @@ export function StudentProfileClient({
               <SchoolBadge
                 tone={studentStatusTone(profile.student.studentStatus)}
               >
-                {studentStatusLabel(profile.student.studentStatus)}
+                {studentStatusLabel(profile.student.studentStatus, t)}
               </SchoolBadge>
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Current Class</div>
-                <div className="mt-2 text-xl font-bold text-slate-900">
-                  {currentEnrollmentLabel(profile)}
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-xl bg-white p-2.5 text-blue-700 shadow-sm">
+                  <GraduationCap className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    {t("students.currentClass")}
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-900">
+                    {currentEnrollmentLabel(
+                      profile,
+                      locale,
+                      t("students.noClassAssigned"),
+                    )}
+                  </div>
                 </div>
               </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Created</div>
-                <div className="mt-2 text-xl font-bold text-slate-900">
-                  {new Date(profile.student.createdAt).toLocaleDateString()}
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-xl bg-white p-2.5 text-violet-700 shadow-sm">
+                  <CalendarDays className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    {t("students.created")}
+                  </div>
+                  <div className="mt-1 font-semibold text-slate-900">
+                    {new Date(profile.student.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Student Code</div>
-                <div className="mt-2 text-xl font-bold text-slate-900">
-                  {profile.student.studentCode ?? "Code pending"}
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-xl bg-white p-2.5 text-emerald-700 shadow-sm">
+                  <Hash className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    {t("students.studentCode")}
+                  </div>
+                  <div className="mt-1 font-mono text-sm font-semibold text-slate-900">
+                    {profile.student.studentCode ?? t("students.pending")}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <StudentProfileEditPanelClient
-            schoolId={schoolId}
-            profile={profile}
-            onUpdated={loadProfile}
-          />
+          <nav
+            aria-label={t("students.profileSections")}
+            className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm"
+          >
+            <div className="flex min-w-max gap-1" role="tablist">
+              {PROFILE_TABS.filter(
+                (tab) =>
+                  tab.id !== "finance" || profile.capabilities.canViewFinance,
+              ).map((tab) => {
+                const Icon = tab.icon;
+                const count =
+                  tab.id === "enrollment"
+                    ? profile.enrollmentHistory.length
+                    : tab.id === "guardians"
+                      ? profile.guardians.length
+                      : tab.id === "documents"
+                        ? profile.documentRecords.length
+                        : tab.id === "finance"
+                          ? (profile.finance?.invoiceCount ?? 0)
+                          : null;
+                const active = selectedTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    id={`student-profile-tab-${tab.id}`}
+                    role="tab"
+                    aria-selected={active}
+                    aria-controls={`student-profile-panel-${tab.id}`}
+                    tabIndex={active ? 0 : -1}
+                    onClick={() => selectTab(tab.id)}
+                    onKeyDown={(event) => {
+                      const tabs = Array.from(
+                        event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                          '[role="tab"]',
+                        ) ?? [],
+                      );
+                      const currentIndex = tabs.indexOf(event.currentTarget);
+                      let nextIndex = currentIndex;
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  Current Class / Section
-                </h3>
+                      if (event.key === "ArrowRight") {
+                        nextIndex = (currentIndex + 1) % tabs.length;
+                      } else if (event.key === "ArrowLeft") {
+                        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                      } else if (event.key === "Home") {
+                        nextIndex = 0;
+                      } else if (event.key === "End") {
+                        nextIndex = tabs.length - 1;
+                      } else {
+                        return;
+                      }
 
-                <p className="mt-1 text-sm text-slate-600">
-                  Active academic placement for this student.
-                </p>
-
-                <div className="mt-4 text-2xl font-bold text-slate-900">
-                  {currentEnrollmentLabel(profile)}
-                </div>
-
-                {profile.currentEnrollment?.gradeLevel.academicDivision ? (
-                  <div className="mt-1 text-sm text-slate-500">
-                    {profile.currentEnrollment.gradeLevel.academicDivision}
-                  </div>
-                ) : null}
-              </div>
-
-              {profile.currentEnrollment ? (
-                <SchoolBadge tone="green">Assigned</SchoolBadge>
-              ) : (
-                <SchoolBadge tone="amber">Not assigned</SchoolBadge>
-              )}
-            </div>
-          </div>
-
-          <StudentSectionAssignmentPanelClient
-            schoolId={schoolId}
-            studentId={profile.student.id}
-            currentSectionId={profile.currentEnrollment?.section.id ?? null}
-            onUpdated={loadProfile}
-          />
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  Enrollment History
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-600">
-                  Historical class and section assignments for this student.
-                </p>
-              </div>
-
-              <SchoolBadge tone="blue">
-                {profile.enrollmentHistory.length} record(s)
-              </SchoolBadge>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {profile.enrollmentHistory.map((row) => (
-                <div
-                  key={row.enrollmentId}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold text-slate-900">
-                        {enrollmentLabel(row)}
-                      </div>
-
-                      {row.gradeLevel.academicDivision ? (
-                        <div className="mt-1 text-xs text-slate-500">
-                          {row.gradeLevel.academicDivision}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <SchoolBadge
-                      tone={enrollmentStatusTone(
-                        row.enrollmentStatus,
-                        row.endedAt,
-                      )}
-                    >
-                      {!row.endedAt && row.enrollmentStatus === "ACTIVE"
-                        ? "Current"
-                        : row.enrollmentStatus}
-                    </SchoolBadge>
-                  </div>
-
-                  <div className="mt-3 grid gap-2 text-xs text-slate-500 md:grid-cols-2">
-                    <div>
-                      Started:{" "}
-                      <span className="font-medium text-slate-700">
-                        {new Date(row.createdAt).toLocaleDateString()}
+                      event.preventDefault();
+                      tabs[nextIndex]?.focus();
+                      tabs[nextIndex]?.click();
+                    }}
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                      active
+                        ? "bg-slate-950 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{t(tab.labelKey)}</span>
+                    {count !== null ? (
+                      <span
+                        className={`rounded-full px-1.5 py-0.5 text-[11px] ${
+                          active
+                            ? "bg-white/15 text-white"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {count}
                       </span>
-                    </div>
-
-                    <div>
-                      Ended:{" "}
-                      <span className="font-medium text-slate-700">
-                        {row.endedAt
-                          ? new Date(row.endedAt).toLocaleDateString()
-                          : "-"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {profile.enrollmentHistory.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-                  No enrollment history found.
-                </div>
-              ) : null}
+                    ) : null}
+                  </button>
+                );
+              })}
             </div>
-          </div>
+          </nav>
 
-          <StudentStatusPanelClient
-            schoolId={schoolId}
-            studentId={profile.student.id}
-            currentStatus={profile.student.studentStatus ?? "PRE_REGISTERED"}
-            hasCurrentEnrollment={Boolean(profile.currentEnrollment)}
-            statusHistory={profile.statusHistory}
-            onUpdated={loadProfile}
-          />
+          <section
+            id={`student-profile-panel-${selectedTab}`}
+            role="tabpanel"
+            aria-labelledby={`student-profile-tab-${selectedTab}`}
+            tabIndex={0}
+            className="space-y-6"
+          >
+          {selectedTab === "overview" ? (
+            <StudentProfileEditPanelClient
+              schoolId={schoolId}
+              profile={profile}
+              onUpdated={loadProfile}
+            />
+          ) : null}
 
-          {profile.admissionSource ? (
+          {selectedTab === "enrollment" ? (
+            <StudentEnrollmentWorkspaceClient
+              schoolId={schoolId}
+              studentId={profile.student.id}
+              currentStatus={profile.student.studentStatus ?? "PRE_REGISTERED"}
+              currentEnrollment={profile.currentEnrollment}
+              enrollmentHistory={profile.enrollmentHistory}
+              statusHistory={profile.statusHistory}
+              onUpdated={loadProfile}
+            />
+          ) : null}
+
+          {selectedTab === "overview" && profile.admissionSource ? (
             <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold text-blue-950">
-                    Admission Source
+                    {t("students.admissionSource")}
                   </h3>
 
                   <p className="mt-1 text-sm text-blue-800">
-                    This student file was created from an admission application.
+                    {t("students.admissionSourceDescription")}
                   </p>
 
                   <div className="mt-3 text-sm text-blue-900">
                     <div>
-                      Application:{" "}
+                      {t("students.application")}:{" "}
                       <span className="font-semibold">
                         {profile.admissionSource.applicationNumber}
                       </span>
                     </div>
 
                     <div>
-                      Candidate:{" "}
+                      {t("students.candidate")}:{" "}
                       <span className="font-semibold">
                         {profile.admissionSource.firstName}{" "}
                         {profile.admissionSource.lastName}
@@ -535,7 +633,7 @@ export function StudentProfileClient({
                     </div>
 
                     <div>
-                      Created:{" "}
+                      {t("students.created")}:{" "}
                       <span className="font-semibold">
                         {new Date(
                           profile.admissionSource.createdAt,
@@ -560,241 +658,274 @@ export function StudentProfileClient({
                     href={`/admissions/${profile.admissionSource.id}`}
                     className="rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
                   >
-                    Open Admission
+                    {t("students.openAdmission")}
                   </a>
                 </div>
               </div>
             </div>
           ) : null}
 
-          <div className="grid gap-6 xl:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">Identity Details</h3>
+          {selectedTab === "overview" ? (
+            <div className="grid gap-6 xl:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="font-semibold text-slate-900">
+                  {t("students.identityDetails")}
+                </h3>
 
-              <div className="mt-4 space-y-2 text-sm">
-                <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Gender</span>
-                  <span className="font-medium">
-                    {profile.student.gender === "MALE"
-                      ? "Boy / Garcon"
-                      : profile.student.gender === "FEMALE"
-                        ? "Girl / Fille"
-                        : "-"}
-                  </span>
-                </div>
-
-                <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Date of birth</span>
-                  <span className="font-medium">
-                    {profile.student.dateOfBirth ?? "-"}
-                  </span>
-                </div>
-
-                <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Place of birth</span>
-                  <span className="font-medium">
-                    {profile.student.placeOfBirth ?? "-"}
-                  </span>
-                </div>
-
-                <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Previous school</span>
-                  <span className="font-medium">
-                    {profile.student.previousSchoolName ?? "-"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">Documents</h3>
-
-              <div className="mt-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Photo</span>
-                  <SchoolBadge
-                    tone={profile.documents.photoReceived ? "green" : "amber"}
-                  >
-                    {profile.documents.photoReceived ? "Received" : "Missing"}
-                  </SchoolBadge>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Birth certificate</span>
-                  <SchoolBadge
-                    tone={
-                      profile.documents.birthCertificateReceived
-                        ? "green"
-                        : "amber"
-                    }
-                  >
-                    {profile.documents.birthCertificateReceived
-                      ? "Received"
-                      : "Missing"}
-                  </SchoolBadge>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Vaccination card</span>
-                  <SchoolBadge
-                    tone={
-                      profile.documents.vaccinationCardReceived
-                        ? "green"
-                        : "amber"
-                    }
-                  >
-                    {profile.documents.vaccinationCardReceived
-                      ? "Received"
-                      : "Missing"}
-                  </SchoolBadge>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>Previous school record</span>
-                  <SchoolBadge
-                    tone={
-                      profile.documents.previousSchoolRecordReceived
-                        ? "green"
-                        : "amber"
-                    }
-                  >
-                    {profile.documents.previousSchoolRecordReceived
-                      ? "Received"
-                      : "Missing"}
-                  </SchoolBadge>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">Health</h3>
-
-              <div className="mt-4 space-y-2 text-sm">
-                <div>
-                  <div className="text-slate-500">Vaccination status</div>
-                  <div className="font-medium">
-                    {profile.health.vaccinationStatus ?? "-"}
+                <div className="mt-4 space-y-2 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <span className="text-slate-500">{t("students.gender")}</span>
+                    <span className="font-medium">
+                      {profile.student.gender === "MALE"
+                        ? t("students.boy")
+                        : profile.student.gender === "FEMALE"
+                          ? t("students.girl")
+                          : "-"}
+                    </span>
                   </div>
-                </div>
 
-                <div>
-                  <div className="text-slate-500">Allergies</div>
-                  <div className="font-medium">
-                    {profile.health.allergies ?? "-"}
+                  <div className="flex justify-between gap-4">
+                    <span className="text-slate-500">{t("students.dateOfBirth")}</span>
+                    <span className="font-medium">
+                      {profile.student.dateOfBirth ?? "-"}
+                    </span>
                   </div>
-                </div>
 
-                <div>
-                  <div className="text-slate-500">Medical notes</div>
-                  <div className="font-medium">
-                    {profile.health.medicalNotes ?? "-"}
+                  <div className="flex justify-between gap-4">
+                    <span className="text-slate-500">{t("students.placeOfBirth")}</span>
+                    <span className="font-medium">
+                      {profile.student.placeOfBirth ?? "-"}
+                    </span>
                   </div>
-                </div>
 
-                <div>
-                  <div className="text-slate-500">Special needs</div>
-                  <div className="font-medium">
-                    {profile.health.specialNeeds ?? "-"}
+                  <div className="flex justify-between gap-4">
+                    <span className="text-slate-500">{t("students.previousSchool")}</span>
+                    <span className="font-medium">
+                      {profile.student.previousSchoolName ?? "-"}
+                    </span>
                   </div>
                 </div>
               </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="font-semibold text-slate-900">
+                  {t("students.documents")}
+                </h3>
+
+                <div className="mt-4 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>{t("students.create.photo")}</span>
+                    <SchoolBadge
+                      tone={profile.documents.photoReceived ? "green" : "amber"}
+                    >
+                      {profile.documents.photoReceived
+                        ? t("students.received")
+                        : t("students.missing")}
+                    </SchoolBadge>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span>{t("students.create.birthCertificate")}</span>
+                    <SchoolBadge
+                      tone={
+                        profile.documents.birthCertificateReceived
+                          ? "green"
+                          : "amber"
+                      }
+                    >
+                      {profile.documents.birthCertificateReceived
+                        ? t("students.received")
+                        : t("students.missing")}
+                    </SchoolBadge>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span>{t("students.create.vaccinationCard")}</span>
+                    <SchoolBadge
+                      tone={
+                        profile.documents.vaccinationCardReceived
+                          ? "green"
+                          : "amber"
+                      }
+                    >
+                      {profile.documents.vaccinationCardReceived
+                        ? t("students.received")
+                        : t("students.missing")}
+                    </SchoolBadge>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span>{t("students.create.previousSchoolRecord")}</span>
+                    <SchoolBadge
+                      tone={
+                        profile.documents.previousSchoolRecordReceived
+                          ? "green"
+                          : "amber"
+                      }
+                    >
+                      {profile.documents.previousSchoolRecordReceived
+                        ? t("students.received")
+                        : t("students.missing")}
+                    </SchoolBadge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="font-semibold text-slate-900">
+                  {t("students.health")}
+                </h3>
+
+                <div className="mt-4 space-y-2 text-sm">
+                  <div>
+                    <div className="text-slate-500">
+                      {t("students.vaccinationStatus")}
+                    </div>
+                    <div className="font-medium">
+                      {profile.health.vaccinationStatus ?? "-"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-slate-500">
+                      {t("students.allergies")}
+                    </div>
+                    <div className="font-medium">
+                      {profile.health.allergies ?? "-"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-slate-500">
+                      {t("students.medicalNotes")}
+                    </div>
+                    <div className="font-medium">
+                      {profile.health.medicalNotes ?? "-"}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-slate-500">
+                      {t("students.specialNeeds")}
+                    </div>
+                    <div className="font-medium">
+                      {profile.health.specialNeeds ?? "-"}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : null}
 
-          <StudentDocumentsPanelClient
-            schoolId={schoolId}
-            studentId={profile.student.id}
-            documents={profile.documentRecords}
-            onChanged={loadProfile}
-          />
-          <StudentGuardiansManagementPanelClient
-            schoolId={schoolId}
-            studentId={profile.student.id}
-            guardians={profile.guardians}
-            onUpdated={loadProfile}
-          />
-
-          {profile.capabilities.canCreateInvoices ? (
-            <StudentCreateInvoicePanelClient
+          {selectedTab === "documents" ? (
+            <StudentDocumentsPanelClient
               schoolId={schoolId}
               studentId={profile.student.id}
-              onCreated={() => {
-                setFinanceRefreshKey((value) => value + 1);
-                loadProfile();
-              }}
+              documents={profile.documentRecords}
+              onChanged={loadProfile}
+            />
+          ) : null}
+          {selectedTab === "guardians" ? (
+            <StudentGuardiansManagementPanelClient
+              schoolId={schoolId}
+              studentId={profile.student.id}
+              guardians={profile.guardians}
+              onUpdated={loadProfile}
             />
           ) : null}
 
-          {profile.capabilities.canViewFinance ? (
-            <StudentFinanceSummaryPanelClient
+          {selectedTab === "finance" ? (
+            <>
+              {profile.capabilities.canCreateInvoices ? (
+                <StudentCreateInvoicePanelClient
+                  schoolId={schoolId}
+                  studentId={profile.student.id}
+                  onCreated={() => {
+                    setFinanceRefreshKey((value) => value + 1);
+                    loadProfile();
+                  }}
+                />
+              ) : null}
+
+              {profile.capabilities.canViewFinance ? (
+                <StudentFinanceSummaryPanelClient
+                  schoolId={schoolId}
+                  studentId={profile.student.id}
+                  refreshKey={financeRefreshKey}
+                  canRecordPayments={profile.capabilities.canRecordPayments}
+                />
+              ) : null}
+            </>
+          ) : null}
+
+          {selectedTab === "attendance" ? (
+            <StudentAttendanceHistoryPanelClient
               schoolId={schoolId}
               studentId={profile.student.id}
-              refreshKey={financeRefreshKey}
-              canRecordPayments={profile.capabilities.canRecordPayments}
             />
           ) : null}
 
-          <StudentAttendanceHistoryPanelClient
-            schoolId={schoolId}
-            studentId={profile.student.id}
-          />
+          {selectedTab === "overview" ? (
+            <>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {t("students.healthMedical")}
+                </h3>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Health / Medical
-            </h3>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <div className="rounded-xl bg-slate-50 p-4">
+                    <div className="text-sm font-medium text-slate-700">
+                      {t("students.healthNotes")}
+                    </div>
+                    <div className="mt-2 text-sm text-slate-600">
+                      {profile.student.healthNotes ?? t("students.noHealthNotes")}
+                    </div>
+                  </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm font-medium text-slate-700">
-                  Health notes
-                </div>
-                <div className="mt-2 text-sm text-slate-600">
-                  {profile.student.healthNotes ?? "No health notes."}
+                  <div className="rounded-xl bg-slate-50 p-4">
+                    <div className="text-sm font-medium text-slate-700">
+                      {t("students.allergies")}
+                    </div>
+                    <div className="mt-2 text-sm text-slate-600">
+                      {profile.student.allergyNotes ?? t("students.noAllergyNotes")}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-slate-50 p-4">
+                    <div className="text-sm font-medium text-slate-700">
+                      {t("students.medicalNotes")}
+                    </div>
+                    <div className="mt-2 text-sm text-slate-600">
+                      {profile.student.medicalNotes ?? t("students.noMedicalNotes")}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm font-medium text-slate-700">
-                  Allergies
-                </div>
-                <div className="mt-2 text-sm text-slate-600">
-                  {profile.student.allergyNotes ?? "No allergy notes."}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {t("students.quickActions")}
+                </h3>
+
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    href="/attendance"
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+                  >
+                    {t("students.openAttendance")}
+                  </Link>
+
+                  <Link
+                    href="/gradebooks"
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+                  >
+                    {t("students.openGradebooks")}
+                  </Link>
                 </div>
               </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm font-medium text-slate-700">
-                  Medical notes
-                </div>
-                <div className="mt-2 text-sm text-slate-600">
-                  {profile.student.medicalNotes ?? "No medical notes."}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Quick Actions
-            </h3>
-
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href="/attendance"
-                className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-              >
-                Open Attendance
-              </Link>
-
-              <Link
-                href="/gradebooks"
-                className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-              >
-                Open Gradebooks
-              </Link>
-            </div>
-          </div>
+            </>
+          ) : null}
+          </section>
         </>
       ) : null}
     </div>

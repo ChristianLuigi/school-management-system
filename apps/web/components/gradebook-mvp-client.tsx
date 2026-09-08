@@ -1,8 +1,16 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  BookOpenCheck,
+  ListPlus,
+  PencilLine,
+  RefreshCw,
+  Save,
+} from "lucide-react";
 import { SectionSelectorClient } from "@/components/section-selector-client";
 import { SchoolBadge } from "@/components/school-ui";
+import { useI18n } from "@/components/i18n-provider";
 
 type Assessment = {
   id: string;
@@ -48,21 +56,37 @@ function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function studentName(student: ScoreStudent) {
-  return `${student.lastName ?? ""} ${student.firstName ?? ""}`.trim() || "Student";
+function studentName(student: ScoreStudent, unnamedLabel: string) {
+  return (
+    `${student.lastName ?? ""} ${student.firstName ?? ""}`.trim() || unnamedLabel
+  );
 }
 
 function i18nName(
   value: Record<string, string> | null | undefined,
   fallback: string,
+  locale: "fr" | "en",
 ) {
-  return value?.fr ?? value?.en ?? fallback;
+  return value?.[locale] ?? value?.fr ?? value?.en ?? fallback;
 }
 
-export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
-  const [sectionId, setSectionId] = useState("");
+export function GradebookMvpClient({
+  schoolId,
+  initialSectionId = "",
+  initialSubjectId = "",
+  canManageStructure = false,
+}: {
+  schoolId: string;
+  initialSectionId?: string;
+  initialSubjectId?: string;
+  canManageStructure?: boolean;
+}) {
+  const { locale, t } = useI18n();
+  const [sectionId, setSectionId] = useState(initialSectionId);
   const [subjects, setSubjects] = useState<GradeLevelSubject[]>([]);
-  const [subjectId, setSubjectId] = useState("");
+  const [subjectId, setSubjectId] = useState(initialSubjectId);
+  const [sectionSelectionReady, setSectionSelectionReady] = useState(false);
+  const [subjectSelectionReady, setSubjectSelectionReady] = useState(false);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
 
@@ -99,10 +123,12 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
 
   async function loadSubjectsForSection() {
     setMessage("");
+    setError("");
 
     if (!sectionId) {
       setSubjects([]);
       setSubjectId("");
+      setSubjectSelectionReady(true);
       setAssessments([]);
       setSelectedAssessmentId("");
       setStudents([]);
@@ -119,13 +145,19 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to load subjects.");
+        throw new Error(body?.message ?? t("gradebooks.loadFailed"));
       }
 
-      setSubjects(body);
-      setSubjectId(body[0]?.subjectId ?? "");
+      const nextSubjects: GradeLevelSubject[] = Array.isArray(body) ? body : [];
+      setSubjects(nextSubjects);
+      setSubjectId((current) =>
+        nextSubjects.some((subject) => subject.subjectId === current)
+          ? current
+          : (nextSubjects[0]?.subjectId ?? ""),
+      );
+      setSubjectSelectionReady(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load subjects.");
+      setError(err instanceof Error ? err.message : t("gradebooks.loadFailed"));
     }
   }
 
@@ -149,19 +181,22 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
         subjectId,
       });
 
-      const res = await fetch(`/api/gradebooks/assessments?${params.toString()}`, {
-        cache: "no-store",
-      });
+      const res = await fetch(
+        `/api/gradebooks/assessments?${params.toString()}`,
+        {
+          cache: "no-store",
+        },
+      );
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to load assessments.");
+        throw new Error(body?.message ?? t("gradebooks.loadFailed"));
       }
 
       setAssessments(body);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load assessments.",
+        err instanceof Error ? err.message : t("gradebooks.loadFailed"),
       );
     } finally {
       setLoadingAssessments(false);
@@ -173,12 +208,12 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
     setError("");
 
     if (!sectionId) {
-      setError("Please select a class/section.");
+      setError(t("gradebooks.selectClassFirst"));
       return;
     }
 
     if (!subjectId) {
-      setError("Please select a subject configured for this class.");
+      setError(t("gradebooks.selectSubjectFirst"));
       return;
     }
 
@@ -204,16 +239,16 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to create assessment.");
+        throw new Error(body?.message ?? t("gradebooks.createFailed"));
       }
 
-      setMessage("Assessment created.");
+      setMessage(t("gradebooks.assessmentCreated"));
       setTitle("");
       await loadAssessments();
       await loadScores(body.id);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create assessment.",
+        err instanceof Error ? err.message : t("gradebooks.createFailed"),
       );
     } finally {
       setSaving(false);
@@ -234,7 +269,7 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to load scores.");
+        throw new Error(body?.message ?? t("gradebooks.scoresLoadFailed"));
       }
 
       setStudents(body.students);
@@ -250,7 +285,9 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
 
       setScores(nextScores);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load scores.");
+      setError(
+        err instanceof Error ? err.message : t("gradebooks.scoresLoadFailed"),
+      );
     }
   }
 
@@ -259,18 +296,20 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
     setError("");
 
     if (!selectedAssessmentId) {
-      setError("Select an assessment first.");
+      setError(t("gradebooks.selectAssessmentFirst"));
       return;
     }
 
     setSaving(true);
 
     try {
-      const payloadScores = Object.entries(scores).map(([studentId, value]) => ({
-        studentId,
-        score: value.score === "" ? undefined : Number(value.score),
-        note: value.note,
-      }));
+      const payloadScores = Object.entries(scores).map(
+        ([studentId, value]) => ({
+          studentId,
+          score: value.score === "" ? undefined : Number(value.score),
+          note: value.note,
+        }),
+      );
 
       const res = await fetch("/api/gradebooks/scores", {
         method: "POST",
@@ -286,56 +325,99 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
       const body = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(body?.message ?? "Failed to save scores.");
+        throw new Error(body?.message ?? t("gradebooks.scoresSaveFailed"));
       }
 
-      setMessage("Scores saved.");
+      setMessage(t("gradebooks.scoresSaved"));
       await loadAssessments();
       await loadScores(selectedAssessmentId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save scores.");
+      setError(
+        err instanceof Error ? err.message : t("gradebooks.scoresSaveFailed"),
+      );
     } finally {
       setSaving(false);
     }
   }
 
   useEffect(() => {
-    loadSubjectsForSection();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sectionId]);
+    const params = new URLSearchParams(window.location.search);
+    if (sectionId) params.set("sectionId", sectionId);
+    else params.delete("sectionId");
+    if (subjectId) params.set("subjectId", subjectId);
+    else params.delete("subjectId");
+    window.history.replaceState(
+      window.history.state,
+      "",
+      params.size
+        ? `${window.location.pathname}?${params.toString()}`
+        : window.location.pathname,
+    );
+  }, [sectionId, subjectId]);
 
   useEffect(() => {
+    if (!sectionSelectionReady) return;
+    loadSubjectsForSection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionId, sectionSelectionReady]);
+
+  useEffect(() => {
+    if (!sectionSelectionReady || !subjectSelectionReady) return;
     loadAssessments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sectionId, subjectId]);
+  }, [sectionId, subjectId, sectionSelectionReady, subjectSelectionReady]);
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h3 className="text-lg font-semibold text-slate-900">Gradebook</h3>
+        <div className="flex items-center gap-3">
+          <span className="rounded-xl bg-violet-50 p-2 text-violet-700">
+            <BookOpenCheck className="h-5 w-5" />
+          </span>
+          <h2 className="text-lg font-semibold text-slate-950">
+            {t("gradebooks.workspaceTitle")}
+          </h2>
+        </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
           <SectionSelectorClient
             schoolId={schoolId}
             sectionId={sectionId}
-            onSectionIdChange={setSectionId}
-            label="Class / Section"
+            onSectionIdChange={(value) => {
+              setSubjectSelectionReady(false);
+              setSectionId(value);
+            }}
+            onSectionDetailsChange={() => setSectionSelectionReady(true)}
+            label={t("gradebooks.classSection")}
             allowEmpty
+            autoSelectFirst
+            disableFullSections={false}
+            includePlanned={false}
+            emptyActionHref={
+              canManageStructure ? "/academic-structure" : "/academics"
+            }
+            emptyActionLabel={
+              canManageStructure
+                ? t("gradebooks.configure")
+                : t("gradebooks.myClasses")
+            }
           />
 
           <div>
             <label className="block text-sm font-medium text-slate-700">
-              Subject
+              {t("gradebooks.subject")}
             </label>
             <select
               className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
               value={subjectId}
               onChange={(event) => setSubjectId(event.target.value)}
             >
-              <option value="">Select subject</option>
+              <option value="">{t("gradebooks.selectSubject")}</option>
               {subjects.map((subject) => (
                 <option key={subject.id} value={subject.subjectId}>
-                  {i18nName(subject.nameI18n, subject.code)} - Coef {subject.coefficient}
+                  {i18nName(subject.nameI18n, subject.code, locale)} -{" "}
+                  {t("gradebooks.coefficient")}{" "}
+                  {subject.coefficient}
                 </option>
               ))}
             </select>
@@ -344,18 +426,20 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
 
         {sectionId && subjects.length === 0 ? (
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            No subjects are configured for this class yet. Configure subjects in Academic Structure.
+            {canManageStructure
+              ? t("gradebooks.noConfiguredSubjects")
+              : t("gradebooks.noAssignedSubjectsForClass")}
           </div>
         ) : null}
 
         {message ? (
-          <div className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-700">
+          <div role="status" className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-700">
             {message}
           </div>
         ) : null}
 
         {error ? (
-          <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <div role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         ) : null}
@@ -363,12 +447,15 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
 
       {sectionId ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="font-semibold text-slate-900">Create Assessment</h3>
+          <h3 className="font-semibold text-slate-900">
+            {t("gradebooks.createAssessment")}
+          </h3>
 
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <input
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              placeholder="Title"
+              aria-label={t("gradebooks.assessmentTitle")}
+              placeholder={t("gradebooks.assessmentTitle")}
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
@@ -380,13 +467,14 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
             >
               {ASSESSMENT_TYPES.map((type) => (
                 <option key={type} value={type}>
-                  {type}
+                  {t(`gradebooks.assessmentTypes.${type}`)}
                 </option>
               ))}
             </select>
 
             <input
               type="date"
+              aria-label={t("attendance.date")}
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
               value={assessmentDate}
               onChange={(event) => setAssessmentDate(event.target.value)}
@@ -394,14 +482,16 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
 
             <input
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              placeholder="Max points"
+              aria-label={t("gradebooks.maxPoints")}
+              placeholder={t("gradebooks.maxPoints")}
               value={maxPoints}
               onChange={(event) => setMaxPoints(event.target.value)}
             />
 
             <input
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              placeholder="Weight %"
+              aria-label={t("gradebooks.weight")}
+              placeholder={t("gradebooks.weight")}
               value={weightPercent}
               onChange={(event) => setWeightPercent(event.target.value)}
             />
@@ -410,9 +500,12 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
               type="button"
               onClick={createAssessment}
               disabled={saving || !subjectId}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60"
             >
-              {saving ? "Saving..." : "Create"}
+              <ListPlus className="h-4 w-4" />
+              {saving
+                ? t("gradebooks.creating")
+                : t("gradebooks.createAssessment")}
             </button>
           </div>
         </div>
@@ -421,14 +514,21 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-semibold text-slate-900">Assessments</h3>
+            <h3 className="font-semibold text-slate-900">
+              {t("gradebooks.assessments")}
+            </h3>
             <button
               type="button"
               onClick={loadAssessments}
               disabled={loadingAssessments || !sectionId || !subjectId}
-              className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
             >
-              {loadingAssessments ? "Loading..." : "Refresh"}
+              <RefreshCw
+                className={`h-4 w-4 ${loadingAssessments ? "animate-spin" : ""}`}
+              />
+              {loadingAssessments
+                ? t("gradebooks.loadingAssessments")
+                : t("common.refresh")}
             </button>
           </div>
 
@@ -442,29 +542,42 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
                   <div>
                     <div className="font-semibold">{assessment.title}</div>
                     <div className="text-sm text-slate-500">
-                      {assessment.subjectName} - {assessment.assessmentType} - /{assessment.maxPoints}
+                      {assessment.subjectName} -{" "}
+                      {t(
+                        `gradebooks.assessmentTypes.${assessment.assessmentType}`,
+                      )}{" "}
+                      - /
+                      {assessment.maxPoints}
                     </div>
                     <div className="text-xs text-slate-500">
-                      Avg: {assessment.averageScore === null ? "-" : assessment.averageScore.toFixed(2)}
+                      {t("gradebooks.average")}:{" "}
+                      {assessment.averageScore === null
+                        ? "-"
+                        : assessment.averageScore.toFixed(2)}
                     </div>
                   </div>
 
-                  <SchoolBadge tone="blue">{assessment.scoreCount} score(s)</SchoolBadge>
+                  <SchoolBadge tone="blue">
+                    {t("gradebooks.scoresCount", {
+                      count: assessment.scoreCount,
+                    })}
+                  </SchoolBadge>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => loadScores(assessment.id)}
-                  className="mt-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
                 >
-                  Enter Scores
+                  <PencilLine className="h-3.5 w-3.5" />
+                  {t("gradebooks.enterScores")}
                 </button>
               </div>
             ))}
 
             {assessments.length === 0 ? (
               <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-                No assessments yet.
+                {t("gradebooks.noAssessments")}
               </div>
             ) : null}
           </div>
@@ -473,7 +586,9 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
         <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold text-slate-900">Scores</h3>
+              <h3 className="font-semibold text-slate-900">
+                {t("gradebooks.scores")}
+              </h3>
               {selectedAssessment ? (
                 <p className="mt-1 text-sm text-slate-600">
                   {selectedAssessment.title} / {selectedAssessment.maxPoints}
@@ -482,7 +597,10 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
             </div>
 
             <SchoolBadge tone="green">
-              Class Avg: {classAverage === null ? "-" : classAverage.toFixed(2)}
+              {t("gradebooks.classAverage", {
+                value:
+                  classAverage === null ? "-" : classAverage.toFixed(2),
+              })}
             </SchoolBadge>
           </div>
 
@@ -495,13 +613,19 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
                     className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-3"
                   >
                     <div>
-                      <div className="font-medium">{studentName(student)}</div>
-                      <div className="text-xs text-slate-500">{student.studentCode ?? "-"}</div>
+                      <div className="font-medium">{studentName(student, t("gradebooks.unnamedStudent"))}</div>
+                      <div className="text-xs text-slate-500">
+                        {student.studentCode ?? "-"}
+                      </div>
                     </div>
 
                     <input
                       className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                      placeholder="Score"
+                      aria-label={`${t("gradebooks.score")}: ${studentName(
+                        student,
+                        t("gradebooks.unnamedStudent"),
+                      )}`}
+                      placeholder={t("gradebooks.score")}
                       value={scores[student.id]?.score ?? ""}
                       onChange={(event) =>
                         setScores((current) => ({
@@ -516,7 +640,11 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
 
                     <input
                       className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                      placeholder="Note"
+                      aria-label={`${t("attendance.note")}: ${studentName(
+                        student,
+                        t("gradebooks.unnamedStudent"),
+                      )}`}
+                      placeholder={t("attendance.note")}
                       value={scores[student.id]?.note ?? ""}
                       onChange={(event) =>
                         setScores((current) => ({
@@ -536,14 +664,15 @@ export function GradebookMvpClient({ schoolId }: { schoolId: string }) {
                 type="button"
                 onClick={saveScores}
                 disabled={saving}
-                className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60"
               >
-                {saving ? "Saving..." : "Save Scores"}
+                <Save className="h-4 w-4" />
+                {saving ? t("common.saving") : t("gradebooks.saveScores")}
               </button>
             </>
           ) : (
             <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-              Select an assessment to enter scores.
+              {t("gradebooks.selectAssessment")}
             </div>
           )}
         </div>

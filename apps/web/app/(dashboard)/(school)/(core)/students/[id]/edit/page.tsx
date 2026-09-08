@@ -19,7 +19,7 @@ export default async function StudentProfileEditPage({
       <div className="space-y-6">
         <SchoolPageHeader
           title="Edit Student Profile"
-          description="Update identity, class assignment, documents, and health information."
+          description="Update student identity, documents, and health information."
         />
 
         <StudentProfileEditClient schoolId={currentSchoolId} studentId={id} />

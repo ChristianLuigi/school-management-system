@@ -1,39 +1,63 @@
 import { GradebookMvpClient } from "@/components/gradebook-mvp-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
-import { getMeContext, resolveCurrentSchoolId } from "@/lib/server-context";
+import {
+  getMeContext,
+  resolveCurrentSchoolId,
+  resolveEffectiveRoles,
+} from "@/lib/server-context";
 
-export default async function GradebooksPage() {
-  const context = await getMeContext();
+function queryValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function GradebooksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    sectionId?: string | string[];
+    subjectId?: string | string[];
+  }>;
+}) {
+  const [context, query] = await Promise.all([getMeContext(), searchParams]);
   const currentSchoolId = resolveCurrentSchoolId(context);
+  const roles = resolveEffectiveRoles(context);
+  const canManageStructure = roles.includes("SCHOOL_ADMIN");
 
   return (
     <SchoolModuleWorkspace
+      compact
       title="Gradebooks"
-      description="Create assessments and enter student scores."
+      description="Create assessments and enter scores."
       quickActions={[
         {
-          href: "/academic-structure",
-          title: "Classes & Sections",
-          description: "Configure academic sections.",
+          href: "/academics",
+          title: "Academics",
+          icon: "academics",
         },
         {
-          href: "/students",
-          title: "Students",
-          description: "Review student academic records.",
+          href: "/attendance",
+          title: "Attendance",
+          icon: "attendance",
         },
+        ...(canManageStructure
+          ? [
+              {
+                href: "/academic-structure",
+                title: "Academic structure",
+                icon: "settings" as const,
+              },
+            ]
+          : []),
       ]}
-      attentionItems={[
-        {
-          tone: "blue",
-          title: "Gradebook MVP",
-          description:
-            "This version supports simple assessment creation and score entry by class/section.",
-        },
-      ]}
-      mainTitle="Gradebook"
-      mainSubtitle="Select a class, create assessments, and enter scores."
+      attentionItems={[]}
+      mainTitle="Gradebooks"
     >
-      <GradebookMvpClient schoolId={currentSchoolId} />
+      <GradebookMvpClient
+        schoolId={currentSchoolId}
+        initialSectionId={queryValue(query.sectionId)}
+        initialSubjectId={queryValue(query.subjectId)}
+        canManageStructure={canManageStructure}
+      />
     </SchoolModuleWorkspace>
   );
 }

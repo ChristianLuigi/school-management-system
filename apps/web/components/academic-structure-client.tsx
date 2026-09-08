@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { ChevronDown, Settings2 } from "lucide-react";
 import { AcademicQuickSetupClient } from "@/components/academic-quick-setup-client";
 import { useI18n } from "@/components/i18n-provider";
 import { AcademicSubjectSetupClient } from "@/components/academic-subject-setup-client";
@@ -269,17 +270,18 @@ export function AcademicStructureClient({
         gradeLevels={gradeLevels}
       />
 
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900">
+      <details className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 transition hover:bg-slate-50">
+          <span className="flex items-center gap-3 font-semibold text-slate-900">
+            <span className="rounded-xl bg-slate-100 p-2 text-slate-600">
+              <Settings2 className="h-4 w-4" />
+            </span>
             {t("academic.advancedManualConfiguration")}
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Use these controls when you need to adjust generated classes,
-            sections, or capacities by hand.
-          </p>
-        </div>
+          </span>
+          <ChevronDown className="h-4 w-4 text-slate-400 transition group-open:rotate-180" />
+        </summary>
 
+        <div className="space-y-4 border-t border-slate-200 p-5">
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <div className="font-semibold text-slate-900">
             {t("academic.configureAcademicDivisions")}
@@ -482,7 +484,8 @@ export function AcademicStructureClient({
             ) : null}
           </div>
         </div>
-      </div>
+        </div>
+      </details>
     </div>
   );
 }
