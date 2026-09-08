@@ -4,6 +4,8 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
+  MaxLength,
 } from 'class-validator';
 
 export class CreateStudentDocumentDto {
@@ -30,17 +32,21 @@ export class CreateStudentDocumentDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
   fileName?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2048)
   fileUrl?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
   receivedAt?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   notes?: string;
 }

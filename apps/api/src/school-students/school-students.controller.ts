@@ -233,7 +233,7 @@ export class SchoolStudentsController {
   @Post()
   async createStudent(
     @Headers('authorization') authorization: string | undefined,
-    @Body() body: Record<string, unknown>,
+    @Body() body: CreateSchoolStudentDto,
   ) {
     const session = await this.requireSession(authorization);
 
@@ -241,7 +241,7 @@ export class SchoolStudentsController {
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
 
     return this.schoolStudentsService.createStudent(
-      body as unknown as CreateSchoolStudentDto,
+      body,
       session.user_id,
       platformRole,
     );

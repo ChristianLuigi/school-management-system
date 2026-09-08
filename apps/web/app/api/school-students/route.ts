@@ -1,14 +1,20 @@
 import { getSessionCookieName } from "@/lib/auth/session-cookie";
 import { NextRequest, NextResponse } from "next/server";
+import { assertTrustedOrigin } from "@/lib/security/trusted-origin";
 
 const API_BASE_URL =
-  process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+  process.env.API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:4000";
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(getSessionCookieName())?.value;
 
   if (!token) {
-    return NextResponse.json({ message: "Missing session token." }, { status: 401 });
+    return NextResponse.json(
+      { message: "Missing session token." },
+      { status: 401 },
+    );
   }
 
   const upstreamUrl = new URL(`${API_BASE_URL}/school-students`);
@@ -29,16 +35,22 @@ export async function GET(request: NextRequest) {
   return new NextResponse(text, {
     status: upstream.status,
     headers: {
-      "Content-Type": upstream.headers.get("content-type") ?? "application/json",
+      "Content-Type":
+        upstream.headers.get("content-type") ?? "application/json",
     },
   });
 }
 
 export async function POST(request: NextRequest) {
+  const originFailure = assertTrustedOrigin(request);
+  if (originFailure) return originFailure;
   const token = request.cookies.get(getSessionCookieName())?.value;
 
   if (!token) {
-    return NextResponse.json({ message: "Missing session token." }, { status: 401 });
+    return NextResponse.json(
+      { message: "Missing session token." },
+      { status: 401 },
+    );
   }
 
   const body = await request.text();
@@ -58,7 +70,8 @@ export async function POST(request: NextRequest) {
   return new NextResponse(text, {
     status: upstream.status,
     headers: {
-      "Content-Type": upstream.headers.get("content-type") ?? "application/json",
+      "Content-Type":
+        upstream.headers.get("content-type") ?? "application/json",
     },
   });
 }

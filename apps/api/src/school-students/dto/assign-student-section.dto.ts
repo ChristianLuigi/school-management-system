@@ -1,4 +1,10 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 
 export class AssignStudentSectionDto {
   @IsUUID('all')
@@ -9,5 +15,10 @@ export class AssignStudentSectionDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   reason?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  activateStudent?: boolean;
 }

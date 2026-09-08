@@ -68,8 +68,12 @@ type SectionOptionRow = {
   academic_division: 'KINDERGARTEN' | 'PRIMARY' | 'SECONDARY' | null;
   grade_level_display_order: number | null;
   section_display_order: number | null;
+  academic_year_id: string;
+  academic_year_name_i18n: Record<string, string> | null;
+  academic_year_status: 'ACTIVE' | 'PLANNED';
   capacity: number | null;
   room_label: string | null;
+  active_enrollment_count: number;
 };
 
 @Injectable()
@@ -152,6 +156,32 @@ export class AcademicService {
     }
   }
 
+  private async isAcademicAdministrator(
+    actorUserId: string,
+    schoolId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+  ) {
+    if (platformRole === 'SUPER_ADMIN') return true;
+
+    const result = await this.db.query(
+      `
+      SELECT sm.id
+      FROM school_memberships sm
+      JOIN school_membership_roles role
+        ON role.school_membership_id = sm.id
+       AND role.role = 'SCHOOL_ADMIN'
+       AND role.deleted_at IS NULL
+      WHERE sm.school_id = $1
+        AND sm.user_id = $2
+        AND sm.membership_status = 'ACTIVE'
+        AND sm.deleted_at IS NULL
+      LIMIT 1
+      `,
+      [schoolId, actorUserId],
+    );
+
+    return Boolean(result.rowCount);
+  }
   async listSchoolSubjects(
     schoolId: string,
     actorUserId: string,
@@ -327,9 +357,12 @@ export class AcademicService {
       ['SCHOOL_ADMIN', 'TEACHER'],
     );
 
-    const sectionResult = await this.db.query<{ grade_level_id: string }>(
+    const sectionResult = await this.db.query<{
+      grade_level_id: string;
+      academic_year_id: string;
+    }>(
       `
-      SELECT grade_level_id
+      SELECT grade_level_id, academic_year_id
       FROM sections
       WHERE id = $1
         AND school_id = $2
@@ -345,17 +378,95 @@ export class AcademicService {
       throw new NotFoundException('Section not found for this school.');
     }
 
-    return this.listGradeLevelSubjects(
-      {
-        schoolId: input.schoolId,
-        gradeLevelId: section.grade_level_id,
-      },
-      actorUserId,
-      platformRole,
-      ['SCHOOL_ADMIN', 'TEACHER'],
-    );
-  }
+    if (
+      await this.isAcademicAdministrator(
+        actorUserId,
+        input.schoolId,
+        platformRole,
+      )
+    ) {
+      return this.listGradeLevelSubjects(
+        {
+          schoolId: input.schoolId,
+          gradeLevelId: section.grade_level_id,
+        },
+        actorUserId,
+        platformRole,
+        ['SCHOOL_ADMIN', 'TEACHER'],
+      );
+    }
 
+    const result = await this.db.query<{
+      id: string;
+      subject_id: string;
+      code: string;
+      name_i18n: Record<string, string>;
+      coefficient: string;
+      display_order: number;
+      is_required: boolean;
+    }>(
+      `
+      SELECT
+        configured.id,
+        subject.id AS subject_id,
+        subject.code,
+        subject.name_i18n,
+        configured.coefficient::text AS coefficient,
+        configured.display_order,
+        configured.is_required
+      FROM grade_level_subjects configured
+      JOIN school_subjects subject
+        ON subject.id = configured.subject_id
+       AND subject.school_id = configured.school_id
+       AND subject.subject_active = TRUE
+       AND subject.deleted_at IS NULL
+      WHERE configured.school_id = $1
+        AND configured.grade_level_id = $2
+        AND configured.deleted_at IS NULL
+        AND EXISTS (
+          SELECT 1
+          FROM teacher_academic_assignments assignment
+          JOIN school_staff_accounts staff
+            ON staff.id = assignment.teacher_staff_account_id
+           AND staff.school_id = assignment.school_id
+           AND staff.user_id = $3
+           AND staff.staff_category = 'TEACHING'
+           AND staff.employment_status = 'ACTIVE'
+           AND staff.deleted_at IS NULL
+          WHERE assignment.school_id = configured.school_id
+            AND assignment.academic_year_id = $4
+            AND assignment.section_id = $5
+            AND assignment.subject_id = configured.subject_id
+            AND assignment.assignment_status = 'ACTIVE'
+            AND assignment.deleted_at IS NULL
+        )
+      ORDER BY configured.display_order ASC, subject.code ASC
+      `,
+      [
+        input.schoolId,
+        section.grade_level_id,
+        actorUserId,
+        section.academic_year_id,
+        input.sectionId,
+      ],
+    );
+
+    if (!result.rows.length) {
+      throw new ForbiddenException(
+        'This section is not assigned to the teacher.',
+      );
+    }
+
+    return result.rows.map((row) => ({
+      id: row.id,
+      subjectId: row.subject_id,
+      code: row.code,
+      nameI18n: row.name_i18n,
+      coefficient: Number(row.coefficient),
+      displayOrder: row.display_order,
+      isRequired: row.is_required,
+    }));
+  }
   async assignGradeLevelSubject(
     gradeLevelId: string,
     dto: AssignGradeLevelSubjectDto,
@@ -773,7 +884,350 @@ export class AcademicService {
     return result.rows;
   }
 
-  async findSectionOptions(schoolId: string) {
+  async getAcademicOverview(
+    schoolId: string,
+    actorUserId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+  ) {
+    await this.assertUserCanAccessAcademicSetup(
+      actorUserId,
+      schoolId,
+      platformRole,
+      ['SCHOOL_ADMIN', 'TEACHER'],
+    );
+
+    const administratorResult = await this.db.query(
+      `
+      SELECT sm.id
+      FROM school_memberships sm
+      JOIN school_membership_roles role
+        ON role.school_membership_id = sm.id
+       AND role.role = 'SCHOOL_ADMIN'
+       AND role.deleted_at IS NULL
+      WHERE sm.school_id = $1
+        AND sm.user_id = $2
+        AND sm.membership_status = 'ACTIVE'
+        AND sm.deleted_at IS NULL
+      LIMIT 1
+      `,
+      [schoolId, actorUserId],
+    );
+    const administratorView =
+      platformRole === 'SUPER_ADMIN' || Boolean(administratorResult.rowCount);
+    const teacherUserId = administratorView ? null : actorUserId;
+
+    const yearResult = await this.db.query<{
+      id: string;
+      name_i18n: Record<string, string>;
+      start_date: string;
+      end_date: string;
+      status: 'ACTIVE' | 'PLANNED';
+    }>(
+      `
+      SELECT
+        id,
+        name_i18n,
+        start_date::text,
+        end_date::text,
+        status::text
+      FROM academic_years
+      WHERE school_id = $1
+        AND status IN ('ACTIVE', 'PLANNED')
+        AND deleted_at IS NULL
+      ORDER BY
+        CASE status WHEN 'ACTIVE' THEN 1 ELSE 2 END,
+        start_date DESC
+      LIMIT 1
+      `,
+      [schoolId],
+    );
+    const year = yearResult.rows[0];
+
+    if (!year) {
+      return {
+        viewMode: administratorView ? 'ADMINISTRATOR' : 'TEACHER',
+        academicYear: null,
+        metrics: {
+          sectionCount: 0,
+          studentCount: 0,
+          assignmentCount: 0,
+          subjectCoveragePercent: 0,
+        },
+        readiness: {
+          sectionsAtCapacity: 0,
+          sectionsWithoutCapacity: 0,
+          unassignedSubjectSlots: 0,
+          studentsWithoutPlacement: 0,
+        },
+        sections: [],
+        assignments: [],
+      };
+    }
+
+    const sectionsResult = await this.db.query<{
+      id: string;
+      code: string;
+      name_i18n: Record<string, string> | null;
+      room_label: string | null;
+      capacity: number | null;
+      grade_level_id: string;
+      grade_level_code: string;
+      grade_level_name_i18n: Record<string, string> | null;
+      academic_division: string | null;
+      active_enrollment_count: string;
+      required_subject_count: string;
+      assigned_subject_count: string;
+    }>(
+      `
+      SELECT
+        section.id,
+        section.code,
+        section.name_i18n,
+        section.room_label,
+        section.capacity,
+        grade.id AS grade_level_id,
+        grade.code AS grade_level_code,
+        grade.name_i18n AS grade_level_name_i18n,
+        grade.academic_division,
+        (
+          SELECT COUNT(*)::text
+          FROM enrollments enrollment
+          WHERE enrollment.section_id = section.id
+            AND enrollment.enrollment_status = 'ACTIVE'
+            AND enrollment.deleted_at IS NULL
+        ) AS active_enrollment_count,
+        (
+          SELECT COUNT(*)::text
+          FROM grade_level_subjects configured
+          WHERE configured.school_id = section.school_id
+            AND configured.grade_level_id = section.grade_level_id
+            AND configured.deleted_at IS NULL
+        ) AS required_subject_count,
+        (
+          SELECT COUNT(DISTINCT assignment.subject_id)::text
+          FROM teacher_academic_assignments assignment
+          JOIN school_staff_accounts staff
+            ON staff.id = assignment.teacher_staff_account_id
+           AND staff.school_id = assignment.school_id
+           AND staff.employment_status = 'ACTIVE'
+           AND staff.deleted_at IS NULL
+          WHERE assignment.school_id = section.school_id
+            AND assignment.academic_year_id = section.academic_year_id
+            AND assignment.section_id = section.id
+            AND assignment.assignment_status = 'ACTIVE'
+            AND assignment.deleted_at IS NULL
+            AND ($3::uuid IS NULL OR staff.user_id = $3)
+        ) AS assigned_subject_count
+      FROM sections section
+      JOIN grade_levels grade
+        ON grade.id = section.grade_level_id
+       AND grade.school_id = section.school_id
+       AND grade.deleted_at IS NULL
+      WHERE section.school_id = $1
+        AND section.academic_year_id = $2
+        AND section.deleted_at IS NULL
+        AND (
+          $3::uuid IS NULL
+          OR EXISTS (
+            SELECT 1
+            FROM teacher_academic_assignments assignment
+            JOIN school_staff_accounts staff
+              ON staff.id = assignment.teacher_staff_account_id
+             AND staff.school_id = assignment.school_id
+             AND staff.user_id = $3
+             AND staff.employment_status = 'ACTIVE'
+             AND staff.deleted_at IS NULL
+            WHERE assignment.school_id = section.school_id
+              AND assignment.academic_year_id = section.academic_year_id
+              AND assignment.section_id = section.id
+              AND assignment.assignment_status = 'ACTIVE'
+              AND assignment.deleted_at IS NULL
+          )
+        )
+      ORDER BY
+        COALESCE(grade.display_order, 9999),
+        COALESCE(section.display_order, 9999),
+        section.code
+      `,
+      [schoolId, year.id, teacherUserId],
+    );
+
+    const assignmentsResult = await this.db.query<{
+      id: string;
+      section_id: string;
+      section_code: string;
+      subject_id: string;
+      subject_code: string;
+      subject_name_i18n: Record<string, string> | null;
+      teacher_staff_account_id: string;
+      teacher_name: string;
+    }>(
+      `
+      SELECT
+        assignment.id,
+        section.id AS section_id,
+        section.code AS section_code,
+        subject.id AS subject_id,
+        subject.code AS subject_code,
+        subject.name_i18n AS subject_name_i18n,
+        staff.id AS teacher_staff_account_id,
+        COALESCE(
+          NULLIF(BTRIM(staff.preferred_name), ''),
+          NULLIF(BTRIM(CONCAT_WS(' ', staff.first_name, staff.last_name)), ''),
+          NULLIF(BTRIM(CONCAT_WS(' ', account.first_name, account.last_name)), ''),
+          staff.staff_code,
+          'Teacher'
+        ) AS teacher_name
+      FROM teacher_academic_assignments assignment
+      JOIN sections section
+        ON section.id = assignment.section_id
+       AND section.school_id = assignment.school_id
+       AND section.deleted_at IS NULL
+      JOIN school_subjects subject
+        ON subject.id = assignment.subject_id
+       AND subject.school_id = assignment.school_id
+       AND subject.deleted_at IS NULL
+      JOIN school_staff_accounts staff
+        ON staff.id = assignment.teacher_staff_account_id
+       AND staff.school_id = assignment.school_id
+       AND staff.employment_status = 'ACTIVE'
+       AND staff.deleted_at IS NULL
+      LEFT JOIN users account
+        ON account.id = staff.user_id
+       AND account.deleted_at IS NULL
+      WHERE assignment.school_id = $1
+        AND assignment.academic_year_id = $2
+        AND assignment.assignment_status = 'ACTIVE'
+        AND assignment.deleted_at IS NULL
+        AND ($3::uuid IS NULL OR staff.user_id = $3)
+      ORDER BY section.code, subject.code, teacher_name
+      `,
+      [schoolId, year.id, teacherUserId],
+    );
+
+    let studentsWithoutPlacement = 0;
+
+    if (administratorView) {
+      const unplacedResult = await this.db.query<{ count: string }>(
+        `
+        SELECT COUNT(*)::text AS count
+        FROM students student
+        WHERE student.school_id = $1
+          AND student.status IN ('REGISTERED', 'ACTIVE')
+          AND student.deleted_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1
+            FROM enrollments enrollment
+            WHERE enrollment.student_id = student.id
+              AND enrollment.enrollment_status = 'ACTIVE'
+              AND enrollment.deleted_at IS NULL
+          )
+        `,
+        [schoolId],
+      );
+      studentsWithoutPlacement = Number(unplacedResult.rows[0]?.count ?? 0);
+    }
+
+    const sections = sectionsResult.rows.map((row) => {
+      const studentCount = Number(row.active_enrollment_count);
+      const capacity = row.capacity === null ? null : Number(row.capacity);
+      const assignedSubjectCount = Number(row.assigned_subject_count);
+      const configuredSubjectCount = administratorView
+        ? Number(row.required_subject_count)
+        : assignedSubjectCount;
+
+      return {
+        id: row.id,
+        code: row.code,
+        nameI18n: row.name_i18n,
+        roomLabel: row.room_label,
+        capacity,
+        studentCount,
+        availableSeats:
+          capacity === null ? null : Math.max(capacity - studentCount, 0),
+        atCapacity: capacity !== null && studentCount >= capacity,
+        gradeLevel: {
+          id: row.grade_level_id,
+          code: row.grade_level_code,
+          nameI18n: row.grade_level_name_i18n,
+          academicDivision: row.academic_division,
+        },
+        configuredSubjectCount,
+        assignedSubjectCount,
+      };
+    });
+    const configuredSubjectSlots = sections.reduce(
+      (sum, section) => sum + section.configuredSubjectCount,
+      0,
+    );
+    const assignedSubjectSlots = sections.reduce(
+      (sum, section) => sum + section.assignedSubjectCount,
+      0,
+    );
+
+    return {
+      viewMode: administratorView ? 'ADMINISTRATOR' : 'TEACHER',
+      academicYear: {
+        id: year.id,
+        nameI18n: year.name_i18n,
+        startDate: year.start_date,
+        endDate: year.end_date,
+        status: year.status,
+      },
+      metrics: {
+        sectionCount: sections.length,
+        studentCount: sections.reduce(
+          (sum, section) => sum + section.studentCount,
+          0,
+        ),
+        assignmentCount: assignmentsResult.rows.length,
+        subjectCoveragePercent:
+          configuredSubjectSlots > 0
+            ? Math.round((assignedSubjectSlots / configuredSubjectSlots) * 100)
+            : 0,
+      },
+      readiness: {
+        sectionsAtCapacity: sections.filter((section) => section.atCapacity)
+          .length,
+        sectionsWithoutCapacity: sections.filter(
+          (section) => section.capacity === null,
+        ).length,
+        unassignedSubjectSlots: administratorView
+          ? Math.max(configuredSubjectSlots - assignedSubjectSlots, 0)
+          : 0,
+        studentsWithoutPlacement,
+      },
+      sections,
+      assignments: assignmentsResult.rows.map((row) => ({
+        id: row.id,
+        sectionId: row.section_id,
+        sectionCode: row.section_code,
+        subjectId: row.subject_id,
+        subjectCode: row.subject_code,
+        subjectNameI18n: row.subject_name_i18n,
+        teacherStaffAccountId: row.teacher_staff_account_id,
+        teacherName: row.teacher_name,
+      })),
+    };
+  }
+  async findSectionOptions(
+    schoolId: string,
+    actorUserId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+  ) {
+    await this.assertUserCanAccessAcademicSetup(
+      actorUserId,
+      schoolId,
+      platformRole,
+      ['SCHOOL_ADMIN', 'TEACHER'],
+    );
+    const teacherUserId = (await this.isAcademicAdministrator(
+      actorUserId,
+      schoolId,
+      platformRole,
+    ))
+      ? null
+      : actorUserId;
     const result = await this.db.query<SectionOptionRow>(
       `
       SELECT
@@ -785,34 +1239,85 @@ export class AcademicService {
         gl.academic_division,
         gl.display_order AS grade_level_display_order,
         se.display_order AS section_display_order,
+        ay.id AS academic_year_id,
+        ay.name_i18n AS academic_year_name_i18n,
+        ay.status::text AS academic_year_status,
         se.capacity,
-        se.room_label
+        se.room_label,
+        (
+          SELECT COUNT(*)::int
+          FROM enrollments en
+          WHERE en.section_id = se.id
+            AND en.enrollment_status = 'ACTIVE'
+            AND en.deleted_at IS NULL
+        ) AS active_enrollment_count
       FROM sections se
       JOIN grade_levels gl
         ON gl.id = se.grade_level_id
+       AND gl.school_id = se.school_id
        AND gl.deleted_at IS NULL
+      JOIN academic_years ay
+        ON ay.id = se.academic_year_id
+       AND ay.school_id = se.school_id
+       AND ay.deleted_at IS NULL
       WHERE se.school_id = $1
         AND se.deleted_at IS NULL
+        AND (
+          $2::uuid IS NULL
+          OR EXISTS (
+            SELECT 1
+            FROM teacher_academic_assignments assignment
+            JOIN school_staff_accounts staff
+              ON staff.id = assignment.teacher_staff_account_id
+             AND staff.school_id = assignment.school_id
+             AND staff.user_id = $2
+             AND staff.staff_category = 'TEACHING'
+             AND staff.employment_status = 'ACTIVE'
+             AND staff.deleted_at IS NULL
+            WHERE assignment.school_id = se.school_id
+              AND assignment.academic_year_id = se.academic_year_id
+              AND assignment.section_id = se.id
+              AND assignment.assignment_status = 'ACTIVE'
+              AND assignment.deleted_at IS NULL
+          )
+        )
+        AND ay.status IN ('ACTIVE', 'PLANNED')
       ORDER BY
+        CASE ay.status WHEN 'ACTIVE' THEN 1 ELSE 2 END,
+        ay.start_date DESC,
         COALESCE(gl.display_order, 9999),
         COALESCE(se.display_order, 9999),
         se.code ASC
       `,
-      [schoolId],
+      [schoolId, teacherUserId],
     );
 
-    return result.rows.map((row) => ({
-      id: row.id,
-      code: row.code,
-      nameI18n: row.name_i18n,
-      gradeLevelCode: row.grade_level_code,
-      gradeLevelNameI18n: row.grade_level_name_i18n,
-      academicDivision: row.academic_division,
-      gradeLevelDisplayOrder: Number(row.grade_level_display_order ?? 9999),
-      sectionDisplayOrder: Number(row.section_display_order ?? 9999),
-      capacity: row.capacity,
-      roomLabel: row.room_label,
-    }));
+    return result.rows.map((row) => {
+      const capacity = row.capacity === null ? null : Number(row.capacity);
+      const activeEnrollmentCount = Number(row.active_enrollment_count ?? 0);
+
+      return {
+        id: row.id,
+        code: row.code,
+        nameI18n: row.name_i18n,
+        gradeLevelCode: row.grade_level_code,
+        gradeLevelNameI18n: row.grade_level_name_i18n,
+        academicDivision: row.academic_division,
+        gradeLevelDisplayOrder: Number(row.grade_level_display_order ?? 9999),
+        sectionDisplayOrder: Number(row.section_display_order ?? 9999),
+        academicYearId: row.academic_year_id,
+        academicYearNameI18n: row.academic_year_name_i18n,
+        academicYearStatus: row.academic_year_status,
+        capacity,
+        roomLabel: row.room_label,
+        activeEnrollmentCount,
+        availableSeats:
+          capacity === null
+            ? null
+            : Math.max(capacity - activeEnrollmentCount, 0),
+        atCapacity: capacity !== null && activeEnrollmentCount >= capacity,
+      };
+    });
   }
 
   async configureGradeLevelSectionCount(

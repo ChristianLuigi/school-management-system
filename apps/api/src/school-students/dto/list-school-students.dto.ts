@@ -1,4 +1,14 @@
-import { IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class ListSchoolStudentsDto {
   @IsUUID('all')
@@ -6,6 +16,7 @@ export class ListSchoolStudentsDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(120)
   search?: string;
 
   @IsOptional()
@@ -24,4 +35,25 @@ export class ListSchoolStudentsDto {
   @IsOptional()
   @IsUUID('all')
   sectionId?: string;
+
+  @IsOptional()
+  @IsUUID('all')
+  gradeLevelId?: string;
+
+  @IsOptional()
+  @IsIn(['ASSIGNED', 'UNASSIGNED'])
+  enrollmentState?: 'ASSIGNED' | 'UNASSIGNED';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(10)
+  @Max(100)
+  pageSize = 25;
 }

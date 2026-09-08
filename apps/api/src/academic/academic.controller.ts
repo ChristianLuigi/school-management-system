@@ -26,6 +26,22 @@ import { QuickAcademicSetupDto } from './dto/quick-academic-setup.dto';
 @Controller('academic')
 export class AcademicController {
   constructor(private readonly academicService: AcademicService) {}
+  @Roles('SCHOOL_ADMIN', 'TEACHER')
+  @Get('overview')
+  async getAcademicOverview(
+    @Query() query: ListGradeLevelsDto,
+    @Req() request: RequestWithAuth,
+  ) {
+    const session = request.authSession;
+    const platformRole =
+      session?.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null;
+
+    return this.academicService.getAcademicOverview(
+      query.schoolId,
+      session?.user_id ?? '',
+      platformRole,
+    );
+  }
   @Roles('SCHOOL_ADMIN')
   @Get('subjects')
   async listSchoolSubjects(
@@ -229,9 +245,18 @@ export class AcademicController {
     );
   }
 
+  @Roles('SCHOOL_ADMIN', 'TEACHER')
   @Get('section-options')
-  async findSectionOptions(@Query('schoolId') schoolId: string) {
-    return this.academicService.findSectionOptions(schoolId);
+  async findSectionOptions(
+    @Query() query: ListGradeLevelsDto,
+    @Req() request: RequestWithAuth,
+  ) {
+    const session = request.authSession;
+    return this.academicService.findSectionOptions(
+      query.schoolId,
+      session?.user_id ?? '',
+      session?.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null,
+    );
   }
 
   @Get('sections')

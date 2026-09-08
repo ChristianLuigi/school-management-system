@@ -5,6 +5,9 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class UpdateSchoolStudentDto {
@@ -13,14 +16,19 @@ export class UpdateSchoolStudentDto {
 
   @IsOptional()
   @IsString()
+  @MinLength(1)
+  @MaxLength(120)
   firstName?: string;
 
   @IsOptional()
   @IsString()
+  @MinLength(1)
+  @MaxLength(120)
   lastName?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(50)
   studentCode?: string;
 
   @IsOptional()
@@ -28,23 +36,28 @@ export class UpdateSchoolStudentDto {
   gender?: 'MALE' | 'FEMALE';
 
   @IsOptional()
-  @IsDateString()
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
   dateOfBirth?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   placeOfBirth?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2048)
   photoUrl?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   previousSchoolName?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   previousSchoolAddress?: string;
 
   @IsOptional()
@@ -65,18 +78,22 @@ export class UpdateSchoolStudentDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   vaccinationStatus?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(1000)
   allergies?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   medicalNotes?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   specialNeeds?: string;
 
   @IsOptional()

@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config';
+import { AcademicService } from '../../src/academic/academic.service';
 import { AccessManagementService } from '../../src/access-management/access-management.service';
 import { GradebooksService } from '../../src/gradebooks/gradebooks.service';
 import { CashierWorkflowService } from '../../src/finance-operations/cashier-workflow.service';
@@ -34,6 +35,7 @@ export async function createServiceHarness() {
   const sessionTokens = new SessionTokenService();
   const email = new CapturingEmailService();
   const activity = new PlatformActivityService(db);
+  const academic = new AcademicService(db, activity);
   const auth = new AuthService(db, passwords, authTokens, sessionTokens, email);
   const invitations = new InvitationsService(
     db,
@@ -57,6 +59,7 @@ export async function createServiceHarness() {
   const staffSelfService = new StaffSelfServiceService(db, activity);
 
   return {
+    academic,
     access,
     activity,
     attendance,
