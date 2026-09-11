@@ -412,7 +412,6 @@ describe('database migration runner integration', () => {
     }
   });
   it('applies and verifies the complete production migration chain', async () => {
-    const database = await createDatabase();
     const migrationsDirectory = path.resolve(
       __dirname,
       '../../../infra/db/migrations',
@@ -426,23 +425,25 @@ describe('database migration runner integration', () => {
       (name) => name.localeCompare(baselineThrough) <= 0,
     ).length;
     const postBaselineMigrations = migrationNames.slice(baselineCount);
-    const runner = new MigrationRunner({
-      databaseUrl: database.url,
+
+    const freshDatabase = await createDatabase();
+    const freshRunner = new MigrationRunner({
+      databaseUrl: freshDatabase.url,
       migrationsDirectory,
       applicationVersion: 'integration-test',
     });
 
     try {
-      await expect(runner.up()).resolves.toMatchObject({
+      await expect(freshRunner.up()).resolves.toMatchObject({
         appliedCount: migrationCount,
         totalCount: migrationCount,
       });
-      await expect(runner.verify()).resolves.toMatchObject({
+      await expect(freshRunner.verify()).resolves.toMatchObject({
         verified: true,
         migrationCount,
       });
 
-      const pool = new Pool({ connectionString: database.url });
+      const pool = new Pool({ connectionString: freshDatabase.url });
       try {
         const legacyAccount = await pool.query<{
           account_status: string;
@@ -460,37 +461,80 @@ describe('database migration runner integration', () => {
           account_status: 'SUSPENDED',
           disabled: true,
         });
-
-        await pool.query('TRUNCATE TABLE schema_migrations');
       } finally {
         await pool.end();
       }
+    } finally {
+      await freshRunner.close();
+    }
 
+    // Test recovery against a schema that genuinely stops at the baseline.
+    // Replaying later migrations over a current schema is not a valid
+    // baseline simulation and can duplicate immutable triggers.
+    const baselineDatabase = await createDatabase();
+    const baselineDirectory = await migrationDirectory();
+    for (const migrationName of migrationNames.slice(0, baselineCount)) {
+      await copyFile(
+        path.join(migrationsDirectory, migrationName),
+        path.join(baselineDirectory, migrationName),
+      );
+    }
+    const baselineSeedRunner = new MigrationRunner({
+      databaseUrl: baselineDatabase.url,
+      migrationsDirectory: baselineDirectory,
+      applicationVersion: 'integration-baseline-seed',
+    });
+    try {
+      await expect(baselineSeedRunner.up()).resolves.toMatchObject({
+        appliedCount: baselineCount,
+        totalCount: baselineCount,
+      });
+    } finally {
+      await baselineSeedRunner.close();
+    }
+
+    const historyPool = new Pool({ connectionString: baselineDatabase.url });
+    try {
+      await historyPool.query('TRUNCATE TABLE schema_migrations');
+    } finally {
+      await historyPool.end();
+    }
+
+    const baselineRunner = new MigrationRunner({
+      databaseUrl: baselineDatabase.url,
+      migrationsDirectory,
+      applicationVersion: 'integration-baseline-test',
+    });
+
+    await expect(
+      baselineRunner.baseline({
+        through: '058_operational_user_access.sql',
+        confirmation: 'WRONG_CONFIRMATION',
+      }),
+    ).rejects.toThrow('Baseline requires');
+    const baselineContractPool = new Pool({
+      connectionString: baselineDatabase.url,
+    });
+    try {
+      await baselineContractPool.query(
+        'ALTER TABLE payroll_run_sequences RENAME TO payroll_run_sequences_missing',
+      );
       await expect(
-        runner.baseline({
+        baselineRunner.baseline({
           through: '058_operational_user_access.sql',
-          confirmation: 'WRONG_CONFIRMATION',
+          confirmation: MigrationRunner.baselineConfirmation(),
         }),
-      ).rejects.toThrow('Baseline requires');
-      const baselineContractPool = new Pool({ connectionString: database.url });
-      try {
-        await baselineContractPool.query(
-          'ALTER TABLE payroll_run_sequences RENAME TO payroll_run_sequences_missing',
-        );
-        await expect(
-          runner.baseline({
-            through: '058_operational_user_access.sql',
-            confirmation: MigrationRunner.baselineConfirmation(),
-          }),
-        ).rejects.toThrow('Missing tables: public.payroll_run_sequences.');
-      } finally {
-        await baselineContractPool.query(
-          'ALTER TABLE payroll_run_sequences_missing RENAME TO payroll_run_sequences',
-        );
-        await baselineContractPool.end();
-      }
+      ).rejects.toThrow('Missing tables: public.payroll_run_sequences.');
+    } finally {
+      await baselineContractPool.query(
+        'ALTER TABLE payroll_run_sequences_missing RENAME TO payroll_run_sequences',
+      );
+      await baselineContractPool.end();
+    }
+
+    try {
       await expect(
-        runner.baseline({
+        baselineRunner.baseline({
           through: '058_operational_user_access.sql',
           confirmation: MigrationRunner.baselineConfirmation(),
         }),
@@ -498,17 +542,17 @@ describe('database migration runner integration', () => {
         baselineCount,
         through: '058_operational_user_access.sql',
       });
-      await expect(runner.up()).resolves.toMatchObject({
+      await expect(baselineRunner.up()).resolves.toMatchObject({
         applied: postBaselineMigrations,
         appliedCount: postBaselineMigrations.length,
       });
-      await expect(runner.verify()).resolves.toMatchObject({
+      await expect(baselineRunner.verify()).resolves.toMatchObject({
         verified: true,
         migrationCount,
         baselineCount,
       });
     } finally {
-      await runner.close();
+      await baselineRunner.close();
     }
   });
 });

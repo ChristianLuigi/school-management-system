@@ -76,5 +76,9 @@
     "onlyBuiltDependencies": [
       "@nestjs/core"
     ]
+  },
+  "overrides": {
+    "multer": "2.3.0",
+    "qs": "6.16.0"
   }
 }
