@@ -1,3 +1,4 @@
+import { FinanceNavigation } from "@/components/finance-navigation";
 import { SchoolRoleGuard } from "@/components/layout/school-role-guard";
 
 export default function FinanceRoutesLayout({
@@ -5,7 +6,10 @@ export default function FinanceRoutesLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <SchoolRoleGuard allowedRoles={["SCHOOL_ADMIN", "FINANCE_ADMIN"]}>
-      {children}
+      <div className="space-y-5">
+        <FinanceNavigation />
+        {children}
+      </div>
     </SchoolRoleGuard>
   );
 }
