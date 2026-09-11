@@ -61,6 +61,15 @@ export class StaffManagementController {
     );
   }
 
+  @Post('staff-import')
+  async importStaff(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: PreviewStaffImportDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.staffManagementService.importStaff(body, session.user_id);
+  }
+
   @Post('staff')
   async createStaff(
     @Headers('authorization') authorization: string | undefined,

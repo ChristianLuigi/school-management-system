@@ -10,6 +10,7 @@ import { AssignStudentSectionDto } from './dto/assign-student-section.dto';
 import { ChangeStudentStatusDto } from './dto/change-student-status.dto';
 import { CreateSchoolStudentDto } from './dto/create-school-student.dto';
 import { CreateStudentDocumentDto } from './dto/create-student-document.dto';
+import { PreviewStudentImportDto } from './dto/preview-student-import.dto';
 import { ListSchoolStudentsDto } from './dto/list-school-students.dto';
 import { AddStudentGuardianDto } from './dto/add-student-guardian.dto';
 import { UpdateSchoolStudentDto } from './dto/update-school-student.dto';
@@ -2757,6 +2758,341 @@ export class SchoolStudentsService {
       };
     });
   }
+  async previewStudentImport(
+    dto: PreviewStudentImportDto,
+    actorUserId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+  ) {
+    await this.assertUserCanAccessStudents(
+      actorUserId,
+      dto.schoolId,
+      platformRole,
+      ['SCHOOL_ADMIN'],
+    );
+
+    type ImportIssue = { code: string; field: string; message: string };
+    const addIssue = (issues: ImportIssue[], issue: ImportIssue) => {
+      if (!issues.some((item) => item.code === issue.code && item.field === issue.field)) {
+        issues.push(issue);
+      }
+    };
+    const trim = (value: string | undefined) => value?.trim() || null;
+    const today = new Date().toISOString().slice(0, 10);
+    const rowNumberCounts = new Map<number, number>();
+    for (const row of dto.rows) {
+      rowNumberCounts.set(
+        row.rowNumber,
+        (rowNumberCounts.get(row.rowNumber) ?? 0) + 1,
+      );
+    }
+
+    const rows = dto.rows.map((row) => {
+      const errors: ImportIssue[] = [];
+      const warnings: ImportIssue[] = [];
+      const firstName = trim(row.firstName);
+      const lastName = trim(row.lastName);
+      const studentCode = trim(row.studentCode)?.toUpperCase() ?? null;
+      const gender = trim(row.gender)?.toUpperCase() ?? null;
+      const dateOfBirth = trim(row.dateOfBirth);
+      const sectionId = row.sectionId ?? null;
+
+      if (!firstName) {
+        addIssue(errors, {
+          code: 'FIRST_NAME_REQUIRED', field: 'firstName', message: 'First name is required.',
+        });
+      }
+      if (!lastName) {
+        addIssue(errors, {
+          code: 'LAST_NAME_REQUIRED', field: 'lastName', message: 'Last name is required.',
+        });
+      }
+      if (firstName && firstName.length > 120) {
+        addIssue(errors, {
+          code: 'FIRST_NAME_TOO_LONG', field: 'firstName', message: 'First name cannot exceed 120 characters.',
+        });
+      }
+      if (lastName && lastName.length > 120) {
+        addIssue(errors, {
+          code: 'LAST_NAME_TOO_LONG', field: 'lastName', message: 'Last name cannot exceed 120 characters.',
+        });
+      }
+      if (studentCode && studentCode.length > 50) {
+        addIssue(errors, {
+          code: 'STUDENT_CODE_TOO_LONG', field: 'studentCode', message: 'Student code cannot exceed 50 characters.',
+        });
+      }
+      if (gender && gender !== 'MALE' && gender !== 'FEMALE') {
+        addIssue(errors, {
+          code: 'INVALID_GENDER', field: 'gender', message: 'Gender must be MALE or FEMALE.',
+        });
+      }
+      if (dateOfBirth) {
+        const parsed = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)
+          ? new Date(`${dateOfBirth}T00:00:00.000Z`)
+          : null;
+        if (
+          !parsed ||
+          Number.isNaN(parsed.getTime()) ||
+          parsed.toISOString().slice(0, 10) !== dateOfBirth
+        ) {
+          addIssue(errors, {
+            code: 'INVALID_DATE_OF_BIRTH', field: 'dateOfBirth', message: 'Date of birth must be a valid YYYY-MM-DD date.',
+          });
+        } else if (dateOfBirth > today) {
+          addIssue(errors, {
+            code: 'FUTURE_DATE_OF_BIRTH', field: 'dateOfBirth', message: 'Date of birth cannot be in the future.',
+          });
+        }
+      }
+      if ((rowNumberCounts.get(row.rowNumber) ?? 0) > 1) {
+        addIssue(errors, {
+          code: 'DUPLICATE_ROW_NUMBER', field: 'rowNumber', message: 'CSV row number is duplicated in this request.',
+        });
+      }
+      if (!studentCode) {
+        addIssue(warnings, {
+          code: 'STUDENT_CODE_WILL_BE_GENERATED', field: 'studentCode', message: 'A student code will be generated during import.',
+        });
+      }
+      if (!sectionId) {
+        addIssue(warnings, {
+          code: 'NO_SECTION', field: 'sectionId', message: 'The student will be registered without a class.',
+        });
+      }
+
+      return {
+        rowNumber: row.rowNumber,
+        normalized: {
+          firstName,
+          lastName,
+          studentCode,
+          gender,
+          dateOfBirth,
+          placeOfBirth: trim(row.placeOfBirth),
+          sectionId,
+          previousSchoolName: trim(row.previousSchoolName),
+          previousSchoolAddress: trim(row.previousSchoolAddress),
+          photoReceived: row.photoReceived ?? false,
+          birthCertificateReceived: row.birthCertificateReceived ?? false,
+          vaccinationCardReceived: row.vaccinationCardReceived ?? false,
+          previousSchoolRecordReceived: row.previousSchoolRecordReceived ?? false,
+          studentStatus: sectionId ? ('ACTIVE' as const) : ('REGISTERED' as const),
+        },
+        valid: false,
+        errors,
+        warnings,
+      };
+    });
+
+    const codeCounts = new Map<string, number>();
+    for (const row of rows) {
+      if (row.normalized.studentCode) {
+        codeCounts.set(
+          row.normalized.studentCode,
+          (codeCounts.get(row.normalized.studentCode) ?? 0) + 1,
+        );
+      }
+    }
+    const studentCodes = [...codeCounts.keys()];
+    const sectionIds = [
+      ...new Set(
+        rows
+          .map((row) => row.normalized.sectionId)
+          .filter((value): value is string => Boolean(value)),
+      ),
+    ];
+    const [existingResult, sectionResult] = await Promise.all([
+      this.db.query<{ student_code: string }>(
+        `
+        SELECT UPPER(COALESCE(student_code, student_number)) AS student_code
+        FROM students
+        WHERE school_id = $1
+          AND deleted_at IS NULL
+          AND (
+            UPPER(COALESCE(student_code, '')) = ANY($2::text[])
+            OR UPPER(COALESCE(student_number, '')) = ANY($2::text[])
+          )
+        `,
+        [dto.schoolId, studentCodes],
+      ),
+      this.db.query<{ id: string }>(
+        `
+        SELECT section.id
+        FROM sections section
+        JOIN academic_years academic_year
+          ON academic_year.id = section.academic_year_id
+         AND academic_year.deleted_at IS NULL
+        WHERE section.school_id = $1
+          AND section.id = ANY($2::uuid[])
+          AND section.deleted_at IS NULL
+        `,
+        [dto.schoolId, sectionIds],
+      ),
+    ]);
+    const existingCodes = new Set(
+      existingResult.rows.map((row) => row.student_code),
+    );
+    const availableSections = new Set(sectionResult.rows.map((row) => row.id));
+
+    for (const row of rows) {
+      const studentCode = row.normalized.studentCode;
+      if (studentCode && (codeCounts.get(studentCode) ?? 0) > 1) {
+        addIssue(row.errors, {
+          code: 'DUPLICATE_STUDENT_CODE_IN_FILE', field: 'studentCode', message: 'Student code appears more than once in this file.',
+        });
+      }
+      if (studentCode && existingCodes.has(studentCode)) {
+        addIssue(row.errors, {
+          code: 'STUDENT_CODE_ALREADY_EXISTS', field: 'studentCode', message: 'Student code is already used in this school.',
+        });
+      }
+      if (row.normalized.sectionId && !availableSections.has(row.normalized.sectionId)) {
+        addIssue(row.errors, {
+          code: 'SECTION_NOT_AVAILABLE', field: 'sectionId', message: 'The selected section is not available for this school.',
+        });
+      }
+      row.valid = row.errors.length === 0;
+    }
+
+    const validRows = rows.filter((row) => row.valid).length;
+    return {
+      importMode: 'ATOMIC' as const,
+      summary: {
+        totalRows: rows.length,
+        validRows,
+        invalidRows: rows.length - validRows,
+        warningRows: rows.filter((row) => row.warnings.length > 0).length,
+      },
+      readyForImport: validRows === rows.length,
+      rows,
+    };
+  }
+
+  async importStudents(
+    dto: PreviewStudentImportDto,
+    actorUserId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+  ) {
+    const preview = await this.previewStudentImport(dto, actorUserId, platformRole);
+    if (!preview.readyForImport) {
+      throw new BadRequestException(
+        'The student file contains errors. Preview and correct it before importing.',
+      );
+    }
+
+    try {
+      return await this.db.withTransaction(async (client) => {
+        const input = preview.rows.map((row) => row.normalized);
+        const result = await client.query<{ imported_count: number }>(
+          `
+          WITH input_rows AS (
+            SELECT * FROM jsonb_to_recordset($2::jsonb) AS item(
+              "firstName" text, "lastName" text, "studentCode" text,
+              gender text, "dateOfBirth" text, "placeOfBirth" text,
+              "sectionId" uuid, "previousSchoolName" text,
+              "previousSchoolAddress" text, "photoReceived" boolean,
+              "birthCertificateReceived" boolean,
+              "vaccinationCardReceived" boolean,
+              "previousSchoolRecordReceived" boolean
+            )
+          ),
+          resolved_rows AS MATERIALIZED (
+            SELECT
+              item.*,
+              COALESCE(
+                NULLIF(UPPER(BTRIM(item."studentCode")), ''),
+                next_student_code($1)
+              ) AS resolved_code,
+              section.academic_year_id,
+              section.grade_level_id,
+              GREATEST(academic_year.start_date, CURRENT_DATE) AS start_date
+            FROM input_rows item
+            LEFT JOIN sections section
+              ON section.id = item."sectionId"
+             AND section.school_id = $1
+             AND section.deleted_at IS NULL
+            LEFT JOIN academic_years academic_year
+              ON academic_year.id = section.academic_year_id
+             AND academic_year.deleted_at IS NULL
+          ),
+          inserted_students AS (
+            INSERT INTO students (
+              school_id, student_number, student_code, first_name, last_name,
+              gender, date_of_birth, place_of_birth, previous_school_name,
+              previous_school_address, photo_received,
+              birth_certificate_received, vaccination_card_received,
+              previous_school_record_received, status
+            )
+            SELECT
+              $1, resolved_code, resolved_code, "firstName", "lastName",
+              gender, NULLIF("dateOfBirth", '')::date, "placeOfBirth",
+              "previousSchoolName", "previousSchoolAddress", "photoReceived",
+              "birthCertificateReceived", "vaccinationCardReceived",
+              "previousSchoolRecordReceived",
+              CASE WHEN "sectionId" IS NULL
+                THEN 'REGISTERED'::student_status
+                ELSE 'ACTIVE'::student_status
+              END
+            FROM resolved_rows
+            RETURNING id, student_code, status
+          ),
+          inserted_history AS (
+            INSERT INTO student_status_history (
+              school_id, student_id, previous_status, new_status,
+              reason, changed_by_user_id
+            )
+            SELECT $1, id, NULL, status, 'Student record imported from CSV.', $3
+            FROM inserted_students
+          ),
+          inserted_enrollments AS (
+            INSERT INTO enrollments (
+              student_id, academic_year_id, grade_level_id, section_id,
+              enrollment_status, start_date
+            )
+            SELECT
+              student.id, row.academic_year_id, row.grade_level_id,
+              row."sectionId", 'ACTIVE', row.start_date
+            FROM inserted_students student
+            JOIN resolved_rows row ON row.resolved_code = student.student_code
+            WHERE row."sectionId" IS NOT NULL
+          )
+          SELECT COUNT(*)::int AS imported_count FROM inserted_students
+          `,
+          [dto.schoolId, JSON.stringify(input), actorUserId],
+        );
+        const importedCount = result.rows[0]?.imported_count ?? 0;
+        await this.platformActivityService.recordTx(client, {
+          eventType: 'STUDENTS_CSV_IMPORTED',
+          actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+          actorUserId,
+          schoolId: dto.schoolId,
+          summary: `${importedCount} student records imported from CSV.`,
+          payload: {
+            importedCount,
+            assignedCount: input.filter((row) => row.sectionId).length,
+          },
+        });
+        return { imported: true, importedCount };
+      });
+    } catch (error: unknown) {
+      const code =
+        typeof error === 'object' && error && 'code' in error
+          ? String(error.code)
+          : '';
+      if (code === '23505') {
+        throw new BadRequestException(
+          'The student file now conflicts with existing data. Preview it again.',
+        );
+      }
+      if (code === '23503' || code === '23514') {
+        throw new BadRequestException(
+          'A class or student value in the file is no longer valid.',
+        );
+      }
+      throw error;
+    }
+  }
+
   async createStudent(
     dto: CreateSchoolStudentDto,
     actorUserId: string,

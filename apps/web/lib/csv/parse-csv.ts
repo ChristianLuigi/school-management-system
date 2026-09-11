@@ -3,7 +3,10 @@ export type ParsedCsv = {
   rows: string[][];
 };
 
-export function parseCsv(input: string): ParsedCsv {
+export function parseCsv(
+  input: string,
+  options: { maxRows?: number; recordLabel?: string } = {},
+): ParsedCsv {
   const source = input.replace(/^\uFEFF/, "");
   const records: string[][] = [];
   let record: string[] = [];
@@ -79,10 +82,13 @@ export function parseCsv(input: string): ParsedCsv {
 
   const rows = nonBlankRecords.slice(1);
   if (!rows.length) {
-    throw new Error("The CSV file does not contain any staff rows.");
+    throw new Error(
+      `The CSV file does not contain any ${options.recordLabel ?? "data"} rows.`,
+    );
   }
-  if (rows.length > 500) {
-    throw new Error("A staff import preview is limited to 500 rows.");
+  const maxRows = options.maxRows ?? 500;
+  if (rows.length > maxRows) {
+    throw new Error(`A CSV import is limited to ${maxRows} rows.`);
   }
   if (rows.some((row) => row.length !== headers.length)) {
     throw new Error("Every CSV row must have the same number of columns.");

@@ -64,6 +64,8 @@ const COPY = {
     template: "Télécharger le modèle",
     choose: "Choisir un fichier CSV",
     checking: "Validation…",
+    importing: "Importation…",
+    import: "Importer les dossiers",
     close: "Fermer",
     draftOnly: "Les dossiers importés seront créés comme brouillons.",
     previewOnly: "Aperçu seulement — aucun dossier n’a été créé.",
@@ -72,8 +74,7 @@ const COPY = {
     invalid: "Invalides",
     warnings: "Avec avertissement",
     row: "Ligne",
-    ready:
-      "Toutes les lignes sont valides. L’exécution de l’importation sera ajoutée après validation de ce flux.",
+    ready: "Toutes les lignes sont valides. Vous pouvez lancer l’importation.",
   },
   en: {
     title: "CSV import preview",
@@ -82,6 +83,8 @@ const COPY = {
     template: "Download template",
     choose: "Choose CSV file",
     checking: "Validating…",
+    importing: "Importing…",
+    import: "Import staff records",
     close: "Close",
     draftOnly: "Imported records will be created as drafts.",
     previewOnly: "Preview only — no staff record was created.",
@@ -90,8 +93,7 @@ const COPY = {
     invalid: "Invalid",
     warnings: "With warnings",
     row: "Row",
-    ready:
-      "All rows are valid. Import execution will be added after this workflow is verified.",
+    ready: "All rows are valid. You can run the import.",
   },
 } as const;
 
@@ -139,14 +141,18 @@ function downloadTemplate() {
 export function StaffImportPreviewClient({
   schoolId,
   onClose,
+  onImported,
 }: {
   schoolId: string;
   onClose: () => void;
+  onImported: () => void;
 }) {
   const { locale } = useI18n();
   const copy = COPY[locale];
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState("");
   const [error, setError] = useState("");
 
   async function previewFile(event: ChangeEvent<HTMLInputElement>) {
@@ -156,6 +162,7 @@ export function StaffImportPreviewClient({
     setLoading(true);
     setError("");
     setPreview(null);
+    setPendingPayload("");
     try {
       if (!file.name.toLowerCase().endsWith(".csv")) {
         throw new Error("Please select a .csv file.");
@@ -171,7 +178,7 @@ export function StaffImportPreviewClient({
       } catch {
         throw new Error("The CSV file must use valid UTF-8 encoding.");
       }
-      const parsed = parseCsv(source);
+      const parsed = parseCsv(source, { maxRows: 500, recordLabel: "staff" });
       const missing = REQUIRED_HEADERS.filter(
         (header) => !parsed.headers.includes(header),
       );
@@ -203,12 +210,13 @@ export function StaffImportPreviewClient({
         department: valueAt(row, "department"),
         workLocation: valueAt(row, "work_location"),
       }));
+      const payload = JSON.stringify({ schoolId, rows });
       const response = await fetch(
         "/api/staff-management/staff-import/preview",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ schoolId, rows }),
+          body: payload,
         },
       );
       const body = await response.json().catch(() => null);
@@ -216,6 +224,7 @@ export function StaffImportPreviewClient({
         throw new Error(body?.message ?? "Unable to validate the staff file.");
       }
       setPreview(body as PreviewResponse);
+      setPendingPayload(payload);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -224,6 +233,34 @@ export function StaffImportPreviewClient({
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function importFile() {
+    if (!preview?.readyForImport || !pendingPayload) return;
+    setImporting(true);
+    setError("");
+    try {
+      const response = await fetch("/api/staff-management/staff-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: pendingPayload,
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(body?.message ?? "Unable to import the staff file.");
+      }
+      setPreview(null);
+      setPendingPayload("");
+      onImported();
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Unable to import the staff file.",
+      );
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -292,8 +329,16 @@ export function StaffImportPreviewClient({
             ))}
           </div>
           {preview.readyForImport ? (
-            <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-              {copy.ready}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+              <span>{copy.ready}</span>
+              <button
+                type="button"
+                disabled={importing}
+                onClick={() => void importFile()}
+                className="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {importing ? copy.importing : copy.import}
+              </button>
             </div>
           ) : null}
           <div className="space-y-2">

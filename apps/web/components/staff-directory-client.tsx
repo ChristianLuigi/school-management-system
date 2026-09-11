@@ -502,6 +502,10 @@ phone: phone.trim() || undefined,
         <StaffImportPreviewClient
           schoolId={schoolId}
           onClose={() => setShowImport(false)}
+          onImported={() => {
+            setShowImport(false);
+            void loadStaff();
+          }}
         />
       ) : null}
 

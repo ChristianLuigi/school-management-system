@@ -114,7 +114,10 @@ export class StaffManagementService {
   ) {}
 
   private hasOwn(value: object, key: string) {
-    return Boolean(Object.prototype.hasOwnProperty.call(value, key));
+    return Boolean(
+      Object.prototype.hasOwnProperty.call(value, key) &&
+      (value as Record<string, unknown>)[key] !== undefined,
+    );
   }
 
   private trim(value: string | undefined | null) {
@@ -604,6 +607,114 @@ export class StaffManagementService {
       readyForImport: validRows === rows.length,
       rows,
     };
+  }
+
+  async importStaff(dto: PreviewStaffImportDto, actorUserId: string) {
+    const preview = await this.previewStaffImport(dto, actorUserId);
+    if (!preview.readyForImport) {
+      throw new BadRequestException(
+        'The staff file contains errors. Preview and correct it before importing.',
+      );
+    }
+
+    try {
+      return await this.db.withTransaction(async (client) => {
+        await this.assertSchoolAdministrator(client, dto.schoolId, actorUserId);
+        const input = preview.rows.map((row) => row.normalized);
+        const result = await client.query<{
+          id: string;
+          staff_code: string;
+        }>(
+          `
+          WITH input_rows AS (
+            SELECT *
+            FROM jsonb_to_recordset($2::jsonb) AS item(
+              "firstName" text,
+              "lastName" text,
+              "preferredName" text,
+              email text,
+              phone text,
+              "staffCode" text,
+              "staffCategory" text,
+              "employmentType" text,
+              "hireDate" text,
+              "jobTitle" text,
+              department text,
+              "workLocation" text
+            )
+          )
+          INSERT INTO school_staff_accounts (
+            school_id,
+            staff_code,
+            first_name,
+            last_name,
+            preferred_name,
+            email_original,
+            phone,
+            staff_category,
+            employment_type,
+            employment_status,
+            hire_date,
+            job_title,
+            department,
+            work_location,
+            status_effective_date,
+            status_reason,
+            employment_status_changed_by_user_id,
+            created_by_user_id
+          )
+          SELECT
+            $1,
+            COALESCE(
+              NULLIF(UPPER(BTRIM(item."staffCode")), ''),
+              next_school_staff_code($1)
+            ),
+            item."firstName",
+            item."lastName",
+            item."preferredName",
+            item.email,
+            item.phone,
+            item."staffCategory",
+            item."employmentType",
+            'DRAFT',
+            NULLIF(item."hireDate", '')::date,
+            item."jobTitle",
+            item.department,
+            item."workLocation",
+            CURRENT_DATE,
+            'Staff draft imported from CSV.',
+            $3,
+            $3
+          FROM input_rows item
+          RETURNING id, staff_code
+          `,
+          [dto.schoolId, JSON.stringify(input), actorUserId],
+        );
+
+        await this.platformActivityService.recordTx(client, {
+          eventType: 'SCHOOL_STAFF_CSV_IMPORTED',
+          actorType: 'SCHOOL_STAFF',
+          actorUserId,
+          schoolId: dto.schoolId,
+          summary: `${result.rowCount ?? 0} staff drafts imported from CSV.`,
+          payload: {
+            importedCount: result.rowCount ?? 0,
+            staffAccountIds: result.rows.map((row) => row.id),
+          },
+        });
+
+        return {
+          imported: true,
+          importedCount: result.rowCount ?? 0,
+          staff: result.rows.map((row) => ({
+            id: row.id,
+            staffCode: row.staff_code,
+          })),
+        };
+      });
+    } catch (error) {
+      this.rethrowDatabaseError(error);
+    }
   }
 
   async listStaff(query: ListStaffDto, actorUserId: string) {

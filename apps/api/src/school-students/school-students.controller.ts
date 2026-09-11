@@ -14,6 +14,7 @@ import { AssignStudentSectionDto } from './dto/assign-student-section.dto';
 import { ChangeStudentStatusDto } from './dto/change-student-status.dto';
 import { CreateSchoolStudentDto } from './dto/create-school-student.dto';
 import { CreateStudentDocumentDto } from './dto/create-student-document.dto';
+import { PreviewStudentImportDto } from './dto/preview-student-import.dto';
 import { AddStudentGuardianDto } from './dto/add-student-guardian.dto';
 import { ListSchoolStudentsDto } from './dto/list-school-students.dto';
 import { UpdateSchoolStudentDto } from './dto/update-school-student.dto';
@@ -230,6 +231,33 @@ export class SchoolStudentsController {
       platformRole,
     );
   }
+
+  @Post('import/preview')
+  async previewStudentImport(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: PreviewStudentImportDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.schoolStudentsService.previewStudentImport(
+      body,
+      session.user_id,
+      session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null,
+    );
+  }
+
+  @Post('import')
+  async importStudents(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: PreviewStudentImportDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.schoolStudentsService.importStudents(
+      body,
+      session.user_id,
+      session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null,
+    );
+  }
+
   @Post()
   async createStudent(
     @Headers('authorization') authorization: string | undefined,

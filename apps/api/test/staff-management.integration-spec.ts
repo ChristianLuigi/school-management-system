@@ -3,7 +3,9 @@ import {
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { Pool } from 'pg';
+import { UpdateStaffDto } from '../src/staff-management/dto/update-staff.dto';
 import {
   createIntegrationPool,
   resetIntegrationDatabase,
@@ -84,6 +86,24 @@ describe('staff employment lifecycle and management integration', () => {
     });
     expect(created.staffCode).toMatch(/^STF-\d{6}$/);
 
+    const transformedContactUpdate = plainToInstance(UpdateStaffDto, {
+      schoolId,
+      rowVersion: created.rowVersion,
+      phone: '+509 3700 0000',
+    });
+    expect(
+      Object.prototype.hasOwnProperty.call(
+        transformedContactUpdate,
+        'jobTitle',
+      ),
+    ).toBe(true);
+    const contactUpdated = await harness.staffManagement.updateStaff(
+      created.id,
+      transformedContactUpdate,
+      admin.id,
+    );
+    expect(contactUpdated.phone).toBe('+509 3700 0000');
+
     const listed = await harness.staffManagement.listStaff(
       {
         schoolId,
@@ -120,7 +140,7 @@ describe('staff employment lifecycle and management integration', () => {
       created.id,
       {
         schoolId,
-        rowVersion: created.rowVersion,
+        rowVersion: contactUpdated.rowVersion,
         jobTitle: 'Senior Registrar',
         department: 'Academic Registry',
         effectiveDate: new Date().toISOString().slice(0, 10),
@@ -131,7 +151,7 @@ describe('staff employment lifecycle and management integration', () => {
     expect(updated).toMatchObject({
       jobTitle: 'Senior Registrar',
       department: 'Academic Registry',
-      rowVersion: 2,
+      rowVersion: 3,
     });
 
     await expect(

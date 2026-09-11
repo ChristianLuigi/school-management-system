@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  FileUp,
   GraduationCap,
   Pencil,
   Plus,
@@ -16,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { SectionSelectorClient } from "@/components/section-selector-client";
+import { StudentImportClient } from "@/components/student-import-client";
 import { SchoolBadge } from "@/components/school-ui";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -169,6 +171,7 @@ export function StudentsManagementClient({
   const [enrollmentState, setEnrollmentState] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [showImport, setShowImport] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -321,6 +324,19 @@ export function StudentsManagementClient({
               />
             </button>
             {canCreate ? (
+              <button
+                type="button"
+                onClick={() => setShowImport((value) => !value)}
+                title={locale === "fr" ? "Importer CSV" : "Import CSV"}
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <FileUp className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {locale === "fr" ? "Importer CSV" : "Import CSV"}
+                </span>
+              </button>
+            ) : null}
+            {canCreate ? (
               <Link
                 href="/students/new"
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
@@ -332,6 +348,19 @@ export function StudentsManagementClient({
           </div>
         </div>
 
+        {showImport ? (
+          <div className="border-b border-slate-200 p-5">
+            <StudentImportClient
+              schoolId={schoolId}
+              onClose={() => setShowImport(false)}
+              onImported={() => {
+                setShowImport(false);
+                setPage(1);
+                void loadStudents(1);
+              }}
+            />
+          </div>
+        ) : null}
         {error ? (
           <div
             role="alert"
