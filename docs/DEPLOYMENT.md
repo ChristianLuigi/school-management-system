@@ -39,6 +39,18 @@ curl --fail https://school.example.com/login
 
 The migration job uses the complete filename as identity, lexically orders files, verifies SHA-256 checksums, and takes a PostgreSQL advisory lock. Duplicate numeric prefixes are supported. Demo seed data is not part of production migration execution. Migration `059_disable_legacy_seed_super_admin.sql` suspends only the untouched deterministic legacy account from migration 022; it does not modify an account whose password was already changed.
 
+### Create the initial Super Admin
+
+Public account registration is intentionally disabled. On a fresh installation, create the first real Super Admin once, from a trusted Windows workstation, after all migrations have completed:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-super-admin.ps1
+```
+
+The script prompts securely for the Neon direct connection string and the new password, passes neither value on the command line, and removes its temporary environment variables afterward. The command requires the exact confirmation `CREATE_INITIAL_SUPER_ADMIN`, validates the normal password policy, records authentication and platform audit events, and refuses to run if a real Super Admin or the requested email already exists. It ignores only the exact untouched legacy account disabled by migration 059.
+
+Do not add bootstrap credentials to Render, Vercel, `.env` files, image build arguments, or application startup commands. If the account already exists, use password recovery instead of rerunning the bootstrap. The Super Admin can then create each school and its first School Admin; School Admins create staff records and grant login access through invitations.
+
 ## Existing installation baseline
 
 Baseline is an administrative exception, not a normal deployment step. First take and restore-verify a backup. Compare the existing schema to a clean database built through `058_operational_user_access.sql`. The runner requires an empty `schema_migrations` table, verifies critical tables/columns, and requires the literal confirmation `BASELINE_EXISTING_SCHEMA`.

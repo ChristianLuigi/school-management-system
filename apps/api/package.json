@@ -25,6 +25,7 @@
     "db:migrate:status": "ts-node --transpile-only src/migration-cli.ts status",
     "db:migrate:verify": "ts-node --transpile-only src/migration-cli.ts verify",
     "db:migrate:baseline": "ts-node --transpile-only src/migration-cli.ts baseline",
+    "admin:bootstrap": "ts-node --transpile-only src/bootstrap-super-admin-cli.ts",
     "db:staff:reconcile": "ts-node --transpile-only src/staff-reconciliation-cli.ts",
     "db:staff:reconcile:strict": "ts-node --transpile-only src/staff-reconciliation-cli.ts --strict"
   },
