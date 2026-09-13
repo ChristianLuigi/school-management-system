@@ -1209,7 +1209,7 @@ export class AttendanceService {
         ON rec.attendance_session_id = sess.id
        AND rec.deleted_at IS NULL
       WHERE se.school_id = $1
-        AND ($2::uuid[] IS NULL OR se.id = ANY($2::uuid[]))
+        AND ($3::uuid[] IS NULL OR se.id = ANY($3::uuid[]))
         AND se.deleted_at IS NULL
       GROUP BY
         se.id,
