@@ -7,8 +7,8 @@ export class LinkStaffUserDto {
   @IsUUID('all')
   userId: string;
 
-  @IsIn(['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'])
-  roleCode: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN';
+  @IsIn(['ADMIN_STAFF', 'SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'])
+  roleCode: 'ADMIN_STAFF' | 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN';
 
   @IsInt()
   @Min(1)

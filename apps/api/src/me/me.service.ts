@@ -64,6 +64,7 @@ export class MeService {
               AND (
                 smr.role::TEXT NOT IN (
                   'SCHOOL_ADMIN',
+                  'ADMIN_STAFF',
                   'TEACHER',
                   'FINANCE_ADMIN'
                 )

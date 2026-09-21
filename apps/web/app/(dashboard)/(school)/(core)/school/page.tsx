@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { SchoolDashboardOverviewClient } from "@/components/school-dashboard-overview-client";
 import { getServerTranslator } from "@/lib/i18n";
 import { getSchoolNavigation } from "@/lib/navigation";
@@ -12,6 +13,7 @@ export default async function SchoolDashboardPage() {
   const context = await getMeContext();
   const schoolId = resolveCurrentSchoolId(context);
   const roles = resolveEffectiveRoles(context);
+  if (roles.includes("ADMIN_STAFF") && !roles.some((role) => ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"].includes(role))) redirect("/students");
   const { locale } = await getServerTranslator();
   const operatorAccess = canSuperAdminManageSchool(context);
   const allowedHrefs = getSchoolNavigation(roles, locale)

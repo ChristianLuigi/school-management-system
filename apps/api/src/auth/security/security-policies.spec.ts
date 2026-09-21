@@ -105,10 +105,13 @@ describe('authentication security policies', () => {
       expect(() => assertCanGrantRole(['SCHOOL_ADMIN'], 'TEACHER')).not.toThrow();
     });
 
-    it('prevents a school administrator from granting school admin access', () => {
+    it('allows school administrators to grant school-level admin roles', () => {
       expect(() =>
         assertCanGrantRole(['SCHOOL_ADMIN'], 'SCHOOL_ADMIN'),
-      ).toThrow(ForbiddenException);
+      ).not.toThrow();
+      expect(() => assertCanGrantRole(['SCHOOL_ADMIN'], 'ADMIN_STAFF')).not.toThrow();
+      expect(() => assertCanGrantRole(['ADMIN_STAFF'], 'SCHOOL_ADMIN')).toThrow(ForbiddenException);
+      expect(() => assertCanGrantRole(['ADMIN_STAFF'], 'TEACHER')).toThrow(ForbiddenException);
     });
   });
 });

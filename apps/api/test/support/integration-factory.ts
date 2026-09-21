@@ -4,6 +4,7 @@ import { PasswordService } from '../../src/auth/security/password.service';
 import { SessionTokenService } from '../../src/auth/security/session-token.service';
 
 export type SchoolRole =
+  | 'ADMIN_STAFF'
   | 'SCHOOL_ADMIN'
   | 'TEACHER'
   | 'FINANCE_ADMIN'
@@ -207,7 +208,7 @@ export class IntegrationFactory {
     userId: string,
     input?: {
       staffCode?: string;
-      staffType?: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN';
+      staffType?: 'SCHOOL_ADMIN' | 'ADMIN_STAFF' | 'TEACHER' | 'FINANCE_ADMIN';
       employmentStatus?:
         | 'ACTIVE'
         | 'ON_LEAVE'

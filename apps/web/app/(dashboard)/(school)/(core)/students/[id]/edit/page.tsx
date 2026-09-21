@@ -1,3 +1,5 @@
+import { OfficeRecordClient } from "@/components/office-record-client";
+import { resolveEffectiveRoles } from "@/lib/server-context";
 import { StudentProfileEditClient } from "@/components/student-profile-edit-client";
 import { SchoolPageHeader } from "@/components/school-ui";
 import {
@@ -14,6 +16,8 @@ export default async function StudentProfileEditPage({
 
   const context = await getMeContext();
   const currentSchoolId = resolveCurrentSchoolId(context);
+  const roles = resolveEffectiveRoles(context);
+  if (roles.includes("ADMIN_STAFF") && !roles.includes("SCHOOL_ADMIN")) return <OfficeRecordClient schoolId={currentSchoolId} kind="student" recordId={id} />;
 
   return (
       <div className="space-y-6">

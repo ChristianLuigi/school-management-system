@@ -32,7 +32,7 @@ type StaffRecord = {
   id: string;
   school_id: string;
   user_id: string | null;
-  staff_type: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN' | null;
+  staff_type: 'SCHOOL_ADMIN' | 'ADMIN_STAFF' | 'TEACHER' | 'FINANCE_ADMIN' | null;
   staff_code: string | null;
   first_name: string | null;
   last_name: string | null;
@@ -274,10 +274,11 @@ export class StaffManagementService {
 
   private assertRoleMatchesStaff(
     staff: StaffRecord,
-    roleCode: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN',
+    roleCode: 'SCHOOL_ADMIN' | 'ADMIN_STAFF' | 'TEACHER' | 'FINANCE_ADMIN',
   ) {
     const expectedCategory = {
       SCHOOL_ADMIN: 'SCHOOL_LEADERSHIP',
+      ADMIN_STAFF: 'ADMINISTRATIVE',
       TEACHER: 'TEACHING',
       FINANCE_ADMIN: 'FINANCE',
     }[roleCode];
@@ -2124,7 +2125,7 @@ export class StaffManagementService {
       let roleCode = staff.staff_type;
       if (!roleCode) {
         const roleResult = await client.query<{
-          role_code: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN';
+          role_code: 'SCHOOL_ADMIN' | 'ADMIN_STAFF' | 'TEACHER' | 'FINANCE_ADMIN';
         }>(
           `
           SELECT role.role::TEXT AS role_code
@@ -2133,6 +2134,7 @@ export class StaffManagementService {
             ON role.school_membership_id = membership.id
            AND role.role::TEXT IN (
              'SCHOOL_ADMIN',
+             'ADMIN_STAFF',
              'TEACHER',
              'FINANCE_ADMIN'
            )

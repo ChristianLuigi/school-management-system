@@ -4,7 +4,7 @@ export default function AdminOnlyRouteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <SchoolRoleGuard allowedRoles={["SCHOOL_ADMIN"]}>
+    <SchoolRoleGuard allowedRoles={["SCHOOL_ADMIN", "ADMIN_STAFF"]}>
       {children}
     </SchoolRoleGuard>
   );

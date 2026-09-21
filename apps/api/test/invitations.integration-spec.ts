@@ -207,7 +207,7 @@ describe('secure invitation and membership integration', () => {
         {
           schoolId: firstSchoolId,
           email: 'stronger-role@release.test',
-          roleCode: 'SCHOOL_ADMIN',
+          roleCode: 'SUPER_ADMIN' as never,
         },
         admin.id,
         null,

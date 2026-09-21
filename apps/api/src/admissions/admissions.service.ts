@@ -1,3 +1,4 @@
+import { assertAdministrativeIntakeFields } from '../auth/security/administrative-admissions-policy';
 import {
   BadRequestException,
   ForbiddenException,
@@ -51,7 +52,7 @@ export class AdmissionsService {
       platformRole === 'SUPER_ADMIN' &&
       school.management_mode !== 'SELF_MANAGED'
     ) {
-      return;
+      return ['SCHOOL_ADMIN'];
     }
 
     const membershipResult = await this.db.query<{
@@ -88,6 +89,7 @@ export class AdmissionsService {
         'You do not have permission to access admissions.',
       );
     }
+    return roles;
   }
 
   async listApplications(
@@ -99,7 +101,7 @@ export class AdmissionsService {
       actorUserId,
       query.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN', 'FINANCE_ADMIN', 'TEACHER'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF', 'FINANCE_ADMIN', 'TEACHER'],
     );
 
     const search = query.search?.trim().toLowerCase() ?? '';
@@ -188,7 +190,7 @@ export class AdmissionsService {
       actorUserId,
       query.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN', 'FINANCE_ADMIN', 'TEACHER'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF', 'FINANCE_ADMIN', 'TEACHER'],
     );
 
     const summaryResult = await this.db.query<{
@@ -336,12 +338,13 @@ export class AdmissionsService {
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
   ) {
-    await this.assertUserCanAccessAdmissions(
+    const actorRoles = await this.assertUserCanAccessAdmissions(
       actorUserId,
       dto.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF'],
     );
+    assertAdministrativeIntakeFields(actorRoles, dto);
 
     const firstName = dto.firstName.trim();
     const lastName = dto.lastName.trim();
@@ -558,12 +561,13 @@ export class AdmissionsService {
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
   ) {
-    await this.assertUserCanAccessAdmissions(
+    const actorRoles = await this.assertUserCanAccessAdmissions(
       actorUserId,
       input.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN', 'FINANCE_ADMIN', 'TEACHER'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF', 'FINANCE_ADMIN', 'TEACHER'],
     );
+    const officeOnly = !actorRoles.some((role) => ['SCHOOL_ADMIN', 'FINANCE_ADMIN', 'TEACHER'].includes(role));
 
     const result = await this.db.query<{
       id: string;
@@ -846,32 +850,32 @@ export class AdmissionsService {
       documents: {
         photoReceived: row.photo_received,
         birthCertificateReceived: row.birth_certificate_received,
-        vaccinationCardReceived: row.vaccination_card_received,
+        vaccinationCardReceived: officeOnly ? null : row.vaccination_card_received,
         previousSchoolRecordReceived: row.previous_school_record_received,
         parentIdDocumentReceived: row.parent_id_document_received,
         conductCertificateReceived: row.conduct_certificate_received,
       },
 
-      notes: row.notes,
+      notes: officeOnly ? null : row.notes,
 
       registrationFee: {
         required: row.registration_fee_required,
 
-        amount: Number(row.registration_fee_amount),
+        amount: officeOnly ? null : Number(row.registration_fee_amount),
 
-        currencyCode: row.registration_fee_currency_code,
+        currencyCode: officeOnly ? null : row.registration_fee_currency_code,
 
         status: row.registration_fee_status,
 
-        paymentMethod: row.registration_payment_method,
+        paymentMethod: officeOnly ? null : row.registration_payment_method,
 
-        paymentReference: row.registration_payment_reference,
+        paymentReference: officeOnly ? null : row.registration_payment_reference,
 
-        paidAt: row.registration_fee_paid_at,
+        paidAt: officeOnly ? null : row.registration_fee_paid_at,
 
-        receiptNumber: row.registration_fee_receipt_number,
+        receiptNumber: officeOnly ? null : row.registration_fee_receipt_number,
 
-        notes: row.registration_payment_notes,
+        notes: officeOnly ? null : row.registration_payment_notes,
       },
 
       convertedStudent: row.converted_student_id
@@ -883,7 +887,7 @@ export class AdmissionsService {
           }
         : null,
 
-      exam: examResult.rows[0]
+      exam: !officeOnly && examResult.rows[0]
         ? {
             id: examResult.rows[0].id,
             examStatus: examResult.rows[0].exam_status,
@@ -920,7 +924,7 @@ export class AdmissionsService {
             updatedAt: examResult.rows[0].updated_at,
           }
         : null,
-      statusHistory: historyResult.rows.map((item) => ({
+      statusHistory: (officeOnly ? [] : historyResult.rows).map((item) => ({
         id: item.id,
         previousStatus: item.previous_status,
         newStatus: item.new_status,
@@ -1956,12 +1960,13 @@ export class AdmissionsService {
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
   ) {
-    await this.assertUserCanAccessAdmissions(
+    const actorRoles = await this.assertUserCanAccessAdmissions(
       actorUserId,
       dto.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF'],
     );
+    assertAdministrativeIntakeFields(actorRoles, dto);
 
     return this.db.withTransaction(async (client) => {
       const existingResult = await client.query<{

@@ -5,7 +5,7 @@ export default function AdmissionsRoutesLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <SchoolRoleGuard
-      allowedRoles={["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"]}
+      allowedRoles={["SCHOOL_ADMIN", "ADMIN_STAFF", "TEACHER", "FINANCE_ADMIN"]}
     >
       {children}
     </SchoolRoleGuard>

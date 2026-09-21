@@ -432,7 +432,7 @@ export class InvitationsService {
       initialPermissionCodes: string[];
     },
   ) {
-    if (['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'].includes(input.roleCode)) {
+    if (['SCHOOL_ADMIN', 'ADMIN_STAFF', 'TEACHER', 'FINANCE_ADMIN'].includes(input.roleCode)) {
       if (input.staffAccountId) {
         const designated = await client.query<{
           user_id: string | null;

@@ -18,7 +18,7 @@ export default async function AdmissionsPage() {
       <SchoolModuleWorkspace
         title="Admissions Workspace"
         description="Manage admission applications before creating official student records."
-        quickActions={[
+        quickActions={effectiveRoles.includes("ADMIN_STAFF") && !isSchoolAdmin ? [] : [
           {
             href: "/students",
             title: "Students",
@@ -50,7 +50,7 @@ export default async function AdmissionsPage() {
           <AdmissionsSummaryClient schoolId={currentSchoolId} />
         </div>
 
-        <AdmissionsClient schoolId={currentSchoolId} canCreate={isSchoolAdmin} />
+        <AdmissionsClient schoolId={currentSchoolId} canCreate={isSchoolAdmin || effectiveRoles.includes("ADMIN_STAFF")} officeOnly={!isSchoolAdmin && effectiveRoles.includes("ADMIN_STAFF")} />
       </SchoolModuleWorkspace>
   );
 }

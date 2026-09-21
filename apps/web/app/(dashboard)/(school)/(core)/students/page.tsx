@@ -17,7 +17,7 @@ export default async function StudentsPage() {
         title="Students"
         description="Directory, enrollment, and student records."
         compact
-        quickActions={[
+        quickActions={effectiveRoles.includes("ADMIN_STAFF") && !isSchoolAdmin ? [] : [
           {
             href: "/attendance",
             title: "Attendance",
@@ -42,7 +42,8 @@ export default async function StudentsPage() {
       >
         <StudentsManagementClient
           schoolId={currentSchoolId}
-          canCreate={isSchoolAdmin}
+          canCreate={isSchoolAdmin || effectiveRoles.includes("ADMIN_STAFF")}
+          canImport={isSchoolAdmin}
         />
       </SchoolModuleWorkspace>
   );

@@ -320,7 +320,7 @@ export function StaffOperationalWorkspaceClient({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const [inviteRole, setInviteRole] = useState<"TEACHER" | "FINANCE_ADMIN">(
+  const [inviteRole, setInviteRole] = useState<"TEACHER" | "FINANCE_ADMIN" | "ADMIN_STAFF" | "SCHOOL_ADMIN">(
     "TEACHER",
   );
   const [inviteLocale, setInviteLocale] = useState<"fr" | "en">(locale);
@@ -828,13 +828,15 @@ export function StaffOperationalWorkspaceClient({
                         value={inviteRole}
                         onChange={(event) =>
                           setInviteRole(
-                            event.target.value as "TEACHER" | "FINANCE_ADMIN",
+                            event.target.value as typeof inviteRole,
                           )
                         }
                         className="staff-input"
                       >
                         <option value="TEACHER">TEACHER</option>
                         <option value="FINANCE_ADMIN">FINANCE ADMIN</option>
+                        <option value="ADMIN_STAFF">{locale === "fr" ? "Personnel administratif" : "Administrative staff"}</option>
+                        <option value="SCHOOL_ADMIN">{locale === "fr" ? "Administrateur de l’école" : "School administrator"}</option>
                       </select>
                     </Field>
                     <Field label={copy.language}>

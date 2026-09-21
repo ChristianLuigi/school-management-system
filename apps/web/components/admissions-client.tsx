@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { OfficeRecordClient } from "@/components/office-record-client";
 import { SectionSelectorClient } from "@/components/section-selector-client";
 import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
@@ -92,9 +93,11 @@ function desiredClassLabel(row: AdmissionApplicationRow) {
 export function AdmissionsClient({
   schoolId,
   canCreate,
+  officeOnly = false,
 }: {
   schoolId: string;
   canCreate: boolean;
+  officeOnly?: boolean;
 }) {
   const [rows, setRows] = useState<AdmissionApplicationRow[]>([]);
   const [search, setSearch] = useState("");
@@ -312,7 +315,7 @@ export function AdmissionsClient({
   }
 
   useEffect(() => {
-    loadAcademicStructureStatus();
+    if (!officeOnly) loadAcademicStructureStatus();
     loadApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId]);
@@ -332,7 +335,7 @@ export function AdmissionsClient({
           {canCreate ? (
             <button
               type="button"
-              disabled={!structureReady || structureLoading}
+              disabled={!officeOnly && (!structureReady || structureLoading)}
               onClick={() => setOpenCreate((value) => !value)}
               className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -371,7 +374,8 @@ export function AdmissionsClient({
           </div>
         ) : null}
 
-        {openCreate && canCreate ? (
+        {openCreate && canCreate && officeOnly ? <OfficeRecordClient schoolId={schoolId} kind="admission" onSaved={() => { setOpenCreate(false); void loadApplications(); }} /> : null}
+        {openCreate && canCreate && !officeOnly ? (
           <div className="mt-5 space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <div>
               <h4 className="font-semibold text-slate-900">

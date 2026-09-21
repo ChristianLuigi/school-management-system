@@ -10,8 +10,8 @@ import {
 export class CreateUserInvitationDto {
   @IsUUID('all') schoolId!: string;
   @IsEmail() email!: string;
-  @IsIn(['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN', 'PARENT'])
-  roleCode!: 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN' | 'PARENT';
+  @IsIn(['ADMIN_STAFF', 'SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN', 'PARENT'])
+  roleCode!: 'ADMIN_STAFF' | 'SCHOOL_ADMIN' | 'TEACHER' | 'FINANCE_ADMIN' | 'PARENT';
   @IsOptional() @IsIn(['fr', 'en']) locale?: 'fr' | 'en';
   @IsOptional() @IsString() firstName?: string;
   @IsOptional() @IsString() lastName?: string;

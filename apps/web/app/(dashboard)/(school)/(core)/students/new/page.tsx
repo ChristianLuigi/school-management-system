@@ -1,3 +1,4 @@
+import { OfficeRecordClient } from "@/components/office-record-client";
 import { redirect } from "next/navigation";
 import { StudentCreateClient } from "@/components/student-create-client";
 import { SchoolPageHeader } from "@/components/school-ui";
@@ -10,6 +11,7 @@ import {
 export default async function NewStudentPage() {
   const context = await getMeContext();
   const roles = resolveEffectiveRoles(context);
+  if (roles.includes("ADMIN_STAFF") && !roles.includes("SCHOOL_ADMIN")) return <OfficeRecordClient schoolId={resolveCurrentSchoolId(context)} kind="student" />;
 
   if (!roles.includes("SCHOOL_ADMIN")) {
     redirect("/students");

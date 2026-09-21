@@ -118,7 +118,7 @@ export class AcademicService {
       platformRole === 'SUPER_ADMIN' &&
       school.management_mode !== 'SELF_MANAGED'
     ) {
-      return;
+      return ['SCHOOL_ADMIN'];
     }
 
     const membershipResult = await this.db.query<{
@@ -154,6 +154,7 @@ export class AcademicService {
         'You do not have permission to manage academic setup.',
       );
     }
+    return roles;
   }
 
   private async isAcademicAdministrator(
@@ -1215,13 +1216,13 @@ export class AcademicService {
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
   ) {
-    await this.assertUserCanAccessAcademicSetup(
+    const actorRoles = await this.assertUserCanAccessAcademicSetup(
       actorUserId,
       schoolId,
       platformRole,
-      ['SCHOOL_ADMIN', 'TEACHER'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF', 'TEACHER'],
     );
-    const teacherUserId = (await this.isAcademicAdministrator(
+    const teacherUserId = actorRoles.includes('ADMIN_STAFF') || (await this.isAcademicAdministrator(
       actorUserId,
       schoolId,
       platformRole,

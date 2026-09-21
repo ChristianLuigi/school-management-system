@@ -24,13 +24,13 @@ const schoolNavigation: SchoolNavigationItem[] = [
     href: "/students",
     labelKey: "nav.students",
     icon: "students",
-    roles: ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"],
+    roles: ["SCHOOL_ADMIN", "ADMIN_STAFF", "TEACHER", "FINANCE_ADMIN"],
   },
   {
     href: "/admissions",
     labelKey: "nav.admissions",
     icon: "admissions",
-    roles: ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"],
+    roles: ["SCHOOL_ADMIN", "ADMIN_STAFF", "TEACHER", "FINANCE_ADMIN"],
   },
   {
     href: "/academics",

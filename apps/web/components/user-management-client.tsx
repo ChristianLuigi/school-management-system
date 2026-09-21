@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 
-type Role = "SCHOOL_ADMIN" | "TEACHER" | "FINANCE_ADMIN" | "PARENT";
+type Role = "SCHOOL_ADMIN" | "ADMIN_STAFF" | "TEACHER" | "FINANCE_ADMIN" | "PARENT";
 type Membership = {
   membershipId: string;
   roleCode: Role;
@@ -40,7 +40,7 @@ type GuardianOption = {
   phone: string | null;
   linkedUserId: string | null;
 };
-const ROLES = ["TEACHER", "FINANCE_ADMIN", "PARENT"] as const;
+const ROLES = ["TEACHER", "FINANCE_ADMIN", "PARENT", "ADMIN_STAFF", "SCHOOL_ADMIN"] as const;
 const FINANCE_PERMISSIONS = [
   "FINANCE_DASHBOARD_VIEW",
   "FINANCE_INVOICES_VIEW",
@@ -164,15 +164,15 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
           locale: inviteLocale,
           guardianId: roleCode === "PARENT" ? guardianId : undefined,
           staffCode:
-            roleCode === "TEACHER" || roleCode === "FINANCE_ADMIN"
+            roleCode !== "PARENT"
               ? staffCode.trim() || undefined
               : undefined,
           jobTitle:
-            roleCode === "TEACHER" || roleCode === "FINANCE_ADMIN"
+            roleCode !== "PARENT"
               ? jobTitle.trim() || undefined
               : undefined,
           department:
-            roleCode === "TEACHER" || roleCode === "FINANCE_ADMIN"
+            roleCode !== "PARENT"
               ? department.trim() || undefined
               : undefined,
           financePermissionCodes:
@@ -256,6 +256,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
 
   return (
     <div className="space-y-6">
+      {roleCode === "SCHOOL_ADMIN" && <p role="note" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{locale === "fr" ? "Accès complet à l’école, y compris les utilisateurs et l’approbation de la paie." : "Full school access, including user management and payroll approval."}</p>}
       <form
         onSubmit={inviteUser}
         className="rounded-2xl border border-slate-200 bg-white p-5"
@@ -315,7 +316,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
               <option value="en">English</option>
             </select>
           </label>
-          {(roleCode === "TEACHER" || roleCode === "FINANCE_ADMIN") && (
+          {roleCode !== "PARENT" && (
             <>
               <Field
                 label={t("users.management.staffCode")}

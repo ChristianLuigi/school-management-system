@@ -155,9 +155,11 @@ function DirectorySkeleton() {
 export function StudentsManagementClient({
   schoolId,
   canCreate,
+  canImport = canCreate,
 }: {
   schoolId: string;
   canCreate: boolean;
+  canImport?: boolean;
 }) {
   const { locale, t } = useI18n();
   const [rows, setRows] = useState<StudentRow[]>([]);
@@ -323,7 +325,7 @@ export function StudentsManagementClient({
                 className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
               />
             </button>
-            {canCreate ? (
+            {canImport ? (
               <button
                 type="button"
                 onClick={() => setShowImport((value) => !value)}

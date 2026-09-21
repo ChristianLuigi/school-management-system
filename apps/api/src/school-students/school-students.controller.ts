@@ -53,7 +53,7 @@ export class SchoolStudentsController {
       session.user_id,
       query.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF', 'TEACHER', 'FINANCE_ADMIN'],
     );
 
     return this.schoolStudentsService.listStudents(query);

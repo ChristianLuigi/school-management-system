@@ -1,3 +1,4 @@
+import { assertAdministrativeStudentFields } from '../auth/security/administrative-staff-policy';
 import {
   BadRequestException,
   ForbiddenException,
@@ -55,7 +56,7 @@ export class SchoolStudentsService {
       platformRole === 'SUPER_ADMIN' &&
       school.management_mode !== 'SELF_MANAGED'
     ) {
-      return;
+      return ['SCHOOL_ADMIN'];
     }
 
     const membershipResult = await this.db.query<{
@@ -91,6 +92,7 @@ export class SchoolStudentsService {
         'You do not have permission to manage students.',
       );
     }
+    return roles;
   }
 
   private async getFinanceCapabilities(
@@ -338,12 +340,13 @@ export class SchoolStudentsService {
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
   ) {
-    await this.assertUserCanAccessStudents(
+    const actorRoles = await this.assertUserCanAccessStudents(
       actorUserId,
       input.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF', 'TEACHER', 'FINANCE_ADMIN'],
     );
+    const officeOnly = !actorRoles.some((role) => ['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'].includes(role));
 
     const studentResult = await this.db.query<{
       id: string;
@@ -815,11 +818,11 @@ export class SchoolStudentsService {
         previousSchoolAddress: student.previous_school_address,
         photoReceived: student.photo_received,
         birthCertificateReceived: student.birth_certificate_received,
-        vaccinationCardReceived: student.vaccination_card_received,
+        vaccinationCardReceived: officeOnly ? null : student.vaccination_card_received,
         previousSchoolRecordReceived: student.previous_school_record_received,
-        healthNotes: student.health_notes,
-        allergyNotes: student.allergy_notes,
-        medicalNotes: student.medical_notes,
+        healthNotes: officeOnly ? null : student.health_notes,
+        allergyNotes: officeOnly ? null : student.allergy_notes,
+        medicalNotes: officeOnly ? null : student.medical_notes,
         createdAt: student.created_at,
       },
       admissionSource: admissionSourceResult.rows[0]
@@ -835,16 +838,16 @@ export class SchoolStudentsService {
       documents: {
         photoReceived: student.photo_received,
         birthCertificateReceived: student.birth_certificate_received,
-        vaccinationCardReceived: student.vaccination_card_received,
+        vaccinationCardReceived: officeOnly ? null : student.vaccination_card_received,
         previousSchoolRecordReceived: student.previous_school_record_received,
       },
       health: {
-        vaccinationStatus: student.vaccination_status,
-        allergies: student.allergies,
-        medicalNotes: student.medical_notes,
-        specialNeeds: student.special_needs,
+        vaccinationStatus: officeOnly ? null : student.vaccination_status,
+        allergies: officeOnly ? null : student.allergies,
+        medicalNotes: officeOnly ? null : student.medical_notes,
+        specialNeeds: officeOnly ? null : student.special_needs,
       },
-      documentRecords: documentRecordsResult.rows.map((row) => ({
+      documentRecords: (officeOnly ? [] : documentRecordsResult.rows).map((row) => ({
         id: row.id,
         documentType: row.document_type,
         documentStatus: row.document_status,
@@ -919,7 +922,7 @@ export class SchoolStudentsService {
         endedAt: row.ended_at,
         endReason: row.ended_reason,
       })),
-      statusHistory: statusHistoryResult.rows.map((row) => ({
+      statusHistory: (officeOnly ? [] : statusHistoryResult.rows).map((row) => ({
         id: row.id,
         previousStatus: row.previous_status,
         newStatus: row.new_status,
@@ -1485,12 +1488,13 @@ export class SchoolStudentsService {
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
   ) {
-    await this.assertUserCanAccessStudents(
+    const actorRoles = await this.assertUserCanAccessStudents(
       actorUserId,
       dto.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF'],
     );
+    assertAdministrativeStudentFields(actorRoles, dto);
 
     if (dto.sectionId !== undefined || dto.clearSection !== undefined) {
       throw new BadRequestException(
@@ -3098,12 +3102,13 @@ export class SchoolStudentsService {
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
   ) {
-    await this.assertUserCanAccessStudents(
+    const actorRoles = await this.assertUserCanAccessStudents(
       actorUserId,
       dto.schoolId,
       platformRole,
-      ['SCHOOL_ADMIN'],
+      ['SCHOOL_ADMIN', 'ADMIN_STAFF'],
     );
+    assertAdministrativeStudentFields(actorRoles, dto);
 
     const firstName = dto.firstName.trim();
     const lastName = dto.lastName.trim();

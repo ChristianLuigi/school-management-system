@@ -245,7 +245,7 @@ export class AcademicController {
     );
   }
 
-  @Roles('SCHOOL_ADMIN', 'TEACHER')
+  @Roles('SCHOOL_ADMIN', 'ADMIN_STAFF', 'TEACHER')
   @Get('section-options')
   async findSectionOptions(
     @Query() query: ListGradeLevelsDto,

@@ -320,7 +320,7 @@ export const messages = {
           FINANCE_PERIOD_CLOSE: "Clôturer et rouvrir les périodes financières",
           PAYROLL_VIEW: "Voir la paie",
           PAYROLL_MANAGE: "Gérer la paie",
-        },        roles: { SCHOOL_ADMIN: "Administrateur de l’école", TEACHER: "Enseignant", FINANCE_ADMIN: "Responsable financier", PARENT: "Parent / Responsable" },
+        },        roles: { ADMIN_STAFF: "Personnel administratif", SCHOOL_ADMIN: "Administrateur de l’école", TEACHER: "Enseignant", FINANCE_ADMIN: "Responsable financier", PARENT: "Parent / Responsable" },
       },
     },
     students: {
@@ -974,7 +974,7 @@ export const messages = {
           FINANCE_PERIOD_CLOSE: "Close and reopen financial periods",
           PAYROLL_VIEW: "View payroll",
           PAYROLL_MANAGE: "Manage payroll",
-        },        roles: { SCHOOL_ADMIN: "School administrator", TEACHER: "Teacher", FINANCE_ADMIN: "Finance administrator", PARENT: "Parent / Guardian" },
+        },        roles: { ADMIN_STAFF: "Administrative staff", SCHOOL_ADMIN: "School administrator", TEACHER: "Teacher", FINANCE_ADMIN: "Finance administrator", PARENT: "Parent / Guardian" },
       },
     },
     students: {

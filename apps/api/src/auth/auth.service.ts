@@ -533,7 +533,7 @@ export class AuthService {
       JOIN school_membership_roles smr ON smr.school_membership_id=sm.id
       WHERE sm.user_id=$1 AND sm.membership_status='ACTIVE' AND sm.deleted_at IS NULL AND smr.deleted_at IS NULL
         AND (
-          smr.role::TEXT NOT IN ('SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN')
+          smr.role::TEXT NOT IN ('SCHOOL_ADMIN', 'ADMIN_STAFF', 'TEACHER', 'FINANCE_ADMIN')
           OR EXISTS (
             SELECT 1
             FROM school_staff_accounts staff
