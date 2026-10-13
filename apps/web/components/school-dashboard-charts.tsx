@@ -203,7 +203,7 @@ export function SchoolDashboardCharts({
       {allowedHrefs.includes("/attendance") ? (
         <Panel
           title={t("dashboard.attendanceToday")}
-          href="/attendance"
+          href={`/attendance?date=${encodeURIComponent(date)}`}
           state={attendance}
         >
           {attendanceTotal ? (

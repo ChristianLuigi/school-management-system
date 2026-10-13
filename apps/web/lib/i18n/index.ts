@@ -1,11 +1,14 @@
 import { cookies } from "next/headers";
+import { createServerI18next } from "next-i18next/server";
+import config from "../../i18n.config";
 import {
   defaultLocale,
   isSupportedLocale,
   LOCALE_COOKIE,
-  translate,
   type Locale,
 } from "./messages";
+
+const { getT } = createServerI18next(config);
 
 export async function getServerLocale(): Promise<Locale> {
   const cookieStore = await cookies();
@@ -20,11 +23,12 @@ export async function getServerLocale(): Promise<Locale> {
 
 export async function getServerTranslator() {
   const locale = await getServerLocale();
+  const { t } = await getT("common", { lng: locale });
 
   return {
     locale,
     t: (key: string, params?: Record<string, string | number>) =>
-      translate(locale, key, params),
+      String(t(key, params)),
   };
 }
 

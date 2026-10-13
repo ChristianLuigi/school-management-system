@@ -1,6 +1,42 @@
 import Link from "next/link";
 import { ReactNode } from "react";
 
+export function schoolActionClass(
+  variant: "primary" | "secondary" = "secondary",
+) {
+  return (
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 " +
+    (variant === "primary"
+      ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50")
+  );
+}
+
+export function SchoolFeedback({
+  children,
+  action,
+  tone = "error",
+}: {
+  children: ReactNode;
+  action?: ReactNode;
+  tone?: "error" | "success";
+}) {
+  return (
+    <div
+      role={tone === "error" ? "alert" : "status"}
+      className={
+        "flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm " +
+        (tone === "error"
+          ? "border-red-200 bg-red-50 text-red-800"
+          : "border-green-200 bg-green-50 text-green-800")
+      }
+    >
+      <div>{children}</div>
+      {action}
+    </div>
+  );
+}
+
 export function SchoolPageHeader({
   title,
   description,
@@ -122,14 +158,27 @@ export function QuickLinkCard({
 export function EmptySchoolState({
   title,
   description,
+  icon,
+  action,
 }: {
   title: string;
   description: string;
+  icon?: ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+      {icon ? (
+        <div
+          aria-hidden="true"
+          className="mb-3 flex justify-center text-slate-400"
+        >
+          {icon}
+        </div>
+      ) : null}
       <div className="text-lg font-semibold text-slate-900">{title}</div>
       <p className="mt-2 text-sm text-slate-600">{description}</p>
+      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
     </div>
   );
 }

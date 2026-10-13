@@ -158,51 +158,51 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
     <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">School Setup Wizard</h1>
-          <p className="mt-1 text-slate-600">
+          <p className="mt-1 text-muted-foreground">
             Set up the academic year. Academic structure can be configured afterward.
           </p>
         </div>
 
         {loading ? (
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <div className="rounded-2xl bg-surface text-foreground p-4 shadow-sm ring-1 ring-slate-200">
             Loading setup status...
           </div>
         ) : null}
 
         {error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-danger">
             {error}
           </div>
         ) : null}
 
         {message ? (
-          <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-green-700">
+          <div className="rounded-2xl border border-success/40 bg-success-subtle p-4 text-success">
             {message}
           </div>
         ) : null}
 
         {status ? (
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <div className="rounded-2xl bg-surface text-foreground p-5 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-lg font-semibold">Current Setup Status</h2>
             <div className="mt-4 grid gap-4 md:grid-cols-5">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Levels</div>
+              <div className="rounded-xl bg-surface-muted p-4">
+                <div className="text-sm text-muted-foreground">Levels</div>
                 <div className="mt-1 text-2xl font-bold">{status.counts.levels}</div>
               </div>
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Academic Years</div>
+              <div className="rounded-xl bg-surface-muted p-4">
+                <div className="text-sm text-muted-foreground">Academic Years</div>
                 <div className="mt-1 text-2xl font-bold">{status.counts.academicYears}</div>
               </div>
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Periods</div>
+              <div className="rounded-xl bg-surface-muted p-4">
+                <div className="text-sm text-muted-foreground">Periods</div>
                 <div className="mt-1 text-2xl font-bold">{status.counts.gradingPeriods}</div>
               </div>
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Grade Levels</div>
+              <div className="rounded-xl bg-surface-muted p-4">
+                <div className="text-sm text-muted-foreground">Grade Levels</div>
                 <div className="mt-1 text-2xl font-bold">{status.counts.gradeLevels}</div>
               </div>
-              <div className="rounded-xl bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Sections</div>
+              <div className="rounded-xl bg-surface-muted p-4">
+                <div className="text-sm text-muted-foreground">Sections</div>
                 <div className="mt-1 text-2xl font-bold">{status.counts.sections}</div>
               </div>
             </div>
@@ -217,7 +217,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
               <span
                 className={`rounded-full px-3 py-2 text-sm font-medium ${
                   status.isComplete
-                    ? "bg-green-100 text-green-700"
+                    ? "bg-green-100 text-success"
                     : "bg-amber-100 text-amber-700"
                 }`}
               >
@@ -229,7 +229,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+          className="space-y-4 rounded-2xl bg-surface text-foreground p-5 shadow-sm ring-1 ring-slate-200"
         >
           <h2 className="text-lg font-semibold">Bootstrap School</h2>
 
@@ -239,7 +239,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
                 Academic Year Name (FR)
               </label>
               <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                className="w-full rounded-lg border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2"
                 value={academicYearFr}
                 onChange={(e) => setAcademicYearFr(e.target.value)}
               />
@@ -250,7 +250,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
                 Academic Year Name (EN)
               </label>
               <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                className="w-full rounded-lg border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2"
                 value={academicYearEn}
                 onChange={(e) => setAcademicYearEn(e.target.value)}
               />
@@ -262,7 +262,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
               <label className="mb-1 block text-sm font-medium">Start Date</label>
               <input
                 type="date"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                className="w-full rounded-lg border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
@@ -272,7 +272,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
               <label className="mb-1 block text-sm font-medium">End Date</label>
               <input
                 type="date"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                className="w-full rounded-lg border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
@@ -282,7 +282,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
           <button
             type="submit"
             disabled={!schoolId || submitting || status?.isComplete}
-            className="rounded-xl bg-slate-900 px-5 py-3 text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-5 py-3 text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
           >
             {submitting ? "Applying Setup..." : "Complete Initial Setup"}
           </button>

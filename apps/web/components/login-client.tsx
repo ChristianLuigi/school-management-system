@@ -2,9 +2,14 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, GraduationCap } from "lucide-react";
+import { useI18n } from "@/components/i18n-provider";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export function LoginClient() {
   const router = useRouter();
+  const { t } = useI18n();
+  const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +21,7 @@ export function LoginClient() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
     setError("");
     try {
@@ -23,8 +29,10 @@ export function LoginClient() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const body = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(body?.message ?? "Adresse électronique ou mot de passe incorrect.");
+      if (!response.ok) {
+        setError(response.status === 401 ? "login.invalid" : "login.unavailable");
+        return;
+      }
 
       const invitationToken = window.sessionStorage.getItem("almac_pending_invitation");
       if (invitationToken) {
@@ -40,8 +48,8 @@ export function LoginClient() {
       }
       router.replace("/dashboard");
       router.refresh();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Connexion impossible.");
+    } catch {
+      setError("login.unavailable");
     } finally {
       setSubmitting(false);
     }
@@ -50,42 +58,50 @@ export function LoginClient() {
   useEffect(() => {
     if (searchParams.get("acceptInvitation") === "1" &&
         !window.sessionStorage.getItem("almac_pending_invitation")) {
-      setError("Le lien d’invitation n’est plus disponible. Ouvrez à nouveau le courriel reçu.");
+      setError("login.invitationMissing");
     }
   }, [searchParams]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-      <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="text-sm font-semibold text-blue-700">ALMAC School Management</div>
-        <h1 className="mt-2 text-3xl font-bold text-slate-950">Connexion</h1>
-        <p className="mt-2 text-sm text-slate-600">Accédez à votre espace scolaire sécurisé.</p>
-        {activated && <Notice>Votre compte a été activé. Vous pouvez maintenant vous connecter.</Notice>}
-        {membershipAdded && <Notice>Votre nouvelle école a été ajoutée. Reconnectez-vous pour continuer.</Notice>}
-        {passwordReset && <Notice>Votre mot de passe a été réinitialisé. Toutes les anciennes sessions ont été fermées.</Notice>}
-        {error && <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+    <main className="flex min-h-svh items-center justify-center bg-background p-4 sm:p-6">
+      <form onSubmit={submit} className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 text-foreground shadow-md sm:p-8">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 font-semibold"><GraduationCap size={24} aria-hidden="true" />ALMAC</div>
+          <LanguageSwitcher />
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight">{t("login.title")}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t("login.description")}</p>
+        {activated && <Notice>{t("login.activated")}</Notice>}
+        {membershipAdded && <Notice>{t("login.membershipAdded")}</Notice>}
+        {passwordReset && <Notice>{t("login.reset")}</Notice>}
+        {error && <div role="alert" id="login-error" className="mt-5 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">{t(error)}</div>}
         <label className="mt-6 block text-sm">
-          <span className="font-medium">Adresse électronique</span>
+          <span className="font-medium">{t("login.email")}</span>
           <input required type="email" autoComplete="username" inputMode="email" value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" />
+            className="mt-2 w-full rounded-lg border border-input bg-surface px-3 py-3 text-foreground" />
         </label>
         <label className="mt-4 block text-sm">
-          <span className="font-medium">Mot de passe</span>
-          <input required type="password" autoComplete="current-password" maxLength={128} value={password}
+          <span className="font-medium">{t("login.password")}</span>
+          <span className="relative mt-2 block">
+          <input required type={showPassword ? "text" : "password"} autoComplete="current-password" maxLength={128} value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" />
+            className="w-full rounded-lg border border-input bg-surface py-3 pl-3 pr-12 text-foreground" />
+          <button type="button" aria-label={t(showPassword ? "login.hidePassword" : "login.showPassword")} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)} className="absolute right-1 top-1 rounded-md p-3 text-muted-foreground hover:text-foreground">
+            {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+          </button>
+          </span>
         </label>
         <button type="submit" disabled={submitting}
-          className="mt-6 w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">
-          {submitting ? "Connexion…" : "Se connecter"}
+          className="mt-6 w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-hover disabled:opacity-60">
+          {t(submitting ? "login.submitting" : "login.submit")}
         </button>
-        <a href="/forgot-password" className="mt-4 block text-center text-sm text-blue-700 hover:underline">Mot de passe oublié ?</a>
+        <a href="/forgot-password" className="mt-5 block text-center text-sm text-foreground underline underline-offset-4">{t("login.forgot")}</a>
       </form>
     </main>
   );
 }
 
 function Notice({ children }: { children: React.ReactNode }) {
-  return <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">{children}</div>;
+  return <div role="status" className="mt-5 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">{children}</div>;
 }

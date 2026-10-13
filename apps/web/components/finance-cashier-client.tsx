@@ -9,7 +9,17 @@ import {
   useRef,
   useState,
 } from "react";
-import { SchoolBadge } from "@/components/school-ui";
+import { SchoolBadge, schoolActionClass } from "@/components/school-ui";
+import {
+  Search,
+  CheckCircle2,
+  CreditCard,
+  Printer,
+  ArrowRight,
+} from "lucide-react";
+import { validatePaymentReview } from "@/lib/payment-review";
+import { cashierCopy } from "@/lib/cashier-copy";
+import { useI18n } from "@/components/i18n-provider";
 
 type StudentSearchResult = {
   id: string;
@@ -108,12 +118,18 @@ function studentName(student: {
   firstName: string | null;
   lastName: string | null;
 }) {
-  return [student.firstName, student.lastName].filter(Boolean).join(" ") ||
-    "Unnamed student";
+  return (
+    [student.firstName, student.lastName].filter(Boolean).join(" ") ||
+    "Unnamed student"
+  );
 }
 
-function money(value: number, currencyCode: string) {
-  return new Intl.NumberFormat("en-US", {
+function money(
+  value: number,
+  currencyCode: string,
+  locale: "fr" | "en" = "en",
+) {
+  return new Intl.NumberFormat(locale === "fr" ? "fr-HT" : "en-US", {
     style: "currency",
     currency: currencyCode,
   }).format(value);
@@ -135,13 +151,16 @@ export function FinanceCashierClient({
   initialStudentId?: string;
   initialInvoiceId?: string;
 }) {
+  const { locale } = useI18n();
+  const copy = cashierCopy[locale];
+  const PAYMENT_METHOD_LABELS = copy.methods;
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<StudentSearchResult[]>([]);
   const [summary, setSummary] = useState<StudentSummary | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState("");
-  const [enabledPaymentMethods, setEnabledPaymentMethods] = useState<string[]>(
-    ["CASH"],
-  );
+  const [enabledPaymentMethods, setEnabledPaymentMethods] = useState<string[]>([
+    "CASH",
+  ]);
   const [sessionEnvelope, setSessionEnvelope] =
     useState<SessionEnvelope | null>(null);
   const [dailySessions, setDailySessions] = useState<CashierSession[]>([]);
@@ -160,6 +179,11 @@ export function FinanceCashierClient({
   const [error, setError] = useState("");
   const idempotencyKeyRef = useRef("");
   const idempotencyPayloadRef = useRef("");
+  const paymentPendingRef = useRef(false);
+  const studentRequestRef = useRef<AbortController | null>(null);
+  const sessionRequestRef = useRef<AbortController | null>(null);
+  const [sessionReadyCurrency, setSessionReadyCurrency] = useState("");
+  const [paymentUncertain, setPaymentUncertain] = useState(false);
 
   const selectedInvoice = useMemo(
     () =>
@@ -168,7 +192,9 @@ export function FinanceCashierClient({
     [selectedInvoiceId, summary],
   );
   const openSession =
-    sessionEnvelope?.session?.status === "OPEN"
+    sessionEnvelope?.session?.status === "OPEN" &&
+    sessionEnvelope.session.currencyCode === selectedInvoice?.currencyCode &&
+    sessionReadyCurrency === selectedInvoice?.currencyCode
       ? sessionEnvelope.session
       : null;
   const numericAmount = Number(amount);
@@ -199,27 +225,42 @@ export function FinanceCashierClient({
 
   const loadSession = useCallback(
     async (currencyCode: string) => {
+      sessionRequestRef.current?.abort();
+      const controller = new AbortController();
+      sessionRequestRef.current = controller;
+      setSessionReadyCurrency("");
+      setSessionEnvelope(null);
       setBusy("session");
       setError("");
       try {
         const params = new URLSearchParams({ schoolId, currencyCode });
         const response = await fetch(
           `/api/finance/cashier/session?${params.toString()}`,
-          { cache: "no-store" },
+          { cache: "no-store", signal: controller.signal },
         );
         const body = await response.json().catch(() => null);
         if (!response.ok) {
           throw new Error(body?.message ?? "Unable to load cashier session.");
         }
+        if (controller.signal.aborted) return;
+        if (
+          !body ||
+          (body.session && body.session.currencyCode !== currencyCode)
+        )
+          throw new Error(
+            "The cash drawer currency does not match the invoice. Reload the session.",
+          );
         setSessionEnvelope(body);
+        setSessionReadyCurrency(currencyCode);
       } catch (caught) {
+        if (controller.signal.aborted) return;
         setError(
           caught instanceof Error
             ? caught.message
             : "Unable to load cashier session.",
         );
       } finally {
-        setBusy("");
+        if (sessionRequestRef.current === controller) setBusy("");
       }
     },
     [schoolId],
@@ -227,6 +268,19 @@ export function FinanceCashierClient({
 
   const loadStudent = useCallback(
     async (studentId: string, preferredInvoiceId?: string) => {
+      if (paymentPendingRef.current) return;
+      studentRequestRef.current?.abort();
+      sessionRequestRef.current?.abort();
+      const controller = new AbortController();
+      studentRequestRef.current = controller;
+      setSummary(null);
+      setSelectedInvoiceId("");
+      setSessionEnvelope(null);
+      setSessionReadyCurrency("");
+      setReviewing(false);
+      setReference("");
+      setNotes("");
+      setAmount("");
       setBusy("student");
       setError("");
       setMessage("");
@@ -235,12 +289,15 @@ export function FinanceCashierClient({
         const params = new URLSearchParams({ schoolId });
         const response = await fetch(
           `/api/finance/students/${encodeURIComponent(studentId)}/summary?${params.toString()}`,
-          { cache: "no-store" },
+          { cache: "no-store", signal: controller.signal },
         );
         const body = await response.json().catch(() => null);
         if (!response.ok) {
           throw new Error(body?.message ?? "Unable to load student balances.");
         }
+        if (controller.signal.aborted) return;
+        if (body?.student?.id !== studentId || !Array.isArray(body?.invoices))
+          throw new Error("Unable to load student balances.");
         const nextSummary = body as StudentSummary;
         setSummary(nextSummary);
         const receivableInvoices = nextSummary.invoices.filter(
@@ -258,13 +315,14 @@ export function FinanceCashierClient({
           setSessionEnvelope(null);
         }
       } catch (caught) {
+        if (controller.signal.aborted) return;
         setError(
           caught instanceof Error
             ? caught.message
             : "Unable to load student balances.",
         );
       } finally {
-        setBusy("");
+        if (studentRequestRef.current === controller) setBusy("");
       }
     },
     [loadSession, schoolId],
@@ -297,10 +355,23 @@ export function FinanceCashierClient({
     }
   }, [initialInvoiceId, initialStudentId, loadStudent]);
 
+  useEffect(
+    () => () => {
+      studentRequestRef.current?.abort();
+      sessionRequestRef.current?.abort();
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!reviewing) return;
     function confirmWithKeyboard(event: KeyboardEvent) {
-      if (event.ctrlKey && event.key === "Enter") {
+      if (
+        !event.isComposing &&
+        !event.repeat &&
+        (event.ctrlKey || event.metaKey) &&
+        event.key === "Enter"
+      ) {
         event.preventDefault();
         const button = document.querySelector<HTMLButtonElement>(
           '[data-cashier-confirm="true"]',
@@ -312,8 +383,59 @@ export function FinanceCashierClient({
     return () => window.removeEventListener("keydown", confirmWithKeyboard);
   }, [reviewing]);
 
+  useEffect(() => {
+    if (!paymentUncertain && busy !== "payment") return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    const followLink = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.altKey
+      )
+        return;
+      const link =
+        event.target instanceof Element
+          ? event.target.closest<HTMLAnchorElement>("a[href]")
+          : null;
+      if (!link || link.target === "_blank" || link.hasAttribute("download"))
+        return;
+      const destination = new URL(link.href, window.location.href);
+      if (
+        destination.pathname === window.location.pathname &&
+        destination.search === window.location.search
+      )
+        return;
+      if (
+        paymentPendingRef.current ||
+        !window.confirm(
+          locale === "fr"
+            ? "Quitter avec un résultat de paiement incertain ? Vérifiez le registre avant de saisir un nouveau paiement."
+            : "Leave with an uncertain payment result? Check the ledger before entering another payment.",
+        )
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    document.addEventListener("click", followLink, true);
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      document.removeEventListener("click", followLink, true);
+    };
+  }, [paymentUncertain, busy, locale]);
+
   async function searchStudents(event: FormEvent) {
     event.preventDefault();
+    if (busy || reviewing || paymentPendingRef.current || !search.trim())
+      return;
+    setResults([]);
     setBusy("search");
     setError("");
     setMessage("");
@@ -341,6 +463,7 @@ export function FinanceCashierClient({
   }
 
   async function selectInvoice(invoice: Invoice) {
+    if (busy || reviewing || paymentPendingRef.current) return;
     setSelectedInvoiceId(invoice.id);
     setAmount(String(invoice.balanceDue));
     setReference("");
@@ -390,33 +513,57 @@ export function FinanceCashierClient({
   }
 
   function reviewPayment() {
+    if (busy || success || paymentPendingRef.current) return;
     setError("");
     setMessage("");
     if (!selectedInvoice || !summary || !openSession) {
-      setError("Select an invoice and open its cashier session first.");
+      setError(copy.contextError);
       return;
     }
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      setError("Enter a payment amount greater than zero.");
+    const validation = validatePaymentReview({
+      amount,
+      balanceDue: selectedInvoice.balanceDue,
+      invoiceCurrency: selectedInvoice.currencyCode,
+      sessionCurrency: openSession.currencyCode,
+      method,
+      enabledMethods: enabledPaymentMethods,
+      reference,
+    });
+    if (validation === "amount") {
+      setError(copy.amountError);
       return;
     }
-    if (numericAmount > selectedInvoice.balanceDue) {
-      setError("The payment cannot exceed the invoice balance.");
+    if (validation === "overpayment") {
+      setError(copy.overpaymentError);
       return;
     }
-    if (!method) {
-      setError("Select a payment method.");
+    if (validation === "method") {
+      setError(copy.methodError);
       return;
     }
-    if (method !== "CASH" && !reference.trim()) {
-      setError("A reference is required for non-cash payments.");
+    if (validation === "reference") {
+      setError(copy.referenceError);
+      return;
+    }
+    if (validation === "currency") {
+      setError(copy.currencyError);
       return;
     }
     setReviewing(true);
   }
 
   async function confirmPayment() {
-    if (!selectedInvoice || !summary || !openSession) return;
+    if (
+      paymentPendingRef.current ||
+      busy ||
+      !reviewing ||
+      success ||
+      !selectedInvoice ||
+      !summary ||
+      !openSession
+    )
+      return;
+    paymentPendingRef.current = true;
     setBusy("payment");
     setError("");
     try {
@@ -444,9 +591,21 @@ export function FinanceCashierClient({
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
+        setPaymentUncertain(response.status >= 500);
         throw new Error(body?.message ?? "Unable to record payment.");
       }
+      if (
+        typeof body?.paymentId !== "string" ||
+        typeof body?.receiptNumber !== "string" ||
+        body.currencyCode !== selectedInvoice.currencyCode ||
+        !Number.isFinite(body.amount) ||
+        !Number.isFinite(body.invoice?.balanceDue)
+      ) {
+        setPaymentUncertain(true);
+        throw new Error(copy.uncertain);
+      }
       setSuccess(body);
+      setPaymentUncertain(false);
       setReviewing(false);
       setMessage(
         `Payment ${body.paymentNumber} recorded. Receipt ${body.receiptNumber} is ready.`,
@@ -462,7 +621,8 @@ export function FinanceCashierClient({
                   ? {
                       ...invoice,
                       invoiceStatus: body.invoice.invoiceStatus,
-                      amountPaid: body.invoice.amountPaid,
+                      paidAmount:
+                        body.invoice.amountPaid ?? body.invoice.paidAmount,
                       balanceDue: body.invoice.balanceDue,
                     }
                   : invoice,
@@ -475,10 +635,12 @@ export function FinanceCashierClient({
         loadDailySessions(),
       ]);
     } catch (caught) {
+      if (caught instanceof TypeError) setPaymentUncertain(true);
       setError(
         caught instanceof Error ? caught.message : "Unable to record payment.",
       );
     } finally {
+      paymentPendingRef.current = false;
       setBusy("");
     }
   }
@@ -570,6 +732,7 @@ export function FinanceCashierClient({
   }
 
   function resetForNextStudent() {
+    if (paymentPendingRef.current || paymentUncertain) return;
     setSummary(null);
     setResults([]);
     setSearch("");
@@ -584,14 +747,20 @@ export function FinanceCashierClient({
   }
 
   return (
-    <div className="space-y-6">
+    <fieldset disabled={Boolean(busy)} className="min-w-0 space-y-6">
       {message ? (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+        <div
+          role="status"
+          className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+        >
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <div
+          role="alert"
+          className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+        >
           {error}
         </div>
       ) : null}
@@ -600,39 +769,41 @@ export function FinanceCashierClient({
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-              Step 1
+              1
             </div>
             <h2 className="mt-1 text-lg font-semibold text-slate-950">
-              Find the student
+              {copy.findStudent}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Search by name or student code. No record ID entry is required.
-            </p>
+            <p className="mt-1 text-sm text-slate-600">{copy.searchHint}</p>
           </div>
           {summary ? (
             <button
               type="button"
               onClick={resetForNextStudent}
+              disabled={reviewing}
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
             >
-              Next student
+              {copy.nextStudent}
             </button>
           ) : null}
         </div>
         <form onSubmit={searchStudents} className="mt-4 flex gap-2">
           <input
             autoFocus
+            aria-label={copy.studentPlaceholder}
+            disabled={reviewing}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Student name or code"
+            placeholder={copy.studentPlaceholder}
             className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3"
           />
           <button
             type="submit"
-            disabled={busy === "search"}
+            disabled={Boolean(busy) || reviewing || !search.trim()}
             className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {busy === "search" ? "Searching…" : "Search"}
+            <Search aria-hidden="true" className="mr-2 inline h-4 w-4" />
+            {busy === "search" ? copy.searching : copy.search}
           </button>
         </form>
         {results.length ? (
@@ -641,6 +812,7 @@ export function FinanceCashierClient({
               <button
                 key={student.id}
                 type="button"
+                disabled={reviewing}
                 onClick={() => void loadStudent(student.id)}
                 className="flex w-full items-center justify-between gap-4 p-3 text-left hover:bg-slate-50"
               >
@@ -657,7 +829,7 @@ export function FinanceCashierClient({
                   </span>
                 </span>
                 <span className="text-sm font-medium text-blue-700">
-                  Select
+                  {copy.select}
                 </span>
               </button>
             ))}
@@ -668,46 +840,50 @@ export function FinanceCashierClient({
       {summary ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-            Step 2
+            2
           </div>
           <h2 className="mt-1 text-lg font-semibold text-slate-950">
-            Select an outstanding invoice
+            {copy.selectInvoice}
           </h2>
           <div className="mt-1 text-sm text-slate-600">
             {studentName(summary.student)} ·{" "}
             {summary.student.studentCode ?? "Code pending"}
           </div>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
-            {summary.invoices.filter(invoiceCanReceivePayment).map((invoice) => (
-              <button
-                key={invoice.id}
-                type="button"
-                onClick={() => void selectInvoice(invoice)}
-                className={`rounded-2xl border p-4 text-left ${
-                  selectedInvoiceId === invoice.id
-                    ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
-                    : "border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="font-semibold text-slate-950">
-                    {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
-                  </span>
-                  <SchoolBadge>{invoice.invoiceStatus}</SchoolBadge>
-                </div>
-                <div className="mt-3 text-2xl font-bold text-slate-950">
-                  {money(invoice.balanceDue, invoice.currencyCode)}
-                </div>
-                <div className="mt-1 text-xs text-slate-500">
-                  Total {money(invoice.totalAmount, invoice.currencyCode)} · Due{" "}
-                  {invoice.dueDate ?? "not set"}
-                </div>
-              </button>
-            ))}
+            {summary.invoices
+              .filter(invoiceCanReceivePayment)
+              .map((invoice) => (
+                <button
+                  key={invoice.id}
+                  type="button"
+                  onClick={() => void selectInvoice(invoice)}
+                  disabled={reviewing}
+                  aria-pressed={selectedInvoiceId === invoice.id}
+                  className={`rounded-2xl border p-4 text-left ${
+                    selectedInvoiceId === invoice.id
+                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                      : "border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="font-semibold text-slate-950">
+                      {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
+                    </span>
+                    <SchoolBadge>{invoice.invoiceStatus}</SchoolBadge>
+                  </div>
+                  <div className="mt-3 text-2xl font-bold text-slate-950">
+                    {money(invoice.balanceDue, invoice.currencyCode)}
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    Total {money(invoice.totalAmount, invoice.currencyCode)} ·
+                    Due {invoice.dueDate ?? "not set"}
+                  </div>
+                </button>
+              ))}
           </div>
           {!summary.invoices.some(invoiceCanReceivePayment) ? (
             <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
-              This student has no issued invoice with an outstanding balance.
+              {copy.noInvoices}
             </div>
           ) : null}
         </section>
@@ -716,18 +892,16 @@ export function FinanceCashierClient({
       {selectedInvoice ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-            Step 3
+            3
           </div>
           <h2 className="mt-1 text-lg font-semibold text-slate-950">
-            Verify the daily cashier session
+            {copy.verifyDrawer}
           </h2>
           {busy === "session" ? (
-            <div className="mt-4 text-sm text-slate-500">
-              Loading session…
-            </div>
+            <div className="mt-4 text-sm text-slate-500">Loading session…</div>
           ) : sessionEnvelope?.session ? (
             <SessionSummary session={sessionEnvelope.session} />
-          ) : (
+          ) : sessionReadyCurrency === selectedInvoice.currencyCode ? (
             <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <div className="font-medium text-amber-950">
                 Open the {selectedInvoice.currencyCode} cash drawer
@@ -742,9 +916,7 @@ export function FinanceCashierClient({
                   min="0"
                   step="0.01"
                   value={openingCashAmount}
-                  onChange={(event) =>
-                    setOpeningCashAmount(event.target.value)
-                  }
+                  onChange={(event) => setOpeningCashAmount(event.target.value)}
                   className="rounded-xl border border-amber-300 bg-white px-3 py-2"
                   aria-label="Opening cash amount"
                 />
@@ -758,21 +930,55 @@ export function FinanceCashierClient({
                 </button>
               </div>
             </div>
+          ) : (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-amber-800">
+                {copy.currencyUnavailable}
+              </p>
+              <button
+                type="button"
+                onClick={() => void loadSession(selectedInvoice.currencyCode)}
+                className={schoolActionClass()}
+              >
+                {locale === "fr" ? "Réessayer" : "Try again"}
+              </button>
+            </div>
           )}
         </section>
       ) : null}
 
-      {selectedInvoice && openSession && summary ? (
+      {selectedInvoice && openSession && summary && !reviewing && !success ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-            Step 4
+            4
           </div>
           <h2 className="mt-1 text-lg font-semibold text-slate-950">
-            Enter and review the payment
+            {copy.enterPayment}
           </h2>
+          <div className="mt-3 flex flex-wrap gap-4 rounded-xl bg-slate-50 p-3 text-sm">
+            <span>
+              {copy.balance}:{" "}
+              <strong>
+                {money(
+                  selectedInvoice.balanceDue,
+                  selectedInvoice.currencyCode,
+                  locale,
+                )}
+              </strong>
+            </span>
+            <span>
+              {copy.afterPayment}:{" "}
+              <strong>
+                {money(resultingBalance, selectedInvoice.currencyCode, locale)}
+              </strong>
+            </span>
+            <span className="font-semibold">
+              {selectedInvoice.currencyCode}
+            </span>
+          </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <label className="text-sm font-medium text-slate-700">
-              Amount ({selectedInvoice.currencyCode})
+              {copy.amount} ({selectedInvoice.currencyCode})
               <input
                 type="number"
                 min="0.01"
@@ -790,7 +996,7 @@ export function FinanceCashierClient({
               />
             </label>
             <label className="text-sm font-medium text-slate-700">
-              Payment method
+              {copy.method}
               <select
                 value={method}
                 onChange={(event) => setMethod(event.target.value)}
@@ -804,16 +1010,19 @@ export function FinanceCashierClient({
               </select>
             </label>
             <label className="text-sm font-medium text-slate-700">
-              Reference {method === "CASH" ? "(optional)" : "(required)"}
+              {copy.reference} (
+              {method === "CASH" ? copy.optional : copy.required})
               <input
+                maxLength={200}
                 value={reference}
                 onChange={(event) => setReference(event.target.value)}
                 className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
               />
             </label>
             <label className="text-sm font-medium text-slate-700">
-              Notes (optional)
+              {copy.notes} ({copy.optional})
               <input
+                maxLength={2000}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
@@ -823,9 +1032,10 @@ export function FinanceCashierClient({
           <button
             type="button"
             onClick={reviewPayment}
-            className="mt-5 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white"
+            className={"mt-5 " + schoolActionClass("primary")}
           >
-            Review payment
+            <CreditCard aria-hidden="true" className="h-4 w-4" />
+            {copy.review}
           </button>
         </section>
       ) : null}
@@ -833,33 +1043,53 @@ export function FinanceCashierClient({
       {reviewing && selectedInvoice && summary && openSession ? (
         <section className="rounded-2xl border-2 border-blue-500 bg-blue-50 p-5">
           <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
-            Step 5 · Final confirmation
+            5 · {copy.confirmation}
           </div>
           <h2 className="mt-1 text-xl font-semibold text-slate-950">
-            Confirm before posting
+            {copy.confirmTitle}
           </h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <ReviewItem label="Student" value={studentName(summary.student)} />
             <ReviewItem
-              label="Student code"
+              label={copy.student}
+              value={studentName(summary.student)}
+            />
+            <ReviewItem
+              label={copy.studentCode}
               value={summary.student.studentCode ?? "Code pending"}
             />
             <ReviewItem
-              label="Invoice"
+              label={copy.invoice}
               value={selectedInvoice.invoiceNumber ?? selectedInvoice.id}
             />
             <ReviewItem
-              label="Payment"
-              value={money(numericAmount, selectedInvoice.currencyCode)}
+              label={copy.payment}
+              value={money(numericAmount, selectedInvoice.currencyCode, locale)}
             />
             <ReviewItem
-              label="Method"
+              label={copy.method}
               value={PAYMENT_METHOD_LABELS[method] ?? method}
             />
             <ReviewItem
-              label="Resulting balance"
-              value={money(resultingBalance, selectedInvoice.currencyCode)}
+              label={copy.afterPayment}
+              value={money(
+                resultingBalance,
+                selectedInvoice.currencyCode,
+                locale,
+              )}
             />
+            <ReviewItem
+              label={copy.currency}
+              value={selectedInvoice.currencyCode}
+            />
+            <ReviewItem
+              label={copy.paymentDate}
+              value={openSession.businessDate}
+            />
+            <ReviewItem
+              label={copy.reference}
+              value={reference.trim() || "—"}
+            />
+            <ReviewItem label={copy.notes} value={notes.trim() || "—"} />
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
             <button
@@ -869,34 +1099,38 @@ export function FinanceCashierClient({
               disabled={busy === "payment"}
               className="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {busy === "payment" ? "Posting…" : "Confirm and post payment"}
+              {busy === "payment" ? copy.posting : copy.confirm}
             </button>
             <button
               type="button"
               onClick={() => setReviewing(false)}
+              disabled={paymentUncertain}
               className="rounded-xl border border-blue-300 bg-white px-5 py-3 text-sm font-medium"
             >
-              Go back
+              {copy.back}
             </button>
           </div>
-          <p className="mt-3 text-xs text-blue-800">
-            Keyboard: Ctrl + Enter confirms this reviewed payment.
-          </p>
+          <p className="mt-3 text-xs text-blue-800">{copy.shortcut}</p>
+          {paymentUncertain ? (
+            <p role="status" className="mt-3 text-sm text-amber-900">
+              {copy.uncertain}
+            </p>
+          ) : null}
         </section>
       ) : null}
 
       {success ? (
         <section className="rounded-2xl border border-green-300 bg-green-50 p-5">
           <div className="text-xs font-semibold uppercase tracking-wider text-green-700">
-            Step 6 · Complete
+            6 · {copy.complete}
           </div>
           <h2 className="mt-1 text-xl font-semibold text-green-950">
             Receipt {success.receiptNumber} is ready
           </h2>
           <p className="mt-2 text-sm text-green-800">
-            {money(success.amount, success.currencyCode)} was posted once.
-            Remaining balance:{" "}
-            {money(success.invoice.balanceDue, success.currencyCode)}.
+            <CheckCircle2 aria-hidden="true" className="mr-1 inline h-4 w-4" />
+            {money(success.amount, success.currencyCode)} recorded. Remaining
+            balance: {money(success.invoice.balanceDue, success.currencyCode)}.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
@@ -905,7 +1139,8 @@ export function FinanceCashierClient({
               disabled={busy === "print"}
               className="rounded-xl bg-green-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
             >
-              Print 80mm receipt
+              <Printer aria-hidden="true" className="mr-1 inline h-4 w-4" />
+              {copy.printThermal}
             </button>
             <button
               type="button"
@@ -913,26 +1148,38 @@ export function FinanceCashierClient({
               disabled={busy === "print"}
               className="rounded-xl border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-900"
             >
-              Print A4 receipt
+              {copy.printA4}
             </button>
             <Link
               href={`/finance/payments/${success.paymentId}/receipt`}
               className="rounded-xl border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-900"
             >
-              Open receipt
+              {copy.openReceipt}
             </Link>
             <button
               type="button"
               onClick={resetForNextStudent}
               className="rounded-xl border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-900"
             >
-              Next student
+              {copy.nextStudent}
             </button>
+            {success.invoice.balanceDue > 0 && summary ? (
+              <button
+                type="button"
+                onClick={() =>
+                  void loadStudent(summary.student.id, selectedInvoiceId)
+                }
+                className={schoolActionClass()}
+              >
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                {copy.anotherPayment}
+              </button>
+            ) : null}
           </div>
         </section>
       ) : null}
 
-      {openSession ? (
+      {openSession && !reviewing ? (
         <section className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white">
           <h2 className="text-lg font-semibold">Close this cash drawer</h2>
           <p className="mt-1 text-sm text-slate-300">
@@ -971,7 +1218,7 @@ export function FinanceCashierClient({
         </section>
       ) : null}
 
-      {sessionEnvelope?.canSupervise && dailySessions.length ? (
+      {sessionEnvelope?.canSupervise && dailySessions.length && !reviewing ? (
         <section className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="text-lg font-semibold text-slate-950">
             Supervisor · today’s cashier sessions
@@ -995,10 +1242,12 @@ export function FinanceCashierClient({
                       {money(session.collectionTotal, session.currencyCode)}
                       {session.refundCount > 0 ? (
                         <>
-                          {" "}· {session.refundCount} refund(s) totaling{" "}
+                          {" "}
+                          · {session.refundCount} refund(s) totaling{" "}
                           {money(session.refundTotal, session.currencyCode)}
                         </>
-                      ) : null}                    </div>
+                      ) : null}{" "}
+                    </div>
                   </div>
                   <SchoolBadge>{session.status}</SchoolBadge>
                 </div>
@@ -1006,8 +1255,8 @@ export function FinanceCashierClient({
                   <div className="mt-3">
                     <div className="text-sm text-slate-600">
                       Expected{" "}
-                      {money(session.expectedCashAmount, session.currencyCode)} ·
-                      Counted{" "}
+                      {money(session.expectedCashAmount, session.currencyCode)}{" "}
+                      · Counted{" "}
                       {money(
                         session.closingCashAmount ?? 0,
                         session.currencyCode,
@@ -1056,7 +1305,7 @@ export function FinanceCashierClient({
           </div>
         </section>
       ) : null}
-    </div>
+    </fieldset>
   );
 }
 
@@ -1103,10 +1352,9 @@ function SessionSummary({ session }: { session: CashierSession }) {
               {PAYMENT_METHOD_LABELS[item.paymentMethod] ?? item.paymentMethod}:{" "}
               net {money(item.totalAmount, session.currencyCode)} (
               {item.paymentCount} payment(s)
-              {item.refundCount > 0
-                ? `, ${item.refundCount} refund(s)`
-                : ""}
-              )            </span>
+              {item.refundCount > 0 ? `, ${item.refundCount} refund(s)` : ""}
+              ){" "}
+            </span>
           ))}
         </div>
       ) : null}
@@ -1119,4 +1367,3 @@ function SessionSummary({ session }: { session: CashierSession }) {
     </div>
   );
 }
-

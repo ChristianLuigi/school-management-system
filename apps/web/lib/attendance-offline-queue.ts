@@ -23,6 +23,9 @@ export type QueuedAttendanceSubmission = {
 };
 
 const STORAGE_KEY = "school_attendance_offline_queue";
+// Browser-local recovery data, not an authoritative attendance ledger. This key
+// is shared in the browser: replay must always be authorized by the current API
+// session, and shared-device/privacy cleanup needs explicit operational review.
 export const ATTENDANCE_QUEUE_UPDATED_EVENT = "attendance-queue-updated";
 
 function safeRandomId() {
@@ -118,6 +121,8 @@ export function clearAttendanceQueue() {
 }
 
 export async function syncQueuedAttendanceSubmissions() {
+  // Remove only successful submissions; retain failures for an explicit retry.
+  // A locally queued record must never be presented as server-confirmed attendance.
   const queue = getQueuedAttendanceSubmissions();
 
   const results: Array<{

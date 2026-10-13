@@ -611,6 +611,8 @@ export class StaffManagementService {
   }
 
   async importStaff(dto: PreviewStaffImportDto, actorUserId: string) {
+    // Recompute the preview server-side; never trust a browser's earlier
+    // validation result. Administrator access is checked again inside the write.
     const preview = await this.previewStaffImport(dto, actorUserId);
     if (!preview.readyForImport) {
       throw new BadRequestException(

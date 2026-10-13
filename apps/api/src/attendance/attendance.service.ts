@@ -809,6 +809,8 @@ export class AttendanceService {
     };
   }
 
+  // Offline replay enters this same validation path as a live submission;
+  // cached student IDs and the supplied school must not be trusted implicitly.
   async submitAttendanceSession(
     dto: SubmitAttendanceSessionDto,
     actorUserId: string,
@@ -905,6 +907,7 @@ export class AttendanceService {
           taken_by_user_id = EXCLUDED.taken_by_user_id,
           submitted_at = NOW(),
           updated_at = NOW()
+        WHERE attendance_sessions.status IS DISTINCT FROM 'LOCKED'
         RETURNING id
         `,
         [
@@ -916,6 +919,11 @@ export class AttendanceService {
         ],
       );
 
+      if (!sessionResult.rows[0]) {
+        throw new ForbiddenException(
+          'Locked attendance sessions cannot be changed.',
+        );
+      }
       const sessionId = sessionResult.rows[0].id;
 
       for (const record of dto.records) {

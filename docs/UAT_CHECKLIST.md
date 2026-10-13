@@ -2,6 +2,8 @@
 
 Record environment, image digests, migration verification output, browser/OS, tester, UTC timestamp, evidence link, result, and defect ID for every failed item. Use two schools (A and B) with distinct data. Never use production student data in UAT.
 
+For staff usability testing of enrollment, attendance and payments, run [UX7_USER_TESTING.md](UX7_USER_TESTING.md) and record observations/sign-off in [UX7_RESULTS.md](UX7_RESULTS.md). These sessions complement the authorization checks below.
+
 ## Preconditions
 
 - [ ] HTTPS certificate valid; HTTP redirects to HTTPS.

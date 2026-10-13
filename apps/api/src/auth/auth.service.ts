@@ -471,6 +471,8 @@ export class AuthService {
   }
 
   async requireSession(authorization?: string) {
+    // Authentication establishes identity, not access to a requested school or
+    // record. Controllers/services must still enforce membership and scope.
     const rawToken = this.bearer(authorization);
     if (!this.tokens.isPlausible(rawToken))
       throw new UnauthorizedException('Authentication required.');
@@ -498,6 +500,8 @@ export class AuthService {
       [this.tokens.hash(rawToken)],
     );
     const session = result.rows[0];
+    // Compare the stored session version with the account's current version:
+    // password/access changes invalidate older sessions even before expiry.
     const invalid =
       !session ||
       session.account_status !== 'ACTIVE' ||
@@ -518,6 +522,8 @@ export class AuthService {
       throw new UnauthorizedException('Authentication required.');
     }
     if (session.last_seen_at.getTime() < Date.now() - 300_000) {
+      // Throttle activity writes; sliding idle expiry must never extend the
+      // absolute lifetime originally granted to the session.
       await this.db.query(
         `
         UPDATE auth_sessions SET last_seen_at=NOW(),

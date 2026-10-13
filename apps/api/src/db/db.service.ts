@@ -51,6 +51,8 @@ export class DbService implements OnModuleDestroy {
   async withTransaction<T>(
     callback: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
+    // Every query in the callback must use this client. Calling db.query there
+    // uses the pool and may execute outside the transaction on another connection.
     const client = await this.pool.connect();
 
     try {

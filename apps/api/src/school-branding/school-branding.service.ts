@@ -6,6 +6,7 @@ import {
 import { DbService } from '../db/db.service';
 import { PlatformActivityService } from '../platform-activity/platform-activity.service';
 import { UpdateSchoolBrandingDto } from './dto/update-school-branding.dto';
+import { validateSchoolLogo } from './logo-policy';
 
 @Injectable()
 export class SchoolBrandingService {
@@ -92,6 +93,9 @@ export class SchoolBrandingService {
       name: string;
       code: string;
       logo_url: string | null;
+      primary_color: string;
+      accent_color: string;
+      default_theme: 'light' | 'dark' | 'system';
       address_line1: string | null;
       address_line2: string | null;
       city: string | null;
@@ -109,6 +113,9 @@ export class SchoolBrandingService {
         name,
         code,
         logo_url,
+        primary_color,
+        accent_color,
+        default_theme,
         address_line1,
         address_line2,
         city,
@@ -138,6 +145,9 @@ export class SchoolBrandingService {
       name: row.name,
       code: row.code,
       logoUrl: row.logo_url,
+      primaryColor: row.primary_color,
+      accentColor: row.accent_color,
+      defaultTheme: row.default_theme,
       addressLine1: row.address_line1,
       addressLine2: row.address_line2,
       city: row.city,
@@ -161,6 +171,7 @@ export class SchoolBrandingService {
       dto.schoolId,
       platformRole,
     );
+    validateSchoolLogo(dto.logoUrl);
 
     const result = await this.db.query(
       `
@@ -178,6 +189,9 @@ export class SchoolBrandingService {
         report_card_footer_i18n = COALESCE($11::jsonb, report_card_footer_i18n),
         branding_updated_by_user_id = $12,
         branding_updated_at = NOW(),
+        primary_color = COALESCE($13, primary_color),
+        accent_color = COALESCE($14, accent_color),
+        default_theme = COALESCE($15, default_theme),
         updated_at = NOW()
       WHERE id = $1
         AND deleted_at IS NULL
@@ -200,6 +214,9 @@ export class SchoolBrandingService {
           ? JSON.stringify(dto.reportCardFooterI18n)
           : null,
         actorUserId,
+        dto.primaryColor ?? null,
+        dto.accentColor ?? null,
+        dto.defaultTheme ?? null,
       ],
     );
 
@@ -219,5 +236,43 @@ export class SchoolBrandingService {
     });
 
     return this.getBranding(dto.schoolId, actorUserId, platformRole);
+  }
+
+  async getAppearance(
+    schoolId: string,
+    actorUserId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+  ) {
+    if (platformRole === 'SUPER_ADMIN')
+      await this.assertUserCanManageBranding(
+        actorUserId,
+        schoolId,
+        platformRole,
+      );
+    else {
+      const membership = await this.db.query(
+        `SELECT id FROM school_memberships WHERE school_id = $1 AND user_id = $2 AND membership_status = 'ACTIVE' AND deleted_at IS NULL LIMIT 1`,
+        [schoolId, actorUserId],
+      );
+      if (!membership.rows[0])
+        throw new ForbiddenException('Active school membership required.');
+    }
+    const result = await this.db.query<{
+      logo_url: string | null;
+      primary_color: string;
+      accent_color: string;
+      default_theme: 'light' | 'dark' | 'system';
+    }>(
+      `SELECT logo_url, primary_color, accent_color, default_theme FROM schools WHERE id = $1 AND deleted_at IS NULL`,
+      [schoolId],
+    );
+    const row = result.rows[0];
+    if (!row) throw new NotFoundException('School not found.');
+    return {
+      logoUrl: row.logo_url,
+      primaryColor: row.primary_color,
+      accentColor: row.accent_color,
+      defaultTheme: row.default_theme,
+    };
   }
 }

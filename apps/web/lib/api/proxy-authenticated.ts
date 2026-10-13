@@ -5,6 +5,9 @@ import { getRequestId } from "@/lib/api/request-id";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
 
+// Server-side relay: the HttpOnly session cookie becomes an upstream bearer
+// header, never a token returned to client JavaScript. API scope checks remain
+// mandatory even when this relay has accepted the cookie and request origin.
 export async function proxyAuthenticated(
   request: NextRequest,
   input: { path: string; method: "GET"|"POST"|"PUT"|"PATCH"|"DELETE" },
@@ -17,6 +20,8 @@ export async function proxyAuthenticated(
   const token=request.cookies.get(getSessionCookieName())?.value;
   if(!token) return NextResponse.json({message:"Authentication required."},{status:401});
   const idempotencyKey = request.headers.get("idempotency-key");
+  // Forward the original key unchanged so a financial retry reaches the API's
+  // existing replay record rather than creating a new operation.
   const upstream=await fetch(`${API_BASE_URL}${input.path}`,{
     method:input.method,
     headers:{

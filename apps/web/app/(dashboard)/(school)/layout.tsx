@@ -48,10 +48,12 @@ export default async function SchoolWorkspaceLayout({
 
   return (
     <AppShell
+      schoolId={currentSchoolId}
+      userId={context.user.id}
       navigation={getSchoolNavigation(roles, locale).filter(
         (item) => !operatorAccess || item.href !== "/my-staff-profile",
       )}
-      workspaceLabel="School workspace"
+      workspaceLabel={locale === "fr" ? "Espace école" : "School workspace"}
       workspaceName={schoolName}
       workspaceCode={schoolCode}
       user={{ name: userName, email: context.user.email }}
@@ -60,8 +62,16 @@ export default async function SchoolWorkspaceLayout({
           {context.isSuperAdmin && operatorAccess ? (
             <Link
               href={`/platform/schools/${currentSchoolId}`}
-              aria-label="Return to Super Admin"
-              title="Return to Super Admin"
+              aria-label={
+                locale === "fr"
+                  ? "Retour au Super Admin"
+                  : "Return to Super Admin"
+              }
+              title={
+                locale === "fr"
+                  ? "Retour au Super Admin"
+                  : "Return to Super Admin"
+              }
               className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted"
             >
               <ArrowLeft aria-hidden="true" size={16} />
@@ -83,7 +93,9 @@ export default async function SchoolWorkspaceLayout({
             role="status"
             className="mb-6 rounded-lg border border-warning bg-warning-subtle p-4 text-sm font-medium text-foreground"
           >
-            You are managing this school as a platform operator.
+            {locale === "fr"
+              ? "Vous gérez cette école en tant qu’opérateur de la plateforme."
+              : "You are managing this school as a platform operator."}
           </div>
         ) : undefined
       }

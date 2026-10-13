@@ -704,6 +704,8 @@ export class InvitationsService {
   }
 
   async acceptInvitationForExistingUser(rawToken: string, actorUserId: string) {
+    // Linking an existing account requires its normalized email to match the
+    // invitation. A valid token alone must not attach another person's account.
     return this.db.withTransaction(async (client) => {
       const invitation = await this.invitationByHash(
         this.tokens.hash(rawToken),

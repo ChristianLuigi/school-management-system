@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -81,6 +81,7 @@ export function StudentGuardiansPanelClient({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const savingRef = useRef(false);
 
   const editingGuardian = guardians.find(
     (guardian) => guardian.studentGuardianId === editingId,
@@ -123,6 +124,8 @@ export function StudentGuardiansPanelClient({
   }
 
   async function saveGuardian() {
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     setMessage("");
     setError("");
@@ -178,6 +181,7 @@ export function StudentGuardiansPanelClient({
         caught instanceof Error ? caught.message : "Failed to save guardian.",
       );
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
@@ -204,6 +208,7 @@ export function StudentGuardiansPanelClient({
         <button
           type="button"
           onClick={startAdd}
+          disabled={saving || open}
           className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
         >
           <Plus className="h-4 w-4" />
@@ -212,12 +217,18 @@ export function StudentGuardiansPanelClient({
       </div>
 
       {message ? (
-        <div className="mx-5 mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div
+          role="status"
+          className="mx-5 mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+        >
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="mx-5 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mx-5 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
           {error}
         </div>
       ) : null}
@@ -229,198 +240,208 @@ export function StudentGuardiansPanelClient({
       ) : null}
 
       {open ? (
-        <div className="m-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 font-semibold text-slate-900">
-              <UserRound className="h-4 w-4 text-blue-700" />
-              {editingId ? "Edit guardian" : "New guardian"}
-            </div>
-            <button
-              type="button"
-              onClick={closeForm}
-              aria-label="Close guardian form"
-              className="rounded-lg p-1.5 text-slate-500 hover:bg-white"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="md:col-span-2">
-              <FieldLabel>Full name *</FieldLabel>
-              <input
-                autoFocus
-                maxLength={200}
-                value={form.fullName}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    fullName: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
-              />
-            </label>
-            <label>
-              <FieldLabel>Relationship</FieldLabel>
-              <select
-                value={form.relationship}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    relationship: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveGuardian();
+          }}
+          className="m-5 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+        >
+          <fieldset disabled={saving}>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 font-semibold text-slate-900">
+                <UserRound className="h-4 w-4 text-blue-700" />
+                {editingId ? "Edit guardian" : "New guardian"}
+              </div>
+              <button
+                type="button"
+                onClick={closeForm}
+                aria-label="Close guardian form"
+                className="rounded-lg p-1.5 text-slate-500 hover:bg-white"
               >
-                <option value="MOTHER">Mother</option>
-                <option value="FATHER">Father</option>
-                <option value="TUTOR">Guardian</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </label>
-            <label>
-              <FieldLabel>Profession</FieldLabel>
-              <input
-                maxLength={160}
-                value={form.profession}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    profession: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
-              />
-            </label>
-            <label>
-              <FieldLabel>Primary phone</FieldLabel>
-              <input
-                type="tel"
-                maxLength={50}
-                value={form.phonePrimary}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    phonePrimary: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
-              />
-            </label>
-            <label>
-              <FieldLabel>Secondary phone</FieldLabel>
-              <input
-                type="tel"
-                maxLength={50}
-                value={form.phoneSecondary}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    phoneSecondary: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
-              />
-            </label>
-            <label className="md:col-span-2">
-              <FieldLabel>Email</FieldLabel>
-              <input
-                type="email"
-                maxLength={255}
-                value={form.email}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
-              />
-            </label>
-            <label className="md:col-span-2">
-              <FieldLabel>Address</FieldLabel>
-              <textarea
-                rows={2}
-                maxLength={500}
-                value={form.address}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    address: event.target.value,
-                  }))
-                }
-                className="w-full resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
-              />
-            </label>
-          </div>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            {[
-              {
-                key: "isPrimaryContact",
-                label: "Primary",
-                disabled:
-                  Boolean(editingGuardian?.isPrimaryContact) ||
-                  (!editingId && guardians.length === 0),
-                icon: UserRound,
-              },
-              {
-                key: "isEmergencyContact",
-                label: "Emergency",
-                disabled: false,
-                icon: ShieldCheck,
-              },
-              {
-                key: "isAuthorizedPickup",
-                label: "Pickup",
-                disabled: false,
-                icon: Check,
-              },
-            ].map((option) => {
-              const Icon = option.icon;
-              const checked = form[option.key as keyof typeof form] as boolean;
-              return (
-                <label
-                  key={option.key}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="md:col-span-2">
+                <FieldLabel>Full name *</FieldLabel>
+                <input
+                  autoFocus
+                  required
+                  maxLength={200}
+                  value={form.fullName}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      fullName: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                />
+              </label>
+              <label>
+                <FieldLabel>Relationship</FieldLabel>
+                <select
+                  value={form.relationship}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      relationship: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
                 >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={option.disabled}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        [option.key]: event.target.checked,
-                      }))
-                    }
-                  />
-                  <Icon className="h-4 w-4 text-slate-400" />
-                  {option.label}
-                </label>
-              );
-            })}
-          </div>
+                  <option value="MOTHER">Mother</option>
+                  <option value="FATHER">Father</option>
+                  <option value="TUTOR">Guardian</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </label>
+              <label>
+                <FieldLabel>Profession</FieldLabel>
+                <input
+                  maxLength={160}
+                  value={form.profession}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      profession: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                />
+              </label>
+              <label>
+                <FieldLabel>Primary phone</FieldLabel>
+                <input
+                  type="tel"
+                  maxLength={50}
+                  value={form.phonePrimary}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      phonePrimary: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                />
+              </label>
+              <label>
+                <FieldLabel>Secondary phone</FieldLabel>
+                <input
+                  type="tel"
+                  maxLength={50}
+                  value={form.phoneSecondary}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      phoneSecondary: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                />
+              </label>
+              <label className="md:col-span-2">
+                <FieldLabel>Email</FieldLabel>
+                <input
+                  type="email"
+                  maxLength={255}
+                  value={form.email}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      email: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                />
+              </label>
+              <label className="md:col-span-2">
+                <FieldLabel>Address</FieldLabel>
+                <textarea
+                  rows={2}
+                  maxLength={500}
+                  value={form.address}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      address: event.target.value,
+                    }))
+                  }
+                  className="w-full resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                />
+              </label>
+            </div>
 
-          <div className="mt-5 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={closeForm}
-              className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-white"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void saveGuardian()}
-              className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-            >
-              {saving ? "Saving…" : "Save guardian"}
-            </button>
-          </div>
-        </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {[
+                {
+                  key: "isPrimaryContact",
+                  label: "Primary",
+                  disabled:
+                    Boolean(editingGuardian?.isPrimaryContact) ||
+                    (!editingId && guardians.length === 0),
+                  icon: UserRound,
+                },
+                {
+                  key: "isEmergencyContact",
+                  label: "Emergency",
+                  disabled: false,
+                  icon: ShieldCheck,
+                },
+                {
+                  key: "isAuthorizedPickup",
+                  label: "Pickup",
+                  disabled: false,
+                  icon: Check,
+                },
+              ].map((option) => {
+                const Icon = option.icon;
+                const checked = form[
+                  option.key as keyof typeof form
+                ] as boolean;
+                return (
+                  <label
+                    key={option.key}
+                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={option.disabled}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          [option.key]: event.target.checked,
+                        }))
+                      }
+                    />
+                    <Icon className="h-4 w-4 text-slate-400" />
+                    {option.label}
+                  </label>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeForm}
+                className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                {saving ? "Saving…" : "Save guardian"}
+              </button>
+            </div>
+          </fieldset>
+        </form>
       ) : null}
 
       <div className="grid gap-3 p-5 md:grid-cols-2">
@@ -442,6 +463,7 @@ export function StudentGuardiansPanelClient({
               <button
                 type="button"
                 onClick={() => startEdit(guardian)}
+                disabled={saving || open}
                 aria-label={`Edit ${guardian.fullName}`}
                 title="Edit guardian"
                 className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"

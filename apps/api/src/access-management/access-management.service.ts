@@ -79,6 +79,9 @@ export class AccessManagementService {
     userId: string,
     reason: string,
   ) {
+    // Use the caller's transaction so scope changes and session invalidation
+    // commit together. This intentionally revokes all sessions for the user,
+    // including sessions used in another school; it does not suspend the account.
     await client.query(
       `UPDATE users SET authentication_version=authentication_version+1,updated_at=NOW() WHERE id=$1`,
       [userId],

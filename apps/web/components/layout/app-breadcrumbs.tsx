@@ -18,6 +18,9 @@ type BreadcrumbItem = {
 const ROUTE_LABELS = {
   en: {
     actions: "Actions",
+    new: "New record",
+    staff: "Staff",
+    approvals: "Approvals",
     activity: "Activity",
     billing: "Billing plans",
     cashier: "Cashier",
@@ -40,6 +43,9 @@ const ROUTE_LABELS = {
   },
   fr: {
     actions: "Actions",
+    new: "Nouveau dossier",
+    staff: "Personnel",
+    approvals: "Approbations",
     activity: "Activité",
     billing: "Plans de facturation",
     cashier: "Caisse",
@@ -72,6 +78,7 @@ const DYNAMIC_LABELS = {
     payments: "Payment details",
     runs: "Payroll run",
     schools: "School details",
+    staff: "Staff record",
     students: "Student profile",
     fallback: "Details",
   },
@@ -84,16 +91,13 @@ const DYNAMIC_LABELS = {
     payments: "Détails du paiement",
     runs: "Cycle de paie",
     schools: "Détails de l’école",
+    staff: "Dossier du personnel",
     students: "Profil de l’élève",
     fallback: "Détails",
   },
 } as const;
 
-const NON_LINKABLE_DYNAMIC_PARENTS = new Set([
-  "batches",
-  "items",
-  "payments",
-]);
+const NON_LINKABLE_DYNAMIC_PARENTS = new Set(["batches", "items", "payments"]);
 const STRUCTURAL_SEGMENTS = new Set([
   "batches",
   "cards",
@@ -110,8 +114,7 @@ function normalizePath(pathname: string) {
 
 function isDynamicSegment(segment: string) {
   return (
-    /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(segment) ||
-    /^[0-9]+$/.test(segment)
+    /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(segment) || /^[0-9]+$/.test(segment)
   );
 }
 

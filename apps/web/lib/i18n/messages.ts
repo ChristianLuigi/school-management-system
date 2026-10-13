@@ -1,5 +1,15 @@
 export const messages = {
   fr: {
+    login: {
+      title: "Connexion", description: "Accédez à votre espace scolaire sécurisé.",
+      email: "Adresse électronique", password: "Mot de passe", submit: "Se connecter", submitting: "Connexion…",
+      forgot: "Mot de passe oublié ?", showPassword: "Afficher le mot de passe", hidePassword: "Masquer le mot de passe",
+      invalid: "Adresse électronique ou mot de passe incorrect.", unavailable: "Connexion impossible. Réessayez dans un instant.",
+      activated: "Votre compte a été activé. Vous pouvez maintenant vous connecter.",
+      membershipAdded: "Votre nouvelle école a été ajoutée. Reconnectez-vous pour continuer.",
+      reset: "Votre mot de passe a été réinitialisé. Les anciennes sessions ont été fermées.",
+      invitationMissing: "Le lien d’invitation n’est plus disponible. Ouvrez à nouveau le courriel reçu.",
+    },
     common: {
       appName: "ALMAC School Management",
       loading: "Chargement...",
@@ -40,12 +50,14 @@ export const messages = {
     auth: {
       forgotPassword: {
         title: "Mot de passe oublié",
-        description: "Entrez votre adresse électronique. Si un compte admissible existe, vous recevrez les instructions de réinitialisation.",
+        description:
+          "Entrez votre adresse électronique. Si un compte admissible existe, vous recevrez les instructions de réinitialisation.",
         email: "Adresse électronique",
         submit: "Envoyer les instructions",
         submitting: "Envoi...",
         successTitle: "Vérifiez votre messagerie",
-        successMessage: "Si un compte admissible existe pour cette adresse, un courriel de réinitialisation sera envoyé.",
+        successMessage:
+          "Si un compte admissible existe pour cette adresse, un courriel de réinitialisation sera envoyé.",
         backToLogin: "Retour à la connexion",
         requestFailed: "Impossible de traiter la demande.",
       },
@@ -57,7 +69,8 @@ export const messages = {
         account: "Compte",
         password: "Nouveau mot de passe",
         confirmPassword: "Confirmer le mot de passe",
-        passwordHint: "Utilisez au moins 15 caractères. Les espaces sont autorisés.",
+        passwordHint:
+          "Utilisez au moins 15 caractères. Les espaces sont autorisés.",
         submit: "Réinitialiser le mot de passe",
         submitting: "Réinitialisation...",
         mismatch: "Les mots de passe ne correspondent pas.",
@@ -92,7 +105,8 @@ export const messages = {
       quickActions: "Actions rapides",
       quickActionsDescription: "Raccourcis utiles pour cet espace.",
       operationalAttention: "Points d'attention",
-      operationalAttentionDescription: "Éléments à vérifier avant de continuer.",
+      operationalAttentionDescription:
+        "Éléments à vérifier avant de continuer.",
     },
 
     dashboard: {
@@ -103,9 +117,11 @@ export const messages = {
       sessionRecordsNote: "Relevés par séance, pas élèves uniques.",
       noSectionData: "Aucune section à afficher pour l’année sélectionnée.",
       noAttendanceData: "Aucune présence enregistrée pour cette date.",
-      chartUnavailable: "Graphique indisponible. Vérifiez vos accès ou actualisez.",
+      chartUnavailable:
+        "Graphique indisponible. Vérifiez vos accès ou actualisez.",
       financeSnapshot: "Situation financière",
-      currencyScaleNote: "Échelle indépendante pour chaque devise. Montants cumulés, sans conversion.",
+      currencyScaleNote:
+        "Échelle indépendante pour chaque devise. Montants cumulés, sans conversion.",
       atAGlance: "Votre école en un coup d’œil.",
       addStudent: "Ajouter un élève",
       registeredToReview: "Élèves inscrits à vérifier",
@@ -118,7 +134,8 @@ export const messages = {
       workspaces: "Espaces de travail",
       financeByCurrency: "Soldes, encaissements et suivi par devise.",
       loadFailed: "Impossible de charger le tableau de bord. Réessayez.",
-      refreshFailed: "Actualisation impossible. Les derniers chiffres affichés sont conservés.",
+      refreshFailed:
+        "Actualisation impossible. Les derniers chiffres affichés sont conservés.",
       updated: "Tableau de bord actualisé.",
       title: "Tableau de bord",
       description:
@@ -143,7 +160,8 @@ export const messages = {
       setup: "Configuration",
       structureSectionsSubjects: "Structure, sections et matières",
       schoolDashboard: "Tableau de bord de l'école",
-      liveOperationalSummary: "Résumé opérationnel en direct pour l'école active.",
+      liveOperationalSummary:
+        "Résumé opérationnel en direct pour l'école active.",
       demoFlows: "Flux principaux de démonstration",
       demoFlowsDescription:
         "Chaque flux majeur est accessible en un clic depuis ce tableau de bord.",
@@ -251,7 +269,8 @@ export const messages = {
       advancedManualDescription:
         "Utilisez ces contrôles pour ajuster manuellement les classes, sections ou capacités générées.",
       configureAcademicDivisions: "Configurer les divisions académiques",
-      selectOfferedLevels: "Sélectionnez seulement les niveaux offerts par cette école.",
+      selectOfferedLevels:
+        "Sélectionnez seulement les niveaux offerts par cette école.",
       createSelectedStructure: "Créer la structure sélectionnée",
       creating: "Création...",
       manualGradeLevelsAndSections: "Classes et sections manuelles",
@@ -273,11 +292,9 @@ export const messages = {
       myClasses: "Mes classes",
       subjectsAssigned: "{assigned}/{configured} matières assignées",
       studentsCount: "{count} élève(s)",
-      noAssignedOrConfiguredSections:
-        "Aucune section assignée ou configurée.",
+      noAssignedOrConfiguredSections: "Aucune section assignée ou configurée.",
       myTeachingAssignments: "Mes assignations d'enseignement",
-      noActiveTeachingAssignments:
-        "Aucune assignation d'enseignement active.",
+      noActiveTeachingAssignments: "Aucune assignation d'enseignement active.",
       openGradebook: "Ouvrir le cahier de notes de {subject}",
       enrolledCount: "{count} inscrit(s)",
       availableSeats: "{count} place(s) disponible(s)",
@@ -290,7 +307,43 @@ export const messages = {
 
     users: {
       management: {
-        title: "Utilisateurs et accès", description: "Invitez les membres du personnel et gérez leurs accès à l’école.", inviteUser: "Inviter un utilisateur", inviteDescription: "L’utilisateur recevra un courriel sécurisé pour activer son compte.", email: "Adresse électronique", firstName: "Prénom", lastName: "Nom", role: "Rôle", language: "Langue du courriel", sendInvitation: "Envoyer l’invitation", sendingInvitation: "Envoi de l’invitation...", usersTab: "Utilisateurs", invitationsTab: "Invitations", verified: "Adresse vérifiée", notVerified: "Adresse non vérifiée", lastLogin: "Dernière connexion", neverConnected: "Jamais connecté", membershipActive: "Accès actif", membershipSuspended: "Accès suspendu", suspend: "Suspendre", reactivate: "Réactiver", resend: "Renvoyer", revoke: "Révoquer", pending: "En attente", accepted: "Acceptée", expired: "Expirée", revoked: "Révoquée", emailDeliveryFailed: "Échec de l’envoi du courriel", invitationSent: "L’invitation a été créée et envoyée.", invitationCreatedButEmailFailed: "L’invitation a été créée, mais le courriel n’a pas pu être envoyé.", noUsers: "Aucun utilisateur trouvé.", noInvitations: "Aucune invitation trouvée.", confirmSuspend: "Suspendre l’accès de cet utilisateur à l’école ?", confirmRevoke: "Révoquer cette invitation ?",
+        title: "Utilisateurs et accès",
+        description:
+          "Invitez les membres du personnel et gérez leurs accès à l’école.",
+        inviteUser: "Inviter un utilisateur",
+        inviteDescription:
+          "L’utilisateur recevra un courriel sécurisé pour activer son compte.",
+        email: "Adresse électronique",
+        firstName: "Prénom",
+        lastName: "Nom",
+        role: "Rôle",
+        language: "Langue du courriel",
+        sendInvitation: "Envoyer l’invitation",
+        sendingInvitation: "Envoi de l’invitation...",
+        usersTab: "Utilisateurs",
+        invitationsTab: "Invitations",
+        verified: "Adresse vérifiée",
+        notVerified: "Adresse non vérifiée",
+        lastLogin: "Dernière connexion",
+        neverConnected: "Jamais connecté",
+        membershipActive: "Accès actif",
+        membershipSuspended: "Accès suspendu",
+        suspend: "Suspendre",
+        reactivate: "Réactiver",
+        resend: "Renvoyer",
+        revoke: "Révoquer",
+        pending: "En attente",
+        accepted: "Acceptée",
+        expired: "Expirée",
+        revoked: "Révoquée",
+        emailDeliveryFailed: "Échec de l’envoi du courriel",
+        invitationSent: "L’invitation a été créée et envoyée.",
+        invitationCreatedButEmailFailed:
+          "L’invitation a été créée, mais le courriel n’a pas pu être envoyé.",
+        noUsers: "Aucun utilisateur trouvé.",
+        noInvitations: "Aucune invitation trouvée.",
+        confirmSuspend: "Suspendre l’accès de cet utilisateur à l’école ?",
+        confirmRevoke: "Révoquer cette invitation ?",
         staffCode: "Code du personnel",
         jobTitle: "Titre du poste",
         department: "Département",
@@ -313,14 +366,22 @@ export const messages = {
           FINANCE_REPORTS_VIEW: "Voir les rapports financiers",
           FINANCE_REPORTS_EXPORT: "Exporter les rapports financiers",
           FINANCE_SETTINGS_MANAGE: "Gérer les paramètres financiers",
-          FINANCE_CASHIER_SESSIONS_SUPERVISE: "Superviser et rouvrir les sessions de caisse",
+          FINANCE_CASHIER_SESSIONS_SUPERVISE:
+            "Superviser et rouvrir les sessions de caisse",
           FINANCE_CREDIT_NOTES_CREATE: "Créer des notes de crédit",
           FINANCE_CORRECTIONS_APPROVE: "Approuver les corrections financières",
           FINANCE_RECONCILIATION_MANAGE: "Gérer les rapprochements de dépôts",
           FINANCE_PERIOD_CLOSE: "Clôturer et rouvrir les périodes financières",
           PAYROLL_VIEW: "Voir la paie",
           PAYROLL_MANAGE: "Gérer la paie",
-        },        roles: { ADMIN_STAFF: "Personnel administratif", SCHOOL_ADMIN: "Administrateur de l’école", TEACHER: "Enseignant", FINANCE_ADMIN: "Responsable financier", PARENT: "Parent / Responsable" },
+        },
+        roles: {
+          ADMIN_STAFF: "Personnel administratif",
+          SCHOOL_ADMIN: "Administrateur de l’école",
+          TEACHER: "Enseignant",
+          FINANCE_ADMIN: "Responsable financier",
+          PARENT: "Parent / Responsable",
+        },
       },
     },
     students: {
@@ -351,6 +412,18 @@ export const messages = {
       noClassAssigned: "Aucune classe assignée",
       unknownClass: "Classe inconnue",
       directoryTitle: "Répertoire des élèves",
+      directoryHeading: "Dossiers",
+      importCsv: "Importer CSV",
+      retry: "Réessayer",
+      gradeFilter: "Niveau",
+      placementFilter: "Affectation",
+      emptyDirectory: "Aucun élève pour le moment",
+      emptyDirectoryHint: "Ajoutez le premier dossier élève.",
+      emptyReadOnlyHint:
+        "Les dossiers apparaîtront ici après leur création par l’administration.",
+      noMatchesHint: "Essayez un autre nom ou effacez les filtres.",
+      loadingDirectory: "Chargement des élèves…",
+      resultsCount: "{count} élève(s) trouvé(s)",
       directorySubtitle: "Dossiers scolaires et affectation actuelle",
       addStudent: "Ajouter un élève",
       refreshDirectory: "Actualiser le répertoire",
@@ -402,8 +475,7 @@ export const messages = {
       cancelStatusChange: "Annuler le changement de statut",
       assignClassBeforeActivation:
         "Assignez une classe active avant d'activer cet élève.",
-      confirmStatusChange:
-        "Confirmer le changement vers le statut {status} ?",
+      confirmStatusChange: "Confirmer le changement vers le statut {status} ?",
       statusUpdated: "Statut de l'élève mis à jour.",
       noLifecycleHistory: "Aucun historique de cycle de vie.",
       createdStatus: "Créé",
@@ -441,6 +513,25 @@ export const messages = {
       noEnrollmentHistory: "Aucun historique de scolarité disponible.",
       create: {
         studentStep: "Élève",
+        pageDescription: "Identité, affectation et vérification du dossier.",
+        requiredHint:
+          "* Obligatoire. Les autres renseignements peuvent être complétés plus tard.",
+        invalidBirthDate: "Saisissez une date de naissance valide.",
+        valuesKept:
+          "Vos données sont conservées dans ce formulaire. Corrigez le problème avant de réessayer.",
+        created: "Élève créé. Ouverture du dossier…",
+        verifyDirectory:
+          "La création a été acceptée, mais le dossier n’a pas pu être ouvert. Vérifiez le répertoire avant de créer un autre élève.",
+        guardianAfterSave:
+          "Après la création, ajoutez le responsable depuis le dossier élève.",
+        documentsHint:
+          "Cochez uniquement les pièces déjà reçues. Leur absence ne bloque pas la création ; les fichiers se déposent ensuite dans le dossier.",
+        nextSteps: "Compléter le dossier",
+        progressHint:
+          "Ces repères ne remplacent pas les règles d’inscription de l’école.",
+        recorded: "Renseigné",
+        toComplete: "À compléter",
+        documentsProgress: "{count} / 4 pièces signalées reçues",
         placementStep: "Affectation",
         reviewStep: "Vérification",
         identityTitle: "Identité de l'élève",
@@ -486,6 +577,23 @@ export const messages = {
 
     attendance: {
       title: "Présences",
+      unmarked: "Non renseigné",
+      markUnmarkedPresent: "Marquer les restants présents",
+      unsavedChanges: "Modifications non enregistrées",
+      discardChanges: "Abandonner les modifications non enregistrées ?",
+      remaining: "{count} élève(s) à renseigner avant l’enregistrement",
+      savedCount: "{count} présence(s) enregistrée(s) · {date} · {slot}",
+      entriesKept:
+        "Vos saisies sont conservées. Vérifiez la connexion et réessayez.",
+      savedRefreshFailed:
+        "Enregistrement réussi, mais actualisation impossible. Actualisez la liste pour vérifier les données enregistrées.",
+      lockedSession: "Séance verrouillée",
+      lockedHint: "Cette séance est en lecture seule.",
+      invalidDate: "Sélectionnez une date valide.",
+      selectContext: "Choisissez la classe, la date et la session.",
+      checkEnrollment:
+        "Vérifiez la classe choisie et les inscriptions des élèves.",
+      draftSummary: "Résumé des saisies de présence",
       description: "Prenez les présences par classe, date et session.",
       date: "Date",
       slot: "Session",
@@ -578,10 +686,13 @@ export const messages = {
     finance: {
       title: "Finances",
       description: "Gérez les factures, paiements, reçus et paie du personnel.",
-      dashboardDescription: "Suivez les encaissements, les factures et les soldes en un coup d’œil.",
+      dashboardDescription:
+        "Suivez les encaissements, les factures et les soldes en un coup d’œil.",
       navigation: "Navigation des finances",
       overview: "Aperçu",
       cashier: "Caisse",
+      cashierDescription:
+        "Choisissez l’élève et la facture, puis vérifiez le paiement et son reçu.",
       billing: "Facturation",
       reconciliation: "Rapprochement",
       corrections: "Corrections",
@@ -656,6 +767,16 @@ export const messages = {
   },
 
   en: {
+    login: {
+      title: "Sign in", description: "Access your secure school workspace.",
+      email: "Email address", password: "Password", submit: "Sign in", submitting: "Signing in…",
+      forgot: "Forgot password?", showPassword: "Show password", hidePassword: "Hide password",
+      invalid: "Email or password is incorrect.", unavailable: "Unable to sign in. Please try again shortly.",
+      activated: "Your account is activated. You can now sign in.",
+      membershipAdded: "Your new school has been added. Sign in again to continue.",
+      reset: "Your password has been reset. Previous sessions have been closed.",
+      invitationMissing: "The invitation link is no longer available. Open the invitation email again.",
+    },
     common: {
       appName: "ALMAC School Management",
       loading: "Loading...",
@@ -696,12 +817,14 @@ export const messages = {
     auth: {
       forgotPassword: {
         title: "Forgot password",
-        description: "Enter your email address. If an eligible account exists, you will receive reset instructions.",
+        description:
+          "Enter your email address. If an eligible account exists, you will receive reset instructions.",
         email: "Email address",
         submit: "Send instructions",
         submitting: "Sending...",
         successTitle: "Check your inbox",
-        successMessage: "If an eligible account exists for this address, a password-reset email will be sent.",
+        successMessage:
+          "If an eligible account exists for this address, a password-reset email will be sent.",
         backToLogin: "Back to login",
         requestFailed: "Unable to process the request.",
       },
@@ -748,7 +871,8 @@ export const messages = {
       quickActions: "Quick Actions",
       quickActionsDescription: "Shortcuts relevant to this workspace.",
       operationalAttention: "Operational Attention",
-      operationalAttentionDescription: "Things worth checking before continuing.",
+      operationalAttentionDescription:
+        "Things worth checking before continuing.",
     },
 
     dashboard: {
@@ -761,7 +885,8 @@ export const messages = {
       noAttendanceData: "No attendance recorded for this date.",
       chartUnavailable: "Chart unavailable. Check your access or refresh.",
       financeSnapshot: "Financial position",
-      currencyScaleNote: "Independent scale per currency. Cumulative amounts, no conversion.",
+      currencyScaleNote:
+        "Independent scale per currency. Cumulative amounts, no conversion.",
       atAGlance: "Your school at a glance.",
       addStudent: "Add student",
       registeredToReview: "Registered students to review",
@@ -774,7 +899,8 @@ export const messages = {
       workspaces: "Workspaces",
       financeByCurrency: "Balances, collections, and follow-up by currency.",
       loadFailed: "Unable to load the dashboard. Please try again.",
-      refreshFailed: "Refresh failed. Previously loaded figures are still displayed.",
+      refreshFailed:
+        "Refresh failed. Previously loaded figures are still displayed.",
       updated: "Dashboard updated.",
       title: "Dashboard",
       description:
@@ -838,8 +964,7 @@ export const messages = {
         "Academic structure drives the whole school workflow",
       attentionStructureDescription:
         "Each school can choose its own structure: Kindergarten only, Primary only, Secondary only, or a combination.",
-      attentionTeacherSubjectTitle:
-        "Check teacher-subject assignments",
+      attentionTeacherSubjectTitle: "Check teacher-subject assignments",
       attentionTeacherSubjectDescription:
         "A teacher should only see the classes and subjects that belong to their real assignment.",
       attentionTeacherPriorityTitle: "Teacher priority",
@@ -877,7 +1002,8 @@ export const messages = {
       sectionSubjects: "Section subjects",
       teachingAssignments: "Teaching assignments",
       noTeachingAssignments: "No teaching assignments found.",
-      noActiveAcademicYear: "No active academic year found. Complete school setup first.",
+      noActiveAcademicYear:
+        "No active academic year found. Complete school setup first.",
       teacher: "Teacher",
       order: "Order",
       subjectSetup: "Subject Setup",
@@ -900,8 +1026,7 @@ export const messages = {
       subjectSaved: "Subject saved successfully.",
       subjectAssigned: "Subject assigned successfully.",
       noSubjectsYet: "No subjects created yet.",
-      noAssignedSubjects:
-        "No subjects assigned to this grade level yet.",
+      noAssignedSubjects: "No subjects assigned to this grade level yet.",
       advancedManualConfiguration: "Advanced manual configuration",
       advancedManualDescription:
         "Use these controls when you need to adjust generated classes, sections, or capacities by hand.",
@@ -928,8 +1053,7 @@ export const messages = {
       myClasses: "My classes",
       subjectsAssigned: "{assigned}/{configured} subjects assigned",
       studentsCount: "{count} student(s)",
-      noAssignedOrConfiguredSections:
-        "No assigned or configured sections.",
+      noAssignedOrConfiguredSections: "No assigned or configured sections.",
       myTeachingAssignments: "My teaching assignments",
       noActiveTeachingAssignments: "No active teaching assignments.",
       openGradebook: "Open the {subject} gradebook",
@@ -944,7 +1068,43 @@ export const messages = {
 
     users: {
       management: {
-        title: "Users and access", description: "Invite staff members and manage their access to the school.", inviteUser: "Invite a user", inviteDescription: "The user will receive a secure email to activate their account.", email: "Email address", firstName: "First name", lastName: "Last name", role: "Role", language: "Email language", sendInvitation: "Send invitation", sendingInvitation: "Sending invitation...", usersTab: "Users", invitationsTab: "Invitations", verified: "Email verified", notVerified: "Email not verified", lastLogin: "Last login", neverConnected: "Never signed in", membershipActive: "Access active", membershipSuspended: "Access suspended", suspend: "Suspend", reactivate: "Reactivate", resend: "Resend", revoke: "Revoke", pending: "Pending", accepted: "Accepted", expired: "Expired", revoked: "Revoked", emailDeliveryFailed: "Email delivery failed", invitationSent: "The invitation was created and sent.", invitationCreatedButEmailFailed: "The invitation was created, but the email could not be sent.", noUsers: "No users found.", noInvitations: "No invitations found.", confirmSuspend: "Suspend this user’s access to the school?", confirmRevoke: "Revoke this invitation?",
+        title: "Users and access",
+        description:
+          "Invite staff members and manage their access to the school.",
+        inviteUser: "Invite a user",
+        inviteDescription:
+          "The user will receive a secure email to activate their account.",
+        email: "Email address",
+        firstName: "First name",
+        lastName: "Last name",
+        role: "Role",
+        language: "Email language",
+        sendInvitation: "Send invitation",
+        sendingInvitation: "Sending invitation...",
+        usersTab: "Users",
+        invitationsTab: "Invitations",
+        verified: "Email verified",
+        notVerified: "Email not verified",
+        lastLogin: "Last login",
+        neverConnected: "Never signed in",
+        membershipActive: "Access active",
+        membershipSuspended: "Access suspended",
+        suspend: "Suspend",
+        reactivate: "Reactivate",
+        resend: "Resend",
+        revoke: "Revoke",
+        pending: "Pending",
+        accepted: "Accepted",
+        expired: "Expired",
+        revoked: "Revoked",
+        emailDeliveryFailed: "Email delivery failed",
+        invitationSent: "The invitation was created and sent.",
+        invitationCreatedButEmailFailed:
+          "The invitation was created, but the email could not be sent.",
+        noUsers: "No users found.",
+        noInvitations: "No invitations found.",
+        confirmSuspend: "Suspend this user’s access to the school?",
+        confirmRevoke: "Revoke this invitation?",
         staffCode: "Staff code",
         jobTitle: "Job title",
         department: "Department",
@@ -967,14 +1127,22 @@ export const messages = {
           FINANCE_REPORTS_VIEW: "View finance reports",
           FINANCE_REPORTS_EXPORT: "Export finance reports",
           FINANCE_SETTINGS_MANAGE: "Manage finance settings",
-          FINANCE_CASHIER_SESSIONS_SUPERVISE: "Supervise and reopen cashier sessions",
+          FINANCE_CASHIER_SESSIONS_SUPERVISE:
+            "Supervise and reopen cashier sessions",
           FINANCE_CREDIT_NOTES_CREATE: "Create credit notes",
           FINANCE_CORRECTIONS_APPROVE: "Approve finance corrections",
           FINANCE_RECONCILIATION_MANAGE: "Manage deposit reconciliation",
           FINANCE_PERIOD_CLOSE: "Close and reopen financial periods",
           PAYROLL_VIEW: "View payroll",
           PAYROLL_MANAGE: "Manage payroll",
-        },        roles: { ADMIN_STAFF: "Administrative staff", SCHOOL_ADMIN: "School administrator", TEACHER: "Teacher", FINANCE_ADMIN: "Finance administrator", PARENT: "Parent / Guardian" },
+        },
+        roles: {
+          ADMIN_STAFF: "Administrative staff",
+          SCHOOL_ADMIN: "School administrator",
+          TEACHER: "Teacher",
+          FINANCE_ADMIN: "Finance administrator",
+          PARENT: "Parent / Guardian",
+        },
       },
     },
     students: {
@@ -1005,6 +1173,18 @@ export const messages = {
       noClassAssigned: "No class assigned",
       unknownClass: "Unknown class",
       directoryTitle: "Student directory",
+      directoryHeading: "Records",
+      importCsv: "Import CSV",
+      retry: "Try again",
+      gradeFilter: "Grade level",
+      placementFilter: "Placement",
+      emptyDirectory: "No students yet",
+      emptyDirectoryHint: "Add the first student record.",
+      emptyReadOnlyHint:
+        "Records will appear here once created by the administration.",
+      noMatchesHint: "Try another name or clear the filters.",
+      loadingDirectory: "Loading students…",
+      resultsCount: "{count} student(s) found",
       directorySubtitle: "School records and current placement",
       addStudent: "Add student",
       refreshDirectory: "Refresh directory",
@@ -1094,6 +1274,24 @@ export const messages = {
       noEnrollmentHistory: "No enrollment history available.",
       create: {
         studentStep: "Student",
+        pageDescription: "Identity, placement, and record review.",
+        requiredHint: "* Required. Other details can be completed later.",
+        invalidBirthDate: "Enter a valid date of birth.",
+        valuesKept:
+          "Your entries remain in this form. Correct the issue before trying again.",
+        created: "Student created. Opening the record…",
+        verifyDirectory:
+          "Creation was accepted, but the record could not be opened. Check the directory before creating another student.",
+        guardianAfterSave:
+          "After creating the student, add their guardian from the student record.",
+        documentsHint:
+          "Only mark documents already received. Missing documents do not block creation; files can be uploaded from the record afterward.",
+        nextSteps: "Complete the record",
+        progressHint:
+          "These reminders do not replace the school’s enrollment rules.",
+        recorded: "Recorded",
+        toComplete: "To complete",
+        documentsProgress: "{count} / 4 documents marked received",
         placementStep: "Placement",
         reviewStep: "Review",
         identityTitle: "Student identity",
@@ -1139,6 +1337,22 @@ export const messages = {
 
     attendance: {
       title: "Attendance",
+      unmarked: "Not marked",
+      markUnmarkedPresent: "Mark remaining present",
+      unsavedChanges: "Unsaved changes",
+      discardChanges: "Discard unsaved attendance changes?",
+      remaining: "{count} student(s) still need a status before saving",
+      savedCount: "{count} attendance record(s) saved · {date} · {slot}",
+      entriesKept:
+        "Your entries are preserved. Check the connection and try again.",
+      savedRefreshFailed:
+        "Saved successfully, but refresh failed. Refresh the roster to verify the saved data.",
+      lockedSession: "Locked session",
+      lockedHint: "This session is read-only.",
+      invalidDate: "Select a valid date.",
+      selectContext: "Choose the class, date, and session.",
+      checkEnrollment: "Check the selected class and student enrollments.",
+      draftSummary: "Attendance entry summary",
       description: "Take attendance by class, date, and session.",
       date: "Date",
       slot: "Slot",
@@ -1229,10 +1443,13 @@ export const messages = {
     finance: {
       title: "Finance",
       description: "Manage invoices, payments, receipts, and payroll.",
-      dashboardDescription: "Track collections, invoices, and balances at a glance.",
+      dashboardDescription:
+        "Track collections, invoices, and balances at a glance.",
       navigation: "Finance navigation",
       overview: "Overview",
       cashier: "Cashier",
+      cashierDescription:
+        "Choose the student and invoice, then review the payment and receipt.",
       billing: "Billing",
       reconciliation: "Reconciliation",
       corrections: "Corrections",
@@ -1283,8 +1500,7 @@ export const messages = {
 
     payroll: {
       title: "Payroll",
-      description:
-        "Manage salary profiles, payroll runs, and payslips.",
+      description: "Manage salary profiles, payroll runs, and payslips.",
       staffProfile: "Staff profile",
       payrollRun: "Payroll run",
       payslip: "Payslip",

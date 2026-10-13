@@ -1,6 +1,7 @@
 "use client";
 
 import { SchoolBadge } from "@/components/school-ui";
+import { useI18n } from "@/components/i18n-provider";
 
 type AdmissionReadinessInput = {
   desiredSection?: {
@@ -34,6 +35,8 @@ export function AdmissionReadinessPanelClient({
 }: {
   application: AdmissionReadinessInput;
 }) {
+  const { locale } = useI18n();
+  const fr = locale === "fr";
   const checks = [
     {
       label: "Desired class / section selected",
@@ -83,35 +86,57 @@ export function AdmissionReadinessPanelClient({
 
   const completed = checks.filter((check) => check.ok).length;
   const total = checks.length;
-  const percentage = Math.round((completed / total) * 100);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">
-            Admission Readiness
+            {fr ? "Complétude du dossier" : "Record completeness"}
           </h3>
           <p className="mt-1 text-sm text-slate-600">
-            Quick checklist before confirming admission or converting to a student file.
+            {fr
+              ? "Repères de suivi ; la décision et les règles de validation restent distinctes."
+              : "Tracking checklist; admission decisions and validation rules are separate."}
           </p>
         </div>
 
-        <SchoolBadge tone={percentage >= 80 ? "green" : percentage >= 50 ? "amber" : "red"}>
-          {percentage}%
+        <SchoolBadge tone="neutral">
+          {completed} / {total}
         </SchoolBadge>
       </div>
 
       <div className="mt-5 space-y-2">
-        {checks.map((check) => (
+        {checks.map((check, index) => (
           <div
             key={check.label}
             className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
           >
-            <span>{check.label}</span>
+            <span>
+              {fr
+                ? [
+                    "Classe souhaitée",
+                    "Identité du candidat",
+                    "Date de naissance",
+                    "Responsable identifié",
+                    "Téléphone du responsable",
+                    "Photo reçue",
+                    "Acte de naissance reçu",
+                    "Carte de vaccination reçue",
+                    "Dossier scolaire précédent reçu",
+                    "Frais d’inscription réglés",
+                  ][index]
+                : check.label}
+            </span>
 
             <SchoolBadge tone={check.ok ? "green" : "amber"}>
-              {check.ok ? "OK" : "Missing"}
+              {check.ok
+                ? fr
+                  ? "Renseigné"
+                  : "Recorded"
+                : fr
+                  ? "À compléter"
+                  : "To complete"}
             </SchoolBadge>
           </div>
         ))}

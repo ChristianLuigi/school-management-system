@@ -13,7 +13,20 @@ export default async function StudentProfilePage({
   const context = await getMeContext();
   const currentSchoolId = resolveCurrentSchoolId(context);
   const roles = resolveEffectiveRoles(context);
-  if (roles.includes("ADMIN_STAFF") && !roles.includes("SCHOOL_ADMIN")) return <OfficeRecordClient schoolId={currentSchoolId} kind="student" recordId={id} />;
+  if (roles.includes("ADMIN_STAFF") && !roles.includes("SCHOOL_ADMIN"))
+    return (
+      <OfficeRecordClient
+        schoolId={currentSchoolId}
+        kind="student"
+        recordId={id}
+      />
+    );
 
-  return <StudentProfileClient schoolId={currentSchoolId} studentId={id} />;
+  return (
+    <StudentProfileClient
+      schoolId={currentSchoolId}
+      studentId={id}
+      canManageEnrollment={roles.includes("SCHOOL_ADMIN")}
+    />
+  );
 }

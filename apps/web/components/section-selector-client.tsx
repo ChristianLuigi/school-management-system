@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { CalendarDays, DoorOpen, UsersRound } from "lucide-react";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -57,9 +57,9 @@ export function sectionOptionLabel(
     : [grade, sectionName].filter(Boolean).join(" - ");
   const occupancy =
     section.capacity === null
-      ? translate?.("academic.enrolledCount", {
+      ? (translate?.("academic.enrolledCount", {
           count: section.activeEnrollmentCount,
-        }) ?? `${section.activeEnrollmentCount} enrolled`
+        }) ?? `${section.activeEnrollmentCount} enrolled`)
       : `${section.activeEnrollmentCount}/${section.capacity}`;
 
   const full = translate?.("academic.full") ?? "Full";
@@ -150,6 +150,7 @@ export function SectionSelectorClient({
   emptyActionLabel?: string;
 }) {
   const { locale, t } = useI18n();
+  const selectId = useId();
   const [sections, setSections] = useState<SectionOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -211,10 +212,14 @@ export function SectionSelectorClient({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700">
+      <label
+        htmlFor={selectId}
+        className="block text-sm font-medium text-slate-700"
+      >
         {label}
       </label>
       <select
+        id={selectId}
         aria-busy={loading}
         className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
         value={sectionId}
@@ -282,7 +287,10 @@ export function SectionSelectorClient({
         </div>
       ) : null}
       {error ? (
-        <div role="alert" className="mt-2 rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700">
+        <div
+          role="alert"
+          className="mt-2 rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700"
+        >
           {error}
         </div>
       ) : null}

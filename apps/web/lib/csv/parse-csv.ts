@@ -3,11 +3,14 @@ export type ParsedCsv = {
   rows: string[][];
 };
 
+// This parser checks file structure only. Role, school ownership, duplicate
+// records and business-field validation remain the import API's responsibility.
 export function parseCsv(
   input: string,
   options: { maxRows?: number; recordLabel?: string } = {},
 ): ParsedCsv {
   const source = input.replace(/^\uFEFF/, "");
+  // Track quoted fields so embedded commas/newlines and escaped quotes survive.
   const records: string[][] = [];
   let record: string[] = [];
   let cell = "";

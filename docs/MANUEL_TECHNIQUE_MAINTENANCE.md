@@ -22,6 +22,8 @@
 
 Les processus métier sont décrits dans le [manuel de fonctionnement](./MANUEL_DE_FONCTIONNEMENT.md); les manipulations à l’écran dans le [manuel utilisateur](./MANUEL_UTILISATEUR.md).
 
+Pour naviguer dans l'ensemble des guides, consulter [l'index documentaire](./README.md). Les conventions de commentaire, la carte des domaines et les invariants de maintenance sont réunis dans le [guide de lecture du code](./CODE_MAINTENANCE_GUIDE.md).
+
 ## 1. Architecture et fichiers
 
 Parcours principal : navigateur HTTPS → Next.js → API NestJS → PostgreSQL. Le navigateur conserve un cookie de session HttpOnly; les routes serveur Next.js transmettent l’authentification à l’API. Les courriels sont envoyés par le fournisseur configuré, pas par le navigateur.

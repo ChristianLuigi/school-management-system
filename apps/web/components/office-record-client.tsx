@@ -1,6 +1,11 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  localDateInputValue,
+  validateStudentIdentity,
+} from "@/lib/students/enrollment-draft";
 import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 import { useI18n } from "@/components/i18n-provider";
@@ -39,7 +44,10 @@ export function OfficeRecordClient({
   recordId?: string;
   onSaved?: () => void;
 }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
+  const router = useRouter();
+  const savingRef = useRef(false);
+  const [createdStudent, setCreatedStudent] = useState(false);
   const fr = locale === "fr";
   const base = kind === "student" ? "school-students" : "admissions";
   const [values, setValues] = useState<Record<string, string>>({});
@@ -97,6 +105,23 @@ export function OfficeRecordClient({
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (savingRef.current || createdStudent) return;
+    if (kind === "student") {
+      const errors = validateStudentIdentity(
+        {
+          firstName: values.firstName ?? "",
+          lastName: values.lastName ?? "",
+          dateOfBirth: values.dateOfBirth ?? "",
+        },
+        localDateInputValue(),
+      );
+      const message = Object.values(errors)[0];
+      if (message) {
+        setError(t(message));
+        return;
+      }
+    }
+    savingRef.current = true;
     setSaving(true);
     setError("");
     setSaved(false);
@@ -131,14 +156,27 @@ export function OfficeRecordClient({
               : "Unable to save.",
         );
       setSaved(true);
+      if (!recordId && kind === "student") {
+        setCreatedStudent(true);
+        if (typeof body?.id === "string" && /^[0-9a-f-]{36}$/i.test(body.id)) {
+          router.push(`/students/${body.id}`);
+          router.refresh();
+        } else setError(t("students.create.verifyDirectory"));
+        return;
+      }
       if (!recordId) {
         setValues({});
         setSectionId("");
+        if (kind === "admission" && typeof body?.id === "string") {
+          router.push(`/admissions/${encodeURIComponent(body.id)}`);
+          router.refresh();
+        }
       }
       onSaved?.();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to save.");
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
@@ -170,6 +208,7 @@ export function OfficeRecordClient({
           disabled={
             loading ||
             saving ||
+            createdStudent ||
             Boolean(recordId && error && !Object.keys(values).length)
           }
           className="space-y-4 disabled:opacity-60"
@@ -188,6 +227,11 @@ export function OfficeRecordClient({
                         : "text"
                   }
                   required={key === "firstName" || key === "lastName"}
+                  max={
+                    key === "dateOfBirth" && kind === "student"
+                      ? localDateInputValue()
+                      : undefined
+                  }
                   maxLength={key.includes("Address") ? 500 : 120}
                   value={values[key] ?? ""}
                   onChange={(event) => {

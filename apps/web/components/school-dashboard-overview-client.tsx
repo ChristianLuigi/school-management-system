@@ -10,6 +10,8 @@ import {
   TriangleAlert,
   UserPlus,
   UsersRound,
+  ArrowRight,
+  WalletCards,
   type LucideIcon,
 } from "lucide-react";
 import { SchoolDashboardCharts } from "@/components/school-dashboard-charts";
@@ -165,6 +167,45 @@ export function SchoolDashboardOverviewClient({
           </button>
         </div>
       </header>
+
+      <nav
+        aria-label={t("workspace.quickActions")}
+        className="flex flex-wrap gap-2"
+      >
+        {[
+          {
+            href: "/attendance",
+            label: t("attendance.submitAttendance"),
+            icon: ClipboardCheck,
+          },
+          {
+            href: "/gradebooks",
+            label: t("gradebooks.enterScores"),
+            icon: BookOpenCheck,
+          },
+          { href: "/admissions", label: t("nav.admissions"), icon: UserPlus },
+          { href: "/finance", label: t("nav.finance"), icon: WalletCards },
+        ]
+          .filter((action) => canOpen(action.href))
+          .map((action) => {
+            const Icon = action.icon;
+            const href =
+              action.href === "/attendance" && overview
+                ? `${action.href}?date=${overview.date}`
+                : action.href;
+            return (
+              <Link
+                key={action.href}
+                href={href}
+                className={`inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 ${focus}`}
+              >
+                <Icon aria-hidden="true" className="h-4 w-4" />
+                {action.label}
+                <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+              </Link>
+            );
+          })}
+      </nav>
 
       {error ? (
         <div

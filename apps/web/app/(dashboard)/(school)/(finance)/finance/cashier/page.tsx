@@ -1,9 +1,7 @@
 import { FinanceCashierClient } from "@/components/finance-cashier-client";
 import { SchoolPageHeader } from "@/components/school-ui";
-import {
-  getMeContext,
-  resolveCurrentSchoolId,
-} from "@/lib/server-context";
+import { getServerTranslator } from "@/lib/i18n";
+import { getMeContext, resolveCurrentSchoolId } from "@/lib/server-context";
 
 export default async function FinanceCashierPage({
   searchParams,
@@ -14,14 +12,15 @@ export default async function FinanceCashierPage({
   }>;
 }) {
   const context = await getMeContext();
+  const { t } = await getServerTranslator();
   const schoolId = resolveCurrentSchoolId(context);
   const query = await searchParams;
 
   return (
     <div className="space-y-6">
       <SchoolPageHeader
-        title="Cashier"
-        description="Record payments through a guided, reconciled daily cashier workflow."
+        title={t("finance.cashier")}
+        description={t("finance.cashierDescription")}
       />
       <FinanceCashierClient
         schoolId={schoolId}

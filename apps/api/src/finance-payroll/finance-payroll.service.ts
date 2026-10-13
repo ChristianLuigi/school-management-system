@@ -2060,6 +2060,8 @@ export class FinancePayrollService {
       ],
     );
   }
+  // Workflow transitions are server-owned: hiding approval buttons is not a
+  // permission check. Resolve the actor before the transactional run update.
   async updatePayrollRunStatus(
     payrollRunId: string,
     dto: UpdatePayrollRunStatusDto,

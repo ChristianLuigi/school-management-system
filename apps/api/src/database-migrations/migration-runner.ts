@@ -122,6 +122,8 @@ function normalizedSql(sql: string) {
 }
 
 function splitPostgresStatements(sql: string) {
+  // Legacy SQL can contain function bodies and quoted semicolons. Splitting on
+  // ';' alone would corrupt those statements; track PostgreSQL quoting instead.
   const statements: string[] = [];
   let statementStart = 0;
   let index = 0;
@@ -400,6 +402,8 @@ export class MigrationRunner {
   private async withLock<T>(
     callback: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
+    // This is a session-level lock: keep the same connection through discovery,
+    // execution and history writes, then release it even after a failed run.
     const client = await this.pool.connect();
 
     try {
@@ -448,6 +452,8 @@ export class MigrationRunner {
       );
     }
 
+    // Full filenames are identities. Duplicate numeric prefixes are historical
+    // and valid; bytewise ordering keeps Windows/Linux execution deterministic.
     const names = entries
       .filter((entry) => entry.isFile() && entry.name.endsWith('.sql'))
       .map((entry) => entry.name)
@@ -546,9 +552,14 @@ export class MigrationRunner {
 
     try {
       if (transactionBody !== null) {
+        // Strip only the outer wrapper so schema changes and their history row
+        // share one transaction, rather than committing SQL before recording it.
         await client.query('BEGIN');
         await client.query(transactionBody);
       } else {
+        // Compatibility path for legacy autocommit files only. Earlier executed
+        // statements cannot be rolled back if a later statement fails; inspect
+        // the schema before retrying. New files must use BEGIN/COMMIT wrappers.
         const statements = splitPostgresStatements(
           normalizedSql(migration.sql),
         );

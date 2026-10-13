@@ -26,6 +26,7 @@ import {
 } from "@/components/student-documents-panel-client";
 import { StudentAttendanceHistoryPanelClient } from "@/components/student-attendance-history-panel-client";
 import { StudentEnrollmentWorkspaceClient } from "@/components/student-enrollment-workspace-client";
+import { StudentEnrollmentNextSteps } from "@/components/student-enrollment-next-steps";
 import { StudentCreateInvoicePanelClient } from "@/components/student-create-invoice-panel-client";
 import { StudentFinanceSummaryPanelClient } from "@/components/student-finance-summary-panel-client";
 import { StudentProfileEditPanelClient } from "@/components/student-profile-edit-panel-client";
@@ -210,9 +211,7 @@ function studentStatusLabel(
 ) {
   if (!status) return translate("students.statusPending");
   const key =
-    status === "PRE_REGISTERED"
-      ? "preRegistered"
-      : status.toLowerCase();
+    status === "PRE_REGISTERED" ? "preRegistered" : status.toLowerCase();
   const label = translate(`students.${key}`);
   return label.startsWith("students.") ? status : label;
 }
@@ -244,16 +243,20 @@ function currentEnrollmentLabel(
   return enrollmentLabel(profile.currentEnrollment, locale, noClassLabel);
 }
 
-function enrollmentLabel(row: {
-  section: {
-    code: string | null;
-    nameI18n: Record<string, string> | null;
-  };
-  gradeLevel: {
-    code: string | null;
-    nameI18n: Record<string, string> | null;
-  };
-}, locale: "fr" | "en", unknownClassLabel: string) {
+function enrollmentLabel(
+  row: {
+    section: {
+      code: string | null;
+      nameI18n: Record<string, string> | null;
+    };
+    gradeLevel: {
+      code: string | null;
+      nameI18n: Record<string, string> | null;
+    };
+  },
+  locale: "fr" | "en",
+  unknownClassLabel: string,
+) {
   const grade = i18nName(
     row.gradeLevel.nameI18n,
     row.gradeLevel.code ?? "",
@@ -275,9 +278,11 @@ function enrollmentLabel(row: {
 export function StudentProfileClient({
   schoolId,
   studentId,
+  canManageEnrollment = false,
 }: {
   schoolId: string;
   studentId: string;
+  canManageEnrollment?: boolean;
 }) {
   const { locale, t } = useI18n();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -400,13 +405,19 @@ export function StudentProfileClient({
       </div>
 
       {loading ? (
-        <div role="status" className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div
+          role="status"
+          className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500"
+        >
           {t("students.loadingProfile")}
         </div>
       ) : null}
 
       {error ? (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           {error}
         </div>
       ) : null}
@@ -539,7 +550,8 @@ export function StudentProfileClient({
                       if (event.key === "ArrowRight") {
                         nextIndex = (currentIndex + 1) % tabs.length;
                       } else if (event.key === "ArrowLeft") {
-                        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                        nextIndex =
+                          (currentIndex - 1 + tabs.length) % tabs.length;
                       } else if (event.key === "Home") {
                         nextIndex = 0;
                       } else if (event.key === "End") {
@@ -584,347 +596,372 @@ export function StudentProfileClient({
             tabIndex={0}
             className="space-y-6"
           >
-          {selectedTab === "overview" ? (
-            <StudentProfileEditPanelClient
-              schoolId={schoolId}
-              profile={profile}
-              onUpdated={loadProfile}
-            />
-          ) : null}
+            {selectedTab === "overview" && canManageEnrollment ? (
+              <StudentEnrollmentNextSteps
+                hasGuardian={profile.guardians.length > 0}
+                hasPlacement={Boolean(profile.currentEnrollment)}
+                documentsReceived={
+                  Object.values(profile.documents).filter(Boolean).length
+                }
+                onSelect={selectTab}
+              />
+            ) : null}
+            {selectedTab === "overview" ? (
+              <StudentProfileEditPanelClient
+                schoolId={schoolId}
+                profile={profile}
+                onUpdated={loadProfile}
+              />
+            ) : null}
 
-          {selectedTab === "enrollment" ? (
-            <StudentEnrollmentWorkspaceClient
-              schoolId={schoolId}
-              studentId={profile.student.id}
-              currentStatus={profile.student.studentStatus ?? "PRE_REGISTERED"}
-              currentEnrollment={profile.currentEnrollment}
-              enrollmentHistory={profile.enrollmentHistory}
-              statusHistory={profile.statusHistory}
-              onUpdated={loadProfile}
-            />
-          ) : null}
+            {selectedTab === "enrollment" ? (
+              <StudentEnrollmentWorkspaceClient
+                schoolId={schoolId}
+                studentId={profile.student.id}
+                currentStatus={
+                  profile.student.studentStatus ?? "PRE_REGISTERED"
+                }
+                currentEnrollment={profile.currentEnrollment}
+                enrollmentHistory={profile.enrollmentHistory}
+                statusHistory={profile.statusHistory}
+                onUpdated={loadProfile}
+              />
+            ) : null}
 
-          {selectedTab === "overview" && profile.admissionSource ? (
-            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-blue-950">
-                    {t("students.admissionSource")}
+            {selectedTab === "overview" && profile.admissionSource ? (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-950">
+                      {t("students.admissionSource")}
+                    </h3>
+
+                    <p className="mt-1 text-sm text-blue-800">
+                      {t("students.admissionSourceDescription")}
+                    </p>
+
+                    <div className="mt-3 text-sm text-blue-900">
+                      <div>
+                        {t("students.application")}:{" "}
+                        <span className="font-semibold">
+                          {profile.admissionSource.applicationNumber}
+                        </span>
+                      </div>
+
+                      <div>
+                        {t("students.candidate")}:{" "}
+                        <span className="font-semibold">
+                          {profile.admissionSource.firstName}{" "}
+                          {profile.admissionSource.lastName}
+                        </span>
+                      </div>
+
+                      <div>
+                        {t("students.created")}:{" "}
+                        <span className="font-semibold">
+                          {new Date(
+                            profile.admissionSource.createdAt,
+                          ).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <SchoolBadge
+                      tone={admissionStatusTone(
+                        profile.admissionSource.admissionStatus,
+                      )}
+                    >
+                      {admissionStatusLabel(
+                        profile.admissionSource.admissionStatus,
+                      )}
+                    </SchoolBadge>
+
+                    <a
+                      href={`/admissions/${profile.admissionSource.id}`}
+                      className="rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
+                    >
+                      {t("students.openAdmission")}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {selectedTab === "overview" ? (
+              <div className="grid gap-6 xl:grid-cols-3">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <h3 className="font-semibold text-slate-900">
+                    {t("students.identityDetails")}
                   </h3>
 
-                  <p className="mt-1 text-sm text-blue-800">
-                    {t("students.admissionSourceDescription")}
-                  </p>
-
-                  <div className="mt-3 text-sm text-blue-900">
-                    <div>
-                      {t("students.application")}:{" "}
-                      <span className="font-semibold">
-                        {profile.admissionSource.applicationNumber}
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-slate-500">
+                        {t("students.gender")}
+                      </span>
+                      <span className="font-medium">
+                        {profile.student.gender === "MALE"
+                          ? t("students.boy")
+                          : profile.student.gender === "FEMALE"
+                            ? t("students.girl")
+                            : "-"}
                       </span>
                     </div>
 
-                    <div>
-                      {t("students.candidate")}:{" "}
-                      <span className="font-semibold">
-                        {profile.admissionSource.firstName}{" "}
-                        {profile.admissionSource.lastName}
+                    <div className="flex justify-between gap-4">
+                      <span className="text-slate-500">
+                        {t("students.dateOfBirth")}
+                      </span>
+                      <span className="font-medium">
+                        {profile.student.dateOfBirth ?? "-"}
                       </span>
                     </div>
 
-                    <div>
-                      {t("students.created")}:{" "}
-                      <span className="font-semibold">
-                        {new Date(
-                          profile.admissionSource.createdAt,
-                        ).toLocaleDateString()}
+                    <div className="flex justify-between gap-4">
+                      <span className="text-slate-500">
+                        {t("students.placeOfBirth")}
+                      </span>
+                      <span className="font-medium">
+                        {profile.student.placeOfBirth ?? "-"}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between gap-4">
+                      <span className="text-slate-500">
+                        {t("students.previousSchool")}
+                      </span>
+                      <span className="font-medium">
+                        {profile.student.previousSchoolName ?? "-"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <SchoolBadge
-                    tone={admissionStatusTone(
-                      profile.admissionSource.admissionStatus,
-                    )}
-                  >
-                    {admissionStatusLabel(
-                      profile.admissionSource.admissionStatus,
-                    )}
-                  </SchoolBadge>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <h3 className="font-semibold text-slate-900">
+                    {t("students.documents")}
+                  </h3>
 
-                  <a
-                    href={`/admissions/${profile.admissionSource.id}`}
-                    className="rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
-                  >
-                    {t("students.openAdmission")}
-                  </a>
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>{t("students.create.photo")}</span>
+                      <SchoolBadge
+                        tone={
+                          profile.documents.photoReceived ? "green" : "amber"
+                        }
+                      >
+                        {profile.documents.photoReceived
+                          ? t("students.received")
+                          : t("students.missing")}
+                      </SchoolBadge>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>{t("students.create.birthCertificate")}</span>
+                      <SchoolBadge
+                        tone={
+                          profile.documents.birthCertificateReceived
+                            ? "green"
+                            : "amber"
+                        }
+                      >
+                        {profile.documents.birthCertificateReceived
+                          ? t("students.received")
+                          : t("students.missing")}
+                      </SchoolBadge>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>{t("students.create.vaccinationCard")}</span>
+                      <SchoolBadge
+                        tone={
+                          profile.documents.vaccinationCardReceived
+                            ? "green"
+                            : "amber"
+                        }
+                      >
+                        {profile.documents.vaccinationCardReceived
+                          ? t("students.received")
+                          : t("students.missing")}
+                      </SchoolBadge>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>{t("students.create.previousSchoolRecord")}</span>
+                      <SchoolBadge
+                        tone={
+                          profile.documents.previousSchoolRecordReceived
+                            ? "green"
+                            : "amber"
+                        }
+                      >
+                        {profile.documents.previousSchoolRecordReceived
+                          ? t("students.received")
+                          : t("students.missing")}
+                      </SchoolBadge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <h3 className="font-semibold text-slate-900">
+                    {t("students.health")}
+                  </h3>
+
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div>
+                      <div className="text-slate-500">
+                        {t("students.vaccinationStatus")}
+                      </div>
+                      <div className="font-medium">
+                        {profile.health.vaccinationStatus ?? "-"}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-slate-500">
+                        {t("students.allergies")}
+                      </div>
+                      <div className="font-medium">
+                        {profile.health.allergies ?? "-"}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-slate-500">
+                        {t("students.medicalNotes")}
+                      </div>
+                      <div className="font-medium">
+                        {profile.health.medicalNotes ?? "-"}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-slate-500">
+                        {t("students.specialNeeds")}
+                      </div>
+                      <div className="font-medium">
+                        {profile.health.specialNeeds ?? "-"}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {selectedTab === "overview" ? (
-            <div className="grid gap-6 xl:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 className="font-semibold text-slate-900">
-                  {t("students.identityDetails")}
-                </h3>
+            {selectedTab === "documents" ? (
+              <StudentDocumentsPanelClient
+                schoolId={schoolId}
+                studentId={profile.student.id}
+                documents={profile.documentRecords}
+                onChanged={loadProfile}
+              />
+            ) : null}
+            {selectedTab === "guardians" ? (
+              <StudentGuardiansManagementPanelClient
+                schoolId={schoolId}
+                studentId={profile.student.id}
+                guardians={profile.guardians}
+                onUpdated={loadProfile}
+              />
+            ) : null}
 
-                <div className="mt-4 space-y-2 text-sm">
-                  <div className="flex justify-between gap-4">
-                    <span className="text-slate-500">{t("students.gender")}</span>
-                    <span className="font-medium">
-                      {profile.student.gender === "MALE"
-                        ? t("students.boy")
-                        : profile.student.gender === "FEMALE"
-                          ? t("students.girl")
-                          : "-"}
-                    </span>
-                  </div>
+            {selectedTab === "finance" ? (
+              <>
+                {profile.capabilities.canCreateInvoices ? (
+                  <StudentCreateInvoicePanelClient
+                    schoolId={schoolId}
+                    studentId={profile.student.id}
+                    onCreated={() => {
+                      setFinanceRefreshKey((value) => value + 1);
+                      loadProfile();
+                    }}
+                  />
+                ) : null}
 
-                  <div className="flex justify-between gap-4">
-                    <span className="text-slate-500">{t("students.dateOfBirth")}</span>
-                    <span className="font-medium">
-                      {profile.student.dateOfBirth ?? "-"}
-                    </span>
-                  </div>
+                {profile.capabilities.canViewFinance ? (
+                  <StudentFinanceSummaryPanelClient
+                    schoolId={schoolId}
+                    studentId={profile.student.id}
+                    refreshKey={financeRefreshKey}
+                    canRecordPayments={profile.capabilities.canRecordPayments}
+                  />
+                ) : null}
+              </>
+            ) : null}
 
-                  <div className="flex justify-between gap-4">
-                    <span className="text-slate-500">{t("students.placeOfBirth")}</span>
-                    <span className="font-medium">
-                      {profile.student.placeOfBirth ?? "-"}
-                    </span>
-                  </div>
+            {selectedTab === "attendance" ? (
+              <StudentAttendanceHistoryPanelClient
+                schoolId={schoolId}
+                studentId={profile.student.id}
+              />
+            ) : null}
 
-                  <div className="flex justify-between gap-4">
-                    <span className="text-slate-500">{t("students.previousSchool")}</span>
-                    <span className="font-medium">
-                      {profile.student.previousSchoolName ?? "-"}
-                    </span>
+            {selectedTab === "overview" ? (
+              <>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {t("students.healthMedical")}
+                  </h3>
+
+                  <div className="mt-4 grid gap-4 md:grid-cols-3">
+                    <div className="rounded-xl bg-slate-50 p-4">
+                      <div className="text-sm font-medium text-slate-700">
+                        {t("students.healthNotes")}
+                      </div>
+                      <div className="mt-2 text-sm text-slate-600">
+                        {profile.student.healthNotes ??
+                          t("students.noHealthNotes")}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-slate-50 p-4">
+                      <div className="text-sm font-medium text-slate-700">
+                        {t("students.allergies")}
+                      </div>
+                      <div className="mt-2 text-sm text-slate-600">
+                        {profile.student.allergyNotes ??
+                          t("students.noAllergyNotes")}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-slate-50 p-4">
+                      <div className="text-sm font-medium text-slate-700">
+                        {t("students.medicalNotes")}
+                      </div>
+                      <div className="mt-2 text-sm text-slate-600">
+                        {profile.student.medicalNotes ??
+                          t("students.noMedicalNotes")}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 className="font-semibold text-slate-900">
-                  {t("students.documents")}
-                </h3>
+                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {t("students.quickActions")}
+                  </h3>
 
-                <div className="mt-4 space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>{t("students.create.photo")}</span>
-                    <SchoolBadge
-                      tone={profile.documents.photoReceived ? "green" : "amber"}
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link
+                      href="/attendance"
+                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
                     >
-                      {profile.documents.photoReceived
-                        ? t("students.received")
-                        : t("students.missing")}
-                    </SchoolBadge>
-                  </div>
+                      {t("students.openAttendance")}
+                    </Link>
 
-                  <div className="flex justify-between">
-                    <span>{t("students.create.birthCertificate")}</span>
-                    <SchoolBadge
-                      tone={
-                        profile.documents.birthCertificateReceived
-                          ? "green"
-                          : "amber"
-                      }
+                    <Link
+                      href="/gradebooks"
+                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
                     >
-                      {profile.documents.birthCertificateReceived
-                        ? t("students.received")
-                        : t("students.missing")}
-                    </SchoolBadge>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span>{t("students.create.vaccinationCard")}</span>
-                    <SchoolBadge
-                      tone={
-                        profile.documents.vaccinationCardReceived
-                          ? "green"
-                          : "amber"
-                      }
-                    >
-                      {profile.documents.vaccinationCardReceived
-                        ? t("students.received")
-                        : t("students.missing")}
-                    </SchoolBadge>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span>{t("students.create.previousSchoolRecord")}</span>
-                    <SchoolBadge
-                      tone={
-                        profile.documents.previousSchoolRecordReceived
-                          ? "green"
-                          : "amber"
-                      }
-                    >
-                      {profile.documents.previousSchoolRecordReceived
-                        ? t("students.received")
-                        : t("students.missing")}
-                    </SchoolBadge>
+                      {t("students.openGradebooks")}
+                    </Link>
                   </div>
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 className="font-semibold text-slate-900">
-                  {t("students.health")}
-                </h3>
-
-                <div className="mt-4 space-y-2 text-sm">
-                  <div>
-                    <div className="text-slate-500">
-                      {t("students.vaccinationStatus")}
-                    </div>
-                    <div className="font-medium">
-                      {profile.health.vaccinationStatus ?? "-"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-slate-500">
-                      {t("students.allergies")}
-                    </div>
-                    <div className="font-medium">
-                      {profile.health.allergies ?? "-"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-slate-500">
-                      {t("students.medicalNotes")}
-                    </div>
-                    <div className="font-medium">
-                      {profile.health.medicalNotes ?? "-"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="text-slate-500">
-                      {t("students.specialNeeds")}
-                    </div>
-                    <div className="font-medium">
-                      {profile.health.specialNeeds ?? "-"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {selectedTab === "documents" ? (
-            <StudentDocumentsPanelClient
-              schoolId={schoolId}
-              studentId={profile.student.id}
-              documents={profile.documentRecords}
-              onChanged={loadProfile}
-            />
-          ) : null}
-          {selectedTab === "guardians" ? (
-            <StudentGuardiansManagementPanelClient
-              schoolId={schoolId}
-              studentId={profile.student.id}
-              guardians={profile.guardians}
-              onUpdated={loadProfile}
-            />
-          ) : null}
-
-          {selectedTab === "finance" ? (
-            <>
-              {profile.capabilities.canCreateInvoices ? (
-                <StudentCreateInvoicePanelClient
-                  schoolId={schoolId}
-                  studentId={profile.student.id}
-                  onCreated={() => {
-                    setFinanceRefreshKey((value) => value + 1);
-                    loadProfile();
-                  }}
-                />
-              ) : null}
-
-              {profile.capabilities.canViewFinance ? (
-                <StudentFinanceSummaryPanelClient
-                  schoolId={schoolId}
-                  studentId={profile.student.id}
-                  refreshKey={financeRefreshKey}
-                  canRecordPayments={profile.capabilities.canRecordPayments}
-                />
-              ) : null}
-            </>
-          ) : null}
-
-          {selectedTab === "attendance" ? (
-            <StudentAttendanceHistoryPanelClient
-              schoolId={schoolId}
-              studentId={profile.student.id}
-            />
-          ) : null}
-
-          {selectedTab === "overview" ? (
-            <>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 className="text-lg font-semibold text-slate-900">
-                  {t("students.healthMedical")}
-                </h3>
-
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  <div className="rounded-xl bg-slate-50 p-4">
-                    <div className="text-sm font-medium text-slate-700">
-                      {t("students.healthNotes")}
-                    </div>
-                    <div className="mt-2 text-sm text-slate-600">
-                      {profile.student.healthNotes ?? t("students.noHealthNotes")}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl bg-slate-50 p-4">
-                    <div className="text-sm font-medium text-slate-700">
-                      {t("students.allergies")}
-                    </div>
-                    <div className="mt-2 text-sm text-slate-600">
-                      {profile.student.allergyNotes ?? t("students.noAllergyNotes")}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl bg-slate-50 p-4">
-                    <div className="text-sm font-medium text-slate-700">
-                      {t("students.medicalNotes")}
-                    </div>
-                    <div className="mt-2 text-sm text-slate-600">
-                      {profile.student.medicalNotes ?? t("students.noMedicalNotes")}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 className="text-lg font-semibold text-slate-900">
-                  {t("students.quickActions")}
-                </h3>
-
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Link
-                    href="/attendance"
-                    className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-                  >
-                    {t("students.openAttendance")}
-                  </Link>
-
-                  <Link
-                    href="/gradebooks"
-                    className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
-                  >
-                    {t("students.openGradebooks")}
-                  </Link>
-                </div>
-              </div>
-            </>
-          ) : null}
+              </>
+            ) : null}
           </section>
         </>
       ) : null}

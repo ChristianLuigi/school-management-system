@@ -1,12 +1,27 @@
 ﻿import { IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
 
+import { IsIn, Matches, MaxLength } from 'class-validator';
+
 export class UpdateSchoolBrandingDto {
   @IsUUID('all')
   schoolId: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(350000)
   logoUrl?: string;
+
+  @IsOptional()
+  @Matches(/^#[0-9a-f]{6}$/i)
+  primaryColor?: string;
+
+  @IsOptional()
+  @Matches(/^#[0-9a-f]{6}$/i)
+  accentColor?: string;
+
+  @IsOptional()
+  @IsIn(['light', 'dark', 'system'])
+  defaultTheme?: 'light' | 'dark' | 'system';
 
   @IsOptional()
   @IsString()

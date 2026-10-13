@@ -105,6 +105,8 @@ export class FinanceOperationsService {
       actorUserId: string;
     },
   ): Promise<T | null> {
+    // Serialize retries for this school/operation/key until transaction end.
+    // A network timeout must not turn a cashier retry into a second payment.
     await client.query(
       `SELECT pg_advisory_xact_lock(hashtextextended($1, 0))`,
       [
@@ -128,6 +130,8 @@ export class FinanceOperationsService {
       [input.schoolId, input.operationType, input.idempotencyKey],
     );
 
+    // Replay is allowed only for the original payload AND original actor;
+    // possession of an idempotency key is not authorization to reuse a result.
     const record = existing.rows[0];
     if (!record) return null;
     if (
@@ -152,6 +156,8 @@ export class FinanceOperationsService {
       actorUserId: string;
     },
   ) {
+    // Persist the response in the same transaction as the financial mutation:
+    // never remember success for an invoice/payment that rolled back.
     await client.query(
       `
       INSERT INTO finance_idempotency_records (

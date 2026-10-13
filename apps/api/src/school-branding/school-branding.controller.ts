@@ -54,4 +54,17 @@ export class SchoolBrandingController {
       session.platform_role,
     );
   }
+
+  @Get('appearance')
+  async getAppearance(
+    @Headers('authorization') authorization: string | undefined,
+    @Query('schoolId') schoolId: string,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.schoolBrandingService.getAppearance(
+      schoolId,
+      session.user_id,
+      session.platform_role,
+    );
+  }
 }

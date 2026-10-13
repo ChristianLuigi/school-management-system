@@ -1,5 +1,6 @@
 import { AttendanceSessionClient } from "@/components/attendance-session-client";
 import { SchoolModuleWorkspace } from "@/components/school-module-workspace";
+import { getServerTranslator } from "@/lib/i18n";
 import {
   getMeContext,
   resolveCurrentSchoolId,
@@ -21,6 +22,7 @@ export default async function AttendancePage({
 }) {
   const [context, query] = await Promise.all([getMeContext(), searchParams]);
   const currentSchoolId = resolveCurrentSchoolId(context);
+  const { t } = await getServerTranslator();
   const roles = resolveEffectiveRoles(context);
   const canManageStructure = roles.includes("SCHOOL_ADMIN");
   const slot = queryValue(query.slot);
@@ -28,31 +30,31 @@ export default async function AttendancePage({
   return (
     <SchoolModuleWorkspace
       compact
-      title="Attendance"
-      description="Record the daily class register."
+      title={t("attendance.title")}
+      description={t("attendance.description")}
       quickActions={[
         {
           href: "/academics",
-          title: "Academics",
+          title: t("nav.academics"),
           icon: "academics",
         },
         {
           href: "/gradebooks",
-          title: "Gradebooks",
+          title: t("nav.gradebooks"),
           icon: "gradebooks",
         },
         ...(canManageStructure
           ? [
               {
                 href: "/students",
-                title: "Students",
+                title: t("nav.students"),
                 icon: "students" as const,
               },
             ]
           : []),
       ]}
       attentionItems={[]}
-      mainTitle="Attendance"
+      mainTitle={t("attendance.title")}
     >
       <AttendanceSessionClient
         schoolId={currentSchoolId}

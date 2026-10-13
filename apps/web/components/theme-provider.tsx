@@ -19,7 +19,7 @@ import {
 type ThemeContextValue = {
   theme: Theme;
   resolvedTheme: ResolvedTheme;
-  setTheme: (theme: Theme) => void;
+  setTheme: (theme: Theme, persist?: boolean) => void;
 };
 
 type ThemeProviderProps = {
@@ -61,8 +61,10 @@ export function ThemeProvider({
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
   const setTheme = useCallback(
-    (nextTheme: Theme) => {
-      window.localStorage.setItem(storageKey, nextTheme);
+    (nextTheme: Theme, persist = true) => {
+      if (persist) {
+        try { window.localStorage.setItem(storageKey, nextTheme); } catch { /* Storage may be disabled. */ }
+      }
       setThemeState(nextTheme);
       setResolvedTheme(applyTheme(nextTheme));
     },

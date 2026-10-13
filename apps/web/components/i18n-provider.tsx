@@ -9,12 +9,12 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { I18nProvider as NextI18nProvider, useT } from "next-i18next/client";
 import {
   defaultLocale,
   LOCALE_COOKIE,
   messages,
   supportedLocales,
-  translate,
   type Locale,
 } from "@/lib/i18n/messages";
 
@@ -25,6 +25,16 @@ type I18nContextValue = {
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
+
+function TranslationBridge({ locale, setLocale, children }: {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  children: ReactNode;
+}) {
+  const { t } = useT("common");
+  const value = useMemo<I18nContextValue>(() => ({ locale, setLocale, t: (key, params) => String(t(key, params)) }), [locale, setLocale, t]);
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
 
 export function I18nProvider({
   initialLocale,
@@ -48,6 +58,7 @@ export function I18nProvider({
       setLocaleState(nextLocale);
 
       document.cookie = `${LOCALE_COOKIE}=${nextLocale}; path=/; max-age=31536000; SameSite=Lax`;
+      document.documentElement.lang = nextLocale;
 
       try {
         window.localStorage.setItem(LOCALE_COOKIE, nextLocale);
@@ -60,15 +71,10 @@ export function I18nProvider({
     [router],
   );
 
-  const value = useMemo<I18nContextValue>(() => {
-    return {
-      locale,
-      setLocale,
-      t: (key, params) => translate(locale, key, params),
-    };
-  }, [locale, setLocale]);
-
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  return <NextI18nProvider language={locale} resources={{ fr: { common: messages.fr }, en: { common: messages.en } }}
+    i18nextOptions={{ fallbackLng: "fr", defaultNS: "common", interpolation: { escapeValue: false, prefix: "{", suffix: "}" } }}>
+    <TranslationBridge locale={locale} setLocale={setLocale}>{children}</TranslationBridge>
+  </NextI18nProvider>;
 }
 
 export function useI18n() {
