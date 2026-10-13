@@ -16,7 +16,6 @@ export type NavigationIcon =
   | "admissions"
   | "attendance"
   | "dashboard"
-  | "demo"
   | "finance"
   | "gradebooks"
   | "reports"
@@ -69,7 +68,7 @@ export function AppShell({
 }: AppShellProps) {
   const { locale } = useI18n();
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   const [appearance, setAppearance] = useState<{ schoolId: string; primaryColor: string; accentColor: string; logoUrl: string | null } | null>(null);
   useEffect(() => {
     if (!schoolId) return;
@@ -175,21 +174,6 @@ export function AppShell({
         <main id="main-content" tabIndex={-1} className="outline-none">
           <div className="mx-auto w-full max-w-[100rem] p-4 sm:p-6 lg:p-8 print:p-0">
             <AppBreadcrumbs navigation={navigation} />
-            {schoolId && userId ? <details className="mb-4 text-sm">
-              <summary className="cursor-pointer">{locale === "fr" ? "Apparence personnelle" : "Personal appearance"}</summary>
-              <label className="mt-2 flex items-center gap-3">
-                {locale === "fr" ? "Thème (ce navigateur)" : "Theme (this browser)"}
-                <select value={theme} className="rounded border border-border bg-surface p-2" onChange={event => {
-                  if (!isTheme(event.target.value)) return;
-                  try { localStorage.setItem(`almac:appearance:${userId}`, event.target.value); } catch { /* Optional storage. */ }
-                  setTheme(event.target.value, false);
-                }}>
-                  <option value="light">{locale === "fr" ? "Clair" : "Light"}</option>
-                  <option value="dark">{locale === "fr" ? "Sombre" : "Dark"}</option>
-                  <option value="system">{locale === "fr" ? "Système" : "System"}</option>
-                </select>
-              </label>
-            </details> : null}
             {currentAppearance?.logoUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img src={currentAppearance.logoUrl} alt={workspaceName} className="mb-4 h-12 max-w-48 object-contain" />

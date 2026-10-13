@@ -15,12 +15,6 @@ const schoolNavigation: SchoolNavigationItem[] = [
     roles: ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"],
   },
   {
-    href: "/demo",
-    labelKey: "nav.demo",
-    icon: "demo",
-    roles: ["SCHOOL_ADMIN", "TEACHER", "FINANCE_ADMIN"],
-  },
-  {
     href: "/students",
     labelKey: "nav.students",
     icon: "students",
@@ -86,6 +80,12 @@ const schoolNavigation: SchoolNavigationItem[] = [
     icon: "settings",
     roles: ["SCHOOL_ADMIN"],
   },
+  {
+    href: "/preferences",
+    labelKey: "nav.settings",
+    icon: "settings",
+    roles: ["TEACHER", "FINANCE_ADMIN", "ADMIN_STAFF", "PARENT"],
+  },
 ];
 
 const platformNavigationItems: Array<Omit<NavigationItem, "label"> & {
@@ -105,6 +105,7 @@ export function getSchoolNavigation(
 ): NavigationItem[] {
   return schoolNavigation
     .filter((item) => item.roles.some((role) => roles.includes(role)))
+    .filter((item) => item.href !== "/preferences" || !roles.includes("SCHOOL_ADMIN"))
     .map(({ href, labelKey, icon, exact }) => ({
       href,
       label: translate(locale, labelKey),

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { LogoLinkImportClient } from "@/components/logo-link-import-client";
+import { Building2, ImagePlus, Palette, Contact, FileText, Save, Trash2 } from "lucide-react";
 
 type Branding = {
   schoolId: string;
@@ -49,6 +51,7 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
+  const [readingLogo, setReadingLogo] = useState(false);
 
   const loadBranding = useCallback(async () => {
     setLoading(true);
@@ -141,7 +144,7 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
         throw new Error(body?.message ?? "Failed to save branding.");
       }
 
-      setMessage("School branding saved successfully.");
+      setMessage(fr ? "Paramètres de l’école enregistrés." : "School settings saved.");
       window.dispatchEvent(new Event("almac:branding-change"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save branding.");
@@ -155,9 +158,10 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
   }, [loadBranding]);
 
   return (
-    <div className="rounded-2xl border border-border bg-surface text-foreground p-5">
+    <form onSubmit={event => { event.preventDefault(); void saveBranding(); }} className="rounded-2xl border border-border bg-surface text-foreground p-5 sm:p-6">
       <div>
-        <h3 className="text-lg font-semibold text-foreground">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <Building2 size={20} aria-hidden="true" />
           {fr ? "Identité et apparence de l’école" : "School identity and appearance"}
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -172,28 +176,31 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
       ) : null}
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
+        <div role="status" className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
+        <div role="alert" className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <label className="text-sm md:col-span-2">
-          {fr ? "Logo (PNG, JPG, WEBP · 256 Ko maximum)" : "Logo (PNG, JPG, WEBP · 256 KB maximum)"}
-          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={!loaded || saving} className="mt-2 block w-full" onChange={async (event) => {
+      <fieldset disabled={!loaded || saving || readingLogo} className="mt-6 space-y-6">
+      <section className="grid gap-4 rounded-xl border border-border p-4 md:grid-cols-2">
+        <h4 className="flex items-center gap-2 font-semibold md:col-span-2"><ImagePlus size={18} aria-hidden="true" />Logo</h4>
+        <label className="rounded-xl border border-dashed border-input bg-surface-muted p-4 text-sm">
+          {fr ? "Depuis votre ordinateur (PNG, JPG, WEBP · 256 Ko maximum)" : "From your computer (PNG, JPG, WEBP · 256 KB maximum)"}
+          <input type="file" accept="image/png,image/jpeg,image/webp" disabled={!loaded || saving || readingLogo} className="mt-3 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-2 file:text-secondary-foreground" onChange={async (event) => {
             const file = event.target.files?.[0];
             event.target.value = "";
             if (!file) return;
             if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 256 * 1024) {
-              setError("PNG, JPG ou WEBP uniquement, 256 KB maximum."); return;
+              setError(fr ? "PNG, JPG ou WEBP uniquement, 256 Ko maximum." : "PNG, JPG or WEBP only, 256 KB maximum."); return;
             }
             try {
+              setReadingLogo(true);
               const logoUrl = await new Promise<string>((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => resolve(String(reader.result));
@@ -202,14 +209,19 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
               });
               setForm(previous => ({ ...previous, logoUrl }));
               setError("");
-            } catch { setError("Lecture du logo impossible."); }
+            } catch { setError(fr ? "Lecture du logo impossible." : "Unable to read the logo."); }
+            finally { setReadingLogo(false); }
           }} />
         </label>
-        {form.logoUrl ? <div className="md:col-span-2">
+        <LogoLinkImportClient disabled={!loaded || saving || readingLogo} onBusyChange={setReadingLogo} onImport={logoUrl => { setForm(previous => ({ ...previous, logoUrl })); setMessage(""); }} />
+        {form.logoUrl ? <div className="flex items-center gap-4 rounded-xl bg-surface-muted p-4 md:col-span-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={form.logoUrl} alt="Logo" className="h-20 max-w-48 object-contain" />
-          <button type="button" onClick={() => setForm(previous => ({ ...previous, logoUrl: "" }))}>{fr ? "Retirer le logo" : "Remove logo"}</button>
+          <div><p className="mb-2 text-xs text-muted-foreground">{fr ? "Aperçu — enregistrez pour appliquer" : "Preview — save to apply"}</p><button type="button" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm" onClick={() => setForm(previous => ({ ...previous, logoUrl: "" }))}><Trash2 size={15} aria-hidden="true" />{fr ? "Retirer" : "Remove"}</button></div>
         </div> : null}
+      </section>
+      <section className="grid gap-4 rounded-xl border border-border p-4 md:grid-cols-2">
+        <h4 className="flex items-center gap-2 font-semibold md:col-span-2"><Palette size={18} aria-hidden="true" />{fr ? "Couleurs et thème de l’école" : "School colors and theme"}</h4>
         <label className="text-sm">{fr ? "Couleur principale" : "Primary color"}
           <input aria-label="Primary color" type="color" value={form.primaryColor} onChange={event => setForm(previous => ({ ...previous, primaryColor: event.target.value }))} className="ml-3" />
         </label>
@@ -221,81 +233,78 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
             <option value="light">{fr ? "Clair" : "Light"}</option><option value="dark">{fr ? "Sombre" : "Dark"}</option><option value="system">{fr ? "Système" : "System"}</option>
           </select>
         </label>
-        <input
-          className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm md:col-span-2"
-          placeholder="Logo URL"
-          value={form.logoUrl}
-          onChange={(e) =>
-            setForm((prev) => ({ ...prev, logoUrl: e.target.value }))
-          }
-        />
-
-        <input
+      </section>
+      <section className="grid gap-4 rounded-xl border border-border p-4 md:grid-cols-2">
+        <h4 className="flex items-center gap-2 font-semibold md:col-span-2"><Contact size={18} aria-hidden="true" />{fr ? "Coordonnées de l’école" : "School contact details"}</h4>
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Adresse" : "Address line 1"}</span><input
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Address line 1"
+          placeholder={fr ? "Adresse" : "Address line 1"}
           value={form.addressLine1}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, addressLine1: e.target.value }))
           }
-        />
+        /></label>
 
-        <input
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Complément d’adresse" : "Address line 2"}</span><input
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Address line 2"
+          placeholder={fr ? "Complément d’adresse" : "Address line 2"}
           value={form.addressLine2}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, addressLine2: e.target.value }))
           }
-        />
+        /></label>
 
-        <input
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Ville" : "City"}</span><input
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="City"
+          placeholder={fr ? "Ville" : "City"}
           value={form.city}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, city: e.target.value }))
           }
-        />
+        /></label>
 
-        <input
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Téléphone" : "Phone"}</span><input
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Phone"
+          placeholder={fr ? "Téléphone" : "Phone"}
           value={form.phone}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, phone: e.target.value }))
           }
-        />
+        /></label>
 
-        <input
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Adresse électronique" : "Email"}</span><input type="email"
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Email"
+          placeholder={fr ? "Adresse électronique" : "Email"}
           value={form.email}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, email: e.target.value }))
           }
-        />
+        /></label>
 
-        <input
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Site web" : "Website"}</span><input type="url"
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Website"
+          placeholder={fr ? "Site web" : "Website"}
           value={form.website}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, website: e.target.value }))
           }
-        />
+        /></label>
 
-        <input
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Nom de la direction" : "Director name"}</span><input
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm md:col-span-2"
-          placeholder="Director name"
+          placeholder={fr ? "Nom de la direction" : "Director name"}
           value={form.directorName}
           onChange={(e) =>
             setForm((prev) => ({ ...prev, directorName: e.target.value }))
           }
-        />
-
-        <input
+        /></label>
+      </section>
+      <details className="rounded-xl border border-border p-4">
+        <summary className="cursor-pointer font-semibold"><FileText size={18} aria-hidden="true" className="mr-2 inline-block" />{fr ? "Documents et bulletins" : "Documents and report cards"}</summary>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Titre du bulletin — français" : "Report card title — French"}</span><input
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Report card title FR"
+          placeholder={fr ? "Titre du bulletin — français" : "Report card title — French"}
           value={form.reportCardTitleFr}
           onChange={(e) =>
             setForm((prev) => ({
@@ -303,11 +312,11 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
               reportCardTitleFr: e.target.value,
             }))
           }
-        />
+        /></label>
 
-        <input
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Titre du bulletin — anglais" : "Report card title — English"}</span><input
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Report card title EN"
+          placeholder={fr ? "Titre du bulletin — anglais" : "Report card title — English"}
           value={form.reportCardTitleEn}
           onChange={(e) =>
             setForm((prev) => ({
@@ -315,11 +324,11 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
               reportCardTitleEn: e.target.value,
             }))
           }
-        />
+        /></label>
 
-        <textarea
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Pied de page — français" : "Footer note — French"}</span><textarea
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Footer note FR"
+          placeholder={fr ? "Pied de page — français" : "Footer note — French"}
           value={form.reportCardFooterFr}
           onChange={(e) =>
             setForm((prev) => ({
@@ -327,11 +336,11 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
               reportCardFooterFr: e.target.value,
             }))
           }
-        />
+        /></label>
 
-        <textarea
+        <label className="block text-sm"><span className="mb-2 block font-medium">{fr ? "Pied de page — anglais" : "Footer note — English"}</span><textarea
           className="rounded-xl border border-input bg-surface text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm"
-          placeholder="Footer note EN"
+          placeholder={fr ? "Pied de page — anglais" : "Footer note — English"}
           value={form.reportCardFooterEn}
           onChange={(e) =>
             setForm((prev) => ({
@@ -339,19 +348,21 @@ export function SchoolBrandingClient({ schoolId }: { schoolId: string }) {
               reportCardFooterEn: e.target.value,
             }))
           }
-        />
+        /></label>
       </div>
+      </details>
+      </fieldset>
 
       <div className="mt-5">
         <button
-          type="button"
-          disabled={saving || loading || !loaded}
-          onClick={saveBranding}
-          className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
+          type="submit"
+          disabled={saving || loading || !loaded || readingLogo}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
         >
+          <Save size={17} aria-hidden="true" />
           {saving ? (fr ? "Enregistrement…" : "Saving…") : (fr ? "Enregistrer" : "Save branding")}
         </button>
       </div>
-    </div>
+    </form>
   );
 }

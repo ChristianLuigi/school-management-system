@@ -78,7 +78,6 @@ export const messages = {
     },
     nav: {
       dashboard: "Tableau de bord",
-      demo: "Démo finale",
       academicStructure: "Structure académique",
       academics: "Académie",
       admissions: "Admissions",
@@ -844,7 +843,6 @@ export const messages = {
     },
     nav: {
       dashboard: "Dashboard",
-      demo: "Final Demo",
       academicStructure: "Academic Structure",
       academics: "Academics",
       admissions: "Admissions",

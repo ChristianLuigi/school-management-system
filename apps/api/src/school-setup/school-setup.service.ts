@@ -165,9 +165,9 @@ export class SchoolSetupService {
     return this.db.withTransaction(async (client) => {
       const school = await this.getSchoolForBootstrap(client, dto.schoolId);
 
-      if (school.status === 'ACTIVE') {
+      if (!['DRAFT', 'ACTIVE_SETUP'].includes(school.status)) {
         throw new BadRequestException(
-          'School is already active. Bootstrap should not be run again.',
+          'School is not eligible for initial setup. Use the academic management workflow.',
         );
       }
 
@@ -363,6 +363,7 @@ export class SchoolSetupService {
       WHERE id = $1
         AND deleted_at IS NULL
       LIMIT 1
+      FOR UPDATE
       `,
       [schoolId],
     );
