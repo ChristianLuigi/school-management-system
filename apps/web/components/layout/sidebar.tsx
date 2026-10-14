@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { useI18n } from "@/components/i18n-provider";
+import { SchoolLogo } from "@/components/layout/school-logo";
 import {
   Activity,
   BookOpen,
@@ -45,6 +46,7 @@ type SidebarProps = {
   workspaceLabel: string;
   workspaceName: string;
   workspaceCode?: string;
+  schoolLogoUrl?: string | null;
   onClose: () => void;
 };
 
@@ -55,6 +57,7 @@ export function Sidebar({
   workspaceLabel,
   workspaceName,
   workspaceCode,
+  schoolLogoUrl,
   onClose,
 }: SidebarProps) {
   const pathname = usePathname();
@@ -146,7 +149,9 @@ export function Sidebar({
       }`}
     >
       <div className="flex min-h-20 items-center justify-between gap-3 border-b border-sidebar-border px-5">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-3">
+          {schoolLogoUrl ? <SchoolLogo key={schoolLogoUrl} url={schoolLogoUrl} /> : null}
+          <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sidebar-muted">
             {workspaceLabel}
           </p>
@@ -158,6 +163,7 @@ export function Sidebar({
               {workspaceCode}
             </p>
           ) : null}
+          </div>
         </div>
 
         <button

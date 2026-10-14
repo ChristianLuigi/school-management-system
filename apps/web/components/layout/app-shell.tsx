@@ -148,6 +148,7 @@ export function AppShell({
       ) : null}
 
       <Sidebar
+        schoolLogoUrl={currentAppearance?.logoUrl}
         desktopVisible={desktopSidebarVisible}
         items={navigation}
         open={sidebarOpen}
@@ -159,6 +160,7 @@ export function AppShell({
 
       <div id="workspace-content" className={`min-h-svh ${desktopSidebarVisible ? "lg:pl-72" : ""} print:pl-0`}>
         <Topbar
+          schoolLogoUrl={currentAppearance?.logoUrl}
           workspaceLabel={workspaceLabel}
           workspaceName={workspaceName}
           user={user}
@@ -174,10 +176,6 @@ export function AppShell({
         <main id="main-content" tabIndex={-1} className="outline-none">
           <div className="mx-auto w-full max-w-[100rem] p-4 sm:p-6 lg:p-8 print:p-0">
             <AppBreadcrumbs navigation={navigation} />
-            {currentAppearance?.logoUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={currentAppearance.logoUrl} alt={workspaceName} className="mb-4 h-12 max-w-48 object-contain" />
-            ) : null}
             {logoutError ? (
               <p
                 role="alert"

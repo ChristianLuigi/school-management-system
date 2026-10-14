@@ -3,10 +3,12 @@
 import type { ReactNode } from "react";
 import { LogOut, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useI18n } from "@/components/i18n-provider";
+import { SchoolLogo } from "@/components/layout/school-logo";
 
 type TopbarProps = {
   workspaceLabel: string;
   workspaceName?: string;
+  schoolLogoUrl?: string | null;
   user: {
     name: string;
     email: string;
@@ -33,6 +35,7 @@ function initials(name: string, email: string) {
 export function Topbar({
   workspaceLabel,
   workspaceName,
+  schoolLogoUrl,
   user,
   actions,
   loggingOut,
@@ -70,6 +73,7 @@ export function Topbar({
             <Menu aria-hidden="true" size={20} />
           </button>
 
+          {schoolLogoUrl ? <SchoolLogo key={schoolLogoUrl} url={schoolLogoUrl} /> : null}
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {workspaceLabel}
