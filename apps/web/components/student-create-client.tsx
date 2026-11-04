@@ -33,7 +33,7 @@ const STEPS = [
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1.5 block text-sm font-medium text-slate-700">
+    <span className="mb-1.5 block text-sm font-medium text-foreground">
       {children}
     </span>
   );
@@ -179,10 +179,10 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
       className="mx-auto max-w-4xl space-y-5"
       aria-busy={saving}
     >
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-muted-foreground">
         {t("students.create.requiredHint")}
       </p>
-      <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="rounded-2xl border border-border bg-surface p-3 shadow-sm">
         <ol className="grid grid-cols-3 gap-2">
           {STEPS.map((item) => {
             const Icon = item.icon;
@@ -197,12 +197,12 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                     if (item.id === 1 || validateIdentity()) setStep(item.id);
                   }}
                   aria-current={active ? "step" : undefined}
-                  className={`flex min-h-11 w-full flex-col items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 sm:flex-row sm:px-3 sm:text-sm ${
+                  className={`flex min-h-11 w-full flex-col items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:px-3 sm:text-sm ${
                     active
-                      ? "bg-slate-950 text-white"
+                      ? "bg-primary text-solid-foreground"
                       : complete
-                        ? "bg-green-50 text-green-700"
-                        : "text-slate-500 hover:bg-slate-50"
+                        ? "bg-success-subtle text-success"
+                        : "text-muted-foreground hover:bg-surface"
                   }`}
                 >
                   {complete ? (
@@ -244,14 +244,14 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
         ref={stepRef}
         tabIndex={-1}
         aria-label={t(STEPS[step - 1].labelKey)}
-        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+        className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6"
       >
         <fieldset disabled={saving || created}>
           {step === 1 ? (
             <div>
               <div className="flex items-center gap-2">
-                <UserRound className="h-5 w-5 text-blue-700" />
-                <h2 className="font-semibold text-slate-950">
+                <UserRound className="h-5 w-5 text-info" />
+                <h2 className="font-semibold text-foreground">
                   {t("students.create.identityTitle")}
                 </h2>
               </div>
@@ -276,12 +276,12 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                         firstName: undefined,
                       }));
                     }}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-input px-3 py-2.5 text-sm outline-none focus:border-info/40 focus:ring-2 focus:ring-ring"
                   />
                   {fieldErrors.firstName ? (
                     <span
                       id="firstName-error"
-                      className="mt-1 block text-sm text-red-700"
+                      className="mt-1 block text-sm text-danger"
                     >
                       {t(fieldErrors.firstName)}
                     </span>
@@ -306,12 +306,12 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                         lastName: undefined,
                       }));
                     }}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-input px-3 py-2.5 text-sm outline-none focus:border-info/40 focus:ring-2 focus:ring-ring"
                   />
                   {fieldErrors.lastName ? (
                     <span
                       id="lastName-error"
-                      className="mt-1 block text-sm text-red-700"
+                      className="mt-1 block text-sm text-danger"
                     >
                       {t(fieldErrors.lastName)}
                     </span>
@@ -322,7 +322,7 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                   <select
                     value={gender}
                     onChange={(event) => setGender(event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                    className="w-full rounded-xl border border-input bg-surface px-3 py-2.5 text-sm"
                   >
                     <option value="">
                       {t("students.create.notSpecified")}
@@ -349,12 +349,12 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                         dateOfBirth: undefined,
                       }));
                     }}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                    className="w-full rounded-xl border border-input px-3 py-2.5 text-sm"
                   />
                   {fieldErrors.dateOfBirth ? (
                     <span
                       id="birthDate-error"
-                      className="mt-1 block text-sm text-red-700"
+                      className="mt-1 block text-sm text-danger"
                     >
                       {t(fieldErrors.dateOfBirth)}
                     </span>
@@ -366,7 +366,7 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                     maxLength={200}
                     value={placeOfBirth}
                     onChange={(event) => setPlaceOfBirth(event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                    className="w-full rounded-xl border border-input px-3 py-2.5 text-sm"
                   />
                 </label>
               </div>
@@ -376,8 +376,8 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
           {step === 2 ? (
             <div>
               <div className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-blue-700" />
-                <h2 className="font-semibold text-slate-950">
+                <GraduationCap className="h-5 w-5 text-info" />
+                <h2 className="font-semibold text-foreground">
                   {t("students.create.placementStep")}
                 </h2>
               </div>
@@ -389,7 +389,7 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                     placeholder={t("students.create.generatedIfBlank")}
                     value={studentCode}
                     onChange={(event) => setStudentCode(event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                    className="w-full rounded-xl border border-input px-3 py-2.5 text-sm"
                   />
                 </label>
                 <div>
@@ -412,7 +412,7 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                     onChange={(event) =>
                       setPreviousSchoolName(event.target.value)
                     }
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                    className="w-full rounded-xl border border-input px-3 py-2.5 text-sm"
                   />
                 </label>
                 <label className="sm:col-span-2">
@@ -426,7 +426,7 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                     onChange={(event) =>
                       setPreviousSchoolAddress(event.target.value)
                     }
-                    className="w-full resize-y rounded-xl border border-slate-300 px-3 py-2.5 text-sm"
+                    className="w-full resize-y rounded-xl border border-input px-3 py-2.5 text-sm"
                   />
                 </label>
               </div>
@@ -436,20 +436,20 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
           {step === 3 ? (
             <div>
               <div className="flex items-center gap-2">
-                <FileCheck2 className="h-5 w-5 text-blue-700" />
-                <h2 className="font-semibold text-slate-950">
+                <FileCheck2 className="h-5 w-5 text-info" />
+                <h2 className="font-semibold text-foreground">
                   {t("students.create.reviewTitle")}
                 </h2>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="rounded-xl border border-border p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("students.student")}
                   </div>
-                  <div className="mt-2 font-semibold text-slate-950">
+                  <div className="mt-2 font-semibold text-foreground">
                     {firstName.trim()} {lastName.trim()}
                   </div>
-                  <div className="mt-1 text-sm text-slate-500">
+                  <div className="mt-1 text-sm text-muted-foreground">
                     {studentCode.trim() || t("students.create.generatedCode")}
                   </div>
                   <dl className="mt-3 space-y-2 text-sm">
@@ -471,8 +471,8 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                       ],
                     ].map(([label, value]) => (
                       <div key={label}>
-                        <dt className="text-slate-500">{label}</dt>
-                        <dd className="break-words text-slate-900">
+                        <dt className="text-muted-foreground">{label}</dt>
+                        <dd className="break-words text-foreground">
                           {value.trim() || t("students.create.notSpecified")}
                         </dd>
                       </div>
@@ -481,27 +481,27 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="mt-3 text-sm font-semibold text-blue-700 underline"
+                    className="mt-3 text-sm font-semibold text-info underline"
                   >
                     {t("common.edit")}
                   </button>
                 </div>
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="rounded-xl border border-border p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("students.create.accessState")}
                   </div>
-                  <div className="mt-2 font-semibold text-slate-950">
+                  <div className="mt-2 font-semibold text-foreground">
                     {sectionId
                       ? t("students.create.activeWithClass")
                       : t("students.create.registeredClassPending")}
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {selectedSection
                       ? sectionOptionLabel(selectedSection, locale, t)
                       : t("students.create.assignLater")}
                   </p>
                   {selectedSection ? (
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {selectedSection.academicYearNameI18n?.[locale] ??
                         selectedSection.academicYearNameI18n?.fr ??
                         selectedSection.academicYearStatus}
@@ -510,21 +510,21 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                   <button
                     type="button"
                     onClick={() => setStep(2)}
-                    className="mt-3 text-sm font-semibold text-blue-700 underline"
+                    className="mt-3 text-sm font-semibold text-info underline"
                   >
                     {t("common.edit")}
                   </button>
-                  <p className="mt-4 text-sm text-slate-600">
+                  <p className="mt-4 text-sm text-muted-foreground">
                     {t("students.create.guardianAfterSave")}
                   </p>
                 </div>
               </div>
 
               <div className="mt-5">
-                <div className="mb-3 text-sm font-medium text-slate-700">
+                <div className="mb-3 text-sm font-medium text-foreground">
                   {t("students.create.documentsReceived")}
                 </div>
-                <p className="mb-3 text-sm text-slate-500">
+                <p className="mb-3 text-sm text-muted-foreground">
                   {t("students.create.documentsHint")}
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -552,7 +552,7 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
                   ].map(([label, checked, setter]) => (
                     <label
                       key={String(label)}
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700"
+                      className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 text-sm text-foreground"
                     >
                       <input
                         type="checkbox"
@@ -573,12 +573,12 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
         </fieldset>
       </section>
 
-      <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur">
+      <div className="sticky bottom-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface/95 p-3 shadow-lg backdrop-blur">
         <div className="flex items-center gap-2">
           {step === 1 ? (
             <Link
               href="/students"
-              className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-surface"
             >
               <ArrowLeft className="h-4 w-4" />
               {t("common.cancel")}
@@ -588,7 +588,7 @@ export function StudentCreateClient({ schoolId }: { schoolId: string }) {
               type="button"
               disabled={saving || created}
               onClick={() => setStep((current) => Math.max(1, current - 1))}
-              className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-surface"
             >
               <ArrowLeft className="h-4 w-4" />
               {t("common.back")}

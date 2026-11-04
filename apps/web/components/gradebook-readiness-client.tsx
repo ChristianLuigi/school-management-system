@@ -54,13 +54,13 @@ export function GradebookReadinessClient({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-2xl border border-border bg-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-slate-900">
+          <div className="text-sm font-semibold text-foreground">
             Readiness Check
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-xs text-muted-foreground">
             Validate assessments, weights, and score completeness before submission.
           </div>
         </div>
@@ -69,14 +69,14 @@ export function GradebookReadinessClient({
           type="button"
           onClick={checkReadiness}
           disabled={loading}
-          className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+          className="rounded-xl border border-input bg-surface px-3 py-2 text-sm hover:bg-surface disabled:opacity-60"
         >
           {loading ? "Checking..." : "Check"}
         </button>
       </div>
 
       {error ? (
-        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-3 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -92,43 +92,43 @@ export function GradebookReadinessClient({
           </div>
 
           <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-xl bg-white p-3">
-              <div className="text-xs text-slate-500">Assessments</div>
+            <div className="rounded-xl bg-surface p-3">
+              <div className="text-xs text-muted-foreground">Assessments</div>
               <div className="mt-1 text-xl font-bold">
                 {readiness.summary.assessments}
               </div>
             </div>
 
-            <div className="rounded-xl bg-white p-3">
-              <div className="text-xs text-slate-500">Students</div>
+            <div className="rounded-xl bg-surface p-3">
+              <div className="text-xs text-muted-foreground">Students</div>
               <div className="mt-1 text-xl font-bold">
                 {readiness.summary.activeStudents}
               </div>
             </div>
 
-            <div className="rounded-xl bg-white p-3">
-              <div className="text-xs text-slate-500">Total Weight</div>
+            <div className="rounded-xl bg-surface p-3">
+              <div className="text-xs text-muted-foreground">Total Weight</div>
               <div className="mt-1 text-xl font-bold">
                 {readiness.summary.totalWeight}%
               </div>
             </div>
 
-            <div className="rounded-xl bg-white p-3">
-              <div className="text-xs text-slate-500">Expected Scores</div>
+            <div className="rounded-xl bg-surface p-3">
+              <div className="text-xs text-muted-foreground">Expected Scores</div>
               <div className="mt-1 text-xl font-bold">
                 {readiness.summary.expectedScoreEntries}
               </div>
             </div>
 
-            <div className="rounded-xl bg-white p-3">
-              <div className="text-xs text-slate-500">Existing Scores</div>
+            <div className="rounded-xl bg-surface p-3">
+              <div className="text-xs text-muted-foreground">Existing Scores</div>
               <div className="mt-1 text-xl font-bold">
                 {readiness.summary.existingScoreEntries}
               </div>
             </div>
 
-            <div className="rounded-xl bg-white p-3">
-              <div className="text-xs text-slate-500">Missing / Invalid</div>
+            <div className="rounded-xl bg-surface p-3">
+              <div className="text-xs text-muted-foreground">Missing / Invalid</div>
               <div className="mt-1 text-xl font-bold">
                 {readiness.summary.missingScores} /{" "}
                 {readiness.summary.invalidScores}
@@ -137,11 +137,11 @@ export function GradebookReadinessClient({
           </div>
 
           {readiness.blockingIssues.length > 0 ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3">
-              <div className="text-sm font-semibold text-red-900">
+            <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3">
+              <div className="text-sm font-semibold text-danger">
                 Blocking Issues
               </div>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-800">
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-danger">
                 {readiness.blockingIssues.map((issue) => (
                   <li key={issue}>{issue}</li>
                 ))}
@@ -150,11 +150,11 @@ export function GradebookReadinessClient({
           ) : null}
 
           {readiness.warnings.length > 0 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <div className="text-sm font-semibold text-amber-900">
+            <div className="rounded-xl border border-warning/40 bg-warning-subtle p-3">
+              <div className="text-sm font-semibold text-warning">
                 Warnings
               </div>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-800">
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-warning">
                 {readiness.warnings.map((warning) => (
                   <li key={warning}>{warning}</li>
                 ))}

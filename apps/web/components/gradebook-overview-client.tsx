@@ -130,13 +130,13 @@ export function GradebookOverviewClient({
   }, [overview, statusFilter, attentionOnly, search]);
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <div className="space-y-5 rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Gradebook Workflow Overview
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Review missing, draft, submitted, approved, and rejected gradebooks.
           </p>
         </div>
@@ -144,29 +144,29 @@ export function GradebookOverviewClient({
         <button
           type="button"
           onClick={loadOverview}
-          className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input bg-surface px-4 py-2 text-sm hover:bg-surface"
         >
           Refresh
         </button>
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-xl bg-white p-4 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading gradebook overview...
         </div>
       ) : null}
 
       {overview ? (
         <>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <div className="text-sm text-slate-500">Current Grading Period</div>
-            <div className="mt-1 text-lg font-semibold text-slate-900">
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="text-sm text-muted-foreground">Current Grading Period</div>
+            <div className="mt-1 text-lg font-semibold text-foreground">
               {overview.gradingPeriod?.nameI18n?.fr ??
                 overview.gradingPeriod?.nameI18n?.en ??
                 "No active grading period"}
@@ -174,57 +174,57 @@ export function GradebookOverviewClient({
           </div>
 
           <div className="grid gap-4 md:grid-cols-4 xl:grid-cols-8">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Coverage</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Coverage</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.coveragePercent}%
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Expected</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Expected</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.totalExpected}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Missing</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Missing</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.missing}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Draft</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Draft</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.draft}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Submitted</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Submitted</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.submitted}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Approved</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Approved</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.approved}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Rejected</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Rejected</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.rejected}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Approval Queue</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Approval Queue</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.approvalQueue}
               </div>
@@ -232,14 +232,14 @@ export function GradebookOverviewClient({
           </div>
 
           <div>
-            <div className="mb-2 flex items-center justify-between text-sm text-slate-600">
+            <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
               <span>Approved / Published coverage</span>
               <span>{overview.summary.coveragePercent}%</span>
             </div>
 
-            <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+            <div className="h-3 overflow-hidden rounded-full bg-surface-muted">
               <div
-                className="h-full rounded-full bg-slate-900"
+                className="h-full rounded-full bg-primary"
                 style={{ width: `${overview.summary.coveragePercent}%` }}
               />
             </div>
@@ -247,7 +247,7 @@ export function GradebookOverviewClient({
 
           <div className="flex flex-wrap gap-3">
             <select
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -261,13 +261,13 @@ export function GradebookOverviewClient({
             </select>
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="Search section or subject"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
 
-            <label className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
+            <label className="flex items-center gap-2 rounded-xl border border-input bg-surface px-3 py-2 text-sm">
               <input
                 type="checkbox"
                 checked={attentionOnly}
@@ -277,9 +277,9 @@ export function GradebookOverviewClient({
             </label>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+          <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-600">
+              <thead className="bg-surface-muted text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Class</th>
                   <th className="px-4 py-3">Subject</th>
@@ -292,25 +292,25 @@ export function GradebookOverviewClient({
                 {<PaginatedCollection items={filteredRows} rows columns={5}>{(row) => (
                   <tr
                     key={row.sectionSubjectId}
-                    className="border-t border-slate-200"
+                    className="border-t border-border"
                   >
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-foreground">
                         {row.gradeLevelNameI18n?.fr ?? row.gradeLevelCode} -{" "}
                         {row.sectionNameI18n?.fr ?? row.sectionCode}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {row.gradeLevelCode} / {row.sectionCode}
                       </div>
                     </td>
 
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-foreground">
                         {row.subjectNameI18n?.fr ??
                           row.subjectNameI18n?.en ??
                           row.subjectCode}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {row.subjectCode}
                       </div>
                     </td>
@@ -349,7 +349,7 @@ export function GradebookOverviewClient({
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-8 text-center text-slate-500"
+                      className="px-4 py-8 text-center text-muted-foreground"
                     >
                       No gradebooks found for this filter set.
                     </td>

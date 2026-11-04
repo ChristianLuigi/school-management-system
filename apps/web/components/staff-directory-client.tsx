@@ -455,15 +455,15 @@ phone: phone.trim() || undefined,
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-slate-950">{copy.title}</h2>
-          <p className="mt-1 max-w-3xl text-sm text-slate-600">
+          <h2 className="text-xl font-semibold text-foreground">{copy.title}</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             {copy.description}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/staff/reports"
-            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700"
+            className="rounded-xl border border-input px-4 py-2.5 text-sm font-semibold text-foreground"
           >
             {copy.reports}
           </Link>
@@ -471,7 +471,7 @@ phone: phone.trim() || undefined,
             type="button"
             disabled={exporting}
             onClick={() => void exportDirectory()}
-            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 disabled:opacity-60"
+            className="rounded-xl border border-input px-4 py-2.5 text-sm font-semibold text-foreground disabled:opacity-60"
           >
             {exporting ? copy.exportingDirectory : copy.exportDirectory}
           </button>
@@ -481,7 +481,7 @@ phone: phone.trim() || undefined,
               setShowImport((value) => !value);
               setShowCreate(false);
             }}
-            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700"
+            className="rounded-xl border border-input px-4 py-2.5 text-sm font-semibold text-foreground"
           >
             {showImport ? copy.close : copy.importPreview}
           </button>
@@ -491,7 +491,7 @@ phone: phone.trim() || undefined,
               setShowCreate((value) => !value);
               setShowImport(false);
             }}
-            className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white"
+            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-solid-foreground"
           >
             {showCreate ? copy.close : copy.add}
           </button>
@@ -512,11 +512,11 @@ phone: phone.trim() || undefined,
       {showCreate ? (
         <form
           onSubmit={createStaff}
-          className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+          className="rounded-3xl border border-border bg-surface p-5 shadow-sm"
         >
           <div className="grid gap-6 xl:grid-cols-3">
             <fieldset>
-              <legend className="font-semibold text-slate-950">
+              <legend className="font-semibold text-foreground">
                 {copy.identity}
               </legend>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -570,7 +570,7 @@ phone: phone.trim() || undefined,
             </fieldset>
 
             <fieldset>
-              <legend className="font-semibold text-slate-950">
+              <legend className="font-semibold text-foreground">
                 {copy.address}
               </legend>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -628,7 +628,7 @@ phone: phone.trim() || undefined,
               </div>
             </fieldset>
             <fieldset>
-              <legend className="font-semibold text-slate-950">
+              <legend className="font-semibold text-foreground">
                 {copy.employment}
               </legend>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -774,7 +774,7 @@ phone: phone.trim() || undefined,
           <button
             type="submit"
             disabled={creating}
-            className="mt-6 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="mt-6 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {creating ? copy.creating : copy.create}
           </button>
@@ -784,7 +784,7 @@ phone: phone.trim() || undefined,
       {error ? (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+          className="rounded-xl border border-danger/40 bg-danger-subtle p-4 text-sm text-danger"
         >
           {error}
         </div>
@@ -792,7 +792,7 @@ phone: phone.trim() || undefined,
 
       <form
         onSubmit={applyFilters}
-        className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 lg:grid-cols-[minmax(16rem,1fr)_repeat(4,minmax(10rem,auto))_auto]"
+        className="grid gap-3 rounded-2xl border border-border bg-surface p-4 lg:grid-cols-[minmax(16rem,1fr)_repeat(4,minmax(10rem,auto))_auto]"
       >
         <input
           aria-label={copy.search}
@@ -878,46 +878,46 @@ phone: phone.trim() || undefined,
         <div className="flex gap-2">
           <button
             type="submit"
-            className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-solid-foreground"
           >
             {copy.searchButton}
           </button>
           <button
             type="button"
             onClick={resetFilters}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="rounded-xl border border-input px-4 py-2 text-sm font-medium text-foreground"
           >
             {copy.reset}
           </button>
         </div>
       </form>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div className="border-b border-slate-200 px-5 py-3 text-sm text-slate-600">
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface">
+        <div className="border-b border-border px-5 py-3 text-sm text-muted-foreground">
           {data.pagination.total} {copy.total}
         </div>
         {loading ? (
-          <div className="p-8 text-center text-sm text-slate-500">
+          <div className="p-8 text-center text-sm text-muted-foreground">
             {copy.loading}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-border">
             {data.items.map((staff) => (
               <article
                 key={staff.id}
-                className="grid gap-4 p-5 transition hover:bg-slate-50 lg:grid-cols-[minmax(15rem,1.3fr)_minmax(12rem,1fr)_minmax(11rem,0.8fr)_auto]"
+                className="grid gap-4 p-5 transition hover:bg-surface lg:grid-cols-[minmax(15rem,1.3fr)_minmax(12rem,1fr)_minmax(11rem,0.8fr)_auto]"
               >
                 <div>
                   <Link
                     href={`/staff/${staff.id}`}
-                    className="font-semibold text-slate-950 hover:underline"
+                    className="font-semibold text-foreground hover:underline"
                   >
                     {staffName(staff)}
                   </Link>
-                  <div className="mt-1 text-sm text-slate-600">
+                  <div className="mt-1 text-sm text-muted-foreground">
                     {staff.jobTitle || categoryLabel(locale, staff.staffCategory)}
                   </div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-1 text-xs text-muted-foreground">
                     {staff.staffCode || "—"}
                     {staff.email ? ` · ${staff.email}` : ""}
                   </div>
@@ -935,14 +935,14 @@ phone: phone.trim() || undefined,
                 </div>
                 <dl className="grid grid-cols-3 gap-3 text-xs">
                   <div>
-                    <dt className="text-slate-500">{copy.account}</dt>
-                    <dd className="mt-1 font-medium text-slate-800">
+                    <dt className="text-muted-foreground">{copy.account}</dt>
+                    <dd className="mt-1 font-medium text-foreground">
                       {staff.account.linked ? copy.linked : copy.noAccount}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">{copy.payroll}</dt>
-                    <dd className="mt-1 font-medium text-slate-800">
+                    <dt className="text-muted-foreground">{copy.payroll}</dt>
+                    <dd className="mt-1 font-medium text-foreground">
                       {!staff.payroll.hasProfile
                         ? copy.noPayroll
                         : staff.payroll.active
@@ -951,8 +951,8 @@ phone: phone.trim() || undefined,
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">{copy.assignments}</dt>
-                    <dd className="mt-1 font-medium text-slate-800">
+                    <dt className="text-muted-foreground">{copy.assignments}</dt>
+                    <dd className="mt-1 font-medium text-foreground">
                       {staff.activeAssignmentCount}
                     </dd>
                   </div>
@@ -960,7 +960,7 @@ phone: phone.trim() || undefined,
                 <div className="flex items-center justify-end">
                   <Link
                     href={`/staff/${staff.id}`}
-                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+                    className="rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground"
                   >
                     {copy.profile}
                   </Link>
@@ -968,7 +968,7 @@ phone: phone.trim() || undefined,
               </article>
             ))}
             {!data.items.length ? (
-              <div className="p-10 text-center text-sm text-slate-500">
+              <div className="p-10 text-center text-sm text-muted-foreground">
                 {copy.empty}
               </div>
             ) : null}
@@ -982,18 +982,18 @@ phone: phone.trim() || undefined,
             type="button"
             disabled={page <= 1 || loading}
             onClick={() => setPage((value) => Math.max(1, value - 1))}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm font-medium disabled:opacity-50"
           >
             {copy.previous}
           </button>
-          <div className="text-sm text-slate-600">
+          <div className="text-sm text-muted-foreground">
             {copy.page} {page} / {data.pagination.pageCount}
           </div>
           <button
             type="button"
             disabled={page >= data.pagination.pageCount || loading}
             onClick={() => setPage((value) => value + 1)}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm font-medium disabled:opacity-50"
           >
             {copy.next}
           </button>
@@ -1012,7 +1012,7 @@ function Field({
 }) {
   return (
     <label className="block text-sm">
-      <span className="font-medium text-slate-800">{label}</span>
+      <span className="font-medium text-foreground">{label}</span>
       {children}
     </label>
   );

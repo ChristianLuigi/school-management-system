@@ -65,7 +65,7 @@ function statusTone(status: string): SchoolBadgeTone {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1.5 block text-sm font-medium text-slate-700">
+    <span className="mb-1.5 block text-sm font-medium text-foreground">
       {children}
     </span>
   );
@@ -246,27 +246,27 @@ export function StudentDocumentsPanelClient({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+    <section className="rounded-2xl border border-border bg-surface shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-blue-50 p-2.5 text-blue-700">
+          <div className="rounded-xl bg-info-subtle p-2.5 text-info">
             <FileText className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-950">Documents</h3>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              <h3 className="font-semibold text-foreground">Documents</h3>
+              <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 {documents.length}
               </span>
             </div>
-            <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500">
-              <span className="text-green-700">{counts.verified} verified</span>
+            <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <span className="text-success">{counts.verified} verified</span>
               <span>·</span>
-              <span className="text-amber-700">{counts.pending} pending</span>
+              <span className="text-warning">{counts.pending} pending</span>
               {counts.rejected ? (
                 <>
                   <span>·</span>
-                  <span className="text-red-700">
+                  <span className="text-danger">
                     {counts.rejected} rejected
                   </span>
                 </>
@@ -277,34 +277,34 @@ export function StudentDocumentsPanelClient({
         <button
           type="button"
           onClick={startAdd}
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary"
         >
           <Plus className="h-4 w-4" /> Add document
         </button>
       </div>
 
       {message ? (
-        <div className="mx-5 mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="mx-5 mt-4 rounded-xl border border-success/40 bg-success-subtle px-4 py-3 text-sm text-success">
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="mx-5 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mx-5 mt-4 rounded-xl border border-danger/40 bg-danger-subtle px-4 py-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {open ? (
-        <div className="m-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="m-5 rounded-2xl border border-border bg-surface p-4">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <div className="font-semibold text-slate-900">
+            <div className="font-semibold text-foreground">
               {editingId ? "Edit document" : "New document"}
             </div>
             <button
               type="button"
               onClick={closeForm}
               aria-label="Close document form"
-              className="rounded-lg p-1.5 text-slate-500 hover:bg-white"
+              className="rounded-lg p-1.5 text-muted-foreground hover:bg-surface"
             >
               <X className="h-4 w-4" />
             </button>
@@ -320,7 +320,7 @@ export function StudentDocumentsPanelClient({
                     documentType: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                className="w-full rounded-xl border border-input bg-surface px-3 py-2.5 text-sm"
               >
                 <option value="PHOTO">Student photo</option>
                 <option value="BIRTH_CERTIFICATE">Birth certificate</option>
@@ -342,7 +342,7 @@ export function StudentDocumentsPanelClient({
                       documentStatus: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                  className="w-full rounded-xl border border-input bg-surface px-3 py-2.5 text-sm"
                 >
                   <option value="PENDING">Pending</option>
                   <option value="VERIFIED">Verified</option>
@@ -364,7 +364,7 @@ export function StudentDocumentsPanelClient({
                     receivedAt: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                className="w-full rounded-xl border border-input bg-surface px-3 py-2.5 text-sm"
               />
             </label>
             <label>
@@ -378,12 +378,12 @@ export function StudentDocumentsPanelClient({
                     fileName: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                className="w-full rounded-xl border border-input bg-surface px-3 py-2.5 text-sm"
               />
             </label>
             <label className="md:col-span-2">
               <FieldLabel>File</FieldLabel>
-              <span className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm font-medium text-slate-600 hover:border-blue-400 hover:text-blue-700">
+              <span className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-input bg-surface px-4 py-5 text-sm font-medium text-muted-foreground hover:border-info/40 hover:text-info">
                 <Upload className="h-4 w-4" />
                 {uploading
                   ? "Uploading…"
@@ -412,7 +412,7 @@ export function StudentDocumentsPanelClient({
                     notes: event.target.value,
                   }))
                 }
-                className="w-full resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
+                className="w-full resize-y rounded-xl border border-input bg-surface px-3 py-2.5 text-sm"
               />
             </label>
           </div>
@@ -420,7 +420,7 @@ export function StudentDocumentsPanelClient({
             <button
               type="button"
               onClick={closeForm}
-              className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-white"
+              className="rounded-xl border border-input px-4 py-2.5 text-sm font-medium text-foreground hover:bg-surface"
             >
               Cancel
             </button>
@@ -428,7 +428,7 @@ export function StudentDocumentsPanelClient({
               type="button"
               disabled={saving || uploading}
               onClick={() => void saveDocument()}
-              className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
               {saving ? "Saving…" : "Save document"}
             </button>
@@ -440,18 +440,18 @@ export function StudentDocumentsPanelClient({
         {<PaginatedCollection items={documents}>{(document) => (
           <article
             key={document.id}
-            className="rounded-2xl border border-slate-200 p-4"
+            className="rounded-2xl border border-border p-4"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="rounded-xl bg-slate-100 p-2 text-slate-600">
+                <div className="rounded-xl bg-surface-muted p-2 text-muted-foreground">
                   <FileText className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <div className="truncate font-semibold text-slate-950">
+                  <div className="truncate font-semibold text-foreground">
                     {documentTypeLabel(document.documentType)}
                   </div>
-                  <div className="mt-1 truncate text-xs text-slate-500">
+                  <div className="mt-1 truncate text-xs text-muted-foreground">
                     {document.fileName ?? "No file uploaded"}
                     {document.receivedAt ? ` · ${document.receivedAt}` : ""}
                   </div>
@@ -466,24 +466,24 @@ export function StudentDocumentsPanelClient({
                   onClick={() => startEdit(document)}
                   aria-label="Edit document"
                   title="Edit document"
-                  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                  className="rounded-lg p-2 text-muted-foreground hover:bg-surface-muted"
                 >
                   <Pencil className="h-4 w-4" />
                 </button>
               </div>
             </div>
             {document.notes ? (
-              <div className="mt-3 text-sm text-slate-600">
+              <div className="mt-3 text-sm text-muted-foreground">
                 {document.notes}
               </div>
             ) : null}
-            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
               {document.fileUrl ? (
                 <a
                   href={document.fileUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-surface"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Open
@@ -497,13 +497,13 @@ export function StudentDocumentsPanelClient({
                   title={
                     document.fileUrl ? "Verify document" : "Upload a file first"
                   }
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 px-2.5 py-1.5 text-xs font-medium text-green-700 disabled:opacity-40"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-success/40 px-2.5 py-1.5 text-xs font-medium text-success disabled:opacity-40"
                 >
                   <ShieldCheck className="h-3.5 w-3.5" />
                   Verify
                 </button>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs text-green-700">
+                <span className="inline-flex items-center gap-1 text-xs text-success">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Verified{" "}
                   {document.verifiedAt
@@ -516,19 +516,19 @@ export function StudentDocumentsPanelClient({
                   type="button"
                   disabled={actingId === document.id}
                   onClick={() => void changeStatus(document, "REJECTED")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-700 disabled:opacity-40"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-danger/40 px-2.5 py-1.5 text-xs font-medium text-danger disabled:opacity-40"
                 >
                   <XCircle className="h-3.5 w-3.5" />
                   Reject
                 </button>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs text-red-700">
+                <span className="inline-flex items-center gap-1 text-xs text-danger">
                   <XCircle className="h-3.5 w-3.5" />
                   Rejected
                 </span>
               )}
               {document.documentStatus === "PENDING" ? (
-                <span className="ml-auto inline-flex items-center gap-1 text-xs text-amber-700">
+                <span className="ml-auto inline-flex items-center gap-1 text-xs text-warning">
                   <Clock3 className="h-3.5 w-3.5" />
                   Awaiting review
                 </span>
@@ -537,8 +537,8 @@ export function StudentDocumentsPanelClient({
           </article>
         )}</PaginatedCollection>}
         {!documents.length ? (
-          <div className="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
-            <FileText className="mx-auto mb-2 h-7 w-7 text-slate-300" />
+          <div className="rounded-xl border border-dashed border-input px-4 py-10 text-center text-sm text-muted-foreground">
+            <FileText className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
             No documents recorded
           </div>
         ) : null}

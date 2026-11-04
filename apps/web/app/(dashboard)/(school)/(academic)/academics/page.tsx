@@ -152,7 +152,7 @@ export default async function AcademicsPage() {
     <AcademicsWorkspace currentRoles={effectiveRoles}>
       <div className="space-y-5">
         {!overview.academicYear ? (
-          <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+          <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning/40 bg-warning-subtle p-4 text-warning">
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-5 w-5" />
               <span className="font-medium">
@@ -162,7 +162,7 @@ export default async function AcademicsPage() {
             {isAdministrator ? (
               <Link
                 href="/academic-structure"
-                className="inline-flex items-center gap-2 rounded-xl bg-amber-800 px-3 py-2 text-sm font-semibold text-white"
+                className="inline-flex items-center gap-2 rounded-xl bg-warning px-3 py-2 text-sm font-semibold text-solid-foreground"
               >
                 {t("common.configure")}
                 <ArrowRight className="h-4 w-4" />
@@ -170,23 +170,23 @@ export default async function AcademicsPage() {
             ) : null}
           </div>
         ) : (
-          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <span className="rounded-xl bg-blue-50 p-3 text-blue-700">
+              <span className="rounded-xl bg-info-subtle p-3 text-info">
                 <CalendarDays className="h-5 w-5" />
               </span>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t("academic.academicYear")}
                 </div>
-                <div className="mt-1 text-lg font-bold text-slate-950">
+                <div className="mt-1 text-lg font-bold text-foreground">
                   {i18nName(
                     overview.academicYear.nameI18n,
                     overview.academicYear.status,
                     locale,
                   )}
                 </div>
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-muted-foreground">
                   {dateLabel(overview.academicYear.startDate, locale)}
                   {" - "}
                   {dateLabel(overview.academicYear.endDate, locale)}
@@ -196,8 +196,8 @@ export default async function AcademicsPage() {
             <span
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
                 overview.academicYear.status === "ACTIVE"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-blue-50 text-blue-700"
+                  ? "bg-success-subtle text-success"
+                  : "bg-info-subtle text-info"
               }`}
             >
               {overview.academicYear.status === "ACTIVE"
@@ -215,7 +215,7 @@ export default async function AcademicsPage() {
                 : t("academic.myStudents"),
               value: overview.metrics.studentCount,
               icon: UsersRound,
-              tone: "bg-blue-50 text-blue-700",
+              tone: "bg-info-subtle text-info",
             },
             {
               label: isAdministrator
@@ -223,7 +223,7 @@ export default async function AcademicsPage() {
                 : t("academic.mySections"),
               value: overview.metrics.sectionCount,
               icon: Layers3,
-              tone: "bg-violet-50 text-violet-700",
+              tone: "bg-info-subtle text-info",
             },
             {
               label: isAdministrator
@@ -231,29 +231,29 @@ export default async function AcademicsPage() {
                 : t("academic.mySubjects"),
               value: overview.metrics.assignmentCount,
               icon: BookOpenCheck,
-              tone: "bg-emerald-50 text-emerald-700",
+              tone: "bg-success-subtle text-success",
             },
             {
               label: t("academic.subjectCoverage"),
               value: `${overview.metrics.subjectCoveragePercent}%`,
               icon: CheckCircle2,
-              tone: "bg-amber-50 text-amber-700",
+              tone: "bg-warning-subtle text-warning",
             },
           ].map((metric) => {
             const Icon = metric.icon;
             return (
               <div
                 key={metric.label}
-                className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm"
               >
                 <span className={`rounded-xl p-3 ${metric.tone}`}>
                   <Icon className="h-5 w-5" />
                 </span>
                 <div>
-                  <div className="text-2xl font-bold text-slate-950">
+                  <div className="text-2xl font-bold text-foreground">
                     {metric.value}
                   </div>
-                  <div className="text-sm text-slate-500">{metric.label}</div>
+                  <div className="text-sm text-muted-foreground">{metric.label}</div>
                 </div>
               </div>
             );
@@ -266,7 +266,7 @@ export default async function AcademicsPage() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800"
+                className="inline-flex items-center gap-2 rounded-xl border border-warning/40 bg-warning-subtle px-3 py-2 text-sm font-medium text-warning"
               >
                 <AlertTriangle className="h-4 w-4" />
                 {item.label}
@@ -274,25 +274,25 @@ export default async function AcademicsPage() {
             ))}
           </div>
         ) : isAdministrator && overview.academicYear ? (
-          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+          <div className="flex items-center gap-2 rounded-xl border border-success/40 bg-success-subtle px-3 py-2 text-sm font-medium text-success">
             <CheckCircle2 className="h-4 w-4" />
             {t("academic.operationallyReady")}
           </div>
         ) : null}
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+        <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+          <header className="flex items-center justify-between border-b border-border px-5 py-4">
             <div className="flex items-center gap-3">
-              <span className="rounded-xl bg-slate-100 p-2 text-slate-700">
+              <span className="rounded-xl bg-surface-muted p-2 text-foreground">
                 <GraduationCap className="h-5 w-5" />
               </span>
-              <h2 className="font-semibold text-slate-950">
+              <h2 className="font-semibold text-foreground">
                 {isAdministrator
                   ? t("academic.classReadiness")
                   : t("academic.myClasses")}
               </h2>
             </div>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
               {overview.sections.length}
             </span>
           </header>
@@ -311,14 +311,14 @@ export default async function AcademicsPage() {
               return (
                 <article
                   key={section.id}
-                  className="rounded-2xl border border-slate-200 p-4"
+                  className="rounded-2xl border border-border p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="font-semibold text-slate-950">
+                      <div className="font-semibold text-foreground">
                         {sectionLabel(section, locale)}
                       </div>
-                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
+                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
                         {section.roomLabel ? (
                           <span className="inline-flex items-center gap-1">
                             <DoorOpen className="h-3.5 w-3.5" />
@@ -336,8 +336,8 @@ export default async function AcademicsPage() {
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                         section.atCapacity
-                          ? "bg-red-50 text-red-700"
-                          : "bg-slate-100 text-slate-600"
+                          ? "bg-danger-subtle text-danger"
+                          : "bg-surface-muted text-muted-foreground"
                       }`}
                     >
                       {section.capacity === null
@@ -348,10 +348,10 @@ export default async function AcademicsPage() {
                     </span>
                   </div>
                   {occupancy !== null ? (
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-muted">
                       <div
                         className={`h-full rounded-full ${
-                          section.atCapacity ? "bg-red-500" : "bg-blue-600"
+                          section.atCapacity ? "bg-danger" : "bg-primary"
                         }`}
                         style={{ width: `${occupancy}%` }}
                       />
@@ -360,13 +360,13 @@ export default async function AcademicsPage() {
                   <div className="mt-4 flex gap-2">
                     <Link
                       href={`/attendance?sectionId=${section.id}`}
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface"
                     >
                       {t("attendance.title")}
                     </Link>
                     <Link
                       href={`/gradebooks?sectionId=${section.id}`}
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface"
                     >
                       {t("gradebooks.title")}
                     </Link>
@@ -375,53 +375,53 @@ export default async function AcademicsPage() {
               );
             })}
             {!overview.sections.length ? (
-              <div className="col-span-full py-10 text-center text-sm text-slate-500">
+              <div className="col-span-full py-10 text-center text-sm text-muted-foreground">
                 {t("academic.noAssignedOrConfiguredSections")}
               </div>
             ) : null}
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+        <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+          <header className="flex items-center justify-between border-b border-border px-5 py-4">
             <div className="flex items-center gap-3">
-              <span className="rounded-xl bg-emerald-50 p-2 text-emerald-700">
+              <span className="rounded-xl bg-success-subtle p-2 text-success">
                 <BookOpenCheck className="h-5 w-5" />
               </span>
-              <h2 className="font-semibold text-slate-950">
+              <h2 className="font-semibold text-foreground">
                 {isAdministrator
                   ? t("academic.teachingAssignments")
                   : t("academic.myTeachingAssignments")}
               </h2>
             </div>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
               {overview.assignments.length}
             </span>
           </header>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-border">
             {overview.assignments.map((assignment) => (
               <div
                 key={assignment.id}
                 className="grid gap-2 px-5 py-3.5 md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center"
               >
-                <span className="w-fit rounded-lg bg-blue-50 px-2.5 py-1.5 font-mono text-xs font-semibold text-blue-700">
+                <span className="w-fit rounded-lg bg-info-subtle px-2.5 py-1.5 font-mono text-xs font-semibold text-info">
                   {assignment.sectionCode}
                 </span>
                 <div className="min-w-0">
-                  <div className="truncate font-medium text-slate-950">
+                  <div className="truncate font-medium text-foreground">
                     {i18nName(
                       assignment.subjectNameI18n,
                       assignment.subjectCode,
                       locale,
                     )}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-muted-foreground">
                     {assignment.subjectCode}
                   </div>
                 </div>
                 {isAdministrator ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <UserRound className="h-4 w-4 text-slate-400" />
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <UserRound className="h-4 w-4 text-muted-foreground" />
                     {assignment.teacherName}
                   </div>
                 ) : (
@@ -433,14 +433,14 @@ export default async function AcademicsPage() {
                     subject: assignment.subjectCode,
                   })}
                   title={t("gradebooks.title")}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border text-muted-foreground hover:border-info/40 hover:bg-info-subtle hover:text-info focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
             ))}
             {!overview.assignments.length ? (
-              <div className="py-10 text-center text-sm text-slate-500">
+              <div className="py-10 text-center text-sm text-muted-foreground">
                 {t("academic.noActiveTeachingAssignments")}
               </div>
             ) : null}

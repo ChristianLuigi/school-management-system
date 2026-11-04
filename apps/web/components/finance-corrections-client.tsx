@@ -368,26 +368,26 @@ export function FinanceCorrectionsClient({
         {data.capabilities.canRequestPaymentCorrection ? (
           <form
             onSubmit={requestPaymentCorrection}
-            className="rounded-2xl border border-slate-200 bg-white p-5"
+            className="rounded-2xl border border-border bg-surface p-5"
           >
-            <h2 className="text-lg font-semibold text-slate-950">
+            <h2 className="text-lg font-semibold text-foreground">
               Request a payment correction
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Use reversal for an erroneous record and refund when money is
               returned. The original payment remains in the audit history.
             </p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-foreground">
                 Payment ID
                 <input
                   required
                   value={paymentId}
                   onChange={(event) => setPaymentId(event.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                  className="mt-1 w-full rounded-xl border border-input px-3 py-2"
                 />
               </label>
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-foreground">
                 Correction
                 <select
                   value={correctionType}
@@ -396,14 +396,14 @@ export function FinanceCorrectionsClient({
                       event.target.value as "REVERSAL" | "REFUND",
                     )
                   }
-                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                  className="mt-1 w-full rounded-xl border border-input px-3 py-2"
                 >
                   <option value="REVERSAL">Reverse erroneous payment</option>
                   <option value="REFUND">Refund payment</option>
                 </select>
               </label>
             </div>
-            <label className="mt-3 block text-sm font-medium text-slate-700">
+            <label className="mt-3 block text-sm font-medium text-foreground">
               Reason
               <textarea
                 required
@@ -411,7 +411,7 @@ export function FinanceCorrectionsClient({
                 maxLength={1000}
                 value={paymentReason}
                 onChange={(event) => setPaymentReason(event.target.value)}
-                className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 min-h-24 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <button
@@ -421,7 +421,7 @@ export function FinanceCorrectionsClient({
                 !paymentId.trim() ||
                 paymentReason.trim().length < 10
               }
-              className="mt-4 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
               Submit for approval
             </button>
@@ -431,26 +431,26 @@ export function FinanceCorrectionsClient({
         {data.capabilities.canRequestCreditNote ? (
           <form
             onSubmit={requestCreditNote}
-            className="rounded-2xl border border-slate-200 bg-white p-5"
+            className="rounded-2xl border border-border bg-surface p-5"
           >
-            <h2 className="text-lg font-semibold text-slate-950">
+            <h2 className="text-lg font-semibold text-foreground">
               Request an invoice credit note
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               A credit note reduces the unpaid invoice balance only after an
               independent reviewer approves it.
             </p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-foreground">
                 Invoice ID
                 <input
                   required
                   value={invoiceId}
                   onChange={(event) => setInvoiceId(event.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                  className="mt-1 w-full rounded-xl border border-input px-3 py-2"
                 />
               </label>
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-foreground">
                 Credit amount
                 <input
                   required
@@ -459,11 +459,11 @@ export function FinanceCorrectionsClient({
                   step="0.01"
                   value={creditAmount}
                   onChange={(event) => setCreditAmount(event.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                  className="mt-1 w-full rounded-xl border border-input px-3 py-2"
                 />
               </label>
             </div>
-            <label className="mt-3 block text-sm font-medium text-slate-700">
+            <label className="mt-3 block text-sm font-medium text-foreground">
               Reason
               <textarea
                 required
@@ -471,7 +471,7 @@ export function FinanceCorrectionsClient({
                 maxLength={1000}
                 value={creditReason}
                 onChange={(event) => setCreditReason(event.target.value)}
-                className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 min-h-24 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <button
@@ -482,7 +482,7 @@ export function FinanceCorrectionsClient({
                 Number(creditAmount) <= 0 ||
                 creditReason.trim().length < 10
               }
-              className="mt-4 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
               Submit credit note
             </button>
@@ -491,30 +491,30 @@ export function FinanceCorrectionsClient({
       </section>
 
       {message ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-4">
+      <section className="rounded-2xl border border-border bg-surface">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
           <div>
-            <h2 className="font-semibold text-slate-950">
+            <h2 className="font-semibold text-foreground">
               Controlled correction register
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-muted-foreground">
               Request, review, and settlement steps are permanently auditable.
             </p>
           </div>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            className="rounded-xl border border-input px-3 py-2 text-sm"
           >
             <option value="">All statuses</option>
             <option value="PENDING_REVIEW">Pending review</option>
@@ -527,7 +527,7 @@ export function FinanceCorrectionsClient({
 
         <div className="space-y-4 p-4">
           {loading ? (
-            <div className="text-sm text-slate-500">Loading corrections…</div>
+            <div className="text-sm text-muted-foreground">Loading corrections…</div>
           ) : null}
 
           {<PaginatedCollection items={data.paymentCorrections}>{(correction) => {
@@ -543,43 +543,43 @@ export function FinanceCorrectionsClient({
             return (
               <article
                 key={correction.id}
-                className="rounded-2xl border border-slate-200 p-4"
+                className="rounded-2xl border border-border p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <strong className="text-slate-950">
+                      <strong className="text-foreground">
                         {correction.correctionType === "REFUND"
                           ? "Payment refund"
                           : "Payment reversal"}
                       </strong>
                       <SchoolBadge>{correction.status}</SchoolBadge>
                     </div>
-                    <div className="mt-2 text-sm text-slate-600">
+                    <div className="mt-2 text-sm text-muted-foreground">
                       Payment{" "}
                       <Link
                         href={`/finance/payments/${correction.paymentId}/receipt`}
-                        className="font-medium text-blue-700 hover:underline"
+                        className="font-medium text-info hover:underline"
                       >
                         {correction.paymentNumber ?? correction.paymentId}
                       </Link>{" "}
                       · {money(correction.amount, correction.currencyCode)}
                     </div>
-                    <div className="mt-2 text-sm text-slate-800">
+                    <div className="mt-2 text-sm text-foreground">
                       {correction.reason}
                     </div>
-                    <div className="mt-2 text-xs text-slate-500">
+                    <div className="mt-2 text-xs text-muted-foreground">
                       Requested by {personName(correction.requestedBy)} ·{" "}
                       {dateTime(correction.requestedAt)}
                     </div>
                     {correction.reviewedAt ? (
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-muted-foreground">
                         Reviewed by {personName(correction.reviewedBy)} ·{" "}
                         {dateTime(correction.reviewedAt)}
                       </div>
                     ) : null}
                     {correction.processedAt ? (
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-muted-foreground">
                         Processed by {personName(correction.processedBy)} ·{" "}
                         {dateTime(correction.processedAt)}
                       </div>
@@ -587,14 +587,14 @@ export function FinanceCorrectionsClient({
                   </div>
                   <Link
                     href={`/finance/invoices/${correction.invoiceId}`}
-                    className="text-sm font-medium text-blue-700 hover:underline"
+                    className="text-sm font-medium text-info hover:underline"
                   >
                     Invoice {correction.invoiceNumber ?? "details"}
                   </Link>
                 </div>
 
                 {canReview ? (
-                  <div className="mt-4 rounded-xl bg-slate-50 p-3">
+                  <div className="mt-4 rounded-xl bg-surface p-3">
                     <input
                       value={notes[correction.id] ?? ""}
                       onChange={(event) =>
@@ -604,7 +604,7 @@ export function FinanceCorrectionsClient({
                         }))
                       }
                       placeholder="Review note; required for rejection"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-input px-3 py-2 text-sm"
                     />
                     <div className="mt-2 flex gap-2">
                       <button
@@ -617,7 +617,7 @@ export function FinanceCorrectionsClient({
                           )
                         }
                         disabled={busy.endsWith(correction.id)}
-                        className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                        className="rounded-lg bg-success px-3 py-2 text-xs font-semibold text-success-foreground disabled:opacity-50"
                       >
                         Approve
                       </button>
@@ -634,7 +634,7 @@ export function FinanceCorrectionsClient({
                           busy.endsWith(correction.id) ||
                           (notes[correction.id]?.trim().length ?? 0) < 10
                         }
-                        className="rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50"
+                        className="rounded-lg border border-danger/40 px-3 py-2 text-xs font-semibold text-danger disabled:opacity-50"
                       >
                         Reject
                       </button>
@@ -643,7 +643,7 @@ export function FinanceCorrectionsClient({
                 ) : null}
 
                 {canProcess ? (
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                  <div className="mt-4 rounded-xl border border-warning/40 bg-warning-subtle p-3">
                     {correction.correctionType === "REFUND" ? (
                       <div className="grid gap-2 md:grid-cols-2">
                         <select
@@ -654,7 +654,7 @@ export function FinanceCorrectionsClient({
                               [correction.id]: event.target.value,
                             }))
                           }
-                          className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"
+                          className="rounded-lg border border-warning/40 bg-surface px-3 py-2 text-sm"
                         >
                           {REFUND_METHODS.map((method) => (
                             <option key={method} value={method}>
@@ -672,10 +672,10 @@ export function FinanceCorrectionsClient({
                               }))
                             }
                             placeholder="Refund transaction reference"
-                            className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"
+                            className="rounded-lg border border-warning/40 bg-surface px-3 py-2 text-sm"
                           />
                         ) : (
-                          <div className="text-xs text-amber-900">
+                          <div className="text-xs text-warning">
                             The current user’s open{" "}
                             {correction.currencyCode} cashier session will be
                             used.
@@ -693,7 +693,7 @@ export function FinanceCorrectionsClient({
                           (refundReferences[correction.id]?.trim().length ??
                             0) < 3)
                       }
-                      className="mt-3 rounded-lg bg-amber-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                      className="mt-3 rounded-lg bg-warning px-3 py-2 text-xs font-semibold text-warning-foreground disabled:opacity-50"
                     >
                       {correction.correctionType === "REFUND"
                         ? "Record refund"
@@ -713,37 +713,37 @@ export function FinanceCorrectionsClient({
             return (
               <article
                 key={credit.id}
-                className="rounded-2xl border border-blue-200 bg-blue-50/30 p-4"
+                className="rounded-2xl border border-info/40 bg-info-subtle/30 p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <strong className="text-slate-950">
+                      <strong className="text-foreground">
                         Credit note {credit.creditNoteNumber}
                       </strong>
                       <SchoolBadge>{credit.status}</SchoolBadge>
                     </div>
-                    <div className="mt-2 text-sm text-slate-600">
+                    <div className="mt-2 text-sm text-muted-foreground">
                       {money(credit.amount, credit.currencyCode)} · Invoice{" "}
                       {credit.invoiceNumber ?? credit.invoiceId}
                     </div>
-                    <div className="mt-2 text-sm text-slate-800">
+                    <div className="mt-2 text-sm text-foreground">
                       {credit.reason}
                     </div>
-                    <div className="mt-2 text-xs text-slate-500">
+                    <div className="mt-2 text-xs text-muted-foreground">
                       Requested by {personName(credit.requestedBy)} ·{" "}
                       {dateTime(credit.requestedAt)}
                     </div>
                   </div>
                   <Link
                     href={`/finance/invoices/${credit.invoiceId}`}
-                    className="text-sm font-medium text-blue-700 hover:underline"
+                    className="text-sm font-medium text-info hover:underline"
                   >
                     Open invoice
                   </Link>
                 </div>
                 {canReview ? (
-                  <div className="mt-4 rounded-xl bg-white p-3">
+                  <div className="mt-4 rounded-xl bg-surface p-3">
                     <input
                       value={notes[credit.id] ?? ""}
                       onChange={(event) =>
@@ -753,7 +753,7 @@ export function FinanceCorrectionsClient({
                         }))
                       }
                       placeholder="Review note; required for rejection"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-input px-3 py-2 text-sm"
                     />
                     <div className="mt-2 flex gap-2">
                       <button
@@ -762,7 +762,7 @@ export function FinanceCorrectionsClient({
                           void review("credit-notes", credit.id, "approve")
                         }
                         disabled={busy.endsWith(credit.id)}
-                        className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                        className="rounded-lg bg-success px-3 py-2 text-xs font-semibold text-success-foreground disabled:opacity-50"
                       >
                         Approve and apply
                       </button>
@@ -775,7 +775,7 @@ export function FinanceCorrectionsClient({
                           busy.endsWith(credit.id) ||
                           (notes[credit.id]?.trim().length ?? 0) < 10
                         }
-                        className="rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50"
+                        className="rounded-lg border border-danger/40 px-3 py-2 text-xs font-semibold text-danger disabled:opacity-50"
                       >
                         Reject
                       </button>
@@ -789,7 +789,7 @@ export function FinanceCorrectionsClient({
           {!loading &&
           !data.paymentCorrections.length &&
           !data.creditNotes.length ? (
-            <div className="rounded-xl bg-slate-50 p-6 text-center text-sm text-slate-500">
+            <div className="rounded-xl bg-surface p-6 text-center text-sm text-muted-foreground">
               No correction records match this filter.
             </div>
           ) : null}

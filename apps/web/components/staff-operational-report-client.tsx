@@ -421,16 +421,16 @@ export function StaffOperationalReportClient({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/staff" className="text-sm font-medium text-blue-700">
+        <Link href="/staff" className="text-sm font-medium text-info">
           ← {copy.back}
         </Link>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-slate-600">
+          <label className="text-sm text-muted-foreground">
             {copy.window}{" "}
             <select
               value={windowDays}
               onChange={(event) => setWindowDays(Number(event.target.value))}
-              className="rounded-lg border border-slate-300 px-2 py-1"
+              className="rounded-lg border border-input px-2 py-1"
             >
               {[30, 60, 90, 180].map((days) => (
                 <option key={days} value={days}>
@@ -443,24 +443,24 @@ export function StaffOperationalReportClient({
             type="button"
             disabled={!report}
             onClick={exportCsv}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-50"
+            className="rounded-lg border border-input px-3 py-1.5 text-sm disabled:opacity-50"
           >
             {copy.export}
           </button>
         </div>
       </div>
-      {loading ? <p className="text-sm text-slate-500">{copy.loading}</p> : null}
+      {loading ? <p className="text-sm text-muted-foreground">{copy.loading}</p> : null}
       {error ? (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger"
         >
           {error}
         </div>
       ) : null}
       {report ? (
         <>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             {copy.generated}:{" "}
             {new Intl.DateTimeFormat(locale === "fr" ? "fr-HT" : "en-US", {
               dateStyle: "medium",
@@ -471,12 +471,12 @@ export function StaffOperationalReportClient({
             {cards.map(([label, value]) => (
               <div
                 key={String(label)}
-                className="rounded-2xl border border-slate-200 bg-white p-4"
+                className="rounded-2xl border border-border bg-surface p-4"
               >
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {label}
                 </div>
-                <div className="mt-2 text-3xl font-semibold text-slate-950">
+                <div className="mt-2 text-3xl font-semibold text-foreground">
                   {value}
                 </div>
               </div>
@@ -486,49 +486,49 @@ export function StaffOperationalReportClient({
             <Breakdown title={copy.status} values={report.statusCounts} />
             <Breakdown title={copy.category} values={report.categoryCounts} />
           </div>
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-slate-950">
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-lg font-semibold text-foreground">
               {copy.departmentHeadcount}
             </h2>
             <div className="mt-4 space-y-2">
               {!report.departmentHeadcount.length ? (
-                <p className="text-sm text-slate-500">{copy.noItems}</p>
+                <p className="text-sm text-muted-foreground">{copy.noItems}</p>
               ) : null}
               {<PaginatedCollection items={report.departmentHeadcount}>{(item) => (
                 <div
                   key={item.department ?? "UNSPECIFIED"}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2 text-sm"
                 >
-                  <span className="text-slate-700">
+                  <span className="text-foreground">
                     {item.department ??
                       (locale === "fr" ? "Non précisé" : "Unspecified")}
                   </span>
-                  <span className="font-semibold text-slate-950">
+                  <span className="font-semibold text-foreground">
                     {item.currentHeadcount}
                   </span>
                 </div>
               )}</PaginatedCollection>}
             </div>
           </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-slate-950">
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-lg font-semibold text-foreground">
               {copy.teacherCoverage}
             </h2>
             <div className="mt-4 space-y-3">
               {!report.teacherAssignmentCoverage.length ? (
-                <p className="text-sm text-slate-500">{copy.noItems}</p>
+                <p className="text-sm text-muted-foreground">{copy.noItems}</p>
               ) : null}
               {<PaginatedCollection items={report.teacherAssignmentCoverage}>{(teacher) => (
                 <div
                   key={teacher.staffId}
-                  className="rounded-xl border border-slate-200 p-3"
+                  className="rounded-xl border border-border p-3"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div className="font-medium text-slate-950">
+                      <div className="font-medium text-foreground">
                         {staffName(teacher)}
                       </div>
-                      <div className="text-sm text-slate-600">
+                      <div className="text-sm text-muted-foreground">
                         {teacher.assignmentCount} · {teacher.sectionCount} / {teacher.subjectCount}
                       </div>
                     </div>
@@ -536,24 +536,24 @@ export function StaffOperationalReportClient({
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                           teacher.requiresAttention
-                            ? "bg-amber-50 text-amber-700"
+                            ? "bg-warning-subtle text-warning"
                             : teacher.coverageStatus === "ASSIGNED"
-                              ? "bg-green-50 text-green-700"
-                              : "bg-slate-100 text-slate-600"
+                              ? "bg-success-subtle text-success"
+                              : "bg-surface-muted text-muted-foreground"
                         }`}
                       >
                         {statusLabel(locale, teacher.coverageStatus)}
                       </span>
                       <Link
                         href={`/staff/${encodeURIComponent(teacher.staffId)}`}
-                        className="text-sm font-medium text-blue-700"
+                        className="text-sm font-medium text-info"
                       >
                         {copy.open}
                       </Link>
                     </div>
                   </div>
                   {teacher.assignments.length ? (
-                    <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                    <div className="mt-3 space-y-1 border-t border-border pt-3 text-xs text-muted-foreground">
                       {teacher.assignments.map((assignment) => (
                         <div key={assignment.assignmentId}>
                           {localizedName(
@@ -580,24 +580,24 @@ export function StaffOperationalReportClient({
                 </div>
               )}</PaginatedCollection>}
             </div>
-          </section>          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-slate-950">
+          </section>          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-lg font-semibold text-foreground">
               {copy.payrollEligibility}
             </h2>
             <div className="mt-4 space-y-3">
               {!report.payrollEligibility.length ? (
-                <p className="text-sm text-slate-500">{copy.noItems}</p>
+                <p className="text-sm text-muted-foreground">{copy.noItems}</p>
               ) : null}
               {<PaginatedCollection items={report.payrollEligibility}>{(item) => (
                 <div
                   key={item.staffId}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"
                 >
                   <div>
-                    <div className="font-medium text-slate-950">
+                    <div className="font-medium text-foreground">
                       {staffName(item)}
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-muted-foreground">
                       {[item.currencyCode, item.payFrequency,
                         item.compensationEffectiveFrom]
                         .filter(Boolean)
@@ -608,17 +608,17 @@ export function StaffOperationalReportClient({
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                         item.eligibilityStatus === "READY"
-                          ? "bg-green-50 text-green-700"
+                          ? "bg-success-subtle text-success"
                           : item.eligibilityStatus === "NOT_CURRENTLY_EMPLOYED"
-                            ? "bg-slate-100 text-slate-600"
-                            : "bg-amber-50 text-amber-700"
+                            ? "bg-surface-muted text-muted-foreground"
+                            : "bg-warning-subtle text-warning"
                       }`}
                     >
                       {statusLabel(locale, item.eligibilityStatus)}
                     </span>
                     <Link
                       href={`/staff/${encodeURIComponent(item.staffId)}`}
-                      className="text-sm font-medium text-blue-700"
+                      className="text-sm font-medium text-info"
                     >
                       {copy.open}
                     </Link>
@@ -627,24 +627,24 @@ export function StaffOperationalReportClient({
               )}</PaginatedCollection>}
             </div>
           </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-slate-950">
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-lg font-semibold text-foreground">
               {copy.accessReconciliation}
             </h2>
             <div className="mt-4 space-y-3">
               {!report.accessReconciliation.length ? (
-                <p className="text-sm text-slate-500">{copy.noItems}</p>
+                <p className="text-sm text-muted-foreground">{copy.noItems}</p>
               ) : null}
               {<PaginatedCollection items={report.accessReconciliation}>{(item) => (
                 <div
                   key={item.staffId}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"
                 >
                   <div>
-                    <div className="font-medium text-slate-950">
+                    <div className="font-medium text-foreground">
                       {staffName(item)}
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-muted-foreground">
                       {item.activeRoles.length
                         ? item.activeRoles.join(", ")
                         : "—"}
@@ -656,17 +656,17 @@ export function StaffOperationalReportClient({
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                         item.requiresAttention
-                          ? "bg-red-50 text-red-700"
+                          ? "bg-danger-subtle text-danger"
                           : item.accessStatus === "ALIGNED"
-                            ? "bg-green-50 text-green-700"
-                            : "bg-slate-100 text-slate-600"
+                            ? "bg-success-subtle text-success"
+                            : "bg-surface-muted text-muted-foreground"
                       }`}
                     >
                       {statusLabel(locale, item.accessStatus)}
                     </span>
                     <Link
                       href={`/staff/${encodeURIComponent(item.staffId)}`}
-                      className="text-sm font-medium text-blue-700"
+                      className="text-sm font-medium text-info"
                     >
                       {copy.open}
                     </Link>
@@ -674,30 +674,30 @@ export function StaffOperationalReportClient({
                 </div>
               )}</PaginatedCollection>}
             </div>
-          </section>          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-slate-950">
+          </section>          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-lg font-semibold text-foreground">
               {copy.credentials}
             </h2>
             <div className="mt-4 space-y-3">
               {!report.credentialAlerts.length ? (
-                <p className="text-sm text-slate-500">{copy.none}</p>
+                <p className="text-sm text-muted-foreground">{copy.none}</p>
               ) : null}
               {<PaginatedCollection items={report.credentialAlerts}>{(item) => (
                 <div
                   key={item.documentId}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"
                 >
                   <div>
-                    <div className="font-medium text-slate-950">
+                    <div className="font-medium text-foreground">
                       {staffName(item)}
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-muted-foreground">
                       {item.displayName} · {item.expiresOn}
                     </div>
                   </div>
                   <Link
                     href={`/staff/${encodeURIComponent(item.staffId)}`}
-                    className="text-sm font-medium text-blue-700"
+                    className="text-sm font-medium text-info"
                   >
                     {copy.open}
                   </Link>
@@ -705,24 +705,24 @@ export function StaffOperationalReportClient({
               )}</PaginatedCollection>}
             </div>
           </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-lg font-semibold text-slate-950">
+          <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="text-lg font-semibold text-foreground">
               {copy.leave}
             </h2>
             <div className="mt-4 space-y-3">
               {!report.leaveQueue.length ? (
-                <p className="text-sm text-slate-500">{copy.none}</p>
+                <p className="text-sm text-muted-foreground">{copy.none}</p>
               ) : null}
               {<PaginatedCollection items={report.leaveQueue}>{(item) => (
                 <div
                   key={item.leaveRequestId}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"
                 >
                   <div>
-                    <div className="font-medium text-slate-950">
+                    <div className="font-medium text-foreground">
                       {staffName(item)}
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-muted-foreground">
                       {item.leaveType.replaceAll("_", " ")} · {item.startDate} —
                       {" "}
                       {item.endDate} · {item.status}
@@ -730,7 +730,7 @@ export function StaffOperationalReportClient({
                   </div>
                   <Link
                     href={`/staff/${encodeURIComponent(item.staffId)}`}
-                    className="text-sm font-medium text-blue-700"
+                    className="text-sm font-medium text-info"
                   >
                     {copy.open}
                   </Link>
@@ -752,16 +752,16 @@ function Breakdown({
   values: Record<string, number>;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5">
-      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+    <section className="rounded-2xl border border-border bg-surface p-5">
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       <div className="mt-4 space-y-2">
         {Object.entries(values).map(([label, value]) => (
           <div
             key={label}
             className="flex items-center justify-between gap-3 text-sm"
           >
-            <span className="text-slate-600">{label.replaceAll("_", " ")}</span>
-            <span className="font-semibold text-slate-950">{value}</span>
+            <span className="text-muted-foreground">{label.replaceAll("_", " ")}</span>
+            <span className="font-semibold text-foreground">{value}</span>
           </div>
         ))}
       </div>

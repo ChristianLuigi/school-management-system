@@ -24,12 +24,12 @@ export function StudentEnrollmentNextSteps({
   return (
     <section
       aria-labelledby="enrollment-next-steps"
-      className="rounded-2xl border border-slate-200 bg-white p-5"
+      className="rounded-2xl border border-border bg-surface p-5"
     >
-      <h2 id="enrollment-next-steps" className="font-semibold text-slate-950">
+      <h2 id="enrollment-next-steps" className="font-semibold text-foreground">
         {t("students.create.nextSteps")}
       </h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-muted-foreground">
         {t("students.create.progressHint")}
       </p>
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
@@ -38,22 +38,22 @@ export function StudentEnrollmentNextSteps({
             key={item.tab}
             type="button"
             onClick={() => onSelect(item.tab)}
-            className="flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 p-3 text-left text-sm hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="flex min-h-11 items-center gap-2 rounded-xl border border-border p-3 text-left text-sm hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {item.done ? (
               <CheckCircle2
                 aria-hidden="true"
-                className="h-5 w-5 shrink-0 text-green-700"
+                className="h-5 w-5 shrink-0 text-success"
               />
             ) : (
               <Circle
                 aria-hidden="true"
-                className="h-5 w-5 shrink-0 text-amber-600"
+                className="h-5 w-5 shrink-0 text-warning"
               />
             )}
             <span className="flex-1">
               <span className="block font-medium">{t(item.label)}</span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-muted-foreground">
                 {item.done
                   ? t("students.create.recorded")
                   : item.tab === "documents"

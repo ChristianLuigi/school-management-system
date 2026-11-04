@@ -44,14 +44,14 @@ function KpiCard({
 }) {
   const toneClass =
     tone === "green"
-      ? "border-green-200 bg-green-50 text-green-900"
+      ? "border-success/40 bg-success-subtle text-success"
       : tone === "amber"
-        ? "border-amber-200 bg-amber-50 text-amber-900"
+        ? "border-warning/40 bg-warning-subtle text-warning"
         : tone === "red"
-          ? "border-red-200 bg-red-50 text-red-900"
+          ? "border-danger/40 bg-danger-subtle text-danger"
           : tone === "blue"
-            ? "border-blue-200 bg-blue-50 text-blue-900"
-            : "border-slate-200 bg-white text-slate-900";
+            ? "border-info/40 bg-info-subtle text-info"
+            : "border-border bg-surface text-foreground";
 
   return (
     <div className={`rounded-2xl border p-4 ${toneClass}`}>
@@ -98,7 +98,7 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+      <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
         {error}
       </div>
     );
@@ -106,7 +106,7 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
 
   if (!summary) {
     return (
-      <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+      <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
         Loading admissions summary...
       </div>
     );
@@ -154,8 +154,8 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="font-semibold text-slate-900">
+        <div className="rounded-2xl border border-border bg-surface p-5">
+          <h3 className="font-semibold text-foreground">
             Applications by Status
           </h3>
 
@@ -163,26 +163,26 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
             {summary.byStatus.map((row) => (
               <div
                 key={row.status}
-                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
+                className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-sm"
               >
                 <SchoolBadge tone={admissionStatusTone(row.status)}>
                   {admissionStatusLabel(row.status)}
                 </SchoolBadge>
 
-                <span className="font-bold text-slate-900">{row.count}</span>
+                <span className="font-bold text-foreground">{row.count}</span>
               </div>
             ))}
 
             {summary.byStatus.length === 0 ? (
-              <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
+              <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                 No admission applications yet.
               </div>
             ) : null}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="font-semibold text-slate-900">
+        <div className="rounded-2xl border border-border bg-surface p-5">
+          <h3 className="font-semibold text-foreground">
             Upcoming Admission Exams
           </h3>
 
@@ -190,18 +190,18 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
             {summary.upcomingExams.map((exam) => (
               <div
                 key={exam.id}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+                className="rounded-xl border border-border bg-surface p-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <Link
                       href={`/admissions/${exam.admissionApplicationId}`}
-                      className="font-medium text-slate-900 underline-offset-4 hover:underline"
+                      className="font-medium text-foreground underline-offset-4 hover:underline"
                     >
                       {exam.firstName} {exam.lastName}
                     </Link>
 
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-muted-foreground">
                       {exam.applicationNumber}
                     </div>
                   </div>
@@ -213,7 +213,7 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
                   </SchoolBadge>
                 </div>
 
-                <div className="mt-2 text-sm text-slate-600">
+                <div className="mt-2 text-sm text-muted-foreground">
                   {exam.location ? `Location: ${exam.location}` : "No location"}
                   {exam.supervisorName
                     ? ` - Supervisor: ${exam.supervisorName}`
@@ -223,7 +223,7 @@ export function AdmissionsSummaryClient({ schoolId }: { schoolId: string }) {
             ))}
 
             {summary.upcomingExams.length === 0 ? (
-              <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
+              <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                 No upcoming admission exams.
               </div>
             ) : null}

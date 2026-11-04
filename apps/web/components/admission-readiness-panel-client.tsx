@@ -88,13 +88,13 @@ export function AdmissionReadinessPanelClient({
   const total = checks.length;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             {fr ? "Complétude du dossier" : "Record completeness"}
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {fr
               ? "Repères de suivi ; la décision et les règles de validation restent distinctes."
               : "Tracking checklist; admission decisions and validation rules are separate."}
@@ -110,7 +110,7 @@ export function AdmissionReadinessPanelClient({
         {checks.map((check, index) => (
           <div
             key={check.label}
-            className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
+            className="flex items-center justify-between rounded-xl border border-border bg-surface p-3 text-sm"
           >
             <span>
               {fr

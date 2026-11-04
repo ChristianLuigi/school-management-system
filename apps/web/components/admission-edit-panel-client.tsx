@@ -214,13 +214,13 @@ export function AdmissionEditPanelClient({
   const locked = Boolean(application.convertedStudent);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Application Information
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Update candidate information, parent contact, documents, and notes.
           </p>
         </div>
@@ -229,7 +229,7 @@ export function AdmissionEditPanelClient({
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             {open ? "Close" : "Edit Application"}
           </button>
@@ -237,45 +237,45 @@ export function AdmissionEditPanelClient({
       </div>
 
       {locked ? (
-        <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+        <div className="mt-4 rounded-xl bg-surface p-3 text-sm text-muted-foreground">
           This application is locked because it has already been converted to a student file.
         </div>
       ) : null}
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {open && !locked ? (
-        <div className="mt-5 space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-5 space-y-5 rounded-2xl border border-border bg-surface p-4">
           <div>
-            <h4 className="font-semibold text-slate-900">Candidate</h4>
+            <h4 className="font-semibold text-foreground">Candidate</h4>
 
             <div className="mt-3 grid gap-4 md:grid-cols-2">
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="First name"
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Last name"
                 value={lastName}
                 onChange={(event) => setLastName(event.target.value)}
               />
 
               <select
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 value={gender}
                 onChange={(event) => setGender(event.target.value)}
               >
@@ -286,27 +286,27 @@ export function AdmissionEditPanelClient({
 
               <input
                 type="date"
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 value={dateOfBirth}
                 onChange={(event) => setDateOfBirth(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Place of birth"
                 value={placeOfBirth}
                 onChange={(event) => setPlaceOfBirth(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Previous school name"
                 value={previousSchoolName}
                 onChange={(event) => setPreviousSchoolName(event.target.value)}
               />
 
               <textarea
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Previous school address"
                 value={previousSchoolAddress}
                 onChange={(event) =>
@@ -317,7 +317,7 @@ export function AdmissionEditPanelClient({
           </div>
 
           <div>
-            <h4 className="font-semibold text-slate-900">Academic Request</h4>
+            <h4 className="font-semibold text-foreground">Academic Request</h4>
 
             <div className="mt-3">
               <SectionSelectorClient
@@ -331,39 +331,39 @@ export function AdmissionEditPanelClient({
           </div>
 
           <div>
-            <h4 className="font-semibold text-slate-900">Parent / Guardian</h4>
+            <h4 className="font-semibold text-foreground">Parent / Guardian</h4>
 
             <div className="mt-3 grid gap-4 md:grid-cols-2">
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Parent / guardian full name"
                 value={parentFullName}
                 onChange={(event) => setParentFullName(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Parent phone"
                 value={parentPhone}
                 onChange={(event) => setParentPhone(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Parent email"
                 value={parentEmail}
                 onChange={(event) => setParentEmail(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Parent profession"
                 value={parentProfession}
                 onChange={(event) => setParentProfession(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Emergency contact phone"
                 value={emergencyContactPhone}
                 onChange={(event) =>
@@ -372,7 +372,7 @@ export function AdmissionEditPanelClient({
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Emergency contact name"
                 value={emergencyContactName}
                 onChange={(event) =>
@@ -381,7 +381,7 @@ export function AdmissionEditPanelClient({
               />
 
               <textarea
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Parent address"
                 value={parentAddress}
                 onChange={(event) => setParentAddress(event.target.value)}
@@ -389,8 +389,8 @@ export function AdmissionEditPanelClient({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <h4 className="font-semibold text-slate-900">
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <h4 className="font-semibold text-foreground">
               Document Checklist
             </h4>
 
@@ -462,7 +462,7 @@ export function AdmissionEditPanelClient({
           </div>
 
           <textarea
-            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
             placeholder="Administrative notes"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
@@ -472,7 +472,7 @@ export function AdmissionEditPanelClient({
             type="button"
             disabled={saving}
             onClick={saveApplication}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Application"}
           </button>

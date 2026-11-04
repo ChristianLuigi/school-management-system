@@ -116,10 +116,10 @@ function apiMessage(body: unknown, fallback: string) {
 
 function statusClass(status: string) {
   if (status === "RECONCILED" || status === "CLOSED") {
-    return "bg-emerald-50 text-emerald-700";
+    return "bg-success-subtle text-success";
   }
-  if (status === "REJECTED") return "bg-red-50 text-red-700";
-  return "bg-amber-50 text-amber-700";
+  if (status === "REJECTED") return "bg-danger-subtle text-danger";
+  return "bg-warning-subtle text-warning";
 }
 
 export function FinanceReconciliationClient({
@@ -410,55 +410,55 @@ export function FinanceReconciliationClient({
   return (
     <div className="space-y-6">
       <div className="grid gap-3 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="text-sm text-slate-500">Cash awaiting deposit</div>
-          <div className="mt-2 text-2xl font-semibold text-slate-950">
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="text-sm text-muted-foreground">Cash awaiting deposit</div>
+          <div className="mt-2 text-2xl font-semibold text-foreground">
             {context.availableCashierSessions.length}
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-xs text-muted-foreground">
             Closed cashier sessions with net cash collections
           </div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="text-sm text-slate-500">Awaiting review</div>
-          <div className="mt-2 text-2xl font-semibold text-amber-700">
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="text-sm text-muted-foreground">Awaiting review</div>
+          <div className="mt-2 text-2xl font-semibold text-warning">
             {
               context.deposits.filter(
                 (deposit) => deposit.status === "PENDING_REVIEW",
               ).length
             }
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-xs text-muted-foreground">
             The submitter cannot perform the review
           </div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="text-sm text-slate-500">Closed periods</div>
-          <div className="mt-2 text-2xl font-semibold text-emerald-700">
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="text-sm text-muted-foreground">Closed periods</div>
+          <div className="mt-2 text-2xl font-semibold text-success">
             {
               context.periods.filter((period) => period.status === "CLOSED")
                 .length
             }
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-xs text-muted-foreground">
             Protected from invoice, payment, and correction writes
           </div>
         </div>
       </div>
 
       {message ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white">
-        <div className="flex flex-wrap gap-2 border-b border-slate-200 p-2">
+      <div className="rounded-2xl border border-border bg-surface">
+        <div className="flex flex-wrap gap-2 border-b border-border p-2">
           {(
             [
               ["deposits", "Deposits"],
@@ -472,8 +472,8 @@ export function FinanceReconciliationClient({
               onClick={() => setTab(value)}
               className={`rounded-xl px-4 py-2 text-sm font-medium ${
                 tab === value
-                  ? "bg-slate-950 text-white"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-primary text-solid-foreground"
+                  : "text-muted-foreground hover:bg-surface"
               }`}
             >
               {label}
@@ -482,7 +482,7 @@ export function FinanceReconciliationClient({
           <button
             type="button"
             onClick={() => void loadContext()}
-            className="ml-auto rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            className="ml-auto rounded-xl border border-input px-3 py-2 text-sm"
           >
             Refresh
           </button>
@@ -490,7 +490,7 @@ export function FinanceReconciliationClient({
 
         <div className="p-5">
           {loading ? (
-            <div className="text-sm text-slate-500">Loading controls…</div>
+            <div className="text-sm text-muted-foreground">Loading controls…</div>
           ) : null}
 
           {tab === "deposits" ? (
@@ -498,18 +498,18 @@ export function FinanceReconciliationClient({
               {context.capabilities.canManageReconciliation ? (
                 <form
                   onSubmit={submitDeposit}
-                  className="rounded-2xl border border-blue-200 bg-blue-50/40 p-5"
+                  className="rounded-2xl border border-info/40 bg-info-subtle/40 p-5"
                 >
-                  <h2 className="text-lg font-semibold text-slate-950">
+                  <h2 className="text-lg font-semibold text-foreground">
                     Submit a cash deposit
                   </h2>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Select closed cashier sessions. Opening floats are excluded;
                     the expected amount is calculated from confirmed cash
                     payments less completed cash refunds.
                   </p>
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Bank destination
                       <select
                         required
@@ -517,7 +517,7 @@ export function FinanceReconciliationClient({
                         onChange={(event) =>
                           setBankAccountId(event.target.value)
                         }
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       >
                         <option value="">Select an account</option>
                         {context.bankAccounts
@@ -529,7 +529,7 @@ export function FinanceReconciliationClient({
                           ))}
                       </select>
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Deposit date
                       <input
                         required
@@ -537,19 +537,19 @@ export function FinanceReconciliationClient({
                         max={new Date().toISOString().slice(0, 10)}
                         value={depositDate}
                         onChange={(event) => setDepositDate(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
                   </div>
                   <fieldset className="mt-4">
-                    <legend className="text-sm font-medium text-slate-700">
+                    <legend className="text-sm font-medium text-foreground">
                       Cashier sessions
                     </legend>
                     <div className="mt-2 grid gap-2 lg:grid-cols-2">
                       {compatibleSessions.map((session) => (
                         <label
                           key={session.id}
-                          className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm"
+                          className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface p-3 text-sm"
                         >
                           <input
                             type="checkbox"
@@ -564,10 +564,10 @@ export function FinanceReconciliationClient({
                             className="mt-1"
                           />
                           <span>
-                            <span className="font-medium text-slate-950">
+                            <span className="font-medium text-foreground">
                               {session.cashierName} · {session.businessDate}
                             </span>
-                            <span className="mt-1 block text-slate-600">
+                            <span className="mt-1 block text-muted-foreground">
                               {money(
                                 session.expectedCollectionAmount,
                                 session.currencyCode,
@@ -578,12 +578,12 @@ export function FinanceReconciliationClient({
                       ))}
                     </div>
                     {!compatibleSessions.length ? (
-                      <div className="mt-2 text-sm text-slate-500">
+                      <div className="mt-2 text-sm text-muted-foreground">
                         No eligible closed cashier sessions for this currency.
                       </div>
                     ) : null}
                   </fieldset>
-                  <div className="mt-4 rounded-xl bg-white p-3 text-sm">
+                  <div className="mt-4 rounded-xl bg-surface p-3 text-sm">
                     Expected from ledger:{" "}
                     <strong>
                       {money(
@@ -593,7 +593,7 @@ export function FinanceReconciliationClient({
                     </strong>
                   </div>
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Amount deposited
                       <input
                         required
@@ -604,10 +604,10 @@ export function FinanceReconciliationClient({
                         onChange={(event) =>
                           setDepositedAmount(event.target.value)
                         }
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Deposit reference
                       <input
                         required
@@ -617,16 +617,16 @@ export function FinanceReconciliationClient({
                         onChange={(event) =>
                           setDepositReference(event.target.value)
                         }
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
                   </div>
-                  <label className="mt-4 block text-sm font-medium text-slate-700">
+                  <label className="mt-4 block text-sm font-medium text-foreground">
                     Evidence note
                     <textarea
                       value={evidenceNote}
                       onChange={(event) => setEvidenceNote(event.target.value)}
-                      className="mt-1 min-h-20 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                      className="mt-1 min-h-20 w-full rounded-xl border border-input bg-surface px-3 py-2"
                     />
                   </label>
                   <button
@@ -636,7 +636,7 @@ export function FinanceReconciliationClient({
                       !bankAccountId ||
                       !selectedSessions.length
                     }
-                    className="mt-4 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                    className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                   >
                     Submit for review
                   </button>
@@ -647,14 +647,14 @@ export function FinanceReconciliationClient({
                 {<PaginatedCollection items={context.deposits}>{(deposit) => (
                   <article
                     key={deposit.id}
-                    className="rounded-2xl border border-slate-200 p-4"
+                    className="rounded-2xl border border-border p-4"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <div className="font-semibold text-slate-950">
+                        <div className="font-semibold text-foreground">
                           {deposit.depositReference}
                         </div>
-                        <div className="mt-1 text-sm text-slate-600">
+                        <div className="mt-1 text-sm text-muted-foreground">
                           {deposit.bankAccountName} · {deposit.depositDate}
                         </div>
                       </div>
@@ -667,52 +667,52 @@ export function FinanceReconciliationClient({
                       </span>
                     </div>
                     <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-xl bg-slate-50 p-3 text-sm">
-                        <div className="text-slate-500">Expected</div>
+                      <div className="rounded-xl bg-surface p-3 text-sm">
+                        <div className="text-muted-foreground">Expected</div>
                         <div className="mt-1 font-semibold">
                           {money(deposit.expectedAmount, deposit.currencyCode)}
                         </div>
                       </div>
-                      <div className="rounded-xl bg-slate-50 p-3 text-sm">
-                        <div className="text-slate-500">Deposited</div>
+                      <div className="rounded-xl bg-surface p-3 text-sm">
+                        <div className="text-muted-foreground">Deposited</div>
                         <div className="mt-1 font-semibold">
                           {money(deposit.depositedAmount, deposit.currencyCode)}
                         </div>
                       </div>
-                      <div className="rounded-xl bg-slate-50 p-3 text-sm">
-                        <div className="text-slate-500">Variance</div>
+                      <div className="rounded-xl bg-surface p-3 text-sm">
+                        <div className="text-muted-foreground">Variance</div>
                         <div
                           className={`mt-1 font-semibold ${
                             deposit.varianceAmount === 0
-                              ? "text-emerald-700"
-                              : "text-red-700"
+                              ? "text-success"
+                              : "text-danger"
                           }`}
                         >
                           {money(deposit.varianceAmount, deposit.currencyCode)}
                         </div>
                       </div>
                     </div>
-                    <div className="mt-3 text-xs text-slate-500">
+                    <div className="mt-3 text-xs text-muted-foreground">
                       Submitted by {deposit.requesterName} ·{" "}
                       {dateTime(deposit.requestedAt)} ·{" "}
                       {deposit.sessions.length} cashier session(s)
                     </div>
                     {deposit.reviewNote ? (
-                      <div className="mt-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+                      <div className="mt-3 rounded-xl bg-surface p-3 text-sm text-foreground">
                         {deposit.reviewNote}
                       </div>
                     ) : null}
                     {deposit.status === "PENDING_REVIEW" &&
                     context.capabilities.canManageReconciliation ? (
-                      <div className="mt-4 border-t border-slate-200 pt-4">
+                      <div className="mt-4 border-t border-border pt-4">
                         {deposit.requestedByUserId === context.currentUserId ? (
-                          <div className="text-sm font-medium text-amber-700">
+                          <div className="text-sm font-medium text-warning">
                             Independent review required from another authorized
                             user.
                           </div>
                         ) : (
                           <>
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label className="block text-sm font-medium text-foreground">
                               Independent review note
                               <textarea
                                 value={reviewNotes[deposit.id] ?? ""}
@@ -722,7 +722,7 @@ export function FinanceReconciliationClient({
                                     [deposit.id]: event.target.value,
                                   }))
                                 }
-                                className="mt-1 min-h-20 w-full rounded-xl border border-slate-300 px-3 py-2"
+                                className="mt-1 min-h-20 w-full rounded-xl border border-input px-3 py-2"
                               />
                             </label>
                             <div className="mt-3 flex gap-2">
@@ -732,7 +732,7 @@ export function FinanceReconciliationClient({
                                 onClick={() =>
                                   void reviewDeposit(deposit, "reconcile")
                                 }
-                                className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                                className="rounded-xl bg-success px-4 py-2 text-sm font-semibold text-success-foreground disabled:opacity-50"
                               >
                                 Reconcile
                               </button>
@@ -742,7 +742,7 @@ export function FinanceReconciliationClient({
                                 onClick={() =>
                                   void reviewDeposit(deposit, "reject")
                                 }
-                                className="rounded-xl border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-50"
+                                className="rounded-xl border border-danger/40 px-4 py-2 text-sm font-semibold text-danger disabled:opacity-50"
                               >
                                 Reject and release
                               </button>
@@ -754,7 +754,7 @@ export function FinanceReconciliationClient({
                   </article>
                 )}</PaginatedCollection>}
                 {!context.deposits.length && !loading ? (
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm text-muted-foreground">
                     No deposit records yet.
                   </div>
                 ) : null}
@@ -767,46 +767,46 @@ export function FinanceReconciliationClient({
               {context.capabilities.canClosePeriods ? (
                 <form
                   onSubmit={createPeriod}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                  className="rounded-2xl border border-border bg-surface p-5"
                 >
-                  <h2 className="text-lg font-semibold text-slate-950">
+                  <h2 className="text-lg font-semibold text-foreground">
                     Create accounting period
                   </h2>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Periods cannot overlap. Closing checks cashier sessions,
                     deposits, corrections, and credit notes before locking the
                     ledger dates.
                   </p>
                   <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Period code
                       <input
                         required
                         value={periodCode}
                         onChange={(event) => setPeriodCode(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Display name
                       <input
                         required
                         value={periodName}
                         onChange={(event) => setPeriodName(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Start date
                       <input
                         required
                         type="date"
                         value={periodStart}
                         onChange={(event) => setPeriodStart(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       End date
                       <input
                         required
@@ -814,14 +814,14 @@ export function FinanceReconciliationClient({
                         min={periodStart || undefined}
                         value={periodEnd}
                         onChange={(event) => setPeriodEnd(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
                   </div>
                   <button
                     type="submit"
                     disabled={actingId === "new-period"}
-                    className="mt-4 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                    className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                   >
                     Create open period
                   </button>
@@ -832,14 +832,14 @@ export function FinanceReconciliationClient({
                 {<PaginatedCollection items={context.periods}>{(period) => (
                   <article
                     key={period.id}
-                    className="rounded-2xl border border-slate-200 p-4"
+                    className="rounded-2xl border border-border p-4"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <div className="font-semibold text-slate-950">
+                        <div className="font-semibold text-foreground">
                           {period.displayName} · {period.periodCode}
                         </div>
-                        <div className="mt-1 text-sm text-slate-600">
+                        <div className="mt-1 text-sm text-muted-foreground">
                           {period.startDate} to {period.endDate}
                         </div>
                       </div>
@@ -852,14 +852,14 @@ export function FinanceReconciliationClient({
                       </span>
                     </div>
                     {period.status === "CLOSED" ? (
-                      <div className="mt-3 text-xs text-slate-500">
+                      <div className="mt-3 text-xs text-muted-foreground">
                         Closed {dateTime(period.closedAt)} · Reopened{" "}
                         {period.reopenCount} time(s)
                       </div>
                     ) : null}
                     {context.capabilities.canClosePeriods ? (
-                      <div className="mt-4 border-t border-slate-200 pt-4">
-                        <label className="block text-sm font-medium text-slate-700">
+                      <div className="mt-4 border-t border-border pt-4">
+                        <label className="block text-sm font-medium text-foreground">
                           {period.status === "OPEN"
                             ? "Close reason"
                             : "Reopen reason"}
@@ -871,7 +871,7 @@ export function FinanceReconciliationClient({
                                 [period.id]: event.target.value,
                               }))
                             }
-                            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                            className="mt-1 w-full rounded-xl border border-input px-3 py-2"
                           />
                         </label>
                         <button
@@ -883,10 +883,10 @@ export function FinanceReconciliationClient({
                               period.status === "OPEN" ? "close" : "reopen",
                             )
                           }
-                          className={`mt-3 rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${
+                          className={`mt-3 rounded-xl px-4 py-2 text-sm font-semibold text-solid-foreground disabled:opacity-50 ${
                             period.status === "OPEN"
-                              ? "bg-slate-950"
-                              : "bg-amber-700"
+                              ? "bg-primary"
+                              : "bg-warning"
                           }`}
                         >
                           {period.status === "OPEN"
@@ -898,7 +898,7 @@ export function FinanceReconciliationClient({
                   </article>
                 )}</PaginatedCollection>}
                 {!context.periods.length && !loading ? (
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm text-muted-foreground">
                     No accounting periods configured.
                   </div>
                 ) : null}
@@ -911,58 +911,58 @@ export function FinanceReconciliationClient({
               {context.capabilities.canManageReconciliation ? (
                 <form
                   onSubmit={createAccount}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
+                  className="rounded-2xl border border-border bg-surface p-5"
                 >
-                  <h2 className="text-lg font-semibold text-slate-950">
+                  <h2 className="text-lg font-semibold text-foreground">
                     Add bank destination
                   </h2>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Store only a masked account reference. Never enter a full
                     bank account number or credential.
                   </p>
                   <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Account code
                       <input
                         required
                         value={accountCode}
                         onChange={(event) => setAccountCode(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Display name
                       <input
                         required
                         value={accountName}
                         onChange={(event) => setAccountName(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Currency
                       <select
                         value={accountCurrency}
                         onChange={(event) =>
                           setAccountCurrency(event.target.value)
                         }
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       >
                         <option value="HTG">HTG</option>
                         <option value="USD">USD</option>
                       </select>
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Institution
                       <input
                         value={institutionName}
                         onChange={(event) =>
                           setInstitutionName(event.target.value)
                         }
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
-                    <label className="text-sm font-medium text-slate-700">
+                    <label className="text-sm font-medium text-foreground">
                       Masked reference
                       <input
                         placeholder="****4821"
@@ -970,14 +970,14 @@ export function FinanceReconciliationClient({
                         onChange={(event) =>
                           setMaskedReference(event.target.value)
                         }
-                        className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                        className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2"
                       />
                     </label>
                   </div>
                   <button
                     type="submit"
                     disabled={actingId === "new-account"}
-                    className="mt-4 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                    className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                   >
                     Add destination
                   </button>
@@ -988,15 +988,15 @@ export function FinanceReconciliationClient({
                 {<PaginatedCollection items={context.bankAccounts}>{(account) => (
                   <article
                     key={account.id}
-                    className="rounded-2xl border border-slate-200 p-4"
+                    className="rounded-2xl border border-border p-4"
                   >
-                    <div className="font-semibold text-slate-950">
+                    <div className="font-semibold text-foreground">
                       {account.displayName}
                     </div>
-                    <div className="mt-1 text-sm text-slate-600">
+                    <div className="mt-1 text-sm text-muted-foreground">
                       {account.accountCode} · {account.currencyCode}
                     </div>
-                    <div className="mt-2 text-xs text-slate-500">
+                    <div className="mt-2 text-xs text-muted-foreground">
                       {[account.institutionName, account.accountReferenceMasked]
                         .filter(Boolean)
                         .join(" · ") || "No account details stored"}
@@ -1005,8 +1005,8 @@ export function FinanceReconciliationClient({
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
                           account.isActive
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-slate-100 text-slate-600"
+                            ? "bg-success-subtle text-success"
+                            : "bg-surface-muted text-muted-foreground"
                         }`}
                       >
                         {account.isActive ? "ACTIVE" : "ARCHIVED"}
@@ -1016,7 +1016,7 @@ export function FinanceReconciliationClient({
                           type="button"
                           disabled={actingId === account.id}
                           onClick={() => void updateAccountStatus(account)}
-                          className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-medium"
+                          className="rounded-xl border border-input px-3 py-1.5 text-xs font-medium"
                         >
                           {account.isActive ? "Archive" : "Reactivate"}
                         </button>
@@ -1025,7 +1025,7 @@ export function FinanceReconciliationClient({
                   </article>
                 )}</PaginatedCollection>}
                 {!context.bankAccounts.length && !loading ? (
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm text-muted-foreground">
                     No bank destinations configured.
                   </div>
                 ) : null}

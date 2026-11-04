@@ -134,14 +134,14 @@ export function StudentFinanceSummaryPanelClient({
   }, [schoolId, studentId, refreshKey]);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Finance Summary
           </h3>
 
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Student billing, payments, and outstanding balance.
           </p>
         </div>
@@ -151,21 +151,21 @@ export function StudentFinanceSummaryPanelClient({
             type="button"
             onClick={loadSummary}
             disabled={loading}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Loading..." : "Refresh"}
           </button>
 
           <Link
             href={`/finance/students/${studentId}/statement`}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Print Statement
           </Link>
 
           <Link
             href={`/finance?studentId=${studentId}`}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
           >
             Open Finance
           </Link>
@@ -173,13 +173,13 @@ export function StudentFinanceSummaryPanelClient({
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {!summary && !error ? (
-        <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="mt-4 rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading finance summary...
         </div>
       ) : null}
@@ -190,34 +190,34 @@ export function StudentFinanceSummaryPanelClient({
             {summary.totalsByCurrency.flatMap((totals) => [
               <div
                 key={`${totals.currencyCode}-invoiced`}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                className="rounded-2xl border border-border bg-surface p-4"
               >
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-muted-foreground">
                   Total invoiced ({totals.currencyCode})
                 </div>
-                <div className="mt-2 text-2xl font-bold text-slate-900">
+                <div className="mt-2 text-2xl font-bold text-foreground">
                   {money(totals.totalInvoiced, totals.currencyCode)}
                 </div>
               </div>,
               <div
                 key={`${totals.currencyCode}-paid`}
-                className="rounded-2xl border border-green-200 bg-green-50 p-4"
+                className="rounded-2xl border border-success/40 bg-success-subtle p-4"
               >
-                <div className="text-sm text-green-800">
+                <div className="text-sm text-success">
                   Total paid ({totals.currencyCode})
                 </div>
-                <div className="mt-2 text-2xl font-bold text-green-900">
+                <div className="mt-2 text-2xl font-bold text-success">
                   {money(totals.totalPaid, totals.currencyCode)}
                 </div>
               </div>,
               <div
                 key={`${totals.currencyCode}-balance`}
-                className="rounded-2xl border border-amber-200 bg-amber-50 p-4"
+                className="rounded-2xl border border-warning/40 bg-warning-subtle p-4"
               >
-                <div className="text-sm text-amber-800">
+                <div className="text-sm text-warning">
                   Balance due ({totals.currencyCode})
                 </div>
-                <div className="mt-2 text-2xl font-bold text-amber-900">
+                <div className="mt-2 text-2xl font-bold text-warning">
                   {money(totals.balanceDue, totals.currencyCode)}
                 </div>
               </div>,
@@ -225,8 +225,8 @@ export function StudentFinanceSummaryPanelClient({
           </div>
 
           <div className="grid gap-5 xl:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 p-4">
-              <div className="font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border p-4">
+              <div className="font-semibold text-foreground">
                 Recent Invoices
               </div>
 
@@ -234,17 +234,17 @@ export function StudentFinanceSummaryPanelClient({
                 {<PaginatedCollection items={summary.invoices}>{(invoice) => (
                   <div
                     key={invoice.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+                    className="rounded-xl border border-border bg-surface p-3"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <Link
                           href={`/finance/invoices/${invoice.id}`}
-                          className="font-medium text-slate-900 underline-offset-4 hover:underline"
+                          className="font-medium text-foreground underline-offset-4 hover:underline"
                         >
                           {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
                         </Link>
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-muted-foreground">
                           Due: {invoice.dueDate ?? "-"}
                         </div>
                       </div>
@@ -261,7 +261,7 @@ export function StudentFinanceSummaryPanelClient({
                       </span>
                     </div>
 
-                    <div className="flex justify-between text-sm text-slate-600">
+                    <div className="flex justify-between text-sm text-muted-foreground">
                       <span>Balance</span>
                       <span>
                         {money(invoice.balanceDue, invoice.currencyCode)}
@@ -270,14 +270,14 @@ export function StudentFinanceSummaryPanelClient({
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Link
                         href={`/finance/invoices/${invoice.id}`}
-                        className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                        className="inline-flex rounded-lg border border-input bg-surface px-3 py-2 text-xs font-medium hover:bg-surface"
                       >
                         Open Invoice
                       </Link>
 
                       <Link
                         href={`/finance/invoices/${invoice.id}/thermal?autoprint=1`}
-                        className="inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                        className="inline-flex rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary"
                       >
                         Print 80mm
                       </Link>
@@ -291,7 +291,7 @@ export function StudentFinanceSummaryPanelClient({
                             studentId,
                             invoiceId: invoice.id,
                           }).toString()}`}
-                          className="inline-flex rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
+                          className="inline-flex rounded-lg bg-success px-3 py-2 text-xs font-semibold text-success-foreground hover:bg-success"
                         >
                           Record in cashier
                         </Link>
@@ -301,15 +301,15 @@ export function StudentFinanceSummaryPanelClient({
                 )}</PaginatedCollection>}
 
                 {summary.invoices.length === 0 ? (
-                  <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
+                  <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                     No invoices yet.
                   </div>
                 ) : null}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 p-4">
-              <div className="font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border p-4">
+              <div className="font-semibold text-foreground">
                 Recent Payments
               </div>
 
@@ -317,18 +317,18 @@ export function StudentFinanceSummaryPanelClient({
                 {<PaginatedCollection items={summary.payments}>{(payment) => (
                   <div
                     key={payment.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+                    className="rounded-xl border border-border bg-surface p-3"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <Link
                           href={`/finance/payments/${payment.id}/receipt`}
-                          className="font-medium text-slate-900 underline-offset-4 hover:underline"
+                          className="font-medium text-foreground underline-offset-4 hover:underline"
                         >
                           {payment.paymentNumber ?? payment.id.slice(0, 8)}
                         </Link>
 
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-muted-foreground">
                           Invoice: {payment.invoiceNumber ?? "-"}
                         </div>
                       </div>
@@ -345,7 +345,7 @@ export function StudentFinanceSummaryPanelClient({
                       </span>
                     </div>
 
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {payment.paidAt ?? payment.createdAt}
                       {payment.paymentMethod
                         ? ` - ${payment.paymentMethod}`
@@ -357,14 +357,14 @@ export function StudentFinanceSummaryPanelClient({
 
                     <Link
                       href={`/finance/payments/${payment.id}/receipt`}
-                      className="mt-3 inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                      className="mt-3 inline-flex rounded-lg border border-input bg-surface px-3 py-2 text-xs font-medium hover:bg-surface"
                     >
                       Open Receipt
                     </Link>
 
                     <Link
                       href={`/finance/payments/${payment.id}/receipt/thermal?autoprint=1`}
-                      className="mt-3 ml-2 inline-flex rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                      className="mt-3 ml-2 inline-flex rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary"
                     >
                       Print 80mm
                     </Link>
@@ -372,7 +372,7 @@ export function StudentFinanceSummaryPanelClient({
                 )}</PaginatedCollection>}
 
                 {summary.payments.length === 0 ? (
-                  <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
+                  <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                     No payments yet.
                   </div>
                 ) : null}

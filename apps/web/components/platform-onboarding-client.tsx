@@ -272,7 +272,7 @@ export function PlatformOnboardingClient({
                           <div
                             className={`h-full rounded-full ${
                               row.completionPercent === 100
-                                ? "bg-green-600"
+                                ? "bg-success"
                                 : row.completionPercent >= 50
                                   ? "bg-warning-subtle0"
                                   : "bg-danger-subtle0"

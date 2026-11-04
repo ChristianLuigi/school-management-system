@@ -229,7 +229,7 @@ export function PlatformInvitationsClient({
       {created && (
         <div className="rounded-2xl border border-success/40 bg-success-subtle p-5 space-y-3">
           <div className="text-sm font-semibold text-success">{pt("Account created - share these credentials with the user")}{" "}</div>
-          <div className="rounded-xl bg-surface text-foreground ring-1 ring-green-200 p-4 grid gap-2 text-sm">
+          <div className="rounded-xl bg-surface text-foreground ring-1 ring-ring p-4 grid gap-2 text-sm">
             <div className="flex justify-between rounded-lg bg-surface-muted px-3 py-2">
               <span className="text-muted-foreground">{pt("Role")}</span>
               <span className="font-medium">

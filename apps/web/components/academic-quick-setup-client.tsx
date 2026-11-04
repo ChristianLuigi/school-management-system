@@ -258,13 +258,13 @@ export function AcademicQuickSetupClient({
   }
 
   return (
-    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+    <div className="rounded-2xl border border-info/40 bg-info-subtle p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-blue-950">
+          <h2 className="text-lg font-semibold text-info">
             {t("academic.quickSetupTitle")}
           </h2>
-          <p className="mt-1 text-sm text-blue-900">
+          <p className="mt-1 text-sm text-info">
             {t("academic.quickSetupDescription")}
           </p>
         </div>
@@ -273,20 +273,20 @@ export function AcademicQuickSetupClient({
           type="button"
           onClick={applySetup}
           disabled={saving}
-          className="rounded-xl bg-blue-950 px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 disabled:opacity-60"
+          className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
         >
           {saving ? t("common.saving") : t("academic.saveStructure")}
         </button>
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -301,14 +301,14 @@ export function AcademicQuickSetupClient({
           return (
             <div
               key={division}
-              className="rounded-2xl border border-blue-100 bg-white p-4"
+              className="rounded-2xl border border-info/40 bg-surface p-4"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="font-semibold text-slate-900">
+                <h3 className="font-semibold text-foreground">
                   {divisionLabel(division, t)}
                 </h3>
 
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <input
                     type="checkbox"
                     checked={divisionEnabled}
@@ -326,11 +326,11 @@ export function AcademicQuickSetupClient({
                     key={grade.gradeCode}
                     className={`grid gap-3 rounded-xl border p-3 md:grid-cols-[auto_1fr_130px] ${
                       grade.enabled
-                        ? "border-slate-200 bg-slate-50"
-                        : "border-slate-100 bg-white opacity-60"
+                        ? "border-border bg-surface"
+                        : "border-border bg-surface opacity-60"
                     }`}
                   >
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                       <input
                         type="checkbox"
                         checked={grade.enabled}
@@ -342,20 +342,20 @@ export function AcademicQuickSetupClient({
                     </label>
 
                     <input
-                      className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                      className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                       value={grade.nameFr}
                       onChange={(event) =>
                         updateGrade(index, { nameFr: event.target.value })
                       }
                     />
 
-                    <label className="grid gap-1 text-xs font-medium text-slate-500">
+                    <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                       {t("academic.sections")}
                       <input
                         type="number"
                         min={0}
                         max={10}
-                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                        className="rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground"
                         value={grade.sectionCount}
                         onChange={(event) =>
                           updateGrade(index, {
@@ -372,7 +372,7 @@ export function AcademicQuickSetupClient({
         })}
       </div>
 
-      <div className="mt-5 rounded-xl border border-blue-100 bg-white p-4 text-sm text-slate-600">
+      <div className="mt-5 rounded-xl border border-info/40 bg-surface p-4 text-sm text-muted-foreground">
         {t("academic.quickSetupNotice")}
       </div>
     </div>

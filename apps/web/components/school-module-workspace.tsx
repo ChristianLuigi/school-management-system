@@ -59,40 +59,40 @@ function attentionToneClasses(
 ): { container: string; heading: string; body: string } {
   if (tone === "red") {
     return {
-      container: "border-red-200 bg-red-50",
-      heading: "text-red-900",
-      body: "text-red-800",
+      container: "border-danger/40 bg-danger-subtle",
+      heading: "text-danger",
+      body: "text-danger",
     };
   }
 
   if (tone === "green") {
     return {
-      container: "border-green-200 bg-green-50",
-      heading: "text-green-900",
-      body: "text-green-800",
+      container: "border-success/40 bg-success-subtle",
+      heading: "text-success",
+      body: "text-success",
     };
   }
 
   if (tone === "blue") {
     return {
-      container: "border-blue-200 bg-blue-50",
-      heading: "text-blue-900",
-      body: "text-blue-800",
+      container: "border-info/40 bg-info-subtle",
+      heading: "text-info",
+      body: "text-info",
     };
   }
 
   if (tone === "neutral") {
     return {
-      container: "border-slate-200 bg-slate-50",
-      heading: "text-slate-900",
-      body: "text-slate-700",
+      container: "border-border bg-surface",
+      heading: "text-foreground",
+      body: "text-foreground",
     };
   }
 
   return {
-    container: "border-amber-200 bg-amber-50",
-    heading: "text-amber-900",
-    body: "text-amber-800",
+    container: "border-warning/40 bg-warning-subtle",
+    heading: "text-warning",
+    body: "text-warning",
   };
 }
 
@@ -132,11 +132,11 @@ export function SchoolModuleWorkspace({
               <Link
                 key={`${action.href}-${action.title}`}
                 href={action.href}
-                className="group inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-950"
+                className="group inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:border-input hover:text-foreground"
               >
-                <Icon className="h-4 w-4 text-slate-500 group-hover:text-blue-600" />
+                <Icon className="h-4 w-4 text-muted-foreground group-hover:text-info" />
                 <span>{action.title}</span>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500" />
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
               </Link>
             );
           })}

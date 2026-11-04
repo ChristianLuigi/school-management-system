@@ -59,31 +59,31 @@ export function ReportCardCommentsEditor({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 print:hidden">
+    <div className="rounded-2xl border border-border bg-surface p-5 print:hidden">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-foreground">
           Report Card Comments
         </h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Add conduct notes, teacher comments, director comments, and final remarks before printing.
         </p>
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <textarea
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-xl border border-input px-3 py-2 text-sm"
           placeholder="Conduct note"
           value={form.conductNote}
           onChange={(e) =>
@@ -92,7 +92,7 @@ export function ReportCardCommentsEditor({
         />
 
         <textarea
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-xl border border-input px-3 py-2 text-sm"
           placeholder="Teacher comment"
           value={form.teacherComment}
           onChange={(e) =>
@@ -101,7 +101,7 @@ export function ReportCardCommentsEditor({
         />
 
         <textarea
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-xl border border-input px-3 py-2 text-sm"
           placeholder="Director comment"
           value={form.directorComment}
           onChange={(e) =>
@@ -110,7 +110,7 @@ export function ReportCardCommentsEditor({
         />
 
         <input
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-xl border border-input px-3 py-2 text-sm"
           placeholder="Final decision override optional"
           value={form.finalDecisionOverride}
           onChange={(e) =>
@@ -122,7 +122,7 @@ export function ReportCardCommentsEditor({
         />
 
         <textarea
-          className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+          className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
           placeholder="Final remarks"
           value={form.finalRemarks}
           onChange={(e) =>
@@ -136,7 +136,7 @@ export function ReportCardCommentsEditor({
           type="button"
           disabled={saving}
           onClick={saveComments}
-          className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
         >
           {saving ? "Saving..." : "Save Comments"}
         </button>

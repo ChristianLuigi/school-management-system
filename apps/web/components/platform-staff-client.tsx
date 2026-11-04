@@ -308,7 +308,7 @@ export function PlatformStaffClient({
         <div className="rounded-2xl border border-success/40 bg-success-subtle p-4 text-sm text-success">
           <div>{pt(message, messageParams)}</div>
           {tempPassword ? (
-            <div className="mt-3 rounded-xl bg-surface text-foreground p-3 font-mono text-sm text-foreground ring-1 ring-green-200">
+            <div className="mt-3 rounded-xl bg-surface text-foreground p-3 font-mono text-sm text-foreground ring-1 ring-ring">
               {tempPassword}
             </div>
           ) : null}

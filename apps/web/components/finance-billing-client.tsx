@@ -432,7 +432,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
 
   if (loading && !context) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500">
+      <div className="rounded-2xl border border-border bg-surface p-5 text-sm text-muted-foreground">
         Loading controlled billing…
       </div>
     );
@@ -441,18 +441,18 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
   return (
     <div className="space-y-6">
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {!context?.capabilities.canManage ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <div className="rounded-xl border border-warning/40 bg-warning-subtle p-4 text-sm text-warning">
           You can review billing history, but controlled billing requires the
           FINANCE_BILLING_MANAGE permission.
         </div>
@@ -461,12 +461,12 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
       {context?.capabilities.canManage ? (
         <form
           onSubmit={createPlan}
-          className="rounded-2xl border border-slate-200 bg-white p-5"
+          className="rounded-2xl border border-border bg-surface p-5"
         >
-          <h2 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-lg font-semibold text-foreground">
             1. Create a billing plan
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Plans define one charge amount, currency, academic scope, and due
             date rule. Generated invoices preserve a snapshot of these values.
           </p>
@@ -480,7 +480,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                   setPlanCode(event.target.value.toUpperCase())
                 }
                 placeholder="TUITION-M01"
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <label className="text-sm">
@@ -490,7 +490,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 value={planNameFr}
                 onChange={(event) => setPlanNameFr(event.target.value)}
                 placeholder="Scolarité mensuelle"
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <label className="text-sm">
@@ -500,7 +500,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 value={planNameEn}
                 onChange={(event) => setPlanNameEn(event.target.value)}
                 placeholder="Monthly tuition"
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <label className="text-sm">
@@ -509,7 +509,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 required
                 value={academicYearId}
                 onChange={(event) => setAcademicYearId(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 <option value="">Select year</option>
                 {context?.academicYears.map((year) => (
@@ -524,7 +524,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
               <select
                 value={gradeLevelId}
                 onChange={(event) => setGradeLevelId(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 <option value="">All active grades</option>
                 {context?.gradeLevels.map((grade) => (
@@ -541,7 +541,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 onChange={(event) =>
                   setFeeType(event.target.value as BillingPlan["feeType"])
                 }
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 <option value="TUITION">Tuition</option>
                 <option value="REGISTRATION">Registration</option>
@@ -557,7 +557,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                     event.target.value as BillingPlan["billingFrequency"],
                   )
                 }
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 <option value="MONTHLY">Monthly</option>
                 <option value="TRIMESTER">Trimester</option>
@@ -573,7 +573,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 step="0.01"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <label className="text-sm">
@@ -581,7 +581,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
               <select
                 value={currencyCode}
                 onChange={(event) => setCurrencyCode(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 <option value="HTG">HTG</option>
                 <option value="USD">USD</option>
@@ -596,36 +596,36 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 max="365"
                 value={dueDays}
                 onChange={(event) => setDueDays(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
           </div>
           <button
             type="submit"
             disabled={action === "create-plan"}
-            className="mt-5 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="mt-5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {action === "create-plan" ? "Creating…" : "Create plan"}
           </button>
         </form>
       ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-semibold text-slate-950">
+      <section className="rounded-2xl border border-border bg-surface p-5">
+        <h2 className="text-lg font-semibold text-foreground">
           Billing plans
         </h2>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
           {<PaginatedCollection items={context?.plans}>{(plan) => (
             <div
               key={plan.id}
-              className="rounded-2xl border border-slate-200 p-4"
+              className="rounded-2xl border border-border p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <div className="font-semibold text-slate-950">
+                  <div className="font-semibold text-foreground">
                     {plan.planCode} · {localized(plan.nameI18n)}
                   </div>
-                  <div className="mt-1 text-sm text-slate-600">
+                  <div className="mt-1 text-sm text-muted-foreground">
                     {localized(plan.academicYearName)} ·{" "}
                     {plan.gradeLevelCode ?? "All grades"}
                   </div>
@@ -643,7 +643,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                   type="button"
                   disabled={action === plan.id}
                   onClick={() => void togglePlan(plan)}
-                  className="mt-4 rounded-lg border border-slate-300 px-3 py-1.5 text-xs disabled:opacity-60"
+                  className="mt-4 rounded-lg border border-input px-3 py-1.5 text-xs disabled:opacity-60"
                 >
                   {plan.isActive ? "Archive plan" : "Reactivate plan"}
                 </button>
@@ -651,7 +651,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
             </div>
           )}</PaginatedCollection>}
           {!context?.plans.length ? (
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-muted-foreground">
               No controlled billing plans yet.
             </div>
           ) : null}
@@ -661,12 +661,12 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
       {context?.capabilities.canManage ? (
         <form
           onSubmit={previewRun}
-          className="rounded-2xl border border-slate-200 bg-white p-5"
+          className="rounded-2xl border border-border bg-surface p-5"
         >
-          <h2 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-lg font-semibold text-foreground">
             2. Preview a billing run
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Preview is mandatory. Students already charged for the same plan
             and period are identified before generation.
           </p>
@@ -680,7 +680,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                   setSelectedPlanId(event.target.value);
                   setPreview(null);
                 }}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 <option value="">Select plan</option>
                 {activePlans.map((plan) => (
@@ -704,7 +704,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                     ? "2026-09"
                     : "2026-T1"
                 }
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <label className="text-sm">
@@ -713,7 +713,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 type="date"
                 value={issueDate}
                 onChange={(event) => setIssueDate(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <label className="text-sm">
@@ -722,7 +722,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 type="date"
                 value={dueDate}
                 onChange={(event) => setDueDate(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
             <label className="text-sm">
@@ -732,7 +732,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 onChange={(event) =>
                   setInvoiceStatus(event.target.value as "DRAFT" | "ISSUED")
                 }
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 <option value="ISSUED">Issue immediately</option>
                 <option value="DRAFT">Create drafts</option>
@@ -742,7 +742,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
           <button
             type="submit"
             disabled={action === "preview" || !selectedPlanId}
-            className="mt-5 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="mt-5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {action === "preview" ? "Preparing preview…" : "Preview students"}
           </button>
@@ -750,18 +750,18 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
       ) : null}
 
       {preview ? (
-        <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+        <section className="rounded-2xl border border-info/40 bg-info-subtle p-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-blue-950">
+              <h2 className="text-lg font-semibold text-info">
                 3. Confirm the billing preview
               </h2>
-              <p className="mt-1 text-sm text-blue-800">
+              <p className="mt-1 text-sm text-info">
                 {preview.plan.planCode} · {preview.billingPeriodCode} ·{" "}
                 {preview.issueDate} → {preview.dueDate}
               </p>
             </div>
-            <div className="text-right text-sm text-blue-950">
+            <div className="text-right text-sm text-info">
               <div>{preview.summary.candidateCount} candidate(s)</div>
               <div>{preview.summary.skippedDuplicateCount} duplicate(s)</div>
               <div className="font-bold">
@@ -773,9 +773,9 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
               </div>
             </div>
           </div>
-          <div className="mt-4 overflow-x-auto rounded-xl border border-blue-200 bg-white">
+          <div className="mt-4 overflow-x-auto rounded-xl border border-info/40 bg-surface">
             <table className="min-w-full text-sm">
-              <thead className="bg-blue-100 text-left text-blue-900">
+              <thead className="bg-info-subtle text-left text-info">
                 <tr>
                   <th className="px-4 py-3">Generate</th>
                   <th className="px-4 py-3">Student</th>
@@ -785,7 +785,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
               </thead>
               <tbody>
                 {preview.students.map((student) => (
-                  <tr key={student.id} className="border-t border-blue-100">
+                  <tr key={student.id} className="border-t border-info/40">
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
@@ -799,7 +799,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                       <div className="font-medium">
                         {student.firstName} {student.lastName}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {student.studentCode ?? "Code pending"}
                       </div>
                     </td>
@@ -810,12 +810,12 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                       {student.alreadyBilled ? (
                         <Link
                           href={`/finance/invoices/${student.existingInvoiceId}`}
-                          className="text-amber-700 underline"
+                          className="text-warning underline"
                         >
                           Already billed · {student.existingInvoiceNumber}
                         </Link>
                       ) : (
-                        <span className="text-green-700">Ready</span>
+                        <span className="text-success">Ready</span>
                       )}
                     </td>
                   </tr>
@@ -827,7 +827,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
             type="button"
             onClick={() => void generateRun()}
             disabled={action === "generate" || selectedStudents.length === 0}
-            className="mt-5 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="mt-5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {action === "generate"
               ? "Generating invoices…"
@@ -836,13 +836,13 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
         </section>
       ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-semibold text-slate-950">
+      <section className="rounded-2xl border border-border bg-surface p-5">
+        <h2 className="text-lg font-semibold text-foreground">
           Recent billing runs
         </h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+        <div className="mt-4 overflow-x-auto rounded-xl border border-border">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left text-slate-600">
+            <thead className="bg-surface-muted text-left text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Plan / period</th>
                 <th className="px-4 py-3">Generated</th>
@@ -854,19 +854,19 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
             </thead>
             <tbody>
               {<PaginatedCollection items={context?.recentRuns} rows columns={6}>{(run) => (
-                <tr key={run.id} className="border-t border-slate-200">
+                <tr key={run.id} className="border-t border-border">
                   <td className="px-4 py-3">
                     <div className="font-medium">
                       {run.planCode} · {run.billingPeriodCode}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {new Date(run.createdAt).toLocaleString()}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-green-700">
+                  <td className="px-4 py-3 text-success">
                     {run.generatedCount}
                   </td>
-                  <td className="px-4 py-3 text-amber-700">
+                  <td className="px-4 py-3 text-warning">
                     {run.skippedDuplicateCount}
                   </td>
                   <td className="px-4 py-3 font-medium">
@@ -878,7 +878,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                       type="button"
                       onClick={() => void loadRun(run.id)}
                       disabled={action === `run-${run.id}`}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs"
+                      className="rounded-lg border border-input px-3 py-1.5 text-xs"
                     >
                       View results
                     </button>
@@ -887,7 +887,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
               )}</PaginatedCollection>}
               {!context?.recentRuns.length ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                     No billing runs yet.
                   </td>
                 </tr>
@@ -898,13 +898,13 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
       </section>
 
       {runDetail ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+        <section className="rounded-2xl border border-border bg-surface p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-slate-950">
+              <h2 className="text-lg font-semibold text-foreground">
                 Run {runDetail.planCode} · {runDetail.billingPeriodCode}
               </h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {runDetail.generatedCount} generated ·{" "}
                 {runDetail.skippedDuplicateCount} skipped ·{" "}
                 {money(
@@ -916,7 +916,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
             <button
               type="button"
               onClick={() => setRunDetail(null)}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs"
+              className="rounded-lg border border-input px-3 py-1.5 text-xs"
             >
               Close
             </button>
@@ -925,13 +925,13 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
             {<PaginatedCollection items={runDetail.items}>{(item) => (
               <div
                 key={item.studentId}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 text-sm"
               >
                 <div>
                   <div className="font-medium">
                     {item.firstName} {item.lastName}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-muted-foreground">
                     {item.studentCode ?? "Code pending"}
                   </div>
                 </div>
@@ -944,7 +944,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                   {item.invoiceId ? (
                     <Link
                       href={`/finance/invoices/${item.invoiceId}`}
-                      className="text-blue-700 underline"
+                      className="text-info underline"
                     >
                       {item.invoiceNumber ?? "Open invoice"}
                     </Link>

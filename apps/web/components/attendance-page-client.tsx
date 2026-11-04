@@ -336,7 +336,7 @@ export function AttendancePageClient({
   }
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 md:grid-cols-4">
+      <div className="grid gap-4 rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring md:grid-cols-4">
         <SectionSelectorClient
           schoolId={schoolId}
           sectionId={sectionId}
@@ -348,7 +348,7 @@ export function AttendancePageClient({
           <label className="mb-1 block text-sm font-medium">Date</label>
           <input
             type="date"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="w-full rounded-lg border border-input px-3 py-2"
             value={attendanceDate}
             onChange={(e) => setAttendanceDate(e.target.value)}
           />
@@ -357,7 +357,7 @@ export function AttendancePageClient({
         <div>
           <label className="mb-1 block text-sm font-medium">Slot</label>
           <select
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            className="w-full rounded-lg border border-input px-3 py-2"
             value={slot}
             onChange={(e) => setSlot(e.target.value as Slot)}
           >
@@ -371,7 +371,7 @@ export function AttendancePageClient({
             type="button"
             onClick={loadAttendanceData}
             disabled={loading}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
+            className="w-full rounded-xl border border-input px-4 py-3 text-sm font-medium hover:bg-surface disabled:opacity-60"
           >
             {loading ? "Loading..." : "Reload"}
           </button>
@@ -379,35 +379,35 @@ export function AttendancePageClient({
       </div>
 
       {sessionId ? (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+        <div className="rounded-2xl border border-success/40 bg-success-subtle p-4 text-sm text-success">
           Session ID: {sessionId}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+        <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-danger">
           {error}
         </div>
       ) : null}
 
       {message ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+        <div className="rounded-2xl border border-border bg-surface p-4 text-sm text-foreground">
           {message}
         </div>
       ) : null}
 
       {submitError ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {submitError}
         </div>
       ) : null}
 
       {submitMessage ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {submitMessage}
 
           {lastSubmitResult ? (
-            <div className="mt-2 text-xs text-green-800">
+            <div className="mt-2 text-xs text-success">
               Session: {lastSubmitResult.attendanceSessionId} | Records:{" "}
               {lastSubmitResult.recordsSubmitted} | Present:{" "}
               {lastSubmitResult.counts.present} | Absent:{" "}
@@ -419,45 +419,45 @@ export function AttendancePageClient({
         </div>
       ) : null}
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted-foreground">
         In weak internet conditions, failed network submissions are saved
         locally and can be synced later. Backend protection prevents duplicate
         attendance sessions.
       </p>
       <div className="grid gap-4 md:grid-cols-5">
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="text-sm text-slate-500">Total</div>
+        <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
+          <div className="text-sm text-muted-foreground">Total</div>
           <div className="mt-2 text-2xl font-bold">{summary.total}</div>
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="text-sm text-slate-500">Present</div>
+        <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
+          <div className="text-sm text-muted-foreground">Present</div>
           <div className="mt-2 text-2xl font-bold">{summary.present}</div>
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="text-sm text-slate-500">Absent</div>
+        <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
+          <div className="text-sm text-muted-foreground">Absent</div>
           <div className="mt-2 text-2xl font-bold">{summary.absent}</div>
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="text-sm text-slate-500">Late</div>
+        <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
+          <div className="text-sm text-muted-foreground">Late</div>
           <div className="mt-2 text-2xl font-bold">{summary.late}</div>
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="text-sm text-slate-500">Excused</div>
+        <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
+          <div className="text-sm text-muted-foreground">Excused</div>
           <div className="mt-2 text-2xl font-bold">{summary.excused}</div>
         </div>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"
+        className="overflow-hidden rounded-2xl bg-surface shadow-sm ring-1 ring-ring"
       >
-        <div className="border-b border-slate-200 px-5 py-4">
+        <div className="border-b border-border px-5 py-4">
           <h2 className="text-lg font-semibold">Roster</h2>
         </div>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left text-slate-600">
+            <thead className="bg-surface-muted text-left text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Student #</th>
                 <th className="px-4 py-3">Name</th>
@@ -469,7 +469,7 @@ export function AttendancePageClient({
               {roster.map((student) => (
                 <tr
                   key={student.student_id}
-                  className="border-t border-slate-200 align-top"
+                  className="border-t border-border align-top"
                 >
                   <td className="px-4 py-3">{student.student_number}</td>
                   <td className="px-4 py-3">
@@ -477,7 +477,7 @@ export function AttendancePageClient({
                   </td>
                   <td className="px-4 py-3">
                     <select
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className="w-full rounded-lg border border-input px-3 py-2"
                       value={statuses[student.student_id] ?? "PRESENT"}
                       onChange={(e) =>
                         setStudentStatus(
@@ -494,7 +494,7 @@ export function AttendancePageClient({
                   </td>
                   <td className="px-4 py-3">
                     <input
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                      className="w-full rounded-lg border border-input px-3 py-2"
                       placeholder="Optional note"
                       value={notes[student.student_id] ?? ""}
                       onChange={(e) =>
@@ -509,7 +509,7 @@ export function AttendancePageClient({
                 <tr>
                   <td
                     colSpan={4}
-                    className="px-4 py-6 text-center text-slate-500"
+                    className="px-4 py-6 text-center text-muted-foreground"
                   >
                     No roster data found for this section.
                   </td>
@@ -519,8 +519,8 @@ export function AttendancePageClient({
           </table>
         </div>
 
-        <div className="space-y-3 border-t border-slate-200 px-5 py-4">
-          <p className="text-xs text-slate-500">
+        <div className="space-y-3 border-t border-border px-5 py-4">
+          <p className="text-xs text-muted-foreground">
             Submissions are retry-safe. If the same section/date/slot is
             submitted again, the existing attendance session will be updated
             instead of duplicated.
@@ -528,7 +528,7 @@ export function AttendancePageClient({
           <button
             type="submit"
             disabled={submitting || roster.length === 0}
-            className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {submitting ? "Submitting..." : "Submit Attendance"}
           </button>

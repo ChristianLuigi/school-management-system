@@ -701,20 +701,20 @@ export function StaffOperationalWorkspaceClient({
   };
 
   if (loading && !access) {
-    return <div className="text-sm text-slate-500">{copy.loading}</div>;
+    return <div className="text-sm text-muted-foreground">{copy.loading}</div>;
   }
 
   return (
     <div className="space-y-5">
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
       {error ? (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger"
         >
           {error}
         </div>
@@ -764,7 +764,7 @@ export function StaffOperationalWorkspaceClient({
                     type="button"
                     disabled={saving}
                     onClick={() => void unlinkAccount()}
-                    className="mt-4 rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-700 disabled:opacity-60"
+                    className="mt-4 rounded-xl border border-danger/40 px-4 py-2 text-sm font-medium text-danger disabled:opacity-60"
                   >
                     {copy.unlink}
                   </button>
@@ -798,14 +798,14 @@ export function StaffOperationalWorkspaceClient({
                     ).format(new Date(access.pendingInvitation.expiresAt))}
                   />
                   {access.pendingInvitation.deliveryFailed ? (
-                    <div className="text-red-700">{copy.deliveryFailed}</div>
+                    <div className="text-danger">{copy.deliveryFailed}</div>
                   ) : null}
                   <div className="flex gap-2">
                     <button
                       type="button"
                       disabled={saving}
                       onClick={() => void invitationAction("resend")}
-                      className="rounded-xl border border-slate-300 px-4 py-2 font-medium"
+                      className="rounded-xl border border-input px-4 py-2 font-medium"
                     >
                       {copy.resend}
                     </button>
@@ -813,7 +813,7 @@ export function StaffOperationalWorkspaceClient({
                       type="button"
                       disabled={saving}
                       onClick={() => void invitationAction("revoke")}
-                      className="rounded-xl border border-red-200 px-4 py-2 font-medium text-red-700"
+                      className="rounded-xl border border-danger/40 px-4 py-2 font-medium text-danger"
                     >
                       {copy.revoke}
                     </button>
@@ -821,7 +821,7 @@ export function StaffOperationalWorkspaceClient({
                 </div>
               ) : (
                 <form onSubmit={sendInvitation} className="space-y-4">
-                  <p className="text-sm text-slate-600">{copy.inviteHelp}</p>
+                  <p className="text-sm text-muted-foreground">{copy.inviteHelp}</p>
                   <Row label={copy.email} value={email ?? "-"} />
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label={copy.role}>
@@ -867,7 +867,7 @@ export function StaffOperationalWorkspaceClient({
                   ) : null}
                   <button
                     disabled={saving}
-                    className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                    className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
                   >
                     {saving ? copy.saving : copy.send}
                   </button>
@@ -886,14 +886,14 @@ export function StaffOperationalWorkspaceClient({
                 type="button"
                 disabled={saving}
                 onClick={() => void saveFinancePermissions()}
-                className="mt-4 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
               >
                 {saving ? copy.saving : copy.savePermissions}
               </button>
             </Panel>
           ) : (
             <Panel title={copy.permissions}>
-              <div className="text-sm text-slate-500">—</div>
+              <div className="text-sm text-muted-foreground">—</div>
             </Panel>
           )}
         </div>
@@ -902,17 +902,17 @@ export function StaffOperationalWorkspaceClient({
       {section === "assignments" ? (
         <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr]">
           <Panel title={copy.assignments}>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-border">
               {<PaginatedCollection items={assignments.items}>{(assignment) => (
                 <div
                   key={assignment.id}
                   className="flex items-center justify-between gap-3 py-3"
                 >
                   <div>
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-foreground">
                       {label(assignment.subject_name, locale)}
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-muted-foreground">
                       {label(assignment.section_name, locale)} ·{" "}
                       {label(assignment.academic_year_name, locale)}
                     </div>
@@ -929,7 +929,7 @@ export function StaffOperationalWorkspaceClient({
                 </div>
               )}</PaginatedCollection>}
               {!assignments.items.length ? (
-                <div className="py-6 text-sm text-slate-500">
+                <div className="py-6 text-sm text-muted-foreground">
                   {copy.noAssignments}
                 </div>
               ) : null}
@@ -937,13 +937,13 @@ export function StaffOperationalWorkspaceClient({
           </Panel>
           <Panel title={copy.saveAssignments}>
             {!assignmentOptions.eligible ? (
-              <div className="text-sm text-amber-700">
+              <div className="text-sm text-warning">
                 {copy.teacherRequired}
               </div>
             ) : (
               <div className="space-y-4">
                 {!assignmentOptions.loginAvailable ? (
-                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                  <div className="rounded-xl border border-info/40 bg-info-subtle p-3 text-sm text-info">
                     {copy.loginRequired}
                   </div>
                 ) : null}
@@ -966,7 +966,7 @@ export function StaffOperationalWorkspaceClient({
                   {yearSections.map((sectionOption) => (
                     <fieldset
                       key={sectionOption.id}
-                      className="rounded-xl border border-slate-200 p-4"
+                      className="rounded-xl border border-border p-4"
                     >
                       <legend className="px-2 text-sm font-semibold">
                         {label(sectionOption.gradeLevelNameI18n, locale)} ·{" "}
@@ -999,7 +999,7 @@ export function StaffOperationalWorkspaceClient({
                     </fieldset>
                   ))}
                   {!yearSections.length ? (
-                    <div className="text-sm text-slate-500">
+                    <div className="text-sm text-muted-foreground">
                       {copy.noAcademicSetup}
                     </div>
                   ) : null}
@@ -1008,7 +1008,7 @@ export function StaffOperationalWorkspaceClient({
                   type="button"
                   disabled={saving || !selectedYear}
                   onClick={() => void saveAssignments()}
-                  className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                  className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
                 >
                   {saving ? copy.saving : copy.saveAssignments}
                 </button>
@@ -1088,14 +1088,14 @@ export function StaffOperationalWorkspaceClient({
               <div className="md:col-span-2">
                 <button
                   disabled={saving}
-                  className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                  className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
                 >
                   {saving ? copy.saving : copy.createPayroll}
                 </button>
               </div>
             </form>
           ) : (
-            <div className="text-sm text-amber-700">
+            <div className="text-sm text-warning">
               {copy.notLinked} · {copy.noPayroll}
             </div>
           )}
@@ -1104,7 +1104,7 @@ export function StaffOperationalWorkspaceClient({
 
       {section === "medical" ? (
         <Panel title={copy.medical}>
-          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="mb-5 rounded-xl border border-warning/40 bg-warning-subtle p-3 text-sm text-warning">
             {copy.medicalWarning}
           </div>
           <form onSubmit={saveMedical} className="grid gap-4 md:grid-cols-2">
@@ -1153,7 +1153,7 @@ export function StaffOperationalWorkspaceClient({
             <div className="md:col-span-2">
               <button
                 disabled={saving}
-                className="rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
               >
                 {saving ? copy.saving : copy.saveMedical}
               </button>
@@ -1173,7 +1173,7 @@ function PermissionGrid({
   onToggle: (permission: string) => void;
 }) {
   return (
-    <div className="grid max-h-80 gap-2 overflow-y-auto rounded-xl border border-slate-200 p-3 sm:grid-cols-2">
+    <div className="grid max-h-80 gap-2 overflow-y-auto rounded-xl border border-border p-3 sm:grid-cols-2">
       {FINANCE_PERMISSIONS.map((permission) => (
         <label key={permission} className="flex items-start gap-2 text-xs">
           <input
@@ -1197,7 +1197,7 @@ function Field({
 }) {
   return (
     <label className="block text-sm">
-      <span className="font-medium text-slate-800">{fieldLabel}</span>
+      <span className="font-medium text-foreground">{fieldLabel}</span>
       {children}
     </label>
   );
@@ -1211,8 +1211,8 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5">
-      <h2 className="mb-4 font-semibold text-slate-950">{title}</h2>
+    <section className="rounded-2xl border border-border bg-surface p-5">
+      <h2 className="mb-4 font-semibold text-foreground">{title}</h2>
       {children}
     </section>
   );
@@ -1220,9 +1220,9 @@ function Panel({
 
 function Row({ label: rowLabel, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-4 border-b border-slate-100 pb-2">
-      <span className="text-slate-500">{rowLabel}</span>
-      <span className="text-right font-medium text-slate-900">{value}</span>
+    <div className="flex justify-between gap-4 border-b border-border pb-2">
+      <span className="text-muted-foreground">{rowLabel}</span>
+      <span className="text-right font-medium text-foreground">{value}</span>
     </div>
   );
 }
@@ -1235,11 +1235,11 @@ function Metric({
   value: string;
 }) {
   return (
-    <div className="rounded-xl bg-slate-50 p-4">
-      <div className="text-xs uppercase tracking-wide text-slate-500">
+    <div className="rounded-xl bg-surface p-4">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">
         {metricLabel}
       </div>
-      <div className="mt-2 font-semibold text-slate-950">{value}</div>
+      <div className="mt-2 font-semibold text-foreground">{value}</div>
     </div>
   );
 }

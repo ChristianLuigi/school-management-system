@@ -268,7 +268,7 @@ export function PlatformSchoolsClient({
                 type="button"
                 onClick={() => void handleDelete(confirmDelete)}
                 disabled={!!working || deleteCode !== confirmDelete.code}
-                className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                className="flex-1 rounded-xl bg-danger py-2.5 text-sm font-medium text-danger-foreground hover:bg-danger disabled:opacity-50"
               >
                 {fr ? "Supprimer" : "Delete"}
               </button>

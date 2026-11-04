@@ -177,13 +177,13 @@ export function StudentEditPanelClient({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Student Information
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Edit identity information and current section.
           </p>
         </div>
@@ -191,50 +191,50 @@ export function StudentEditPanelClient({
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           {open ? "Close" : "Edit Student"}
         </button>
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {open ? (
-        <div className="mt-5 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-5 space-y-4 rounded-2xl border border-border bg-surface p-4">
           <div className="grid gap-4 md:grid-cols-2">
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="First name"
               value={firstName}
               onChange={(event) => setFirstName(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="Last name"
               value={lastName}
               onChange={(event) => setLastName(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               placeholder="Student code"
               value={studentCode}
               onChange={(event) => setStudentCode(event.target.value)}
             />
 
             <select
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               value={gender}
               onChange={(event) => setGender(event.target.value)}
             >
@@ -245,34 +245,34 @@ export function StudentEditPanelClient({
 
             <input
               type="date"
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               value={dateOfBirth}
               onChange={(event) => setDateOfBirth(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               placeholder="Place of birth"
               value={placeOfBirth}
               onChange={(event) => setPlaceOfBirth(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               placeholder="Photo URL"
               value={photoUrl}
               onChange={(event) => setPhotoUrl(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               placeholder="Previous school name"
               value={previousSchoolName}
               onChange={(event) => setPreviousSchoolName(event.target.value)}
             />
 
             <textarea
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               placeholder="Previous school address"
               value={previousSchoolAddress}
               onChange={(event) => setPreviousSchoolAddress(event.target.value)}
@@ -291,8 +291,8 @@ export function StudentEditPanelClient({
               />
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 md:col-span-2">
-              <div className="font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-4 md:col-span-2">
+              <div className="font-semibold text-foreground">
                 Document Checklist
               </div>
 
@@ -341,35 +341,35 @@ export function StudentEditPanelClient({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 md:col-span-2">
-              <div className="font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-4 md:col-span-2">
+              <div className="font-semibold text-foreground">
                 Health Information
               </div>
 
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <input
-                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                  className="rounded-xl border border-input px-3 py-2 text-sm"
                   placeholder="Vaccination status"
                   value={vaccinationStatus}
                   onChange={(event) => setVaccinationStatus(event.target.value)}
                 />
 
                 <input
-                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                  className="rounded-xl border border-input px-3 py-2 text-sm"
                   placeholder="Allergies"
                   value={allergies}
                   onChange={(event) => setAllergies(event.target.value)}
                 />
 
                 <textarea
-                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                  className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
                   placeholder="Medical notes"
                   value={medicalNotes}
                   onChange={(event) => setMedicalNotes(event.target.value)}
                 />
 
                 <textarea
-                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                  className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
                   placeholder="Special needs"
                   value={specialNeeds}
                   onChange={(event) => setSpecialNeeds(event.target.value)}
@@ -377,7 +377,7 @@ export function StudentEditPanelClient({
               </div>
             </div>
 
-            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm md:col-span-2">
+            <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm md:col-span-2">
               <input
                 type="checkbox"
                 checked={clearSection}
@@ -391,7 +391,7 @@ export function StudentEditPanelClient({
             type="button"
             disabled={saving}
             onClick={saveStudent}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>

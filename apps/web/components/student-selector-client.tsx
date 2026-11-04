@@ -88,17 +88,17 @@ export function StudentSelectorClient({
   }, [schoolId, search]);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <div className="text-sm font-semibold text-slate-900">{label}</div>
+    <div className="rounded-2xl border border-border bg-surface p-4">
+      <div className="text-sm font-semibold text-foreground">{label}</div>
 
       {selectedStudent ? (
-        <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
-          <div className="font-semibold text-slate-900">
+        <div className="mt-3 rounded-xl border border-border bg-surface p-3">
+          <div className="font-semibold text-foreground">
             {studentDisplayName(selectedStudent)}
           </div>
 
-          <div className="mt-1 text-xs text-slate-500">
-            <span className="font-medium text-slate-700">
+          <div className="mt-1 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">
               {selectedStudent.studentCode ?? "Code pending"}
             </span>{" "}
             · {studentClassLabel(selectedStudent)}
@@ -107,7 +107,7 @@ export function StudentSelectorClient({
           <button
             type="button"
             onClick={() => onSelect(null)}
-            className="mt-3 rounded-lg border border-slate-300 px-3 py-2 text-xs hover:bg-slate-50"
+            className="mt-3 rounded-lg border border-input px-3 py-2 text-xs hover:bg-surface"
           >
             Change student
           </button>
@@ -115,21 +115,21 @@ export function StudentSelectorClient({
       ) : (
         <>
           <input
-            className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="mt-3 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
             placeholder="Search by name or student code..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
           {error ? (
-            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="mt-3 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
               {error}
             </div>
           ) : null}
 
           <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
             {loading ? (
-              <div className="rounded-xl bg-white p-3 text-sm text-slate-500">
+              <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                 Searching students...
               </div>
             ) : null}
@@ -143,14 +143,14 @@ export function StudentSelectorClient({
                   setSearch("");
                   setResults([]);
                 }}
-                className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left hover:bg-slate-50"
+                className="w-full rounded-xl border border-border bg-surface p-3 text-left hover:bg-surface"
               >
-                <div className="font-semibold text-slate-900">
+                <div className="font-semibold text-foreground">
                   {studentDisplayName(student)}
                 </div>
 
-                <div className="mt-1 text-xs text-slate-500">
-                  <span className="font-medium text-slate-700">
+                <div className="mt-1 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">
                     {student.studentCode ?? "Code pending"}
                   </span>{" "}
                   · {studentClassLabel(student)}
@@ -159,7 +159,7 @@ export function StudentSelectorClient({
             ))}
 
             {!loading && results.length === 0 ? (
-              <div className="rounded-xl bg-white p-3 text-sm text-slate-500">
+              <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                 No students found.
               </div>
             ) : null}

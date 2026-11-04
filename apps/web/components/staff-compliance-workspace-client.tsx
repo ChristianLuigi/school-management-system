@@ -431,14 +431,14 @@ export function StaffComplianceWorkspaceClient({
   return (
     <div className="space-y-6">
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
       {error ? (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger"
         >
           {error}
         </div>
@@ -447,12 +447,12 @@ export function StaffComplianceWorkspaceClient({
         <>
           <form
             onSubmit={uploadDocument}
-            className="rounded-2xl border border-slate-200 bg-white p-5"
+            className="rounded-2xl border border-border bg-surface p-5"
           >
-            <h2 className="text-lg font-semibold text-slate-950">
+            <h2 className="text-lg font-semibold text-foreground">
               {copy.documentsTitle}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               {copy.documentsDescription}
             </p>
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -532,34 +532,34 @@ export function StaffComplianceWorkspaceClient({
             <button
               type="submit"
               disabled={acting}
-              className="mt-5 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              className="mt-5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
               {acting ? copy.uploading : copy.upload}
             </button>
           </form>
           <div className="space-y-3">
             {loading ? (
-              <p className="text-sm text-slate-500">{copy.loading}</p>
+              <p className="text-sm text-muted-foreground">{copy.loading}</p>
             ) : null}
             {!loading && !documents.length ? (
-              <p className="text-sm text-slate-500">{copy.noDocuments}</p>
+              <p className="text-sm text-muted-foreground">{copy.noDocuments}</p>
             ) : null}
             {<PaginatedCollection items={documents}>{(item) => (
               <div
                 key={item.id}
-                className="rounded-2xl border border-slate-200 bg-white p-4"
+                className="rounded-2xl border border-border bg-surface p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <div className="font-semibold text-slate-950">
+                    <div className="font-semibold text-foreground">
                       {item.displayName}
                     </div>
-                    <div className="mt-1 text-sm text-slate-600">
+                    <div className="mt-1 text-sm text-muted-foreground">
                       {item.documentType.replaceAll("_", " ")} ·{" "}
                       {Math.ceil(item.fileSizeBytes / 1024)} KB
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                      <span className="rounded-full bg-slate-100 px-3 py-1">
+                      <span className="rounded-full bg-surface-muted px-3 py-1">
                         {item.confidentiality === "RESTRICTED"
                           ? copy.restricted
                           : copy.standard}
@@ -567,10 +567,10 @@ export function StaffComplianceWorkspaceClient({
                       <span
                         className={`rounded-full px-3 py-1 ${
                           item.expiryStatus === "EXPIRED"
-                            ? "bg-red-50 text-red-700"
+                            ? "bg-danger-subtle text-danger"
                             : item.expiryStatus === "EXPIRING_SOON"
-                              ? "bg-amber-50 text-amber-700"
-                              : "bg-green-50 text-green-700"
+                              ? "bg-warning-subtle text-warning"
+                              : "bg-success-subtle text-success"
                         }`}
                       >
                         {expiryLabel(item.expiryStatus)}
@@ -588,7 +588,7 @@ export function StaffComplianceWorkspaceClient({
                               staffId,
                             )}&documentId=${encodeURIComponent(item.id)}`
                           }
-                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs"
+                          className="rounded-lg border border-input px-3 py-1.5 text-xs"
                         >
                           {copy.download}
                         </a>
@@ -596,13 +596,13 @@ export function StaffComplianceWorkspaceClient({
                           type="button"
                           disabled={actingId === item.id}
                           onClick={() => void revokeDocument(item)}
-                          className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700"
+                          className="rounded-lg border border-danger/40 px-3 py-1.5 text-xs text-danger"
                         >
                           {copy.revoke}
                         </button>
                       </>
                     ) : (
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         {copy.revoked}
                       </span>
                     )}
@@ -616,12 +616,12 @@ export function StaffComplianceWorkspaceClient({
         <>
           <form
             onSubmit={submitLeave}
-            className="rounded-2xl border border-slate-200 bg-white p-5"
+            className="rounded-2xl border border-border bg-surface p-5"
           >
-            <h2 className="text-lg font-semibold text-slate-950">
+            <h2 className="text-lg font-semibold text-foreground">
               {copy.leaveTitle}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               {copy.leaveDescription}
             </p>
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -690,34 +690,34 @@ export function StaffComplianceWorkspaceClient({
             <button
               type="submit"
               disabled={acting}
-              className="mt-5 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+              className="mt-5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
             >
               {acting ? copy.submitting : copy.submitLeave}
             </button>
           </form>
           <div className="space-y-3">
             {loading ? (
-              <p className="text-sm text-slate-500">{copy.loading}</p>
+              <p className="text-sm text-muted-foreground">{copy.loading}</p>
             ) : null}
             {!loading && !leaveRequests.length ? (
-              <p className="text-sm text-slate-500">{copy.noLeave}</p>
+              <p className="text-sm text-muted-foreground">{copy.noLeave}</p>
             ) : null}
             {<PaginatedCollection items={leaveRequests}>{(item) => (
               <div
                 key={item.id}
-                className="rounded-2xl border border-slate-200 bg-white p-4"
+                className="rounded-2xl border border-border bg-surface p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <div className="font-semibold text-slate-950">
+                    <div className="font-semibold text-foreground">
                       {item.leaveType.replaceAll("_", " ")}
                     </div>
-                    <div className="mt-1 text-sm text-slate-600">
+                    <div className="mt-1 text-sm text-muted-foreground">
                       {item.startDate} — {item.endDate} · {item.requestedDays}{" "}
                       {copy.requestedDays.toLowerCase()}
                     </div>
-                    <p className="mt-2 text-sm text-slate-700">{item.reason}</p>
-                    <span className="mt-2 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs">
+                    <p className="mt-2 text-sm text-foreground">{item.reason}</p>
+                    <span className="mt-2 inline-block rounded-full bg-surface-muted px-3 py-1 text-xs">
                       {leaveStatusLabel(item.status)}
                     </span>
                   </div>
@@ -728,7 +728,7 @@ export function StaffComplianceWorkspaceClient({
                           type="button"
                           disabled={actingId === item.id}
                           onClick={() => void actOnLeave(item, "approve")}
-                          className="rounded-lg border border-green-200 px-3 py-1.5 text-xs text-green-700"
+                          className="rounded-lg border border-success/40 px-3 py-1.5 text-xs text-success"
                         >
                           {copy.approve}
                         </button>
@@ -736,7 +736,7 @@ export function StaffComplianceWorkspaceClient({
                           type="button"
                           disabled={actingId === item.id}
                           onClick={() => void actOnLeave(item, "reject")}
-                          className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700"
+                          className="rounded-lg border border-danger/40 px-3 py-1.5 text-xs text-danger"
                         >
                           {copy.reject}
                         </button>
@@ -748,7 +748,7 @@ export function StaffComplianceWorkspaceClient({
                         type="button"
                         disabled={actingId === item.id}
                         onClick={() => void actOnLeave(item, "cancel")}
-                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs"
+                        className="rounded-lg border border-input px-3 py-1.5 text-xs"
                       >
                         {copy.cancel}
                       </button>

@@ -71,7 +71,7 @@ export function SchoolSwitcher({
         ))}
       </select>
       {error ? (
-        <p role="alert" className="mt-1 text-xs text-red-700">
+        <p role="alert" className="mt-1 text-xs text-danger">
           {error}
         </p>
       ) : null}

@@ -135,13 +135,13 @@ export function ReportCardReadinessClient({
   }, [data]);
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="space-y-5 rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Report Card Readiness
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Publish approved gradebooks before official report cards are generated.
           </p>
         </div>
@@ -149,26 +149,26 @@ export function ReportCardReadinessClient({
         <button
           type="button"
           onClick={loadReadiness}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           Refresh
         </button>
       </div>
 
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading report card readiness...
         </div>
       ) : null}
@@ -192,57 +192,57 @@ export function ReportCardReadinessClient({
           </div>
 
           <div className="grid gap-4 md:grid-cols-4 xl:grid-cols-8">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Published</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Published</div>
               <div className="mt-2 text-3xl font-bold">
                 {data.summary.publishedCoveragePercent}%
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Expected</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Expected</div>
               <div className="mt-2 text-3xl font-bold">
                 {data.summary.totalExpected}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Published</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Published</div>
               <div className="mt-2 text-3xl font-bold">
                 {data.summary.published}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Approved</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Approved</div>
               <div className="mt-2 text-3xl font-bold">
                 {data.summary.approved}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Submitted</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Submitted</div>
               <div className="mt-2 text-3xl font-bold">
                 {data.summary.submitted}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Draft</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Draft</div>
               <div className="mt-2 text-3xl font-bold">
                 {data.summary.draft}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Rejected</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Rejected</div>
               <div className="mt-2 text-3xl font-bold">
                 {data.summary.rejected}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Missing</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Missing</div>
               <div className="mt-2 text-3xl font-bold">
                 {data.summary.missing}
               </div>
@@ -250,25 +250,25 @@ export function ReportCardReadinessClient({
           </div>
 
           <div>
-            <div className="mb-2 flex items-center justify-between text-sm text-slate-600">
+            <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
               <span>Published coverage</span>
               <span>{data.summary.publishedCoveragePercent}%</span>
             </div>
 
-            <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+            <div className="h-3 overflow-hidden rounded-full bg-surface-muted">
               <div
-                className="h-full rounded-full bg-slate-900"
+                className="h-full rounded-full bg-primary"
                 style={{ width: `${data.summary.publishedCoveragePercent}%` }}
               />
             </div>
           </div>
 
           {data.blockingIssues.length > 0 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <div className="text-sm font-semibold text-amber-900">
+            <div className="rounded-xl border border-warning/40 bg-warning-subtle p-3">
+              <div className="text-sm font-semibold text-warning">
                 Blocking Items
               </div>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-800">
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-warning">
                 {data.blockingIssues.map((issue) => (
                   <li key={issue}>{issue}</li>
                 ))}
@@ -277,19 +277,19 @@ export function ReportCardReadinessClient({
           ) : null}
 
           {isSchoolAdmin && publishableRows.length > 0 ? (
-            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-              <div className="font-semibold text-blue-900">
+            <div className="rounded-2xl border border-info/40 bg-info-subtle p-4">
+              <div className="font-semibold text-info">
                 {publishableRows.length} gradebook(s) ready to publish
               </div>
-              <p className="mt-1 text-sm text-blue-800">
+              <p className="mt-1 text-sm text-info">
                 Publishing makes approved gradebooks available for official reporting.
               </p>
             </div>
           ) : null}
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-600">
+              <thead className="bg-surface-muted text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Class</th>
                   <th className="px-4 py-3">Subject</th>
@@ -300,24 +300,24 @@ export function ReportCardReadinessClient({
               </thead>
               <tbody>
                 {<PaginatedCollection items={data.rows} rows columns={5}>{(row) => (
-                  <tr key={row.sectionSubjectId} className="border-t border-slate-200">
+                  <tr key={row.sectionSubjectId} className="border-t border-border">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-foreground">
                         {row.gradeLevelNameI18n?.fr ?? row.gradeLevelCode} -{" "}
                         {row.sectionNameI18n?.fr ?? row.sectionCode}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {row.gradeLevelCode} / {row.sectionCode}
                       </div>
                     </td>
 
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-foreground">
                         {row.subjectNameI18n?.fr ??
                           row.subjectNameI18n?.en ??
                           row.subjectCode}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {row.subjectCode}
                       </div>
                     </td>
@@ -342,14 +342,14 @@ export function ReportCardReadinessClient({
                           type="button"
                           disabled={publishingId === row.gradebookId}
                           onClick={() => publishGradebook(row.gradebookId!)}
-                          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                          className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
                         >
                           {publishingId === row.gradebookId
                             ? "Publishing..."
                             : "Publish"}
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-500">-</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </td>
                   </tr>
@@ -359,7 +359,7 @@ export function ReportCardReadinessClient({
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-8 text-center text-slate-500"
+                      className="px-4 py-8 text-center text-muted-foreground"
                     >
                       No gradebooks found for report card readiness.
                     </td>

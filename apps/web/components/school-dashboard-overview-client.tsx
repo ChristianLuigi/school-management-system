@@ -30,7 +30,7 @@ type Overview = {
 };
 
 const focus =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 function Metric({
   icon: Icon,
   label,
@@ -45,23 +45,23 @@ function Metric({
   tone: "blue" | "amber" | "green" | "slate";
 }) {
   const color = {
-    blue: "bg-blue-50 text-blue-700",
-    amber: "bg-amber-50 text-amber-700",
-    green: "bg-emerald-50 text-emerald-700",
-    slate: "bg-slate-100 text-slate-700",
+    blue: "bg-info-subtle text-info",
+    amber: "bg-warning-subtle text-warning",
+    green: "bg-success-subtle text-success",
+    slate: "bg-surface-muted text-foreground",
   }[tone];
   return (
-    <article className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="min-w-0 rounded-2xl border border-border bg-surface p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <span className={`rounded-xl p-2.5 ${color}`}>
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
       </div>
-      <div className="mt-2 text-3xl font-bold tracking-tight text-slate-950 tabular-nums">
+      <div className="mt-2 text-3xl font-bold tracking-tight text-foreground tabular-nums">
         {value}
       </div>
-      <h3 className="mt-1 text-sm font-semibold text-slate-700">{label}</h3>
-      <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
+      <h3 className="mt-1 text-sm font-semibold text-foreground">{label}</h3>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">{detail}</p>
     </article>
   );
 }
@@ -129,10 +129,10 @@ export function SchoolDashboardOverviewClient({
     <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             {t("dashboard.title")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t("dashboard.atAGlance")}
           </p>
         </div>
@@ -140,14 +140,14 @@ export function SchoolDashboardOverviewClient({
           {canCreateStudent ? (
             <Link
               href="/students/new"
-              className={`inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800 ${focus}`}
+              className={`inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary ${focus}`}
             >
               <UserPlus className="h-4 w-4" aria-hidden="true" />
               {t("dashboard.addStudent")}
             </Link>
           ) : null}
           {formattedDate ? (
-            <span className="flex items-center gap-2 text-sm text-slate-500">
+            <span className="flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
               <time dateTime={overview?.date}>{formattedDate}</time>
             </span>
@@ -158,7 +158,7 @@ export function SchoolDashboardOverviewClient({
             disabled={loading}
             title={t("common.refresh")}
             aria-label={t("common.refresh")}
-            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 ${focus}`}
+            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground shadow-sm hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60 ${focus}`}
           >
             <RefreshCw
               className={`h-4 w-4 ${loading ? "motion-safe:animate-spin" : ""}`}
@@ -197,7 +197,7 @@ export function SchoolDashboardOverviewClient({
               <Link
                 key={action.href}
                 href={href}
-                className={`inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 ${focus}`}
+                className={`inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground hover:bg-surface ${focus}`}
               >
                 <Icon aria-hidden="true" className="h-4 w-4" />
                 {action.label}
@@ -210,7 +210,7 @@ export function SchoolDashboardOverviewClient({
       {error ? (
         <div
           role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-sm text-danger"
         >
           <span className="flex items-center gap-2">
             <TriangleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -220,7 +220,7 @@ export function SchoolDashboardOverviewClient({
             type="button"
             disabled={loading}
             onClick={() => setRefresh((value) => value + 1)}
-            className={`min-h-10 rounded-lg bg-red-700 px-3 py-2 font-semibold text-white disabled:opacity-60 ${focus}`}
+            className={`min-h-10 rounded-lg bg-danger px-3 py-2 font-semibold text-danger-foreground disabled:opacity-60 ${focus}`}
           >
             {t("finance.retry")}
           </button>
@@ -237,7 +237,7 @@ export function SchoolDashboardOverviewClient({
             className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 motion-safe:animate-pulse"
           >
             {[0, 1, 2, 3].map((item) => (
-              <div key={item} className="h-44 rounded-2xl bg-slate-100" />
+              <div key={item} className="h-44 rounded-2xl bg-surface-muted" />
             ))}
           </div>
         ) : null}

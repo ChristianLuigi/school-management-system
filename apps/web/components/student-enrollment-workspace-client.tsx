@@ -112,21 +112,21 @@ export function StudentEnrollmentWorkspaceClient({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
+      <section className="rounded-2xl border border-border bg-surface p-5">
         <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
           <div className="flex min-w-0 items-center gap-4">
-            <span className="rounded-2xl bg-blue-50 p-3 text-blue-700">
+            <span className="rounded-2xl bg-info-subtle p-3 text-info">
               <GraduationCap className="h-6 w-6" />
             </span>
             <div className="min-w-0">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("students.currentPlacement")}
               </div>
-              <div className="mt-1 truncate text-xl font-bold text-slate-950">
+              <div className="mt-1 truncate text-xl font-bold text-foreground">
                 {currentLabel}
               </div>
               {currentEnrollment ? (
-                <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5">
                     <CalendarDays className="h-4 w-4" />
                     {i18nName(
@@ -172,38 +172,38 @@ export function StudentEnrollmentWorkspaceClient({
         onUpdated={onUpdated}
       />
 
-      <section className="rounded-2xl border border-slate-200 bg-white">
+      <section className="rounded-2xl border border-border bg-surface">
         <div className="flex items-center justify-between gap-3 p-5">
           <div className="flex items-center gap-3">
-            <span className="rounded-xl bg-slate-100 p-2.5 text-slate-700">
+            <span className="rounded-xl bg-surface-muted p-2.5 text-foreground">
               <History className="h-5 w-5" />
             </span>
-            <h3 className="font-semibold text-slate-950">
+            <h3 className="font-semibold text-foreground">
               {t("students.enrollmentHistory")}
             </h3>
           </div>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+          <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
             {enrollmentHistory.length}
           </span>
         </div>
 
-        <div className="border-t border-slate-200 p-5">
+        <div className="border-t border-border p-5">
           <div className="space-y-3">
             {enrollmentHistory.map((row) => (
               <article
                 key={row.enrollmentId}
-                className="rounded-xl border border-slate-200 p-4"
+                className="rounded-xl border border-border p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="font-semibold text-slate-900">
+                    <div className="font-semibold text-foreground">
                       {enrollmentLabel(
                         row,
                         locale,
                         t("students.unknownClass"),
                       )}
                     </div>
-                    <div className="mt-1 text-sm text-slate-500">
+                    <div className="mt-1 text-sm text-muted-foreground">
                       {i18nName(
                         row.academicYear.nameI18n,
                         row.academicYear.status,
@@ -219,7 +219,7 @@ export function StudentEnrollmentWorkspaceClient({
                       : row.enrollmentStatus}
                   </SchoolBadge>
                 </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <time>
                     {new Date(
                       row.startDate + "T00:00:00",
@@ -237,12 +237,12 @@ export function StudentEnrollmentWorkspaceClient({
                   </time>
                 </div>
                 {row.endReason ? (
-                  <p className="mt-2 text-sm text-slate-600">{row.endReason}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{row.endReason}</p>
                 ) : null}
               </article>
             ))}
             {!enrollmentHistory.length ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {t("students.noEnrollmentHistory")}
               </p>
             ) : null}

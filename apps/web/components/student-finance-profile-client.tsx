@@ -125,13 +125,13 @@ export function StudentFinanceProfileClient({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Student Finance Profile
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Review invoices, payments, and outstanding balance for one student.
           </p>
         </div>
@@ -152,35 +152,35 @@ export function StudentFinanceProfileClient({
           type="button"
           disabled={loading || !selectedStudent}
           onClick={loadProfile}
-          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
         >
           {loading ? "Loading..." : "Load Profile"}
         </button>
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {profile ? (
         <div className="mt-6 space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+          <div className="rounded-2xl border border-border bg-surface p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <div className="text-sm text-slate-500">Student</div>
-                <div className="mt-1 text-2xl font-bold text-slate-900">
+                <div className="text-sm text-muted-foreground">Student</div>
+                <div className="mt-1 text-2xl font-bold text-foreground">
                   {profile.student.firstName ?? ""} {profile.student.lastName ?? ""}
                 </div>
-                <div className="mt-1 text-sm text-slate-500">
+                <div className="mt-1 text-sm text-muted-foreground">
                   {profile.student.code ?? "Code pending"}
                 </div>
               </div>
 
               <a
                 href={`/finance/students/${profile.student.id}/statement`}
-                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
               >
                 Print Statement
               </a>
@@ -188,16 +188,16 @@ export function StudentFinanceProfileClient({
           </div>
 
           <div className="grid gap-4 md:grid-cols-5">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Invoices</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Invoices</div>
               <div className="mt-2 text-2xl font-bold">
                 {profile.summary.invoiceCount}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
-              <div className="text-sm text-red-700">Overdue</div>
-              <div className="mt-2 text-2xl font-bold text-red-900">
+            <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4">
+              <div className="text-sm text-danger">Overdue</div>
+              <div className="mt-2 text-2xl font-bold text-danger">
                 {profile.summary.overdueCount}
               </div>
             </div>
@@ -205,9 +205,9 @@ export function StudentFinanceProfileClient({
             {profile.totalsByCurrency.flatMap((totals) => [
               <div
                 key={`${totals.currencyCode}-billed`}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                className="rounded-2xl border border-border bg-surface p-4"
               >
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-muted-foreground">
                   Total Billed ({totals.currencyCode})
                 </div>
                 <div className="mt-2 text-2xl font-bold">
@@ -216,37 +216,37 @@ export function StudentFinanceProfileClient({
               </div>,
               <div
                 key={`${totals.currencyCode}-paid`}
-                className="rounded-2xl border border-green-200 bg-green-50 p-4"
+                className="rounded-2xl border border-success/40 bg-success-subtle p-4"
               >
-                <div className="text-sm text-green-700">
+                <div className="text-sm text-success">
                   Total Paid ({totals.currencyCode})
                 </div>
-                <div className="mt-2 text-2xl font-bold text-green-900">
+                <div className="mt-2 text-2xl font-bold text-success">
                   {money(totals.totalPaid, totals.currencyCode)}
                 </div>
               </div>,
               <div
                 key={`${totals.currencyCode}-outstanding`}
-                className="rounded-2xl border border-amber-200 bg-amber-50 p-4"
+                className="rounded-2xl border border-warning/40 bg-warning-subtle p-4"
               >
-                <div className="text-sm text-amber-700">
+                <div className="text-sm text-warning">
                   Outstanding ({totals.currencyCode})
                 </div>
-                <div className="mt-2 text-2xl font-bold text-amber-900">
+                <div className="mt-2 text-2xl font-bold text-warning">
                   {money(totals.totalOutstanding, totals.currencyCode)}
                 </div>
               </div>,
             ])}
           </div>
 
-          <div className="rounded-2xl border border-slate-200">
-            <div className="border-b border-slate-200 p-4">
-              <h4 className="font-semibold text-slate-900">Invoices</h4>
+          <div className="rounded-2xl border border-border">
+            <div className="border-b border-border p-4">
+              <h4 className="font-semibold text-foreground">Invoices</h4>
             </div>
 
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-100 text-left text-slate-600">
+                <thead className="bg-surface-muted text-left text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Invoice</th>
                     <th className="px-4 py-3">Status</th>
@@ -259,20 +259,20 @@ export function StudentFinanceProfileClient({
 
                 <tbody>
                   {<PaginatedCollection items={profile.invoices} rows columns={6}>{(invoice) => (
-                    <tr key={invoice.id} className="border-t border-slate-200">
+                    <tr key={invoice.id} className="border-t border-border">
                       <td className="px-4 py-3">
                         <a
                           href={`/finance/invoices/${invoice.id}`}
-                          className="font-medium text-slate-900 underline-offset-4 hover:underline"
+                          className="font-medium text-foreground underline-offset-4 hover:underline"
                         >
                           {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
                         </a>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-muted-foreground">
                           Issued: {invoice.issueDate}
                         </div>
 
                         {invoice.items.length > 0 ? (
-                          <div className="mt-2 space-y-1 text-xs text-slate-500">
+                          <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                             {invoice.items.slice(0, 3).map((item) => (
                               <div key={item.id}>
                                 {item.description} - {item.quantity} x{" "}
@@ -293,7 +293,7 @@ export function StudentFinanceProfileClient({
                         </SchoolBadge>
 
                         {invoice.daysOverdue ? (
-                          <div className="mt-1 text-xs text-red-700">
+                          <div className="mt-1 text-xs text-danger">
                             {invoice.daysOverdue} day(s) overdue
                           </div>
                         ) : null}
@@ -319,7 +319,7 @@ export function StudentFinanceProfileClient({
                     <tr>
                       <td
                         colSpan={6}
-                        className="px-4 py-8 text-center text-slate-500"
+                        className="px-4 py-8 text-center text-muted-foreground"
                       >
                         No invoices found for this student.
                       </td>
@@ -330,19 +330,19 @@ export function StudentFinanceProfileClient({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200">
-            <div className="border-b border-slate-200 p-4">
-              <h4 className="font-semibold text-slate-900">Payments</h4>
+          <div className="rounded-2xl border border-border">
+            <div className="border-b border-border p-4">
+              <h4 className="font-semibold text-foreground">Payments</h4>
             </div>
 
             <div className="space-y-2 p-4">
               {<PaginatedCollection items={profile.payments}>{(payment) => (
                 <div
                   key={payment.id}
-                  className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
+                  className="rounded-xl border border-border bg-surface p-3 text-sm"
                 >
                   <div className="flex flex-wrap justify-between gap-2">
-                    <div className="font-semibold text-slate-900">
+                    <div className="font-semibold text-foreground">
                       {money(payment.amount, payment.currencyCode)}
                     </div>
 
@@ -351,7 +351,7 @@ export function StudentFinanceProfileClient({
                     </SchoolBadge>
                   </div>
 
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-1 text-xs text-muted-foreground">
                     {payment.paymentDate}
                     {payment.invoiceNumber ? ` - ${payment.invoiceNumber}` : ""}
                     {payment.method ? ` - ${payment.method}` : ""}
@@ -359,7 +359,7 @@ export function StudentFinanceProfileClient({
                   </div>
 
                   {payment.notes ? (
-                    <div className="mt-1 text-xs text-slate-600">
+                    <div className="mt-1 text-xs text-muted-foreground">
                       {payment.notes}
                     </div>
                   ) : null}
@@ -367,7 +367,7 @@ export function StudentFinanceProfileClient({
               )}</PaginatedCollection>}
 
               {profile.payments.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
+                <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                   No payments found for this student.
                 </div>
               ) : null}

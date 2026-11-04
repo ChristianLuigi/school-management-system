@@ -146,13 +146,13 @@ export function StudentProfileEditPanelClient({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Student File
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Update identity, documents, and medical notes.
           </p>
         </div>
@@ -160,46 +160,46 @@ export function StudentProfileEditPanelClient({
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           {open ? "Close" : "Edit Student File"}
         </button>
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {open ? (
-        <div className="mt-5 space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-5 space-y-5 rounded-2xl border border-border bg-surface p-4">
           <div>
-            <h4 className="font-semibold text-slate-900">Identity</h4>
+            <h4 className="font-semibold text-foreground">Identity</h4>
 
             <div className="mt-3 grid gap-4 md:grid-cols-2">
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="First name"
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Last name"
                 value={lastName}
                 onChange={(event) => setLastName(event.target.value)}
               />
 
               <select
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 value={gender}
                 onChange={(event) => setGender(event.target.value)}
               >
@@ -210,27 +210,27 @@ export function StudentProfileEditPanelClient({
 
               <input
                 type="date"
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 value={dateOfBirth}
                 onChange={(event) => setDateOfBirth(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Place of birth"
                 value={placeOfBirth}
                 onChange={(event) => setPlaceOfBirth(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Previous school"
                 value={previousSchoolName}
                 onChange={(event) => setPreviousSchoolName(event.target.value)}
               />
 
               <textarea
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                 placeholder="Previous school address"
                 value={previousSchoolAddress}
                 onChange={(event) =>
@@ -240,8 +240,8 @@ export function StudentProfileEditPanelClient({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <h4 className="font-semibold text-slate-900">
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <h4 className="font-semibold text-foreground">
               Document Checklist
             </h4>
 
@@ -291,25 +291,25 @@ export function StudentProfileEditPanelClient({
           </div>
 
           <div>
-            <h4 className="font-semibold text-slate-900">Health</h4>
+            <h4 className="font-semibold text-foreground">Health</h4>
 
             <div className="mt-3 grid gap-4">
               <textarea
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Health notes"
                 value={healthNotes}
                 onChange={(event) => setHealthNotes(event.target.value)}
               />
 
               <textarea
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Allergy notes"
                 value={allergyNotes}
                 onChange={(event) => setAllergyNotes(event.target.value)}
               />
 
               <textarea
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Medical notes"
                 value={medicalNotes}
                 onChange={(event) => setMedicalNotes(event.target.value)}
@@ -321,7 +321,7 @@ export function StudentProfileEditPanelClient({
             type="button"
             disabled={saving}
             onClick={saveProfile}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Student File"}
           </button>

@@ -147,13 +147,13 @@ export function AttendanceAdminReviewClient({
   }, [schoolId, attendanceDate]);
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="space-y-5 rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Admin Review & Locking
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Review submitted attendance sessions and lock them after validation.
           </p>
         </div>
@@ -161,7 +161,7 @@ export function AttendanceAdminReviewClient({
         <div className="flex flex-wrap gap-2">
           <input
             type="date"
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            className="rounded-xl border border-input px-3 py-2 text-sm"
             value={attendanceDate}
             onChange={(e) => setAttendanceDate(e.target.value)}
           />
@@ -169,7 +169,7 @@ export function AttendanceAdminReviewClient({
           <button
             type="button"
             onClick={loadOverview}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Refresh
           </button>
@@ -177,19 +177,19 @@ export function AttendanceAdminReviewClient({
       </div>
 
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading review data...
         </div>
       ) : null}
@@ -197,38 +197,38 @@ export function AttendanceAdminReviewClient({
       {overview ? (
         <>
           <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Completion</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Completion</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.completionPercent}%
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Completed</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Completed</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.completedSessions}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Expected</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Expected</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.expectedSessions}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Missing</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Missing</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.missingSessions}
               </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-600">
+              <thead className="bg-surface-muted text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Grade / Section</th>
                   <th className="px-4 py-3">Morning</th>
@@ -239,13 +239,13 @@ export function AttendanceAdminReviewClient({
               </thead>
               <tbody>
                 {<PaginatedCollection items={overview.sectionBreakdown} rows columns={5}>{(section) => (
-                  <tr key={section.sectionId} className="border-t border-slate-200">
+                  <tr key={section.sectionId} className="border-t border-border">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-foreground">
                         {section.gradeLevelNameI18n?.fr ?? section.gradeLevelCode} -{" "}
                         {section.sectionNameI18n?.fr ?? section.sectionCode}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {section.gradeLevelCode} / {section.sectionCode}
                       </div>
                     </td>
@@ -267,14 +267,14 @@ export function AttendanceAdminReviewClient({
                           onClick={() =>
                             lockSession(section.morning.attendanceSessionId!)
                           }
-                          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                          className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
                         >
                           {lockingId === section.morning.attendanceSessionId
                             ? "Locking..."
                             : "Lock"}
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-500">-</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </td>
 
@@ -295,14 +295,14 @@ export function AttendanceAdminReviewClient({
                           onClick={() =>
                             lockSession(section.afternoon.attendanceSessionId!)
                           }
-                          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                          className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
                         >
                           {lockingId === section.afternoon.attendanceSessionId
                             ? "Locking..."
                             : "Lock"}
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-500">-</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </td>
                   </tr>
@@ -312,7 +312,7 @@ export function AttendanceAdminReviewClient({
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-8 text-center text-slate-500"
+                      className="px-4 py-8 text-center text-muted-foreground"
                     >
                       No sections found for this school.
                     </td>

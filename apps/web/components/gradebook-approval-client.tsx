@@ -145,13 +145,13 @@ export function GradebookApprovalClient({
   const visibleRows = isSchoolAdmin ? adminQueue : rejectedForTeacher;
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="space-y-5 rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Gradebook Approval Center
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {isSchoolAdmin
               ? "Approve or reject submitted gradebooks."
               : "Review rejected gradebooks and resubmit after corrections."}
@@ -161,36 +161,36 @@ export function GradebookApprovalClient({
         <button
           type="button"
           onClick={loadOverview}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           Refresh
         </button>
       </div>
 
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading approval queue...
         </div>
       ) : null}
 
       {!loading && visibleRows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-          <div className="text-lg font-semibold text-slate-900">
+        <div className="rounded-2xl border border-dashed border-input bg-surface p-8 text-center">
+          <div className="text-lg font-semibold text-foreground">
             No gradebooks in this queue
           </div>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             {isSchoolAdmin
               ? "Submitted gradebooks will appear here for approval."
               : "Rejected gradebooks will appear here for correction and resubmission."}
@@ -199,9 +199,9 @@ export function GradebookApprovalClient({
       ) : null}
 
       {visibleRows.length > 0 ? (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
+        <div className="overflow-x-auto rounded-2xl border border-border">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left text-slate-600">
+            <thead className="bg-surface-muted text-left text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Class</th>
                 <th className="px-4 py-3">Subject</th>
@@ -211,24 +211,24 @@ export function GradebookApprovalClient({
             </thead>
             <tbody>
               {<PaginatedCollection items={visibleRows} rows columns={4}>{(row) => (
-                <tr key={row.sectionSubjectId} className="border-t border-slate-200">
+                <tr key={row.sectionSubjectId} className="border-t border-border">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-foreground">
                       {row.gradeLevelNameI18n?.fr ?? row.gradeLevelCode} -{" "}
                       {row.sectionNameI18n?.fr ?? row.sectionCode}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {row.gradeLevelCode} / {row.sectionCode}
                     </div>
                   </td>
 
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-foreground">
                       {row.subjectNameI18n?.fr ??
                         row.subjectNameI18n?.en ??
                         row.subjectCode}
                     </div>
-                    <div className="text-xs text-slate-500">{row.subjectCode}</div>
+                    <div className="text-xs text-muted-foreground">{row.subjectCode}</div>
                   </td>
 
                   <td className="px-4 py-3">
@@ -247,7 +247,7 @@ export function GradebookApprovalClient({
                             type="button"
                             disabled={actingId === row.gradebookId}
                             onClick={() => runAction(row.gradebookId!, "approve")}
-                            className="rounded-lg bg-green-600 px-3 py-2 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-60"
+                            className="rounded-lg bg-success px-3 py-2 text-xs font-medium text-success-foreground hover:bg-success disabled:opacity-60"
                           >
                             {actingId === row.gradebookId ? "Working..." : "Approve"}
                           </button>
@@ -260,7 +260,7 @@ export function GradebookApprovalClient({
                                 rejectingId === row.gradebookId ? "" : row.gradebookId!,
                               )
                             }
-                            className="rounded-lg border border-red-300 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+                            className="rounded-lg border border-danger/40 px-3 py-2 text-xs font-medium text-danger hover:bg-danger-subtle disabled:opacity-60"
                           >
                             Reject
                           </button>
@@ -269,7 +269,7 @@ export function GradebookApprovalClient({
                         {rejectingId === row.gradebookId ? (
                           <div className="space-y-2">
                             <textarea
-                              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                              className="w-full rounded-xl border border-input px-3 py-2 text-sm"
                               placeholder="Reason for rejection"
                               value={rejectReasons[row.gradebookId] ?? ""}
                               onChange={(e) =>
@@ -284,7 +284,7 @@ export function GradebookApprovalClient({
                               type="button"
                               disabled={actingId === row.gradebookId}
                               onClick={() => runAction(row.gradebookId!, "reject")}
-                              className="rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                              className="rounded-lg bg-danger px-3 py-2 text-xs font-medium text-danger-foreground hover:bg-danger disabled:opacity-60"
                             >
                               Confirm Rejection
                             </button>
@@ -298,7 +298,7 @@ export function GradebookApprovalClient({
                         type="button"
                         disabled={actingId === row.gradebookId}
                         onClick={() => runAction(row.gradebookId!, "submit")}
-                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
                       >
                         {actingId === row.gradebookId ? "Submitting..." : "Resubmit"}
                       </button>

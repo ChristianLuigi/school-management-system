@@ -112,10 +112,10 @@ export function ActivateAccountClient() {
     return (
       <Shell>
         <h1 className="text-xl font-semibold">Lien indisponible</h1>
-        <p className="mt-3 text-sm text-red-700">{error}</p>
+        <p className="mt-3 text-sm text-danger">{error}</p>
         <a
           href="/login"
-          className="mt-6 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm text-white"
+          className="mt-6 inline-flex rounded-xl bg-primary px-4 py-2 text-sm text-solid-foreground"
         >
           Retour à la connexion
         </a>
@@ -125,7 +125,7 @@ export function ActivateAccountClient() {
     return (
       <Shell>
         <h1 className="text-2xl font-bold">Compte existant</h1>
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-muted-foreground">
           Un compte existe déjà pour {invitation.emailMasked}. Connectez-vous
           pour rejoindre {invitation.schoolName}.
         </p>
@@ -134,7 +134,7 @@ export function ActivateAccountClient() {
             window.sessionStorage.setItem("almac_pending_invitation", token);
             router.push("/login?acceptInvitation=1");
           }}
-          className="mt-6 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+          className="mt-6 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-solid-foreground"
         >
           Se connecter
         </button>
@@ -142,26 +142,26 @@ export function ActivateAccountClient() {
     );
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+    <main className="flex min-h-screen items-center justify-center bg-surface p-6">
       <form
         onSubmit={submit}
-        className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
+        className="w-full max-w-lg rounded-3xl border border-border bg-surface p-8 shadow-sm"
       >
-        <div className="text-sm font-medium text-blue-700">
+        <div className="text-sm font-medium text-info">
           ALMAC School Management
         </div>
-        <h1 className="mt-2 text-3xl font-bold text-slate-950">
+        <h1 className="mt-2 text-3xl font-bold text-foreground">
           Activez votre compte
         </h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-muted-foreground">
           Vous rejoignez <strong>{invitation?.schoolName}</strong> avec le rôle{" "}
           <strong>{invitation?.roleCode}</strong>.
         </p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Adresse vérifiée : {invitation?.emailMasked}
         </p>
         {error && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mt-5 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
             {error}
           </div>
         )}
@@ -184,7 +184,7 @@ export function ActivateAccountClient() {
           value={password}
           onChange={setPassword}
         />
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-muted-foreground">
           Utilisez au moins 15 caractères. Les espaces sont autorisés.
         </p>
         <PasswordField
@@ -195,7 +195,7 @@ export function ActivateAccountClient() {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          className="mt-6 w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting ? "Activation…" : "Activer mon compte"}
         </button>
@@ -206,8 +206,8 @@ export function ActivateAccountClient() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-      <div className="max-w-md rounded-2xl border bg-white p-8">{children}</div>
+    <main className="flex min-h-screen items-center justify-center bg-surface p-6">
+      <div className="max-w-md rounded-2xl border bg-surface p-8">{children}</div>
     </main>
   );
 }
@@ -231,7 +231,7 @@ function Field({
         autoComplete={autoComplete}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+        className="mt-1 w-full rounded-xl border border-input px-3 py-2"
       />
     </label>
   );
@@ -257,7 +257,7 @@ function PasswordField({
         maxLength={128}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+        className="mt-1 w-full rounded-xl border border-input px-3 py-2"
       />
     </label>
   );

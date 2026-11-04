@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef } from "react";
 import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function ConfirmationDialog({
   open,
@@ -45,50 +46,45 @@ export function ConfirmationDialog({
         event.preventDefault();
         if (!busy) onCancel();
       }}
-      className="w-[min(92vw,30rem)] rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-slate-950/45"
+      className="w-[min(92vw,30rem)] rounded-2xl border border-border bg-surface p-0 shadow-2xl backdrop:bg-primary/45"
     >
       <div className="p-5">
         <div className="flex items-start gap-3">
-          <span className="rounded-xl bg-amber-50 p-2.5 text-amber-700">
+          <span className="rounded-xl bg-warning-subtle p-2.5 text-warning">
             <AlertTriangle aria-hidden="true" className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <h2
               id={titleId}
-              className="font-semibold text-slate-950"
+              className="font-semibold text-foreground"
             >
               {title}
             </h2>
             <p
               id={descriptionId}
-              className="mt-1 text-sm leading-6 text-slate-600"
+              className="mt-1 text-sm leading-6 text-muted-foreground"
             >
               {description}
             </p>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">
-          <button
+          <Button
             type="button"
             autoFocus
             disabled={busy}
             onClick={onCancel}
-            className="min-h-11 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:opacity-50"
           >
             {cancelLabel}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={destructive ? 'danger' : 'primary'}
             type="button"
             disabled={busy}
             onClick={onConfirm}
-            className={`min-h-11 rounded-xl px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 ${
-              destructive
-                ? "bg-red-700 hover:bg-red-800 focus-visible:ring-red-700"
-                : "bg-slate-950 hover:bg-slate-800 focus-visible:ring-blue-600"
-            }`}
           >
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </dialog>

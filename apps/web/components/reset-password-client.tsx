@@ -90,21 +90,21 @@ export function ResetPasswordClient() {
 
   if (loading)
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50">
+      <main className="flex min-h-screen items-center justify-center bg-surface">
         {t("auth.resetPassword.checking")}
       </main>
     );
   if (!information)
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-        <div className="max-w-md rounded-2xl border border-red-200 bg-white p-8">
+      <main className="flex min-h-screen items-center justify-center bg-surface p-6">
+        <div className="max-w-md rounded-2xl border border-danger/40 bg-surface p-8">
           <h1 className="text-xl font-bold">
             {t("auth.resetPassword.invalidTitle")}
           </h1>
-          <p className="mt-3 text-sm text-red-700">{error}</p>
+          <p className="mt-3 text-sm text-danger">{error}</p>
           <a
             href="/forgot-password"
-            className="mt-6 inline-flex rounded-xl bg-slate-950 px-4 py-2 text-sm text-white"
+            className="mt-6 inline-flex rounded-xl bg-primary px-4 py-2 text-sm text-solid-foreground"
           >
             {t("auth.forgotPassword.title")}
           </a>
@@ -113,19 +113,19 @@ export function ResetPasswordClient() {
     );
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+    <main className="flex min-h-screen items-center justify-center bg-surface p-6">
       <form
         onSubmit={submit}
-        className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"
+        className="w-full max-w-md rounded-3xl border border-border bg-surface p-8 shadow-sm"
       >
-        <h1 className="text-3xl font-bold text-slate-950">
+        <h1 className="text-3xl font-bold text-foreground">
           {t("auth.resetPassword.title")}
         </h1>
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-muted-foreground">
           {t("auth.resetPassword.account")}: {information.emailMasked}
         </p>
         {error ? (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mt-5 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
             {error}
           </div>
         ) : null}
@@ -141,9 +141,9 @@ export function ResetPasswordClient() {
             maxLength={128}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-input px-3 py-2"
           />
-          <span className="mt-1 block text-xs text-slate-500">
+          <span className="mt-1 block text-xs text-muted-foreground">
             {t("auth.resetPassword.passwordHint")}
           </span>
         </label>
@@ -159,13 +159,13 @@ export function ResetPasswordClient() {
             maxLength={128}
             value={passwordConfirmation}
             onChange={(event) => setPasswordConfirmation(event.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-input px-3 py-2"
           />
         </label>
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
+          className="mt-6 w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {submitting
             ? t("auth.resetPassword.submitting")

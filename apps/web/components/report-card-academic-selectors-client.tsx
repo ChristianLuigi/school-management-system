@@ -102,25 +102,25 @@ export function ReportCardAcademicSelectorsClient({
   return (
     <div className="space-y-3">
       {loading ? (
-        <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
           Loading academic options...
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block">
-          <span className="text-sm font-medium text-slate-700">
+          <span className="text-sm font-medium text-foreground">
             Grading Period
           </span>
 
           <select
-            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-xl border border-input px-3 py-2 text-sm"
             value={gradingPeriodId}
             onChange={(event) => onGradingPeriodIdChange(event.target.value)}
           >
@@ -137,10 +137,10 @@ export function ReportCardAcademicSelectorsClient({
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-slate-700">Section</span>
+          <span className="text-sm font-medium text-foreground">Section</span>
 
           <select
-            className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded-xl border border-input px-3 py-2 text-sm"
             value={sectionId}
             onChange={(event) => onSectionIdChange(event.target.value)}
           >

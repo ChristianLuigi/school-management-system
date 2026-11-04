@@ -185,24 +185,24 @@ export function OfficeRecordClient({
     <div className="space-y-4">
       <Link
         href={kind === "student" ? "/students" : "/admissions"}
-        className="inline-flex items-center gap-2 text-sm text-blue-700"
+        className="inline-flex items-center gap-2 text-sm text-info"
       >
         <ArrowLeft size={16} />
         {fr ? "Retour à la liste" : "Back to directory"}
       </Link>
       {error && (
-        <p role="alert" className="rounded-xl bg-red-50 p-3 text-red-700">
+        <p role="alert" className="rounded-xl bg-danger-subtle p-3 text-danger">
           {error}
         </p>
       )}
       {saved && (
-        <p role="status" className="rounded-xl bg-green-50 p-3 text-green-700">
+        <p role="status" className="rounded-xl bg-success-subtle p-3 text-success">
           {fr ? "Enregistrement effectué." : "Record saved."}
         </p>
       )}
       <form
         onSubmit={save}
-        className="rounded-2xl border border-slate-200 bg-white p-5"
+        className="rounded-2xl border border-border bg-surface p-5"
       >
         <fieldset
           disabled={
@@ -218,7 +218,7 @@ export function OfficeRecordClient({
               <label key={key} className="text-sm font-medium">
                 {fr ? french : english}
                 <input
-                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                  className="mt-1 w-full rounded-xl border border-input px-3 py-2"
                   type={
                     key === "dateOfBirth"
                       ? "date"
@@ -244,7 +244,7 @@ export function OfficeRecordClient({
             <label className="text-sm font-medium">
               {fr ? "Sexe" : "Gender"}
               <select
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
                 value={values.gender ?? ""}
                 onChange={(event) =>
                   setValues({ ...values, gender: event.target.value })
@@ -269,7 +269,7 @@ export function OfficeRecordClient({
           )}
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-white"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-solid-foreground"
           >
             <Save size={16} />
             {loading

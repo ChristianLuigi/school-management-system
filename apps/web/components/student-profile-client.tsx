@@ -370,7 +370,7 @@ export function StudentProfileClient({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/students"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-surface"
         >
           <ArrowLeft className="h-4 w-4" />
           {t("students.backToStudents")}
@@ -379,14 +379,14 @@ export function StudentProfileClient({
         <div className="flex items-center gap-2">
           <Link
             href={`/students/${studentId}/report-card`}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-surface"
           >
             <FileText className="h-4 w-4" />
             {t("students.reportCard")}
           </Link>
           <Link
             href={`/students/${studentId}/edit`}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary"
           >
             <Pencil className="h-4 w-4" />
             {t("common.edit")}
@@ -397,7 +397,7 @@ export function StudentProfileClient({
             disabled={loading}
             title={t("students.refreshProfile")}
             aria-label={t("students.refreshProfile")}
-            className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:opacity-50"
+            className="rounded-xl border border-border bg-surface p-2.5 text-muted-foreground shadow-sm transition hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -407,7 +407,7 @@ export function StudentProfileClient({
       {loading ? (
         <div
           role="status"
-          className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500"
+          className="rounded-xl bg-surface p-4 text-sm text-muted-foreground"
         >
           {t("students.loadingProfile")}
         </div>
@@ -416,7 +416,7 @@ export function StudentProfileClient({
       {error ? (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger"
         >
           {error}
         </div>
@@ -424,7 +424,7 @@ export function StudentProfileClient({
 
       {profile ? (
         <>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6">
+          <div className="rounded-3xl border border-border bg-surface p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex flex-wrap items-start gap-5">
                 {profile.student.photoUrl ? (
@@ -432,10 +432,10 @@ export function StudentProfileClient({
                   <img
                     src={profile.student.photoUrl}
                     alt={studentName(profile, t("students.unnamedStudent"))}
-                    className="h-28 w-28 rounded-2xl border border-slate-200 object-cover"
+                    className="h-28 w-28 rounded-2xl border border-border object-cover"
                   />
                 ) : (
-                  <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-3xl font-bold text-slate-400">
+                  <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-border bg-surface text-3xl font-bold text-muted-foreground">
                     {studentName(profile, t("students.unnamedStudent"))
                       .slice(0, 2)
                       .toUpperCase()}
@@ -443,11 +443,11 @@ export function StudentProfileClient({
                 )}
 
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900">
+                  <h1 className="text-3xl font-bold text-foreground">
                     {studentName(profile, t("students.unnamedStudent"))}
                   </h1>
 
-                  <div className="mt-1 text-sm text-slate-500">
+                  <div className="mt-1 text-sm text-muted-foreground">
                     {profile.student.studentCode ?? t("students.codePending")}
                   </div>
                 </div>
@@ -461,15 +461,15 @@ export function StudentProfileClient({
             </div>
 
             <div className="mt-6 grid gap-3 md:grid-cols-3">
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="rounded-xl bg-white p-2.5 text-blue-700 shadow-sm">
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+                <div className="rounded-xl bg-surface p-2.5 text-info shadow-sm">
                   <GraduationCap className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {t("students.currentClass")}
                   </div>
-                  <div className="mt-1 font-semibold text-slate-900">
+                  <div className="mt-1 font-semibold text-foreground">
                     {currentEnrollmentLabel(
                       profile,
                       locale,
@@ -478,28 +478,28 @@ export function StudentProfileClient({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="rounded-xl bg-white p-2.5 text-violet-700 shadow-sm">
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+                <div className="rounded-xl bg-surface p-2.5 text-info shadow-sm">
                   <CalendarDays className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {t("students.created")}
                   </div>
-                  <div className="mt-1 font-semibold text-slate-900">
+                  <div className="mt-1 font-semibold text-foreground">
                     {new Date(profile.student.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="rounded-xl bg-white p-2.5 text-emerald-700 shadow-sm">
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+                <div className="rounded-xl bg-surface p-2.5 text-success shadow-sm">
                   <Hash className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {t("students.studentCode")}
                   </div>
-                  <div className="mt-1 font-mono text-sm font-semibold text-slate-900">
+                  <div className="mt-1 font-mono text-sm font-semibold text-foreground">
                     {profile.student.studentCode ?? t("students.pending")}
                   </div>
                 </div>
@@ -509,7 +509,7 @@ export function StudentProfileClient({
 
           <nav
             aria-label={t("students.profileSections")}
-            className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm"
+            className="overflow-x-auto rounded-2xl border border-border bg-surface p-1.5 shadow-sm"
           >
             <div className="flex min-w-max gap-1" role="tablist">
               {PROFILE_TABS.filter(
@@ -564,10 +564,10 @@ export function StudentProfileClient({
                       tabs[nextIndex]?.focus();
                       tabs[nextIndex]?.click();
                     }}
-                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                       active
-                        ? "bg-slate-950 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-surface-muted hover:text-foreground"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -576,8 +576,8 @@ export function StudentProfileClient({
                       <span
                         className={`rounded-full px-1.5 py-0.5 text-[11px] ${
                           active
-                            ? "bg-white/15 text-white"
-                            : "bg-slate-200 text-slate-600"
+                            ? "bg-surface/15 text-solid-foreground"
+                            : "bg-surface-muted text-muted-foreground"
                         }`}
                       >
                         {count}
@@ -629,18 +629,18 @@ export function StudentProfileClient({
             ) : null}
 
             {selectedTab === "overview" && profile.admissionSource ? (
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+              <div className="rounded-2xl border border-info/40 bg-info-subtle p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-blue-950">
+                    <h3 className="text-lg font-semibold text-info">
                       {t("students.admissionSource")}
                     </h3>
 
-                    <p className="mt-1 text-sm text-blue-800">
+                    <p className="mt-1 text-sm text-info">
                       {t("students.admissionSourceDescription")}
                     </p>
 
-                    <div className="mt-3 text-sm text-blue-900">
+                    <div className="mt-3 text-sm text-info">
                       <div>
                         {t("students.application")}:{" "}
                         <span className="font-semibold">
@@ -680,7 +680,7 @@ export function StudentProfileClient({
 
                     <a
                       href={`/admissions/${profile.admissionSource.id}`}
-                      className="rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
+                      className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
                     >
                       {t("students.openAdmission")}
                     </a>
@@ -691,14 +691,14 @@ export function StudentProfileClient({
 
             {selectedTab === "overview" ? (
               <div className="grid gap-6 xl:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <h3 className="font-semibold text-slate-900">
+                <div className="rounded-2xl border border-border bg-surface p-5">
+                  <h3 className="font-semibold text-foreground">
                     {t("students.identityDetails")}
                   </h3>
 
                   <div className="mt-4 space-y-2 text-sm">
                     <div className="flex justify-between gap-4">
-                      <span className="text-slate-500">
+                      <span className="text-muted-foreground">
                         {t("students.gender")}
                       </span>
                       <span className="font-medium">
@@ -711,7 +711,7 @@ export function StudentProfileClient({
                     </div>
 
                     <div className="flex justify-between gap-4">
-                      <span className="text-slate-500">
+                      <span className="text-muted-foreground">
                         {t("students.dateOfBirth")}
                       </span>
                       <span className="font-medium">
@@ -720,7 +720,7 @@ export function StudentProfileClient({
                     </div>
 
                     <div className="flex justify-between gap-4">
-                      <span className="text-slate-500">
+                      <span className="text-muted-foreground">
                         {t("students.placeOfBirth")}
                       </span>
                       <span className="font-medium">
@@ -729,7 +729,7 @@ export function StudentProfileClient({
                     </div>
 
                     <div className="flex justify-between gap-4">
-                      <span className="text-slate-500">
+                      <span className="text-muted-foreground">
                         {t("students.previousSchool")}
                       </span>
                       <span className="font-medium">
@@ -739,8 +739,8 @@ export function StudentProfileClient({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <h3 className="font-semibold text-slate-900">
+                <div className="rounded-2xl border border-border bg-surface p-5">
+                  <h3 className="font-semibold text-foreground">
                     {t("students.documents")}
                   </h3>
 
@@ -805,14 +805,14 @@ export function StudentProfileClient({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <h3 className="font-semibold text-slate-900">
+                <div className="rounded-2xl border border-border bg-surface p-5">
+                  <h3 className="font-semibold text-foreground">
                     {t("students.health")}
                   </h3>
 
                   <div className="mt-4 space-y-2 text-sm">
                     <div>
-                      <div className="text-slate-500">
+                      <div className="text-muted-foreground">
                         {t("students.vaccinationStatus")}
                       </div>
                       <div className="font-medium">
@@ -821,7 +821,7 @@ export function StudentProfileClient({
                     </div>
 
                     <div>
-                      <div className="text-slate-500">
+                      <div className="text-muted-foreground">
                         {t("students.allergies")}
                       </div>
                       <div className="font-medium">
@@ -830,7 +830,7 @@ export function StudentProfileClient({
                     </div>
 
                     <div>
-                      <div className="text-slate-500">
+                      <div className="text-muted-foreground">
                         {t("students.medicalNotes")}
                       </div>
                       <div className="font-medium">
@@ -839,7 +839,7 @@ export function StudentProfileClient({
                     </div>
 
                     <div>
-                      <div className="text-slate-500">
+                      <div className="text-muted-foreground">
                         {t("students.specialNeeds")}
                       </div>
                       <div className="font-medium">
@@ -901,37 +901,37 @@ export function StudentProfileClient({
 
             {selectedTab === "overview" ? (
               <>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                <div className="rounded-2xl border border-border bg-surface p-5">
+                  <h3 className="text-lg font-semibold text-foreground">
                     {t("students.healthMedical")}
                   </h3>
 
                   <div className="mt-4 grid gap-4 md:grid-cols-3">
-                    <div className="rounded-xl bg-slate-50 p-4">
-                      <div className="text-sm font-medium text-slate-700">
+                    <div className="rounded-xl bg-surface p-4">
+                      <div className="text-sm font-medium text-foreground">
                         {t("students.healthNotes")}
                       </div>
-                      <div className="mt-2 text-sm text-slate-600">
+                      <div className="mt-2 text-sm text-muted-foreground">
                         {profile.student.healthNotes ??
                           t("students.noHealthNotes")}
                       </div>
                     </div>
 
-                    <div className="rounded-xl bg-slate-50 p-4">
-                      <div className="text-sm font-medium text-slate-700">
+                    <div className="rounded-xl bg-surface p-4">
+                      <div className="text-sm font-medium text-foreground">
                         {t("students.allergies")}
                       </div>
-                      <div className="mt-2 text-sm text-slate-600">
+                      <div className="mt-2 text-sm text-muted-foreground">
                         {profile.student.allergyNotes ??
                           t("students.noAllergyNotes")}
                       </div>
                     </div>
 
-                    <div className="rounded-xl bg-slate-50 p-4">
-                      <div className="text-sm font-medium text-slate-700">
+                    <div className="rounded-xl bg-surface p-4">
+                      <div className="text-sm font-medium text-foreground">
                         {t("students.medicalNotes")}
                       </div>
-                      <div className="mt-2 text-sm text-slate-600">
+                      <div className="mt-2 text-sm text-muted-foreground">
                         {profile.student.medicalNotes ??
                           t("students.noMedicalNotes")}
                       </div>
@@ -939,22 +939,22 @@ export function StudentProfileClient({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                <div className="rounded-2xl border border-border bg-surface p-5">
+                  <h3 className="text-lg font-semibold text-foreground">
                     {t("students.quickActions")}
                   </h3>
 
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Link
                       href="/attendance"
-                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+                      className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
                     >
                       {t("students.openAttendance")}
                     </Link>
 
                     <Link
                       href="/gradebooks"
-                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+                      className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
                     >
                       {t("students.openGradebooks")}
                     </Link>

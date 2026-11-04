@@ -271,29 +271,29 @@ export function AcademicStructureClient({
         gradeLevels={gradeLevels}
       />
 
-      <details className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 transition hover:bg-slate-50">
-          <span className="flex items-center gap-3 font-semibold text-slate-900">
-            <span className="rounded-xl bg-slate-100 p-2 text-slate-600">
+      <details className="group overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 transition hover:bg-surface">
+          <span className="flex items-center gap-3 font-semibold text-foreground">
+            <span className="rounded-xl bg-surface-muted p-2 text-muted-foreground">
               <Settings2 className="h-4 w-4" />
             </span>
             {t("academic.advancedManualConfiguration")}
           </span>
-          <ChevronDown className="h-4 w-4 text-slate-400 transition group-open:rotate-180" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground transition group-open:rotate-180" />
         </summary>
 
-        <div className="space-y-4 border-t border-slate-200 p-5">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div className="font-semibold text-slate-900">
+        <div className="space-y-4 border-t border-border p-5">
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="font-semibold text-foreground">
             {t("academic.configureAcademicDivisions")}
           </div>
 
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t("academic.selectOfferedLevels")}
           </p>
 
           <div className="mt-3 grid gap-2 md:grid-cols-3">
-            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+            <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
               <input
                 type="checkbox"
                 checked={includeKindergarten}
@@ -304,7 +304,7 @@ export function AcademicStructureClient({
               {t("academic.kindergarten")}
             </label>
 
-            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+            <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
               <input
                 type="checkbox"
                 checked={includePrimary}
@@ -313,7 +313,7 @@ export function AcademicStructureClient({
               {t("academic.primary")}
             </label>
 
-            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+            <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
               <input
                 type="checkbox"
                 checked={includeSecondary}
@@ -327,7 +327,7 @@ export function AcademicStructureClient({
             type="button"
             onClick={createSelectedStructure}
             disabled={seeding}
-            className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {seeding
               ? t("academic.creating")
@@ -335,19 +335,19 @@ export function AcademicStructureClient({
           </button>
 
           {message ? (
-            <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+            <div className="mt-3 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
               {message}
             </div>
           ) : null}
 
           {error ? (
-            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="mt-3 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
               {error}
             </div>
           ) : null}
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+        <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
           <h2 className="text-lg font-semibold">
             {t("academic.manualGradeLevelsAndSections")}
           </h2>
@@ -355,7 +355,7 @@ export function AcademicStructureClient({
             {["KINDERGARTEN", "PRIMARY", "SECONDARY", "OTHER"].map((key) =>
               groupedGradeLevels[key]?.length ? (
                 <div key={key}>
-                  <div className="text-xs font-semibold uppercase text-slate-500">
+                  <div className="text-xs font-semibold uppercase text-muted-foreground">
                     {divisionLabel(key === "OTHER" ? null : key, t)}
                   </div>
 
@@ -366,14 +366,14 @@ export function AcademicStructureClient({
                       return (
                         <div
                           key={level.id}
-                          className="rounded-xl border border-slate-200 p-4"
+                          className="rounded-xl border border-border p-4"
                         >
                           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                             <div>
-                              <div className="font-semibold text-slate-900">
+                              <div className="font-semibold text-foreground">
                                 {i18nName(level.name_i18n, level.code, locale)}
                               </div>
-                              <div className="mt-1 text-xs text-slate-500">
+                              <div className="mt-1 text-xs text-muted-foreground">
                                 {levelSections.length} section
                                 {levelSections.length === 1 ? "" : "s"}
                               </div>
@@ -392,7 +392,7 @@ export function AcademicStructureClient({
                                 );
                                 setDefaultCapacity("");
                               }}
-                              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
+                              className="rounded-lg border border-input bg-surface px-3 py-2 text-xs hover:bg-surface"
                             >
                               {configureGradeLevelId === level.id
                                 ? "Close"
@@ -405,7 +405,7 @@ export function AcademicStructureClient({
                               <PaginatedCollection items={levelSections}>{(section) => (
                                 <span
                                   key={section.id}
-                                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                                  className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
                                 >
                                   {i18nName(
                                     section.nameI18n,
@@ -413,26 +413,26 @@ export function AcademicStructureClient({
                                     locale,
                                   )}
                                   {section.capacity ? (
-                                    <span className="ml-2 text-xs text-slate-500">
+                                    <span className="ml-2 text-xs text-muted-foreground">
                                       Cap. {section.capacity}
                                     </span>
                                   ) : null}
                                 </span>
                               )}</PaginatedCollection>
                             ) : (
-                              <span className="text-sm text-slate-500">
+                              <span className="text-sm text-muted-foreground">
                                 {t("academic.noSectionsConfigured")}
                               </span>
                             )}
                           </div>
 
                           {configureGradeLevelId === level.id ? (
-                            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
-                              <div className="font-semibold text-blue-900">
+                            <div className="mt-4 rounded-xl border border-info/40 bg-info-subtle p-4">
+                              <div className="font-semibold text-info">
                                 {t("academic.configureRoomsSections")}
                               </div>
 
-                              <p className="mt-1 text-sm text-blue-800">
+                              <p className="mt-1 text-sm text-info">
                                 Enter how many parallel classrooms this level
                                 should have. The system will generate Section A,
                                 B, C, etc.
@@ -440,7 +440,7 @@ export function AcademicStructureClient({
 
                               <div className="mt-3 grid gap-3 md:grid-cols-2">
                                 <input
-                                  className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
+                                  className="rounded-xl border border-info/40 bg-surface px-3 py-2 text-sm"
                                   placeholder={t("academic.numberOfSections")}
                                   value={numberOfSections}
                                   onChange={(event) =>
@@ -449,7 +449,7 @@ export function AcademicStructureClient({
                                 />
 
                                 <input
-                                  className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm"
+                                  className="rounded-xl border border-info/40 bg-surface px-3 py-2 text-sm"
                                   placeholder={t(
                                     "academic.descriptionOptional",
                                   )}
@@ -464,7 +464,7 @@ export function AcademicStructureClient({
                                 type="button"
                                 disabled={saving}
                                 onClick={() => configureSections(level.id)}
-                                className="mt-3 rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60"
+                                className="mt-3 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
                               >
                                 {saving ? t("common.saving") : t("common.save")}
                               </button>
@@ -479,7 +479,7 @@ export function AcademicStructureClient({
             )}
 
             {gradeLevels.length === 0 ? (
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-muted-foreground">
                 {t("common.noRecords")}
               </div>
             ) : null}

@@ -147,7 +147,7 @@ export function FinanceInvoiceDetailClient({
         <div className="flex flex-wrap gap-2">
           <Link
             href="/finance"
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Back to Finance
           </Link>
@@ -156,7 +156,7 @@ export function FinanceInvoiceDetailClient({
           !["DRAFT", "VOID"].includes(invoice.invoiceStatus) ? (
             <Link
               href={`/finance/corrections?invoiceId=${encodeURIComponent(invoiceId)}`}
-              className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-800 hover:bg-blue-100"
+              className="rounded-xl border border-info/40 bg-info-subtle px-4 py-2 text-sm font-medium text-info hover:bg-info-subtle"
             >
               Request credit note
             </Link>
@@ -166,7 +166,7 @@ export function FinanceInvoiceDetailClient({
           "THERMAL_80MM" ? (
             <Link
               href={`/finance/invoices/${invoiceId}/thermal?autoprint=1`}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
             >
               Print Preferred
             </Link>
@@ -174,7 +174,7 @@ export function FinanceInvoiceDetailClient({
             <button
               type="button"
               onClick={() => window.print()}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
             >
               Print Preferred
             </button>
@@ -183,21 +183,21 @@ export function FinanceInvoiceDetailClient({
           <button
             type="button"
             onClick={() => window.print()}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             A4 / PDF
           </button>
 
           <Link
             href={`/finance/invoices/${invoiceId}/thermal`}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Thermal 80mm
           </Link>
 
           <Link
             href={`/finance/invoices/${invoiceId}/thermal?autoprint=1`}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Quick 80mm Print
           </Link>
@@ -206,20 +206,20 @@ export function FinanceInvoiceDetailClient({
         <button
           type="button"
           onClick={loadInvoice}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           Refresh
         </button>
       </div>
 
       {loading ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 print:hidden">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground print:hidden">
           Loading invoice...
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 print:hidden">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger print:hidden">
           {error}
         </div>
       ) : null}
@@ -236,23 +236,23 @@ export function FinanceInvoiceDetailClient({
             onChanged={loadInvoice}
           />
 
-          <div className="mx-auto max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
-            <div className="border-b border-slate-200 pb-6">
+          <div className="mx-auto max-w-5xl rounded-3xl border border-border bg-surface p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+            <div className="border-b border-border pb-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                <div className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
                   Invoice
                 </div>
 
-                <h1 className="mt-2 text-3xl font-bold text-slate-900">
+                <h1 className="mt-2 text-3xl font-bold text-foreground">
                   {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
                 </h1>
 
-                <div className="mt-1 text-sm text-slate-500">
+                <div className="mt-1 text-sm text-muted-foreground">
                   {invoice.school.name} - {invoice.school.code}
                 </div>
 
-                <div className="mt-2 space-y-0.5 text-sm text-slate-500">
+                <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
                   {invoice.school.addressLine1 ? <div>{invoice.school.addressLine1}</div> : null}
                   {invoice.school.addressLine2 ? <div>{invoice.school.addressLine2}</div> : null}
                   {invoice.school.city ? <div>{invoice.school.city}</div> : null}
@@ -285,95 +285,95 @@ export function FinanceInvoiceDetailClient({
                   {invoice.invoiceStatus}
                 </SchoolBadge>
 
-                <div className="mt-3 text-sm text-slate-500">
+                <div className="mt-3 text-sm text-muted-foreground">
                   Issue date: {invoice.issueDate}
                 </div>
 
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-muted-foreground">
                   Due date: {invoice.dueDate ?? "-"}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-6 border-b border-slate-200 py-6 md:grid-cols-3">
+          <div className="grid gap-6 border-b border-border py-6 md:grid-cols-3">
             <div>
-              <div className="text-xs uppercase tracking-wider text-slate-500">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">
                 Bill To
               </div>
 
-              <div className="mt-1 text-xl font-bold text-slate-900">
+              <div className="mt-1 text-xl font-bold text-foreground">
                 {invoice.student
                   ? `${invoice.student.firstName ?? ""} ${invoice.student.lastName ?? ""}`
                   : "No student"}
               </div>
 
               {invoice.student ? (
-                <div className="mt-1 text-sm text-slate-500">
+                <div className="mt-1 text-sm text-muted-foreground">
                   {invoice.student.code ?? "Code pending"}
                 </div>
               ) : null}
             </div>
 
             <div>
-              <div className="text-xs uppercase tracking-wider text-slate-500">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">
                 Invoice ID
               </div>
 
-              <div className="mt-1 break-all text-sm font-medium text-slate-900">
+              <div className="mt-1 break-all text-sm font-medium text-foreground">
                 {invoice.id}
               </div>
             </div>
 
             <div>
-              <div className="text-xs uppercase tracking-wider text-slate-500">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">
                 Currency
               </div>
 
-              <div className="mt-1 text-xl font-bold text-slate-900">
+              <div className="mt-1 text-xl font-bold text-foreground">
                 {invoice.currencyCode}
               </div>
             </div>
           </div>
 
           <div className="grid gap-4 py-6 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 print:bg-white">
-              <div className="text-sm text-slate-500">Subtotal</div>
-              <div className="mt-2 text-2xl font-bold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-5 print:bg-white">
+              <div className="text-sm text-muted-foreground">Subtotal</div>
+              <div className="mt-2 text-2xl font-bold text-foreground">
                 {money(invoice.subtotalAmount, invoice.currencyCode)}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 print:bg-white">
-              <div className="text-sm text-slate-500">Discount</div>
-              <div className="mt-2 text-2xl font-bold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-5 print:bg-white">
+              <div className="text-sm text-muted-foreground">Discount</div>
+              <div className="mt-2 text-2xl font-bold text-foreground">
                 {money(invoice.discountAmount, invoice.currencyCode)}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-green-200 bg-green-50 p-5 print:bg-white">
-              <div className="text-sm text-green-700">Paid</div>
-              <div className="mt-2 text-2xl font-bold text-green-900">
+            <div className="rounded-2xl border border-success/40 bg-success-subtle p-5 print:bg-white">
+              <div className="text-sm text-success">Paid</div>
+              <div className="mt-2 text-2xl font-bold text-success">
                 {money(invoice.amountPaid, invoice.currencyCode)}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 print:bg-white">
-              <div className="text-sm text-amber-700">Balance</div>
-              <div className="mt-2 text-2xl font-bold text-amber-900">
+            <div className="rounded-2xl border border-warning/40 bg-warning-subtle p-5 print:bg-white">
+              <div className="text-sm text-warning">Balance</div>
+              <div className="mt-2 text-2xl font-bold text-warning">
                 {money(invoice.balanceDue, invoice.currencyCode)}
               </div>
             </div>
           </div>
 
           <div>
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">
+            <h2 className="mb-3 text-lg font-semibold text-foreground">
               Invoice Items
             </h2>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <div className="overflow-x-auto rounded-2xl border border-border">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-100 text-left text-slate-600 print:bg-white">
+                <thead className="bg-surface-muted text-left text-muted-foreground print:bg-white">
                   <tr>
                     <th className="px-4 py-3">Description</th>
                     <th className="px-4 py-3">Quantity</th>
@@ -384,8 +384,8 @@ export function FinanceInvoiceDetailClient({
 
                 <tbody>
                   {invoice.items.map((item) => (
-                    <tr key={item.id} className="border-t border-slate-200">
-                      <td className="px-4 py-3 font-medium text-slate-900">
+                    <tr key={item.id} className="border-t border-border">
+                      <td className="px-4 py-3 font-medium text-foreground">
                         {item.description}
                       </td>
                       <td className="px-4 py-3">{item.quantity}</td>
@@ -402,7 +402,7 @@ export function FinanceInvoiceDetailClient({
                     <tr>
                       <td
                         colSpan={4}
-                        className="px-4 py-8 text-center text-slate-500"
+                        className="px-4 py-8 text-center text-muted-foreground"
                       >
                         No invoice items found.
                       </td>
@@ -413,41 +413,41 @@ export function FinanceInvoiceDetailClient({
             </div>
           </div>
 
-          <div className="mt-8 rounded-2xl border border-slate-200 p-5">
-            <h2 className="text-lg font-semibold text-slate-900">Totals</h2>
+          <div className="mt-8 rounded-2xl border border-border p-5">
+            <h2 className="text-lg font-semibold text-foreground">Totals</h2>
 
             <div className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Subtotal</span>
-                <span className="font-medium text-slate-900">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium text-foreground">
                   {money(invoice.subtotalAmount, invoice.currencyCode)}
                 </span>
               </div>
 
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Discount</span>
-                <span className="font-medium text-slate-900">
+                <span className="text-muted-foreground">Discount</span>
+                <span className="font-medium text-foreground">
                   {money(invoice.discountAmount, invoice.currencyCode)}
                 </span>
               </div>
 
-              <div className="flex justify-between gap-4 border-t border-slate-200 pt-2">
-                <span className="font-semibold text-slate-900">Total</span>
-                <span className="font-bold text-slate-900">
+              <div className="flex justify-between gap-4 border-t border-border pt-2">
+                <span className="font-semibold text-foreground">Total</span>
+                <span className="font-bold text-foreground">
                   {money(invoice.totalAmount, invoice.currencyCode)}
                 </span>
               </div>
 
               <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Amount Paid</span>
-                <span className="font-medium text-green-700">
+                <span className="text-muted-foreground">Amount Paid</span>
+                <span className="font-medium text-success">
                   {money(invoice.amountPaid, invoice.currencyCode)}
                 </span>
               </div>
 
-              <div className="flex justify-between gap-4 border-t border-slate-200 pt-2 text-lg">
-                <span className="font-bold text-slate-900">Balance Due</span>
-                <span className="font-bold text-amber-800">
+              <div className="flex justify-between gap-4 border-t border-border pt-2 text-lg">
+                <span className="font-bold text-foreground">Balance Due</span>
+                <span className="font-bold text-warning">
                   {money(invoice.balanceDue, invoice.currencyCode)}
                 </span>
               </div>
@@ -455,13 +455,13 @@ export function FinanceInvoiceDetailClient({
           </div>
 
           <div className="mt-8">
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">
+            <h2 className="mb-3 text-lg font-semibold text-foreground">
               Payment History
             </h2>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <div className="overflow-x-auto rounded-2xl border border-border">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-100 text-left text-slate-600 print:bg-white">
+                <thead className="bg-surface-muted text-left text-muted-foreground print:bg-white">
                   <tr>
                     <th className="px-4 py-3">Payment</th>
                     <th className="px-4 py-3">Date</th>
@@ -475,7 +475,7 @@ export function FinanceInvoiceDetailClient({
 
                 <tbody>
                   {<PaginatedCollection items={invoice.payments} rows columns={7}>{(payment) => (
-                    <tr key={payment.id} className="border-t border-slate-200">
+                    <tr key={payment.id} className="border-t border-border">
                       <td className="px-4 py-3 font-medium">
                         {payment.paymentNumber ?? payment.id.slice(0, 8)}
                       </td>
@@ -493,14 +493,14 @@ export function FinanceInvoiceDetailClient({
                       <td className="px-4 py-3">
                         <a
                           href={`/finance/payments/${payment.id}/receipt`}
-                          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                          className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary"
                         >
                           Receipt
                         </a>
 
                         <a
                           href={`/finance/payments/${payment.id}/receipt/thermal`}
-                          className="ml-2 rounded-lg border border-slate-300 px-3 py-2 text-xs hover:bg-slate-50 print:hidden"
+                          className="ml-2 rounded-lg border border-input px-3 py-2 text-xs hover:bg-surface print:hidden"
                         >
                           80mm
                         </a>
@@ -512,7 +512,7 @@ export function FinanceInvoiceDetailClient({
                     <tr>
                       <td
                         colSpan={7}
-                        className="px-4 py-8 text-center text-slate-500"
+                        className="px-4 py-8 text-center text-muted-foreground"
                       >
                         No payments recorded for this invoice.
                       </td>
@@ -524,24 +524,24 @@ export function FinanceInvoiceDetailClient({
           </div>
 
           {invoice.notes ? (
-            <div className="mt-8 rounded-2xl border border-slate-200 p-5">
-              <div className="text-sm font-semibold text-slate-900">Notes</div>
-              <p className="mt-2 text-sm text-slate-600">{invoice.notes}</p>
+            <div className="mt-8 rounded-2xl border border-border p-5">
+              <div className="text-sm font-semibold text-foreground">Notes</div>
+              <p className="mt-2 text-sm text-muted-foreground">{invoice.notes}</p>
             </div>
           ) : null}
 
-          <div className="mt-10 grid gap-8 border-t border-slate-200 pt-10 md:grid-cols-2">
-            <div className="h-24 border-t border-slate-300 pt-2 text-center text-sm text-slate-500">
+          <div className="mt-10 grid gap-8 border-t border-border pt-10 md:grid-cols-2">
+            <div className="h-24 border-t border-input pt-2 text-center text-sm text-muted-foreground">
               Finance Officer
             </div>
 
-            <div className="h-24 border-t border-slate-300 pt-2 text-center text-sm text-slate-500">
+            <div className="h-24 border-t border-input pt-2 text-center text-sm text-muted-foreground">
               Parent / Guardian
             </div>
           </div>
           {invoice.school.financeSettings?.invoiceFooterI18n?.en ||
           invoice.school.financeSettings?.invoiceFooterI18n?.fr ? (
-            <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
+            <div className="mt-6 border-t border-border pt-4 text-center text-xs text-muted-foreground">
               {invoice.school.financeSettings.invoiceFooterI18n.en ??
                 invoice.school.financeSettings.invoiceFooterI18n.fr}
             </div>

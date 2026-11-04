@@ -108,14 +108,14 @@ function KpiCard({
 }) {
   const toneClass =
     tone === "green"
-      ? "border-green-200 bg-green-50 text-green-900"
+      ? "border-success/40 bg-success-subtle text-success"
       : tone === "amber"
-        ? "border-amber-200 bg-amber-50 text-amber-900"
+        ? "border-warning/40 bg-warning-subtle text-warning"
         : tone === "red"
-          ? "border-red-200 bg-red-50 text-red-900"
+          ? "border-danger/40 bg-danger-subtle text-danger"
           : tone === "blue"
-            ? "border-blue-200 bg-blue-50 text-blue-900"
-            : "border-slate-200 bg-white text-slate-900";
+            ? "border-info/40 bg-info-subtle text-info"
+            : "border-border bg-surface text-foreground";
 
   return (
     <div className={`rounded-2xl border p-4 ${toneClass}`}>
@@ -166,10 +166,10 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">
+          <h2 className="text-xl font-semibold text-foreground">
             Finance Overview
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Student billing, payments, invoices, and balances.
           </p>
         </div>
@@ -178,20 +178,20 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
           type="button"
           onClick={loadDashboard}
           disabled={loading}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Loading..." : "Refresh"}
         </button>
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {!dashboard && !error ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading finance dashboard...
         </div>
       ) : null}
@@ -234,31 +234,31 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">Recent Invoices</h3>
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <h3 className="font-semibold text-foreground">Recent Invoices</h3>
 
               <div className="mt-4 space-y-3">
                 {<PaginatedCollection items={dashboard.recentInvoices}>{(invoice) => (
                   <div
                     key={invoice.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                    className="rounded-xl border border-border bg-surface p-4"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <Link
                           href={`/finance/invoices/${invoice.id}`}
-                          className="font-semibold text-slate-900 underline-offset-4 hover:underline"
+                          className="font-semibold text-foreground underline-offset-4 hover:underline"
                         >
                           {invoice.invoiceNumber ?? "Invoice"}
                         </Link>
 
-                        <div className="mt-1 text-sm text-slate-600">
+                        <div className="mt-1 text-sm text-muted-foreground">
                           {invoice.invoiceTitle ?? "School invoice"}
                         </div>
 
                         <Link
                           href={`/students/${invoice.student.id}`}
-                          className="mt-1 block text-xs text-slate-500 underline-offset-4 hover:underline"
+                          className="mt-1 block text-xs text-muted-foreground underline-offset-4 hover:underline"
                         >
                           {invoice.student.firstName} {invoice.student.lastName}
                           {invoice.student.studentCode
@@ -274,21 +274,21 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
 
                     <div className="mt-3 grid gap-2 text-sm md:grid-cols-3">
                       <div>
-                        <div className="text-slate-500">Total</div>
+                        <div className="text-muted-foreground">Total</div>
                         <div className="font-semibold">
                           {money(invoice.totalAmount, invoice.currencyCode)}
                         </div>
                       </div>
 
                       <div>
-                        <div className="text-slate-500">Paid</div>
+                        <div className="text-muted-foreground">Paid</div>
                         <div className="font-semibold">
                           {money(invoice.paidAmount, invoice.currencyCode)}
                         </div>
                       </div>
 
                       <div>
-                        <div className="text-slate-500">Balance</div>
+                        <div className="text-muted-foreground">Balance</div>
                         <div className="font-semibold">
                           {money(invoice.balanceDue, invoice.currencyCode)}
                         </div>
@@ -298,14 +298,14 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Link
                         href={`/finance/invoices/${invoice.id}`}
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                        className="rounded-lg border border-input bg-surface px-3 py-2 text-xs font-medium hover:bg-surface"
                       >
                         Open
                       </Link>
 
                       <Link
                         href={`/finance/invoices/${invoice.id}/thermal?autoprint=1`}
-                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary"
                       >
                         Print 80mm
                       </Link>
@@ -314,34 +314,34 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
                 )}</PaginatedCollection>}
 
                 {dashboard.recentInvoices.length === 0 ? (
-                  <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+                  <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
                     No invoices yet.
                   </div>
                 ) : null}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">Recent Payments</h3>
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <h3 className="font-semibold text-foreground">Recent Payments</h3>
 
               <div className="mt-4 space-y-3">
                 {<PaginatedCollection items={dashboard.recentPayments}>{(payment) => (
                   <div
                     key={payment.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                    className="rounded-xl border border-border bg-surface p-4"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <Link
                           href={`/finance/payments/${payment.id}/receipt`}
-                          className="font-semibold text-slate-900 underline-offset-4 hover:underline"
+                          className="font-semibold text-foreground underline-offset-4 hover:underline"
                         >
                           {payment.paymentNumber ?? "Payment"}
                         </Link>
 
                         <Link
                           href={`/students/${payment.student.id}`}
-                          className="mt-1 block text-xs text-slate-500 underline-offset-4 hover:underline"
+                          className="mt-1 block text-xs text-muted-foreground underline-offset-4 hover:underline"
                         >
                           {payment.student.firstName} {payment.student.lastName}
                           {payment.student.studentCode
@@ -349,7 +349,7 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
                             : ""}
                         </Link>
 
-                        <div className="mt-1 text-xs text-slate-500">
+                        <div className="mt-1 text-xs text-muted-foreground">
                           {payment.paidAt
                             ? new Date(payment.paidAt).toLocaleString()
                             : "-"}
@@ -374,14 +374,14 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Link
                         href={`/finance/payments/${payment.id}/receipt`}
-                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                        className="rounded-lg border border-input bg-surface px-3 py-2 text-xs font-medium hover:bg-surface"
                       >
                         Receipt
                       </Link>
 
                       <Link
                         href={`/finance/payments/${payment.id}/receipt/thermal?autoprint=1`}
-                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary"
                       >
                         Print 80mm
                       </Link>
@@ -390,7 +390,7 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
                 )}</PaginatedCollection>}
 
                 {dashboard.recentPayments.length === 0 ? (
-                  <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+                  <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
                     No payments yet.
                   </div>
                 ) : null}

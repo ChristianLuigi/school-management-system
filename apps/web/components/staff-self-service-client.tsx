@@ -171,10 +171,10 @@ const COPY = {
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-1 text-sm text-slate-900">{value}</dd>
+      <dd className="mt-1 text-sm text-foreground">{value}</dd>
     </div>
   );
 }
@@ -350,7 +350,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
   }
 
   if (loading && !profile) {
-    return <p className="text-sm text-slate-500">{copy.loading}</p>;
+    return <p className="text-sm text-muted-foreground">{copy.loading}</p>;
   }
 
   if (!profile) {
@@ -358,14 +358,14 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
       <div className="space-y-3">
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger"
         >
           {error || "Unable to load your staff record."}
         </div>
         <button
           type="button"
           onClick={() => void load()}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-input px-3 py-2 text-sm"
         >
           {copy.refresh}
         </button>
@@ -378,7 +378,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
       {error ? (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger"
         >
           {error}
         </div>
@@ -386,7 +386,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
       {message ? (
         <div
           role="status"
-          className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700"
+          className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success"
         >
           {message}
         </div>
@@ -449,7 +449,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
             type="button"
             onClick={() => void load()}
             disabled={loading}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-50"
+            className="rounded-lg border border-input px-3 py-1.5 text-sm disabled:opacity-50"
           >
             {copy.refresh}
           </button>
@@ -457,18 +457,18 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
       >
         <div className="space-y-3">
           {!documents.length ? (
-            <p className="text-sm text-slate-500">{copy.noDocuments}</p>
+            <p className="text-sm text-muted-foreground">{copy.noDocuments}</p>
           ) : null}
           {<PaginatedCollection items={documents}>{(document) => (
             <div
               key={document.id}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 p-4"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border p-4"
             >
               <div>
-                <div className="font-semibold text-slate-950">
+                <div className="font-semibold text-foreground">
                   {document.displayName}
                 </div>
-                <div className="mt-1 text-sm text-slate-600">
+                <div className="mt-1 text-sm text-muted-foreground">
                   {document.documentType.replaceAll("_", " ")}
                   {document.expiresOn
                     ? ` · ${copy.expires}: ${document.expiresOn}`
@@ -494,7 +494,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
                     document.id,
                   )}/download?schoolId=${encodeURIComponent(schoolId)}`
                 }
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                className="rounded-lg border border-input px-3 py-2 text-sm font-medium text-foreground hover:bg-surface"
               >
                 {copy.download}
               </a>
@@ -572,32 +572,32 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-5 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="mt-5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
             {submitting ? copy.submitting : copy.submit}
           </button>
         </form>
 
-        <div className="mt-6 space-y-3 border-t border-slate-200 pt-6">
+        <div className="mt-6 space-y-3 border-t border-border pt-6">
           {!leaveRequests.length ? (
-            <p className="text-sm text-slate-500">{copy.noLeave}</p>
+            <p className="text-sm text-muted-foreground">{copy.noLeave}</p>
           ) : null}
           {<PaginatedCollection items={leaveRequests}>{(request) => (
             <div
               key={request.id}
-              className="rounded-2xl border border-slate-200 p-4"
+              className="rounded-2xl border border-border p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <div className="font-semibold text-slate-950">
+                  <div className="font-semibold text-foreground">
                     {request.leaveType.replaceAll("_", " ")}
                   </div>
-                  <div className="mt-1 text-sm text-slate-600">
+                  <div className="mt-1 text-sm text-muted-foreground">
                     {request.startDate} - {request.endDate} · {request.requestedDays}
                   </div>
-                  <p className="mt-2 text-sm text-slate-700">{request.reason}</p>
+                  <p className="mt-2 text-sm text-foreground">{request.reason}</p>
                   {request.reviewNote ? (
-                    <p className="mt-2 text-sm text-slate-600">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       {copy.reviewNote}: {request.reviewNote}
                     </p>
                   ) : null}
@@ -620,7 +620,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
                     type="button"
                     disabled={actingId === request.id}
                     onClick={() => void withdrawLeave(request)}
-                    className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 disabled:opacity-50"
+                    className="rounded-lg border border-danger/40 px-3 py-1.5 text-xs font-medium text-danger disabled:opacity-50"
                   >
                     {copy.withdraw}
                   </button>

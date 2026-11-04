@@ -181,7 +181,7 @@ export function AdmissionDetailClient({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/admissions"
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           Back to Admissions
         </Link>
@@ -193,7 +193,7 @@ export function AdmissionDetailClient({
           ) ? (
             <Link
               href={`/admissions/${admissionApplicationId}/decision-letter`}
-              className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+              className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
             >
               Bordereau admission
             </Link>
@@ -202,7 +202,7 @@ export function AdmissionDetailClient({
           <button
             type="button"
             onClick={loadApplication}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Refresh
           </button>
@@ -210,32 +210,32 @@ export function AdmissionDetailClient({
       </div>
 
       {loading ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading admission application...
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {application ? (
         <>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6">
+          <div className="rounded-3xl border border-border bg-surface p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                <div className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
                   Admission Application
                 </div>
 
-                <h2 className="mt-2 text-3xl font-bold text-slate-900">
+                <h2 className="mt-2 text-3xl font-bold text-foreground">
                   {application.candidate.firstName}{" "}
                   {application.candidate.lastName}
                 </h2>
 
-                <div className="mt-1 text-sm text-slate-500">
+                <div className="mt-1 text-sm text-muted-foreground">
                   {application.applicationNumber}
                 </div>
               </div>
@@ -248,9 +248,9 @@ export function AdmissionDetailClient({
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Desired level</div>
-                <div className="mt-2 text-xl font-bold text-slate-900">
+              <div className="rounded-2xl border border-border bg-surface p-4">
+                <div className="text-sm text-muted-foreground">Desired level</div>
+                <div className="mt-2 text-xl font-bold text-foreground">
                   {application.desiredGradeLevel
                     ? i18nName(
                         application.desiredGradeLevel.nameI18n,
@@ -260,9 +260,9 @@ export function AdmissionDetailClient({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Desired section</div>
-                <div className="mt-2 text-xl font-bold text-slate-900">
+              <div className="rounded-2xl border border-border bg-surface p-4">
+                <div className="text-sm text-muted-foreground">Desired section</div>
+                <div className="mt-2 text-xl font-bold text-foreground">
                   {application.desiredSection
                     ? i18nName(
                         application.desiredSection.nameI18n,
@@ -272,9 +272,9 @@ export function AdmissionDetailClient({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm text-slate-500">Created</div>
-                <div className="mt-2 text-xl font-bold text-slate-900">
+              <div className="rounded-2xl border border-border bg-surface p-4">
+                <div className="text-sm text-muted-foreground">Created</div>
+                <div className="mt-2 text-xl font-bold text-foreground">
                   {new Date(application.createdAt).toLocaleDateString()}
                 </div>
               </div>
@@ -312,72 +312,72 @@ export function AdmissionDetailClient({
           />
 
           <div className="grid gap-6 xl:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">Candidate</h3>
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <h3 className="font-semibold text-foreground">Candidate</h3>
 
               <div className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Gender</span>
+                  <span className="text-muted-foreground">Gender</span>
                   <span className="font-medium">
                     {formatGender(application.candidate.gender)}
                   </span>
                 </div>
 
                 <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Date of birth</span>
+                  <span className="text-muted-foreground">Date of birth</span>
                   <span className="font-medium">
                     {application.candidate.dateOfBirth ?? "-"}
                   </span>
                 </div>
 
                 <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Place of birth</span>
+                  <span className="text-muted-foreground">Place of birth</span>
                   <span className="font-medium">
                     {application.candidate.placeOfBirth ?? "-"}
                   </span>
                 </div>
 
                 <div>
-                  <div className="text-slate-500">Previous school</div>
+                  <div className="text-muted-foreground">Previous school</div>
                   <div className="font-medium">
                     {application.candidate.previousSchoolName ?? "-"}
                   </div>
-                  <div className="text-slate-600">
+                  <div className="text-muted-foreground">
                     {application.candidate.previousSchoolAddress ?? ""}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <h3 className="font-semibold text-foreground">
                 Parent / Guardian
               </h3>
 
               <div className="mt-4 space-y-2 text-sm">
                 <div>
-                  <div className="text-slate-500">Name</div>
+                  <div className="text-muted-foreground">Name</div>
                   <div className="font-medium">
                     {application.parent.fullName ?? "-"}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-slate-500">Phone</div>
+                  <div className="text-muted-foreground">Phone</div>
                   <div className="font-medium">
                     {application.parent.phone ?? "-"}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-slate-500">Email</div>
+                  <div className="text-muted-foreground">Email</div>
                   <div className="font-medium">
                     {application.parent.email ?? "-"}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-slate-500">Profession</div>
+                  <div className="text-muted-foreground">Profession</div>
                   <div className="font-medium">
                     {application.parent.profession ?? "-"}
                   </div>
@@ -385,21 +385,21 @@ export function AdmissionDetailClient({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <h3 className="font-semibold text-foreground">
                 Emergency Contact
               </h3>
 
               <div className="mt-4 space-y-2 text-sm">
                 <div>
-                  <div className="text-slate-500">Name</div>
+                  <div className="text-muted-foreground">Name</div>
                   <div className="font-medium">
                     {application.emergencyContact.name ?? "-"}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-slate-500">Phone</div>
+                  <div className="text-muted-foreground">Phone</div>
                   <div className="font-medium">
                     {application.emergencyContact.phone ?? "-"}
                   </div>
@@ -408,38 +408,38 @@ export function AdmissionDetailClient({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="font-semibold text-slate-900">Documents</h3>
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <h3 className="font-semibold text-foreground">Documents</h3>
 
             <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
+              <div className="flex justify-between rounded-xl border border-border p-3 text-sm">
                 <span>Photo</span>
                 {documentBadge(application.documents.photoReceived)}
               </div>
 
-              <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
+              <div className="flex justify-between rounded-xl border border-border p-3 text-sm">
                 <span>Birth certificate</span>
                 {documentBadge(application.documents.birthCertificateReceived)}
               </div>
 
-              <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
+              <div className="flex justify-between rounded-xl border border-border p-3 text-sm">
                 <span>Vaccination card</span>
                 {documentBadge(application.documents.vaccinationCardReceived)}
               </div>
 
-              <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
+              <div className="flex justify-between rounded-xl border border-border p-3 text-sm">
                 <span>Previous school record</span>
                 {documentBadge(
                   application.documents.previousSchoolRecordReceived,
                 )}
               </div>
 
-              <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
+              <div className="flex justify-between rounded-xl border border-border p-3 text-sm">
                 <span>Parent ID document</span>
                 {documentBadge(application.documents.parentIdDocumentReceived)}
               </div>
 
-              <div className="flex justify-between rounded-xl border border-slate-200 p-3 text-sm">
+              <div className="flex justify-between rounded-xl border border-border p-3 text-sm">
                 <span>Conduct certificate</span>
                 {documentBadge(
                   application.documents.conductCertificateReceived,
@@ -449,11 +449,11 @@ export function AdmissionDetailClient({
           </div>
 
           {application.notes ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <h3 className="font-semibold text-foreground">
                 Administrative Notes
               </h3>
-              <p className="mt-3 text-sm text-slate-600">{application.notes}</p>
+              <p className="mt-3 text-sm text-muted-foreground">{application.notes}</p>
             </div>
           ) : null}
 

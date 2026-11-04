@@ -182,13 +182,13 @@ export function AdmissionExamPanelClient({
   const locked = Boolean(convertedStudentId);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Examen d’admission
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Planifier l’examen, saisir les resultats et enregistrer la decision.
           </p>
 
@@ -213,7 +213,7 @@ export function AdmissionExamPanelClient({
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             {open ? "Close" : exam ? "Update Exam" : "Schedule Exam"}
           </button>
@@ -221,9 +221,9 @@ export function AdmissionExamPanelClient({
       </div>
 
       {exam ? (
-        <div className="mt-4 grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm md:grid-cols-3">
+        <div className="mt-4 grid gap-3 rounded-2xl bg-surface p-4 text-sm md:grid-cols-3">
           <div>
-            <div className="text-slate-500">Date</div>
+            <div className="text-muted-foreground">Date</div>
             <div className="font-medium">
               {exam.scheduledAt
                 ? new Date(exam.scheduledAt).toLocaleString()
@@ -232,57 +232,57 @@ export function AdmissionExamPanelClient({
           </div>
 
           <div>
-            <div className="text-slate-500">Location</div>
+            <div className="text-muted-foreground">Location</div>
             <div className="font-medium">{exam.location ?? "-"}</div>
           </div>
 
           <div>
-            <div className="text-slate-500">Supervisor</div>
+            <div className="text-muted-foreground">Supervisor</div>
             <div className="font-medium">{exam.supervisorName ?? "-"}</div>
           </div>
 
           <div>
-            <div className="text-slate-500">Total</div>
+            <div className="text-muted-foreground">Total</div>
             <div className="font-medium">
               {exam.totalScore ?? "-"} / {exam.maxScore}
             </div>
           </div>
 
           <div>
-            <div className="text-slate-500">Decision</div>
+            <div className="text-muted-foreground">Decision</div>
             <div className="font-medium">
               {decisionLabel(exam.decisionStatus)}
             </div>
           </div>
 
           <div>
-            <div className="text-slate-500">Notes</div>
+            <div className="text-muted-foreground">Notes</div>
             <div className="font-medium">{exam.notes ?? "-"}</div>
           </div>
         </div>
       ) : (
-        <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+        <div className="mt-4 rounded-xl bg-warning-subtle p-3 text-sm text-warning">
           Aucun examen n’est encore planifie pour cette demande.
         </div>
       )}
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {open && !locked ? (
-        <div className="mt-5 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-5 space-y-4 rounded-2xl border border-border bg-surface p-4">
           <div className="grid gap-4 md:grid-cols-2">
             <select
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               value={examStatus}
               onChange={(event) => setExamStatus(event.target.value)}
             >
@@ -294,68 +294,68 @@ export function AdmissionExamPanelClient({
 
             <input
               type="datetime-local"
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               value={scheduledAt}
               onChange={(event) => setScheduledAt(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="Salle / lieu"
               value={location}
               onChange={(event) => setLocation(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="Surveillant / responsable"
               value={supervisorName}
               onChange={(event) => setSupervisorName(event.target.value)}
             />
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <div className="font-semibold text-slate-900">Resultats</div>
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="font-semibold text-foreground">Resultats</div>
 
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Francais"
                 value={frenchScore}
                 onChange={(event) => setFrenchScore(event.target.value)}
               />
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Mathematiques"
                 value={mathScore}
                 onChange={(event) => setMathScore(event.target.value)}
               />
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Anglais"
                 value={englishScore}
                 onChange={(event) => setEnglishScore(event.target.value)}
               />
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Culture generale"
                 value={generalScore}
                 onChange={(event) => setGeneralScore(event.target.value)}
               />
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Entretien"
                 value={interviewScore}
                 onChange={(event) => setInterviewScore(event.target.value)}
               />
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Total"
                 value={totalScore}
                 onChange={(event) => setTotalScore(event.target.value)}
               />
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Max score"
                 value={maxScore}
                 onChange={(event) => setMaxScore(event.target.value)}
@@ -364,7 +364,7 @@ export function AdmissionExamPanelClient({
           </div>
 
           <select
-            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
             value={decisionStatus}
             onChange={(event) => setDecisionStatus(event.target.value)}
           >
@@ -375,7 +375,7 @@ export function AdmissionExamPanelClient({
             <option value="REJECTED">Refuse</option>
           </select>
 
-          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+          <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
             <input
               type="checkbox"
               checked={syncAdmissionStatus}
@@ -385,7 +385,7 @@ export function AdmissionExamPanelClient({
           </label>
 
           <textarea
-            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
             placeholder="Notes examen"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
@@ -395,7 +395,7 @@ export function AdmissionExamPanelClient({
             type="button"
             disabled={saving}
             onClick={saveExam}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Exam"}
           </button>

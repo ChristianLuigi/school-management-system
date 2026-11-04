@@ -97,21 +97,21 @@ function KpiCard({
   tone: "blue" | "green" | "amber" | "red" | "slate";
 }) {
   const iconClass = {
-    blue: "bg-blue-50 text-blue-700",
-    green: "bg-emerald-50 text-emerald-700",
-    amber: "bg-amber-50 text-amber-700",
-    red: "bg-red-50 text-red-700",
-    slate: "bg-slate-100 text-slate-700",
+    blue: "bg-info-subtle text-info",
+    green: "bg-success-subtle text-success",
+    amber: "bg-warning-subtle text-warning",
+    red: "bg-danger-subtle text-danger",
+    slate: "bg-surface-muted text-foreground",
   }[tone];
 
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm">
       <span className={`shrink-0 rounded-xl p-3 ${iconClass}`}>
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <div className="min-w-0">
-        <div className="truncate text-xl font-bold text-slate-950">{value}</div>
-        <div className="truncate text-sm text-slate-500">{label}</div>
+        <div className="truncate text-xl font-bold text-foreground">{value}</div>
+        <div className="truncate text-sm text-muted-foreground">{label}</div>
       </div>
     </div>
   );
@@ -186,21 +186,21 @@ export function FinanceCommandCenterClient({ schoolId }: { schoolId: string }) {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/finance/cashier"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary"
           >
             <Banknote className="h-4 w-4" aria-hidden="true" />
             {t("finance.collectPayment")}
           </Link>
           <Link
             href="/finance/billing"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-blue-700"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm transition hover:border-info/40 hover:text-info"
           >
             <ReceiptText className="h-4 w-4" aria-hidden="true" />
             {t("finance.runBilling")}
           </Link>
           <Link
             href="/finance/corrections"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:text-blue-700"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-sm transition hover:border-info/40 hover:text-info"
           >
             <RotateCcw className="h-4 w-4" aria-hidden="true" />
             {t("finance.corrections")}
@@ -212,7 +212,7 @@ export function FinanceCommandCenterClient({ schoolId }: { schoolId: string }) {
           disabled={loading}
           title={t("common.refresh")}
           aria-label={t("common.refresh")}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground shadow-sm transition hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
         >
           <RefreshCw
             className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
@@ -222,7 +222,7 @@ export function FinanceCommandCenterClient({ schoolId }: { schoolId: string }) {
       </div>
 
       {error ? (
-        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800">
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-danger">
           <span className="flex items-center gap-2 text-sm font-medium">
             <TriangleAlert className="h-4 w-4" aria-hidden="true" />
             {error}
@@ -230,7 +230,7 @@ export function FinanceCommandCenterClient({ schoolId }: { schoolId: string }) {
           <button
             type="button"
             onClick={() => void loadDashboard()}
-            className="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white"
+            className="rounded-lg bg-danger px-3 py-2 text-sm font-semibold text-solid-foreground"
           >
             {t("finance.retry")}
           </button>
@@ -240,7 +240,7 @@ export function FinanceCommandCenterClient({ schoolId }: { schoolId: string }) {
       {!dashboard && loading ? (
         <div className="grid animate-pulse gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-24 rounded-2xl bg-slate-100" />
+            <div key={index} className="h-24 rounded-2xl bg-surface-muted" />
           ))}
         </div>
       ) : null}
@@ -279,136 +279,136 @@ export function FinanceCommandCenterClient({ schoolId }: { schoolId: string }) {
             />
           </div>
 
-          <div className="flex flex-wrap gap-2 text-sm text-slate-600">
-            <span className="rounded-full bg-slate-100 px-3 py-1.5">
+          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+            <span className="rounded-full bg-surface-muted px-3 py-1.5">
               {t("finance.invoices")}: <strong>{dashboard.totals.invoiceCount}</strong>
             </span>
-            <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-emerald-700">
+            <span className="rounded-full bg-success-subtle px-3 py-1.5 text-success">
               {t("finance.paid")}: <strong>{dashboard.totals.paidInvoiceCount}</strong>
             </span>
-            <span className="rounded-full bg-blue-50 px-3 py-1.5 text-blue-700">
+            <span className="rounded-full bg-info-subtle px-3 py-1.5 text-info">
               {t("finance.payments")}: <strong>{dashboard.totals.paymentCount}</strong>
             </span>
           </div>
 
           <div className="grid gap-5 xl:grid-cols-2">
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+              <header className="flex items-center justify-between border-b border-border px-5 py-4">
                 <div className="flex items-center gap-3">
-                  <span className="rounded-xl bg-blue-50 p-2 text-blue-700">
+                  <span className="rounded-xl bg-info-subtle p-2 text-info">
                     <ReceiptText className="h-5 w-5" aria-hidden="true" />
                   </span>
-                  <h2 className="font-semibold text-slate-950">
+                  <h2 className="font-semibold text-foreground">
                     {t("finance.recentInvoices")}
                   </h2>
                 </div>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                   {dashboard.recentInvoices.length}
                 </span>
               </header>
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-border">
                 {dashboard.recentInvoices.map((invoice) => (
                   <article key={invoice.id} className="px-5 py-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Link href={`/finance/invoices/${invoice.id}`} className="truncate font-semibold text-slate-950 hover:text-blue-700">
+                          <Link href={`/finance/invoices/${invoice.id}`} className="truncate font-semibold text-foreground hover:text-info">
                             {invoice.invoiceNumber ?? t("finance.invoice")}
                           </Link>
                           <SchoolBadge tone={invoiceTone(invoice.invoiceStatus)}>
                             {statusLabel(invoice.invoiceStatus)}
                           </SchoolBadge>
                         </div>
-                        <Link href={`/students/${invoice.student.id}`} className="mt-1 block truncate text-sm text-slate-500 hover:text-blue-700">
+                        <Link href={`/students/${invoice.student.id}`} className="mt-1 block truncate text-sm text-muted-foreground hover:text-info">
                           {studentName(invoice.student)}
                           {invoice.student.studentCode ? ` · ${invoice.student.studentCode}` : ""}
                         </Link>
-                        <div className="mt-1 text-xs text-slate-400">
+                        <div className="mt-1 text-xs text-muted-foreground">
                           {date(invoice.issueDate ?? invoice.createdAt)}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-slate-950">
+                        <div className="font-bold text-foreground">
                           {money(invoice.totalAmount, invoice.currencyCode)}
                         </div>
                         {invoice.balanceDue > 0 ? (
-                          <div className="mt-1 text-xs font-medium text-amber-700">
+                          <div className="mt-1 text-xs font-medium text-warning">
                             {t("finance.balance")}: {money(invoice.balanceDue, invoice.currencyCode)}
                           </div>
                         ) : null}
                       </div>
                     </div>
                     <div className="mt-3 flex justify-end gap-2 print:hidden">
-                      <Link href={`/finance/invoices/${invoice.id}`} title={t("finance.open")} aria-label={t("finance.open")} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+                      <Link href={`/finance/invoices/${invoice.id}`} title={t("finance.open")} aria-label={t("finance.open")} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-surface hover:text-info">
                         <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                       </Link>
-                      <Link href={`/finance/invoices/${invoice.id}/thermal?autoprint=1`} title={t("finance.thermalPrint")} aria-label={t("finance.thermalPrint")} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+                      <Link href={`/finance/invoices/${invoice.id}/thermal?autoprint=1`} title={t("finance.thermalPrint")} aria-label={t("finance.thermalPrint")} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-surface hover:text-info">
                         <Printer className="h-4 w-4" aria-hidden="true" />
                       </Link>
                     </div>
                   </article>
                 ))}
                 {!dashboard.recentInvoices.length ? (
-                  <div className="py-10 text-center text-sm text-slate-500">
+                  <div className="py-10 text-center text-sm text-muted-foreground">
                     {t("finance.noInvoices")}
                   </div>
                 ) : null}
               </div>
             </section>
 
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+              <header className="flex items-center justify-between border-b border-border px-5 py-4">
                 <div className="flex items-center gap-3">
-                  <span className="rounded-xl bg-emerald-50 p-2 text-emerald-700">
+                  <span className="rounded-xl bg-success-subtle p-2 text-success">
                     <Banknote className="h-5 w-5" aria-hidden="true" />
                   </span>
-                  <h2 className="font-semibold text-slate-950">
+                  <h2 className="font-semibold text-foreground">
                     {t("finance.recentPayments")}
                   </h2>
                 </div>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                   {dashboard.recentPayments.length}
                 </span>
               </header>
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-border">
                 {dashboard.recentPayments.map((payment) => (
                   <article key={payment.id} className="px-5 py-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Link href={`/finance/payments/${payment.id}/receipt`} className="truncate font-semibold text-slate-950 hover:text-blue-700">
+                          <Link href={`/finance/payments/${payment.id}/receipt`} className="truncate font-semibold text-foreground hover:text-info">
                             {payment.paymentNumber ?? t("finance.payment")}
                           </Link>
                           <SchoolBadge tone={paymentTone(payment.paymentStatus)}>
                             {statusLabel(payment.paymentStatus)}
                           </SchoolBadge>
                         </div>
-                        <Link href={`/students/${payment.student.id}`} className="mt-1 block truncate text-sm text-slate-500 hover:text-blue-700">
+                        <Link href={`/students/${payment.student.id}`} className="mt-1 block truncate text-sm text-muted-foreground hover:text-info">
                           {studentName(payment.student)}
                           {payment.student.studentCode ? ` · ${payment.student.studentCode}` : ""}
                         </Link>
-                        <div className="mt-1 text-xs text-slate-400">
+                        <div className="mt-1 text-xs text-muted-foreground">
                           {[date(payment.paidAt ?? payment.createdAt), payment.paymentMethod]
                             .filter(Boolean)
                             .join(" · ")}
                         </div>
                       </div>
-                      <div className="text-right font-bold text-slate-950">
+                      <div className="text-right font-bold text-foreground">
                         {money(payment.amount, payment.currencyCode)}
                       </div>
                     </div>
                     <div className="mt-3 flex justify-end gap-2 print:hidden">
-                      <Link href={`/finance/payments/${payment.id}/receipt`} title={t("finance.printReceipt")} aria-label={t("finance.printReceipt")} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+                      <Link href={`/finance/payments/${payment.id}/receipt`} title={t("finance.printReceipt")} aria-label={t("finance.printReceipt")} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-surface hover:text-info">
                         <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                       </Link>
-                      <Link href={`/finance/payments/${payment.id}/receipt/thermal?autoprint=1`} title={t("finance.thermalPrint")} aria-label={t("finance.thermalPrint")} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-700">
+                      <Link href={`/finance/payments/${payment.id}/receipt/thermal?autoprint=1`} title={t("finance.thermalPrint")} aria-label={t("finance.thermalPrint")} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-surface hover:text-info">
                         <Printer className="h-4 w-4" aria-hidden="true" />
                       </Link>
                     </div>
                   </article>
                 ))}
                 {!dashboard.recentPayments.length ? (
-                  <div className="py-10 text-center text-sm text-slate-500">
+                  <div className="py-10 text-center text-sm text-muted-foreground">
                     {t("finance.noPayments")}
                   </div>
                 ) : null}

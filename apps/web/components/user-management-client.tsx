@@ -257,15 +257,15 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
 
   return (
     <div className="space-y-6">
-      {roleCode === "SCHOOL_ADMIN" && <p role="note" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">{locale === "fr" ? "Accès complet à l’école, y compris les utilisateurs et l’approbation de la paie." : "Full school access, including user management and payroll approval."}</p>}
+      {roleCode === "SCHOOL_ADMIN" && <p role="note" className="rounded-xl bg-warning-subtle p-3 text-sm text-warning">{locale === "fr" ? "Accès complet à l’école, y compris les utilisateurs et l’approbation de la paie." : "Full school access, including user management and payroll approval."}</p>}
       <form
         onSubmit={inviteUser}
-        className="rounded-2xl border border-slate-200 bg-white p-5"
+        className="rounded-2xl border border-border bg-surface p-5"
       >
-        <h2 className="text-lg font-semibold text-slate-950">
+        <h2 className="text-lg font-semibold text-foreground">
           {t("users.management.inviteUser")}
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           {t("users.management.inviteDescription")}
         </p>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -293,7 +293,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
               onChange={(event) =>
                 setRoleCode(event.target.value as typeof roleCode)
               }
-              className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+              className="mt-1 w-full rounded-xl border border-input px-3 py-2"
             >
               {ROLES.map((role) => (
                 <option key={role} value={role}>
@@ -311,7 +311,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
               onChange={(event) =>
                 setInviteLocale(event.target.value as "fr" | "en")
               }
-              className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+              className="mt-1 w-full rounded-xl border border-input px-3 py-2"
             >
               <option value="fr">Français</option>
               <option value="en">English</option>
@@ -345,7 +345,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
                 required
                 value={guardianId}
                 onChange={(event) => setGuardianId(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 <option value="">{t("users.management.selectGuardian")}</option>
                 {guardians.map((guardian) => (
@@ -362,7 +362,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
           )}
         </div>
         {roleCode === "FINANCE_ADMIN" && (
-          <fieldset className="mt-5 rounded-xl border border-slate-200 p-4">
+          <fieldset className="mt-5 rounded-xl border border-border p-4">
             <legend className="px-2 text-sm font-semibold">
               {t("users.management.financePermissions")}
             </legend>
@@ -378,14 +378,14 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
                 </label>
               ))}
             </div>
-            <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-muted-foreground">
               {t("users.management.payrollNotDefault")}
             </p>
           </fieldset>
         )}
         <button
           disabled={submitting}
-          className="mt-5 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          className="mt-5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
           {t(
             submitting
@@ -395,23 +395,23 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
         </button>
       </form>
       {message && (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       )}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       )}
-      <div className="rounded-2xl border border-slate-200 bg-white">
-        <div className="flex border-b border-slate-200 p-2">
+      <div className="rounded-2xl border border-border bg-surface">
+        <div className="flex border-b border-border p-2">
           {(["users", "invitations"] as const).map((name) => (
             <button
               key={name}
               type="button"
               onClick={() => setTab(name)}
-              className={`rounded-xl px-4 py-2 text-sm font-medium ${tab === name ? "bg-slate-950 text-white" : "text-slate-600"}`}
+              className={`rounded-xl px-4 py-2 text-sm font-medium ${tab === name ? "bg-primary text-solid-foreground" : "text-muted-foreground"}`}
             >
               {t(`users.management.${name}Tab`)} · {data[name].length}
             </button>
@@ -419,25 +419,25 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
         </div>
         <div className="space-y-3 p-5">
           {loading && (
-            <div className="text-sm text-slate-500">{t("common.loading")}</div>
+            <div className="text-sm text-muted-foreground">{t("common.loading")}</div>
           )}
           {tab === "users"
             ? <PaginatedCollection items={data.users}>{(user) => (
                 <div
                   key={user.id}
-                  className="rounded-2xl border border-slate-200 p-4"
+                  className="rounded-2xl border border-border p-4"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <div className="font-semibold text-slate-950">
+                      <div className="font-semibold text-foreground">
                         {[user.firstName, user.lastName]
                           .filter(Boolean)
                           .join(" ") || user.email}
                       </div>
-                      <div className="mt-1 text-sm text-slate-600">
+                      <div className="mt-1 text-sm text-muted-foreground">
                         {user.email}
                       </div>
-                      <div className="mt-2 text-xs text-slate-500">
+                      <div className="mt-2 text-xs text-muted-foreground">
                         {t(
                           user.emailVerifiedAt
                             ? "users.management.verified"
@@ -453,11 +453,11 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
                           key={`${membership.membershipId}-${membership.roleCode}`}
                           className="flex items-center justify-end gap-2"
                         >
-                          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                          <span className="rounded-full bg-info-subtle px-3 py-1 text-xs font-medium text-info">
                             {roleLabel(membership.roleCode)}
                           </span>
                           <span
-                            className={`rounded-full px-3 py-1 text-xs font-medium ${membership.membershipStatus === "ACTIVE" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}`}
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${membership.membershipStatus === "ACTIVE" ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning"}`}
                           >
                             {t(
                               membership.membershipStatus === "ACTIVE"
@@ -488,7 +488,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
                                   { schoolId, membershipStatus: next },
                                 );
                               }}
-                              className="rounded-lg border border-slate-300 px-3 py-1 text-xs"
+                              className="rounded-lg border border-input px-3 py-1 text-xs"
                             >
                               {t(
                                 membership.membershipStatus === "ACTIVE"
@@ -506,22 +506,22 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
             : <PaginatedCollection items={data.invitations}>{(invitation) => (
                 <div
                   key={invitation.id}
-                  className="rounded-2xl border border-slate-200 p-4"
+                  className="rounded-2xl border border-border p-4"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <div className="font-semibold text-slate-950">
+                      <div className="font-semibold text-foreground">
                         {invitation.email}
                       </div>
-                      <div className="mt-1 text-sm text-slate-600">
+                      <div className="mt-1 text-sm text-muted-foreground">
                         {roleLabel(invitation.roleCode)}
                       </div>
-                      <div className="mt-2 text-xs text-slate-500">
+                      <div className="mt-2 text-xs text-muted-foreground">
                         {invitationStatus(invitation.status)} ·{" "}
                         {formatDate(invitation.expiresAt)}
                       </div>
                       {invitation.deliveryFailed && (
-                        <div className="mt-2 text-xs font-medium text-red-700">
+                        <div className="mt-2 text-xs font-medium text-danger">
                           {t("users.management.emailDeliveryFailed")}
                         </div>
                       )}
@@ -538,7 +538,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
                               { invitationId: invitation.id },
                             )
                           }
-                          className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs"
+                          className="rounded-lg border border-input px-3 py-1.5 text-xs"
                         >
                           {t("users.management.resend")}
                         </button>
@@ -556,7 +556,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
                                 invitation.id,
                               );
                           }}
-                          className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700"
+                          className="rounded-lg border border-danger/40 px-3 py-1.5 text-xs text-danger"
                         >
                           {t("users.management.revoke")}
                         </button>
@@ -569,7 +569,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
             !(tab === "users"
               ? data.users.length
               : data.invitations.length) && (
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-muted-foreground">
                 {t(
                   tab === "users"
                     ? "users.management.noUsers"
@@ -604,7 +604,7 @@ function Field({
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+        className="mt-1 w-full rounded-xl border border-input px-3 py-2"
       />
     </label>
   );

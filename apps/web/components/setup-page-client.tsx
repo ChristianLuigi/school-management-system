@@ -144,7 +144,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl bg-surface text-foreground p-4 shadow-sm ring-1 ring-slate-200">
+          <div className="rounded-2xl bg-surface text-foreground p-4 shadow-sm ring-1 ring-ring">
             {fr ? "Vérification…" : "Checking setup…"}
           </div>
         ) : null}
@@ -162,7 +162,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
         ) : null}
 
         {status ? (
-          <div className="rounded-2xl bg-surface text-foreground p-5 shadow-sm ring-1 ring-slate-200">
+          <div className="rounded-2xl bg-surface text-foreground p-5 shadow-sm ring-1 ring-ring">
             <h3 className="text-lg font-semibold">{fr ? "Configuration actuelle" : "Current configuration"}</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-5">
               <div className="rounded-xl bg-surface-muted p-4">
@@ -188,7 +188,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
             </div>
 
             {status.counts.gradeLevels === 0 || status.counts.sections === 0 ? (
-              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              <div className="mt-4 rounded-xl border border-warning/40 bg-warning-subtle p-3 text-sm text-warning">
                 {fr ? "Structure académique à compléter dans Académie." : "Complete the academic structure in Academics."}
               </div>
             ) : null}
@@ -197,8 +197,8 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
               <span
                 className={`rounded-full px-3 py-2 text-sm font-medium ${
                   status.isComplete
-                    ? "bg-green-100 text-success"
-                    : "bg-amber-100 text-amber-700"
+                    ? "bg-success-subtle text-success"
+                    : "bg-warning-subtle text-warning"
                 }`}
               >
                 {status.isComplete ? (fr ? "Initialisation terminée" : "Initialization complete") : (fr ? "Configuration à compléter" : "Configuration incomplete")}
@@ -213,7 +213,7 @@ export function SetupPageClient({ schoolId }: { schoolId: string }) {
         </div> : null}
         {canBootstrapSchool(status) && !loading ? <form
           onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl bg-surface text-foreground p-5 shadow-sm ring-1 ring-slate-200"
+          className="space-y-4 rounded-2xl bg-surface text-foreground p-5 shadow-sm ring-1 ring-ring"
         >
           <h3 className="text-lg font-semibold">{fr ? "Créer la première année" : "Create the first academic year"}</h3>
           <p className="text-sm text-muted-foreground">{fr ? "Trois périodes consécutives seront réparties sur les dates choisies. Vous pourrez les ajuster dans Académie." : "Three consecutive periods will be distributed across the selected dates. You can adjust them in Academics."}</p>

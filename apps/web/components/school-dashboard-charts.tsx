@@ -66,14 +66,14 @@ function Panel({
 }) {
   const { t } = useI18n();
   return (
-    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="min-w-0 rounded-2xl border border-border bg-surface p-5 shadow-sm">
       <header className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-slate-950">{title}</h2>
+        <h2 className="font-semibold text-foreground">{title}</h2>
         <Link
           href={href}
           title={title}
           aria-label={title}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </Link>
@@ -81,12 +81,12 @@ function Panel({
       {!state ? (
         <div
           role="status"
-          className="h-56 rounded-xl bg-slate-50 motion-safe:animate-pulse"
+          className="h-56 rounded-xl bg-surface motion-safe:animate-pulse"
         >
           <span className="sr-only">{t("common.loading")}</span>
         </div>
       ) : state.error ? (
-        <p role="alert" className="py-16 text-center text-sm text-slate-500">
+        <p role="alert" className="py-16 text-center text-sm text-muted-foreground">
           {t("dashboard.chartUnavailable")}
         </p>
       ) : (
@@ -159,7 +159,7 @@ export function SchoolDashboardCharts({
           state={academic}
         >
           {academic?.data?.academicYear ? (
-            <p className="mb-4 text-xs text-slate-500">
+            <p className="mb-4 text-xs text-muted-foreground">
               {name(academic.data.academicYear.nameI18n, "")}
             </p>
           ) : null}
@@ -171,19 +171,19 @@ export function SchoolDashboardCharts({
               {sections.map((section) => (
                 <li key={section.id}>
                   <div className="mb-1.5 flex items-start justify-between gap-3 text-sm">
-                    <span className="min-w-0 text-slate-600">
+                    <span className="min-w-0 text-muted-foreground">
                       {name(section.nameI18n, section.code)}
                     </span>
-                    <span className="font-semibold text-slate-950 tabular-nums">
+                    <span className="font-semibold text-foreground tabular-nums">
                       {format(section.studentCount)}
                     </span>
                   </div>
                   <div
                     aria-hidden="true"
-                    className="h-3 overflow-hidden rounded-full bg-slate-100"
+                    className="h-3 overflow-hidden rounded-full bg-surface-muted"
                   >
                     <div
-                      className="h-full rounded-full bg-blue-600"
+                      className="h-full rounded-full bg-primary"
                       style={{
                         width: `${(100 * section.studentCount) / maxStudents}%`,
                       }}
@@ -193,7 +193,7 @@ export function SchoolDashboardCharts({
               ))}
             </ul>
           ) : (
-            <p className="py-16 text-center text-sm text-slate-500">
+            <p className="py-16 text-center text-sm text-muted-foreground">
               {t("dashboard.noSectionData")}
             </p>
           )}
@@ -246,10 +246,10 @@ export function SchoolDashboardCharts({
                     })}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold text-slate-950 tabular-nums">
+                    <span className="text-3xl font-bold text-foreground tabular-nums">
                       {format(attendanceTotal)}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-muted-foreground">
                       {t("dashboard.records")}
                     </span>
                   </div>
@@ -268,22 +268,22 @@ export function SchoolDashboardCharts({
                         className="h-2.5 w-2.5 rounded-full"
                         style={{ backgroundColor: item.color }}
                       />
-                      <span className="flex-1 text-slate-600">
+                      <span className="flex-1 text-muted-foreground">
                         {item.label}
                       </span>
-                      <strong className="ml-3 text-slate-950 tabular-nums">
+                      <strong className="ml-3 text-foreground tabular-nums">
                         {format(attendance?.data?.totals[item.key] ?? 0)}
                       </strong>
                     </li>
                   ))}
                 </ul>
               </div>
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-muted-foreground">
                 {t("dashboard.sessionRecordsNote")}
               </p>
             </>
           ) : (
-            <p className="py-16 text-center text-sm text-slate-500">
+            <p className="py-16 text-center text-sm text-muted-foreground">
               {t("dashboard.noAttendanceData")}
             </p>
           )}
@@ -304,17 +304,17 @@ export function SchoolDashboardCharts({
                     {
                       label: t("finance.totalInvoiced"),
                       value: currency.totalInvoiced,
-                      color: "bg-blue-600",
+                      color: "bg-primary",
                     },
                     {
                       label: t("finance.totalCollected"),
                       value: currency.totalPaid,
-                      color: "bg-emerald-600",
+                      color: "bg-success",
                     },
                     {
                       label: t("finance.outstanding"),
                       value: currency.totalBalanceDue,
-                      color: "bg-amber-500",
+                      color: "bg-warning",
                     },
                   ];
                   const max = Math.max(
@@ -323,17 +323,17 @@ export function SchoolDashboardCharts({
                   );
                   return (
                     <div key={currency.currencyCode}>
-                      <h3 className="mb-4 text-sm font-bold text-slate-950">
+                      <h3 className="mb-4 text-sm font-bold text-foreground">
                         {currency.currencyCode}
                       </h3>
                       <ul className="space-y-4">
                         {items.map((item) => (
                           <li key={item.label}>
                             <div className="mb-1.5 flex flex-wrap justify-between gap-2 text-sm">
-                              <span className="text-slate-600">
+                              <span className="text-muted-foreground">
                                 {item.label}
                               </span>
-                              <strong className="text-slate-950 tabular-nums">
+                              <strong className="text-foreground tabular-nums">
                                 {new Intl.NumberFormat(
                                   locale === "fr" ? "fr-HT" : "en-US",
                                   {
@@ -345,7 +345,7 @@ export function SchoolDashboardCharts({
                             </div>
                             <div
                               aria-hidden="true"
-                              className="h-3 overflow-hidden rounded-full bg-slate-100"
+                              className="h-3 overflow-hidden rounded-full bg-surface-muted"
                             >
                               <div
                                 className={`h-full rounded-full ${item.color}`}
@@ -362,12 +362,12 @@ export function SchoolDashboardCharts({
                 })}
               </div>
             ) : (
-              <p className="py-12 text-center text-sm text-slate-500">
+              <p className="py-12 text-center text-sm text-muted-foreground">
                 {t("finance.noInvoices")}
               </p>
             )}
             {finance?.data?.moneyByCurrency.length ? (
-              <p className="mt-5 text-xs text-slate-500">
+              <p className="mt-5 text-xs text-muted-foreground">
                 {t("dashboard.currencyScaleNote")}
               </p>
             ) : null}

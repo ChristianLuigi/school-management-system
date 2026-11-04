@@ -190,7 +190,7 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+              className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 active
                   ? "bg-sidebar-accent text-sidebar-foreground"
                   : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"

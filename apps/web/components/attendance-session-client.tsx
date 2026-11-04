@@ -315,11 +315,11 @@ export function AttendanceSessionClient({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="flex items-center gap-2 font-semibold text-slate-950">
+      <section className="rounded-2xl border border-border bg-surface p-5">
+        <h2 className="flex items-center gap-2 font-semibold text-foreground">
           <ClipboardCheck
             aria-hidden="true"
-            className="h-5 w-5 text-blue-700"
+            className="h-5 w-5 text-info"
           />
           {t("attendance.dailyAttendance")}
         </h2>
@@ -346,22 +346,22 @@ export function AttendanceSessionClient({
                 : t("attendance.myClasses")
             }
           />
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground">
             {t("attendance.date")}
             <input
               type="date"
               required
-              className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3 py-2 focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="mt-1 min-h-11 w-full rounded-xl border border-input px-3 py-2 focus-visible:ring-2 focus-visible:ring-ring"
               value={attendanceDate}
               onChange={(event) => {
                 if (confirmDiscard()) setAttendanceDate(event.target.value);
               }}
             />
           </label>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-foreground">
             {t("attendance.slot")}
             <select
-              className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="mt-1 min-h-11 w-full rounded-xl border border-input bg-surface px-3 py-2 focus-visible:ring-2 focus-visible:ring-ring"
               value={slot}
               onChange={(event) => {
                 if (confirmDiscard())
@@ -415,7 +415,7 @@ export function AttendanceSessionClient({
       {loading ? (
         <p
           role="status"
-          className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600"
+          className="rounded-xl bg-surface p-4 text-sm text-muted-foreground"
         >
           {t("attendance.loadingRoster")}
         </p>
@@ -430,16 +430,16 @@ export function AttendanceSessionClient({
       {current && !loading ? (
         <>
           <section
-            className="rounded-2xl border border-slate-200 bg-white p-5"
+            className="rounded-2xl border border-border bg-surface p-5"
             aria-busy={saving}
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="font-semibold text-slate-950">
+                <h3 className="font-semibold text-foreground">
                   {current.section.nameI18n?.[locale] ?? current.section.code} ·{" "}
                   {attendanceDate} · {t(`attendance.${slot.toLowerCase()}`)}
                 </h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {t("attendance.rosterCount", {
                     count: current.students.length,
                   })}
@@ -461,7 +461,7 @@ export function AttendanceSessionClient({
               </button>
             </div>
             {locked ? (
-              <p className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+              <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <LockKeyhole aria-hidden="true" className="h-4 w-4" />
                 {t("attendance.lockedHint")}
               </p>
@@ -483,7 +483,7 @@ export function AttendanceSessionClient({
               <table className="min-w-full text-left text-sm">
                 <caption className="sr-only">{t("attendance.roster")}</caption>
                 <thead>
-                  <tr className="border-b border-slate-200 text-xs uppercase text-slate-500">
+                  <tr className="border-b border-border text-xs uppercase text-muted-foreground">
                     <th scope="col" className="p-3">
                       {t("attendance.student")}
                     </th>
@@ -497,12 +497,12 @@ export function AttendanceSessionClient({
                 </thead>
                 <tbody>
                   {current.students.map((student) => (
-                    <tr key={student.id} className="border-b border-slate-100">
+                    <tr key={student.id} className="border-b border-border">
                       <th scope="row" className="p-3 font-medium">
                         <div>
                           {student.lastName} {student.firstName}
                         </div>
-                        <div className="text-xs font-normal text-slate-500">
+                        <div className="text-xs font-normal text-muted-foreground">
                           {student.studentCode ?? "—"}
                         </div>
                       </th>
@@ -520,14 +520,14 @@ export function AttendanceSessionClient({
                               onClick={() =>
                                 updateRecord(student.id, { status })
                               }
-                              className={`min-h-11 rounded-lg border px-3 py-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-60 ${records[student.id]?.status === status ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"}`}
+                              className={`min-h-11 rounded-lg border px-3 py-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 ${records[student.id]?.status === status ? "border-input bg-primary text-solid-foreground" : "border-input bg-surface text-foreground hover:bg-surface"}`}
                             >
                               {statusLabel(status)}
                             </button>
                           ))}
                         </div>
                         {!records[student.id]?.status ? (
-                          <span className="mt-1 block text-xs text-amber-700">
+                          <span className="mt-1 block text-xs text-warning">
                             {t("attendance.unmarked")}
                           </span>
                         ) : null}
@@ -536,7 +536,7 @@ export function AttendanceSessionClient({
                         <input
                           disabled={!editable}
                           maxLength={1000}
-                          className="min-h-11 w-full min-w-40 rounded-xl border border-slate-300 px-3 py-2 focus-visible:ring-2 focus-visible:ring-blue-600"
+                          className="min-h-11 w-full min-w-40 rounded-xl border border-input px-3 py-2 focus-visible:ring-2 focus-visible:ring-ring"
                           aria-label={`${t("attendance.note")}: ${student.lastName ?? ""} ${student.firstName ?? ""}`}
                           placeholder={t("attendance.noteOptional")}
                           value={records[student.id]?.note ?? ""}
@@ -559,8 +559,8 @@ export function AttendanceSessionClient({
               />
             ) : null}
           </section>
-          <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
-            <div role="status" className="text-sm text-slate-700">
+          <div className="sticky bottom-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-lg">
+            <div role="status" className="text-sm text-foreground">
               {locked
                 ? t("attendance.lockedSession")
                 : counts.UNMARKED

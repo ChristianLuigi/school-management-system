@@ -65,12 +65,12 @@ export function InviteAcceptClient({ token, invitation }: InviteAcceptClientProp
 
   if (accepted) {
     return (
-      <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 text-center space-y-4">
+      <div className="rounded-2xl bg-surface p-8 shadow-sm ring-1 ring-ring text-center space-y-4">
         <div className="text-4xl">🎉</div>
         <h2 className="text-xl font-semibold">Account created!</h2>
-        <p className="text-slate-600">
+        <p className="text-muted-foreground">
           You can now{" "}
-          <a href="/login" className="font-medium text-slate-900 underline underline-offset-2">
+          <a href="/login" className="font-medium text-foreground underline underline-offset-2">
             log in
           </a>{" "}
           with{" "}
@@ -83,9 +83,9 @@ export function InviteAcceptClient({ token, invitation }: InviteAcceptClientProp
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-3">
+      <div className="rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-ring space-y-3">
         <h2 className="text-lg font-semibold">Invitation Details</h2>
-        <div className="grid gap-1 text-sm text-slate-700">
+        <div className="grid gap-1 text-sm text-foreground">
           <div>
             <span className="font-medium">School:</span>{" "}
             {invitation.school.name} ({invitation.school.code})
@@ -114,7 +114,7 @@ export function InviteAcceptClient({ token, invitation }: InviteAcceptClientProp
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-4"
+        className="rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-ring space-y-4"
       >
         <h2 className="text-lg font-semibold">Set Your Password</h2>
 
@@ -124,7 +124,7 @@ export function InviteAcceptClient({ token, invitation }: InviteAcceptClientProp
             type="password"
             required
             minLength={8}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-input px-3 py-2 text-sm"
             placeholder="At least 8 characters"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -138,7 +138,7 @@ export function InviteAcceptClient({ token, invitation }: InviteAcceptClientProp
           <input
             type="password"
             required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-input px-3 py-2 text-sm"
             placeholder="Repeat your password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -146,7 +146,7 @@ export function InviteAcceptClient({ token, invitation }: InviteAcceptClientProp
         </div>
 
         {error ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
             {error}
           </div>
         ) : null}
@@ -154,7 +154,7 @@ export function InviteAcceptClient({ token, invitation }: InviteAcceptClientProp
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
         >
           {submitting ? "Creating account..." : "Accept Invitation"}
         </button>

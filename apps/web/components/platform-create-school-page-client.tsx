@@ -224,7 +224,7 @@ export function PlatformCreateSchoolPageClient() {
         <div className="space-y-4 rounded-2xl border border-success/40 bg-success-subtle p-5">
           <div>
             <div className="text-sm font-medium text-success">{pt("School created successfully")}{" "}</div>
-            <div className="mt-1 text-xl font-bold text-green-900">
+            <div className="mt-1 text-xl font-bold text-success">
               {result.school.name}
             </div>
             <div className="mt-2 flex flex-wrap gap-3 text-sm">
@@ -239,7 +239,7 @@ export function PlatformCreateSchoolPageClient() {
             </div>
           </div>
 
-          <div className="rounded-xl bg-surface text-foreground p-4 ring-1 ring-green-200">
+          <div className="rounded-xl bg-surface text-foreground p-4 ring-1 ring-ring">
             <div className="text-sm font-semibold text-foreground">{pt("First Admin — Login Credentials")}{" "}</div>
             <p className="mt-1 text-xs text-muted-foreground">{pt("Share these with the school admin. They will use them to log in and complete onboarding.")}{" "}</p>
 

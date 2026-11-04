@@ -124,15 +124,15 @@ export function StudentSectionAssignmentPanelClient({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white">
+    <section className="rounded-2xl border border-border bg-surface">
       <div className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="rounded-xl bg-blue-50 p-2.5 text-blue-700">
+          <span className="rounded-xl bg-info-subtle p-2.5 text-info">
             <GraduationCap className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <h3 className="font-semibold text-slate-950">Academic placement</h3>
-            <p className="truncate text-sm text-slate-500">
+            <h3 className="font-semibold text-foreground">Academic placement</h3>
+            <p className="truncate text-sm text-muted-foreground">
               {currentSectionId ? currentSectionLabel : "No class assigned"}
             </p>
           </div>
@@ -147,7 +147,7 @@ export function StudentSectionAssignmentPanelClient({
               setOpen(true);
             }
           }}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground transition hover:bg-surface"
         >
           {open ? (
             <X className="h-4 w-4" />
@@ -159,22 +159,22 @@ export function StudentSectionAssignmentPanelClient({
       </div>
 
       {message ? (
-        <div className="mx-5 mb-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+        <div className="mx-5 mb-5 flex items-center gap-2 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           <CheckCircle2 className="h-4 w-4" />
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="mx-5 mb-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mx-5 mb-5 flex items-center gap-2 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           {error}
         </div>
       ) : null}
 
       {open ? (
-        <div className="space-y-4 border-t border-slate-200 bg-slate-50/70 p-5">
+        <div className="space-y-4 border-t border-border bg-surface/70 p-5">
           {!canPlace ? (
-            <div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="flex gap-2 rounded-xl border border-warning/40 bg-warning-subtle p-3 text-sm text-warning">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               Update the student lifecycle status before assigning a class.
             </div>
@@ -191,12 +191,12 @@ export function StudentSectionAssignmentPanelClient({
           />
 
           {isDifferentSection ? (
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm">
-              <span className="min-w-0 flex-1 truncate text-slate-500">
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 text-sm">
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">
                 {currentSectionId ? currentSectionLabel : "Unassigned"}
               </span>
-              <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
-              <span className="min-w-0 flex-1 truncate font-semibold text-slate-900">
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate font-semibold text-foreground">
                 {selectedSection
                   ? sectionOptionLabel(selectedSection).split(" · ")[0]
                   : "Select a class"}
@@ -205,7 +205,7 @@ export function StudentSectionAssignmentPanelClient({
           ) : null}
 
           {isTransfer ? (
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-foreground">
               Transfer reason
               <textarea
                 required
@@ -214,14 +214,14 @@ export function StudentSectionAssignmentPanelClient({
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
                 placeholder="Reason for changing the active section"
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               />
             </label>
           ) : null}
 
           {currentStatus === "PRE_REGISTERED" ||
           currentStatus === "REGISTERED" ? (
-            <label className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+            <label className="flex items-start gap-3 rounded-xl border border-info/40 bg-info-subtle p-3 text-sm text-info">
               <input
                 type="checkbox"
                 checked={activateStudent}
@@ -232,7 +232,7 @@ export function StudentSectionAssignmentPanelClient({
                 <span className="block font-semibold">
                   Activate after placement
                 </span>
-                <span className="text-blue-700">
+                <span className="text-info">
                   The student becomes active as soon as the class is saved.
                 </span>
               </span>
@@ -244,7 +244,7 @@ export function StudentSectionAssignmentPanelClient({
               type="button"
               disabled={saving || !canSubmit}
               onClick={() => void assignSection()}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" />

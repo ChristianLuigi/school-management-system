@@ -1,5 +1,8 @@
+"use client";
+
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { useI18n } from "@/components/i18n-provider";
 
 export type PageHeaderProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
   title: ReactNode;
@@ -16,6 +19,7 @@ export function PageHeader({
   className,
   ...props
 }: PageHeaderProps) {
+  const { locale } = useI18n();
   return (
     <header
       className={cn(
@@ -27,7 +31,7 @@ export function PageHeader({
       <div className="min-w-0 flex-1">
         {breadcrumbs ? (
           <nav
-            aria-label="Breadcrumb"
+            aria-label={locale === 'fr' ? 'Fil d’Ariane' : 'Breadcrumb'}
             className="mb-2 text-sm text-muted-foreground"
           >
             {breadcrumbs}
@@ -48,7 +52,7 @@ export function PageHeader({
       {actions ? (
         <div
           role="group"
-          aria-label="Page actions"
+          aria-label={locale === 'fr' ? 'Actions de la page' : 'Page actions'}
           className="flex shrink-0 flex-wrap items-center gap-2"
         >
           {actions}

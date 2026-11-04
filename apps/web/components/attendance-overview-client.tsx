@@ -94,13 +94,13 @@ export function AttendanceOverviewClient({
   }, [schoolId, attendanceDate, refreshKey]);
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <div className="space-y-5 rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Daily Attendance Overview
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Review completion and attendance status for the selected day.
           </p>
         </div>
@@ -108,7 +108,7 @@ export function AttendanceOverviewClient({
         <div className="flex flex-wrap gap-2">
           <input
             type="date"
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            className="rounded-xl border border-input px-3 py-2 text-sm"
             value={attendanceDate}
             onChange={(e) => setAttendanceDate(e.target.value)}
           />
@@ -116,7 +116,7 @@ export function AttendanceOverviewClient({
           <button
             type="button"
             onClick={loadOverview}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Refresh
           </button>
@@ -124,13 +124,13 @@ export function AttendanceOverviewClient({
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {loading ? (
-        <div className="rounded-xl bg-white p-4 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading attendance overview...
         </div>
       ) : null}
@@ -138,37 +138,37 @@ export function AttendanceOverviewClient({
       {overview ? (
         <>
           <div className="grid gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Completion</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Completion</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.summary.completionPercent}%
               </div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs text-muted-foreground">
                 {overview.summary.completedSessions} /{" "}
                 {overview.summary.expectedSessions} sessions
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Present</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Present</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.totals.present}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Absent</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Absent</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.totals.absent}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="text-sm text-slate-500">Late / Excused</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Late / Excused</div>
               <div className="mt-2 text-3xl font-bold">
                 {overview.totals.late + overview.totals.excused}
               </div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs text-muted-foreground">
                 Late: {overview.totals.late} / Excused:{" "}
                 {overview.totals.excused}
               </div>
@@ -176,14 +176,14 @@ export function AttendanceOverviewClient({
           </div>
 
           <div>
-            <div className="mb-2 flex items-center justify-between text-sm text-slate-600">
+            <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
               <span>Daily completion</span>
               <span>{overview.summary.completionPercent}%</span>
             </div>
 
-            <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+            <div className="h-3 overflow-hidden rounded-full bg-surface-muted">
               <div
-                className="h-full rounded-full bg-slate-900"
+                className="h-full rounded-full bg-primary"
                 style={{
                   width: `${overview.summary.completionPercent}%`,
                 }}
@@ -191,9 +191,9 @@ export function AttendanceOverviewClient({
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+          <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-600">
+              <thead className="bg-surface-muted text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Grade / Section</th>
                   <th className="px-4 py-3">Morning</th>
@@ -205,15 +205,15 @@ export function AttendanceOverviewClient({
                 {<PaginatedCollection items={overview.sectionBreakdown} rows columns={4}>{(section) => (
                   <tr
                     key={section.sectionId}
-                    className="border-t border-slate-200"
+                    className="border-t border-border"
                   >
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-foreground">
                         {section.gradeLevelNameI18n?.fr ??
                           section.gradeLevelCode}{" "}
                         - {section.sectionNameI18n?.fr ?? section.sectionCode}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {section.gradeLevelCode} / {section.sectionCode}
                       </div>
                     </td>
@@ -254,7 +254,7 @@ export function AttendanceOverviewClient({
                   <tr>
                     <td
                       colSpan={4}
-                      className="px-4 py-8 text-center text-slate-500"
+                      className="px-4 py-8 text-center text-muted-foreground"
                     >
                       No active sections found for this school.
                     </td>

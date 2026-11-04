@@ -209,9 +209,9 @@ export function PayrollCompensationEditor({
     lines: CompensationLine[],
   ) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-3">
+      <div className="rounded-xl border border-border bg-surface p-3">
         <div className="flex items-center justify-between gap-3">
-          <div className="text-sm font-medium text-slate-900">{title}</div>
+          <div className="text-sm font-medium text-foreground">{title}</div>
           <button
             type="button"
             onClick={() =>
@@ -220,7 +220,7 @@ export function PayrollCompensationEditor({
                 emptyLine(),
               ])
             }
-            className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs"
+            className="rounded-lg border border-input px-2.5 py-1 text-xs"
           >
             Add line
           </button>
@@ -233,7 +233,7 @@ export function PayrollCompensationEditor({
                 placeholder="Code"
                 value={line.code}
                 onChange={(event) => updateLine(type, index, "code", event.target.value)}
-                className="rounded-lg border border-slate-300 px-2 py-1.5 text-xs md:col-span-3"
+                className="rounded-lg border border-input px-2 py-1.5 text-xs md:col-span-3"
               />
               <input
                 aria-label={`${title} description`}
@@ -242,7 +242,7 @@ export function PayrollCompensationEditor({
                 onChange={(event) =>
                   updateLine(type, index, "description", event.target.value)
                 }
-                className="rounded-lg border border-slate-300 px-2 py-1.5 text-xs md:col-span-5"
+                className="rounded-lg border border-input px-2 py-1.5 text-xs md:col-span-5"
               />
               <input
                 aria-label={`${title} amount`}
@@ -252,19 +252,19 @@ export function PayrollCompensationEditor({
                 placeholder="Amount"
                 value={line.amount}
                 onChange={(event) => updateLine(type, index, "amount", event.target.value)}
-                className="rounded-lg border border-slate-300 px-2 py-1.5 text-xs md:col-span-3"
+                className="rounded-lg border border-input px-2 py-1.5 text-xs md:col-span-3"
               />
               <button
                 type="button"
                 onClick={() => removeLine(type, index)}
-                className="rounded-lg border border-red-200 px-2 py-1.5 text-xs text-red-700 md:col-span-1"
+                className="rounded-lg border border-danger/40 px-2 py-1.5 text-xs text-danger md:col-span-1"
               >
                 ×
               </button>
             </div>
           ))}
           {!lines.length ? (
-            <div className="text-xs text-slate-500">No standard lines.</div>
+            <div className="text-xs text-muted-foreground">No standard lines.</div>
           ) : null}
         </div>
       </div>
@@ -272,27 +272,27 @@ export function PayrollCompensationEditor({
   }
 
   return (
-    <div className="mt-4 border-t border-slate-200 pt-4">
+    <div className="mt-4 border-t border-border pt-4">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium"
+        className="rounded-lg border border-input bg-surface px-3 py-2 text-xs font-medium"
       >
         {open ? "Close compensation history" : "Compensation history"}
       </button>
       {open ? (
         <div className="mt-4 space-y-4">
           {message ? (
-            <div className="rounded-lg bg-green-50 p-2 text-xs text-green-700">{message}</div>
+            <div className="rounded-lg bg-success-subtle p-2 text-xs text-success">{message}</div>
           ) : null}
           {error ? (
-            <div className="rounded-lg bg-red-50 p-2 text-xs text-red-700">{error}</div>
+            <div className="rounded-lg bg-danger-subtle p-2 text-xs text-danger">{error}</div>
           ) : null}
-          <div className="rounded-xl border border-slate-200 bg-slate-100 p-4">
-            <div className="text-sm font-semibold text-slate-900">
+          <div className="rounded-xl border border-border bg-surface-muted p-4">
+            <div className="text-sm font-semibold text-foreground">
               Schedule approved salary terms
             </div>
-            <p className="mt-1 text-xs text-slate-600">
+            <p className="mt-1 text-xs text-muted-foreground">
               A new version never rewrites payroll runs that already exist.
             </p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -302,7 +302,7 @@ export function PayrollCompensationEditor({
                   type="date"
                   value={effectiveFrom}
                   onChange={(event) => setEffectiveFrom(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2"
+                  className="mt-1 w-full rounded-lg border border-input bg-surface px-2.5 py-2"
                 />
               </label>
               <label className="text-xs">
@@ -313,7 +313,7 @@ export function PayrollCompensationEditor({
                   step="0.01"
                   value={baseAmount}
                   onChange={(event) => setBaseAmount(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2"
+                  className="mt-1 w-full rounded-lg border border-input bg-surface px-2.5 py-2"
                 />
               </label>
               <label className="text-xs">
@@ -321,7 +321,7 @@ export function PayrollCompensationEditor({
                 <select
                   value={currencyCode}
                   onChange={(event) => setCurrencyCode(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2"
+                  className="mt-1 w-full rounded-lg border border-input bg-surface px-2.5 py-2"
                 >
                   <option value="HTG">HTG</option>
                   <option value="USD">USD</option>
@@ -332,7 +332,7 @@ export function PayrollCompensationEditor({
                 <select
                   value={payFrequency}
                   onChange={(event) => setPayFrequency(event.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2"
+                  className="mt-1 w-full rounded-lg border border-input bg-surface px-2.5 py-2"
                 >
                   <option value="MONTHLY">Monthly</option>
                   <option value="SEMI_MONTHLY">Semi-monthly</option>
@@ -351,46 +351,46 @@ export function PayrollCompensationEditor({
                 value={changeReason}
                 onChange={(event) => setChangeReason(event.target.value)}
                 placeholder="Why are these terms changing?"
-                className="mt-1 min-h-20 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2"
+                className="mt-1 min-h-20 w-full rounded-lg border border-input bg-surface px-2.5 py-2"
               />
             </label>
             <button
               type="button"
               disabled={saving}
               onClick={() => void save()}
-              className="mt-3 rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+              className="mt-3 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
             >
               {saving ? "Saving..." : "Approve and schedule version"}
             </button>
           </div>
           <div className="space-y-2">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Immutable history
             </div>
             {history.map((version) => (
-              <div key={version.id} className="rounded-xl border border-slate-200 bg-white p-3">
+              <div key={version.id} className="rounded-xl border border-border bg-surface p-3">
                 <div className="flex flex-wrap justify-between gap-3">
                   <div>
-                    <div className="text-sm font-semibold text-slate-900">
+                    <div className="text-sm font-semibold text-foreground">
                       {formatMoney(version.baseAmount, version.currencyCode)} ·{" "}
                       {version.payFrequency.replaceAll("_", " ")}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-muted-foreground">
                       Effective {version.effectiveFrom} · {version.compensationType}
                     </div>
                   </div>
-                  <div className="text-right text-xs text-slate-500">
+                  <div className="text-right text-xs text-muted-foreground">
                     {version.standardAllowances.length} allowance(s) ·{" "}
                     {version.standardDeductions.length} deduction(s)
                   </div>
                 </div>
-                <div className="mt-2 text-xs text-slate-600">{version.changeReason}</div>
+                <div className="mt-2 text-xs text-muted-foreground">{version.changeReason}</div>
               </div>
             ))}
             {!history.length && !loading ? (
-              <div className="text-xs text-slate-500">No compensation history found.</div>
+              <div className="text-xs text-muted-foreground">No compensation history found.</div>
             ) : null}
-            {loading ? <div className="text-xs text-slate-500">Loading history...</div> : null}
+            {loading ? <div className="text-xs text-muted-foreground">Loading history...</div> : null}
           </div>
         </div>
       ) : null}

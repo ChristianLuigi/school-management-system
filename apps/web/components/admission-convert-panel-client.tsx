@@ -167,16 +167,16 @@ export function AdmissionConvertPanelClient({
 
   if (application.convertedStudent) {
     return (
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
+      <div className="rounded-2xl border border-success/40 bg-success-subtle p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-green-900">
+            <h3 className="text-lg font-semibold text-success">
               Student File Created
             </h3>
-            <p className="mt-1 text-sm text-green-800">
+            <p className="mt-1 text-sm text-success">
               This application has already been converted into an official student file.
             </p>
-            <div className="mt-2 text-sm text-green-800">
+            <div className="mt-2 text-sm text-success">
               {application.convertedStudent.firstName}{" "}
               {application.convertedStudent.lastName} -{" "}
               {application.convertedStudent.studentCode ?? "Code pending"}
@@ -188,7 +188,7 @@ export function AdmissionConvertPanelClient({
 
         <Link
           href={`/students/${application.convertedStudent.id}`}
-          className="mt-4 inline-flex rounded-xl bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800"
+          className="mt-4 inline-flex rounded-xl bg-success px-4 py-2 text-sm font-medium text-success-foreground hover:bg-success"
         >
           Open Student Profile
         </Link>
@@ -197,13 +197,13 @@ export function AdmissionConvertPanelClient({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Convert to Student
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Create the official student file from this admission application.
           </p>
         </div>
@@ -212,7 +212,7 @@ export function AdmissionConvertPanelClient({
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
           >
             {open ? "Close" : "Convert"}
           </button>
@@ -225,15 +225,15 @@ export function AdmissionConvertPanelClient({
         <div className="mt-4">
           <Link
             href={`/admissions/${application.id}/decision-letter`}
-            className="inline-flex rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="inline-flex rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Print admission letter
           </Link>
         </div>
       ) : null}
 
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="font-semibold text-slate-900">
+      <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
+        <div className="font-semibold text-foreground">
           Conversion readiness
         </div>
 
@@ -241,7 +241,7 @@ export function AdmissionConvertPanelClient({
           {conversionChecks.map((check) => (
             <div
               key={check.label}
-              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+              className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-3 py-2 text-sm"
             >
               <span>{check.label}</span>
 
@@ -254,19 +254,19 @@ export function AdmissionConvertPanelClient({
       </div>
 
       {!canConvert(application.admissionStatus) ? (
-        <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+        <div className="mt-4 rounded-xl bg-warning-subtle p-3 text-sm text-warning">
           Application must be admitted, conditionally admitted, or confirmed before conversion.
         </div>
       ) : null}
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           <div>{message}</div>
 
           {convertedStudentId ? (
             <Link
               href={`/students/${convertedStudentId}`}
-              className="mt-3 inline-flex rounded-lg bg-green-700 px-3 py-2 text-xs font-medium text-white hover:bg-green-800"
+              className="mt-3 inline-flex rounded-lg bg-success px-3 py-2 text-xs font-medium text-success-foreground hover:bg-success"
             >
               Open Student Profile
             </Link>
@@ -275,19 +275,19 @@ export function AdmissionConvertPanelClient({
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {open && canConvert(application.admissionStatus) ? (
-        <div className="mt-5 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-5 space-y-4 rounded-2xl border border-border bg-surface p-4">
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-foreground">
               Student status after conversion
             </span>
             <select
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               value={targetStudentStatus}
               onChange={(event) =>
                 setTargetStudentStatus(
@@ -302,7 +302,7 @@ export function AdmissionConvertPanelClient({
           </label>
 
           {application.desiredSection ? (
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+            <div className="rounded-xl border border-info/40 bg-info-subtle p-3 text-sm text-info">
               Requested class:{" "}
               <span className="font-semibold">
                 {i18nName(
@@ -312,7 +312,7 @@ export function AdmissionConvertPanelClient({
               </span>
             </div>
           ) : (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="rounded-xl border border-warning/40 bg-warning-subtle p-3 text-sm text-warning">
               No requested class was selected for this admission application.
             </div>
           )}
@@ -325,7 +325,7 @@ export function AdmissionConvertPanelClient({
             allowEmpty
           />
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="rounded-2xl border border-border bg-surface p-4">
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -337,7 +337,7 @@ export function AdmissionConvertPanelClient({
 
             {createGuardian ? (
               <select
-                className="mt-3 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="mt-3 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 value={guardianRelationship}
                 onChange={(event) =>
                   setGuardianRelationship(
@@ -353,14 +353,14 @@ export function AdmissionConvertPanelClient({
             ) : null}
 
             {createGuardian && !application.parent.fullName ? (
-              <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+              <div className="mt-3 rounded-xl bg-warning-subtle p-3 text-sm text-warning">
                 No parent/guardian name is currently recorded. No guardian will be created unless parent information exists.
               </div>
             ) : null}
           </div>
 
           <textarea
-            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
             placeholder="Conversion note optional"
             value={conversionNote}
             onChange={(event) => setConversionNote(event.target.value)}
@@ -370,7 +370,7 @@ export function AdmissionConvertPanelClient({
             type="button"
             disabled={saving || !readyToConvert}
             onClick={convertApplication}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving
               ? "Converting..."

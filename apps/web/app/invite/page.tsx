@@ -41,17 +41,17 @@ export default async function InvitePage({
   const { token } = await searchParams;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-start justify-center px-4 py-16">
+    <div className="min-h-screen bg-surface flex items-start justify-center px-4 py-16">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold">Accept Invitation</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Set a password to activate your school account.
           </p>
         </div>
 
         {!token ? (
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 text-center text-slate-600">
+          <div className="rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-ring text-center text-muted-foreground">
             Invalid invitation link. No token provided.
           </div>
         ) : (
@@ -67,7 +67,7 @@ async function InviteContent({ token }: { token: string }) {
 
   if (!invitation) {
     return (
-      <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 text-center text-slate-600">
+      <div className="rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-ring text-center text-muted-foreground">
         This invitation link is invalid, expired, or has already been used.
       </div>
     );
@@ -75,7 +75,7 @@ async function InviteContent({ token }: { token: string }) {
 
   if (invitation.status !== "PENDING") {
     return (
-      <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 text-center text-slate-600">
+      <div className="rounded-2xl bg-surface p-6 shadow-sm ring-1 ring-ring text-center text-muted-foreground">
         This invitation has already been{" "}
         <span className="font-medium">{invitation.status.toLowerCase()}</span>{" "}
         and cannot be accepted again.

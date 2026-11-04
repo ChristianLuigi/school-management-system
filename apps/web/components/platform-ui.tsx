@@ -2,6 +2,8 @@
 import { ReactNode } from "react";
 import { ArrowUpRight, Inbox } from "lucide-react";
 import { PlatformValueLabel } from "@/components/platform-value-label";
+import { buttonStyles } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 export function PlatformPageHeader({
   title,
@@ -13,18 +15,7 @@ export function PlatformPageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          {title}
-        </h1>
-        {description ? (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        ) : null}
-      </div>
-
-      {action ? <div>{action}</div> : null}
-    </div>
+    <PageHeader title={title} description={description} actions={action} />
   );
 }
 
@@ -158,7 +149,7 @@ export function PlatformPrimaryLinkButton({
   return (
     <Link
       href={href}
-      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+      className={buttonStyles('primary')}
     >
       {children}
       <ArrowUpRight size={16} aria-hidden="true" />

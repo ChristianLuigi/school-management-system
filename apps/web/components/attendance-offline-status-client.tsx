@@ -93,13 +93,13 @@ export function AttendanceOfflineStatusClient({
   const failedCount = queue.filter((item) => item.status === "FAILED").length;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="rounded-2xl border border-border bg-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-slate-900">
+          <div className="text-sm font-semibold text-foreground">
             Low-Bandwidth Sync Status
           </div>
-          <div className="mt-1 text-xs text-slate-500">
+          <div className="mt-1 text-xs text-muted-foreground">
             {isOnline ? "Online" : "Offline"} | {queue.length} queued |{" "}
             {pendingCount} pending | {failedCount} failed
           </div>
@@ -110,7 +110,7 @@ export function AttendanceOfflineStatusClient({
             type="button"
             onClick={syncNow}
             disabled={syncing || queue.length === 0}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+            className="rounded-xl border border-input px-3 py-2 text-sm hover:bg-surface disabled:opacity-60"
           >
             {syncing ? "Syncing..." : "Sync Now"}
           </button>
@@ -119,7 +119,7 @@ export function AttendanceOfflineStatusClient({
             type="button"
             onClick={clearQueue}
             disabled={queue.length === 0}
-            className="rounded-xl border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-60"
+            className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger hover:bg-danger-subtle disabled:opacity-60"
           >
             Clear Queue
           </button>
@@ -127,13 +127,13 @@ export function AttendanceOfflineStatusClient({
       </div>
 
       {message ? (
-        <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-3 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-3 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -143,7 +143,7 @@ export function AttendanceOfflineStatusClient({
           {queue.slice(0, 5).map((item) => (
             <div
               key={item.id}
-              className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"
+              className="rounded-xl border border-border bg-surface p-3 text-xs text-foreground"
             >
               <div className="font-medium">
                 {item.payload.attendanceDate} | {item.payload.slot}
@@ -153,7 +153,7 @@ export function AttendanceOfflineStatusClient({
                 {item.attempts} | Status: {item.status}
               </div>
               {item.lastError ? (
-                <div className="mt-1 text-red-700">{item.lastError}</div>
+                <div className="mt-1 text-danger">{item.lastError}</div>
               ) : null}
             </div>
           ))}

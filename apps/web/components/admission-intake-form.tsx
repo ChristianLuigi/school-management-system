@@ -42,7 +42,7 @@ export function AdmissionIntakeForm({
     required = false,
   ) {
     return (
-      <label key={key} className="block text-sm font-medium text-slate-700">
+      <label key={key} className="block text-sm font-medium text-foreground">
         {fr ? french : english}
         {required ? " *" : ""}
         <input
@@ -52,7 +52,7 @@ export function AdmissionIntakeForm({
           autoComplete="off"
           value={values[key] ?? ""}
           onChange={(event) => onChange(key, event.target.value)}
-          className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+          className="mt-1 min-h-11 w-full rounded-xl border border-input bg-surface px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </label>
     );
@@ -63,11 +63,11 @@ export function AdmissionIntakeForm({
         event.preventDefault();
         onSubmit();
       }}
-      className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4"
+      className="mt-5 rounded-2xl border border-border bg-surface p-4"
       aria-busy={saving}
     >
       <fieldset disabled={saving} className="space-y-5">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           {fr
             ? "* Obligatoire. Le dossier créé reste une candidature."
             : "* Required. The created record remains an application."}
@@ -80,12 +80,12 @@ export function AdmissionIntakeForm({
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             {field("firstName", "Prénom", "First name", "text", true)}
             {field("lastName", "Nom", "Last name", "text", true)}
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-foreground">
               {fr ? "Sexe" : "Gender"}
               <select
                 value={values.gender ?? ""}
                 onChange={(event) => onChange("gender", event.target.value)}
-                className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2"
+                className="mt-1 min-h-11 w-full rounded-xl border border-input bg-surface px-3 py-2"
               >
                 <option value="">{fr ? "Non précisé" : "Not specified"}</option>
                 <option value="MALE">{fr ? "Garçon" : "Boy"}</option>
@@ -134,7 +134,7 @@ export function AdmissionIntakeForm({
             )}
           </div>
         </section>
-        <details className="rounded-xl border border-slate-200 bg-white p-3">
+        <details className="rounded-xl border border-border bg-surface p-3">
           <summary className="cursor-pointer font-medium">
             {fr
               ? "École précédente et renseignements complémentaires"
@@ -158,17 +158,17 @@ export function AdmissionIntakeForm({
                 rows={3}
                 value={values.notes ?? ""}
                 onChange={(event) => onChange("notes", event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 p-3"
+                className="mt-1 w-full rounded-xl border border-input p-3"
               />
             </label>
           </div>
         </details>
-        <details className="rounded-xl border border-slate-200 bg-white p-3">
+        <details className="rounded-xl border border-border bg-surface p-3">
           <summary className="cursor-pointer font-medium">
             <FileCheck2 aria-hidden="true" size={18} className="mr-2 inline" />
             {fr ? "Pièces reçues" : "Documents received"}
           </summary>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             {fr
               ? "Cochez seulement les pièces déjà reçues."
               : "Only mark documents already received."}

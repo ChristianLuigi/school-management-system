@@ -214,14 +214,14 @@ export function SectionSelectorClient({
     <div>
       <label
         htmlFor={selectId}
-        className="block text-sm font-medium text-slate-700"
+        className="block text-sm font-medium text-foreground"
       >
         {label}
       </label>
       <select
         id={selectId}
         aria-busy={loading}
-        className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        className="mt-1 min-h-11 w-full rounded-xl border border-input bg-surface px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         value={sectionId}
         onChange={(event) => {
           const value = event.target.value;
@@ -253,7 +253,7 @@ export function SectionSelectorClient({
       </select>
 
       {selected ? (
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <CalendarDays className="h-3.5 w-3.5" />
             {i18nName(
@@ -282,20 +282,20 @@ export function SectionSelectorClient({
       ) : null}
 
       {loading ? (
-        <div role="status" className="mt-2 text-xs text-slate-500">
+        <div role="status" className="mt-2 text-xs text-muted-foreground">
           {t("academic.loadingSections")}
         </div>
       ) : null}
       {error ? (
         <div
           role="alert"
-          className="mt-2 rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700"
+          className="mt-2 rounded-lg border border-danger/40 bg-danger-subtle p-2 text-xs text-danger"
         >
           {error}
         </div>
       ) : null}
       {!loading && sections.length === 0 ? (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-warning/40 bg-warning-subtle p-3 text-sm text-warning">
           <span>{t("academic.noAvailableSections")}</span>
           {emptyActionHref ? (
             <Link

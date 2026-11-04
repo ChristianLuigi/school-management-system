@@ -114,24 +114,24 @@ export function ReportCardGenerationClient({
   }
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="space-y-5 rounded-2xl border border-border bg-surface p-5">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-foreground">
           Report Card Generation
         </h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Generate report cards only after all required gradebooks are published.
         </p>
       </div>
 
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -153,7 +153,7 @@ export function ReportCardGenerationClient({
         />
 
         <textarea
-          className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-input px-3 py-2 text-sm"
           placeholder="Notes optional"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -165,7 +165,7 @@ export function ReportCardGenerationClient({
           type="button"
           disabled={checking || !gradingPeriodId || !sectionId}
           onClick={checkReadiness}
-          className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-slate-50 disabled:opacity-60"
+          className="rounded-xl border border-input px-4 py-3 text-sm font-medium hover:bg-surface disabled:opacity-60"
         >
           {checking ? "Checking..." : "Check Readiness"}
         </button>
@@ -174,14 +174,14 @@ export function ReportCardGenerationClient({
           type="button"
           disabled={generating || !readiness?.isReady}
           onClick={generateReportCards}
-          className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+          className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
         >
           {generating ? "Generating..." : "Generate Report Cards"}
         </button>
       </div>
 
       {readiness ? (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="rounded-2xl border border-border bg-surface p-4">
           <div className="flex flex-wrap gap-2">
             {readiness.isReady ? (
               <SchoolBadge tone="green">Ready</SchoolBadge>
@@ -196,12 +196,12 @@ export function ReportCardGenerationClient({
           </div>
 
           {readiness.blockers.length > 0 ? (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3">
-              <div className="text-sm font-semibold text-red-900">
+            <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3">
+              <div className="text-sm font-semibold text-danger">
                 Blocking Gradebooks
               </div>
 
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-800">
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-danger">
                 {readiness.blockers.map((blocker) => (
                   <li key={blocker.subjectCode}>
                     {blocker.subjectNameI18n?.fr ??

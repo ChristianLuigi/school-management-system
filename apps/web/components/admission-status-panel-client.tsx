@@ -127,13 +127,13 @@ export function AdmissionStatusPanelClient({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Admission Status
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Track the application from submission to admission decision.
           </p>
 
@@ -151,7 +151,7 @@ export function AdmissionStatusPanelClient({
               setNewStatus(currentStatus);
               setOpen((value) => !value);
             }}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             {open ? "Close" : "Change Status"}
           </button>
@@ -159,27 +159,27 @@ export function AdmissionStatusPanelClient({
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {convertedStudentId ? (
-        <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+        <div className="mt-4 rounded-xl bg-surface p-3 text-sm text-muted-foreground">
           This application has already been converted into a student file.
         </div>
       ) : null}
 
       {open ? (
-        <div className="mt-5 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-5 space-y-4 rounded-2xl border border-border bg-surface p-4">
           <select
-            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
             value={newStatus}
             onChange={(event) => setNewStatus(event.target.value)}
           >
@@ -193,7 +193,7 @@ export function AdmissionStatusPanelClient({
           </select>
 
           <textarea
-            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
             placeholder="Reason / administrative note"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
@@ -203,7 +203,7 @@ export function AdmissionStatusPanelClient({
             type="button"
             disabled={saving}
             onClick={changeStatus}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Status"}
           </button>
@@ -211,16 +211,16 @@ export function AdmissionStatusPanelClient({
       ) : null}
 
       <div className="mt-5">
-        <div className="mb-3 font-semibold text-slate-900">Status History</div>
+        <div className="mb-3 font-semibold text-foreground">Status History</div>
 
         <div className="space-y-2">
           {statusHistory.map((row) => (
             <div
               key={row.id}
-              className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
+              className="rounded-xl border border-border bg-surface p-3 text-sm"
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-slate-500">
+                <span className="text-muted-foreground">
                   {row.previousStatus
                     ? admissionStatusLabel(row.previousStatus)
                     : "Initial"}
@@ -231,18 +231,18 @@ export function AdmissionStatusPanelClient({
                 </SchoolBadge>
               </div>
 
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-1 text-xs text-muted-foreground">
                 {new Date(row.changedAt).toLocaleString()}
               </div>
 
               {row.reason ? (
-                <div className="mt-1 text-sm text-slate-600">{row.reason}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{row.reason}</div>
               ) : null}
             </div>
           ))}
 
           {statusHistory.length === 0 ? (
-            <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
+            <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
               No status history yet.
             </div>
           ) : null}

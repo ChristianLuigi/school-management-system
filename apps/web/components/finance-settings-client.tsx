@@ -181,13 +181,13 @@ export function FinanceSettingsClient({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Finance Settings
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Configure invoice defaults, payment methods, and finance document notes.
           </p>
         </div>
@@ -195,26 +195,26 @@ export function FinanceSettingsClient({
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           {open ? "Close" : "Settings"}
         </button>
       </div>
 
       {loading ? (
-        <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
+        <div className="mt-4 rounded-xl bg-surface p-3 text-sm text-muted-foreground">
           Loading settings...
         </div>
       ) : null}
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -223,7 +223,7 @@ export function FinanceSettingsClient({
         <div className="mt-5 space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
             <select
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               value={form.defaultCurrencyCode}
               onChange={(e) =>
                 setForm((prev) => ({
@@ -237,7 +237,7 @@ export function FinanceSettingsClient({
             </select>
 
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               placeholder="Default invoice due days"
               value={form.defaultInvoiceDueDays}
               onChange={(e) =>
@@ -248,19 +248,19 @@ export function FinanceSettingsClient({
               }
             />
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
-              <div className="font-semibold text-slate-900">Print Preferences</div>
-              <p className="mt-1 text-sm text-slate-600">
+            <div className="rounded-2xl border border-border bg-surface p-4 md:col-span-2">
+              <div className="font-semibold text-foreground">Print Preferences</div>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Configure the preferred print formats for cashier and finance workflows.
               </p>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-medium text-foreground">
                     Default receipt print
                   </span>
                   <select
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                     value={form.defaultReceiptPrintFormat}
                     onChange={(event) =>
                       setForm((prev) => ({
@@ -277,11 +277,11 @@ export function FinanceSettingsClient({
                 </label>
 
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-medium text-foreground">
                     Default invoice print
                   </span>
                   <select
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                     value={form.defaultInvoicePrintFormat}
                     onChange={(event) =>
                       setForm((prev) => ({
@@ -298,7 +298,7 @@ export function FinanceSettingsClient({
                 </label>
               </div>
 
-              <label className="mt-4 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+              <label className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
                 <input
                   type="checkbox"
                   checked={form.autoOpenReceiptAfterPayment}
@@ -313,7 +313,7 @@ export function FinanceSettingsClient({
               </label>
             </div>
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               placeholder="Finance contact name"
               value={form.financeContactName}
               onChange={(e) =>
@@ -325,7 +325,7 @@ export function FinanceSettingsClient({
             />
 
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               placeholder="Finance contact phone"
               value={form.financeContactPhone}
               onChange={(e) =>
@@ -337,7 +337,7 @@ export function FinanceSettingsClient({
             />
 
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
               placeholder="Finance contact email"
               value={form.financeContactEmail}
               onChange={(e) =>
@@ -349,7 +349,7 @@ export function FinanceSettingsClient({
             />
 
             <textarea
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               placeholder="Invoice footer FR"
               value={form.invoiceFooterFr}
               onChange={(e) =>
@@ -361,7 +361,7 @@ export function FinanceSettingsClient({
             />
 
             <textarea
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               placeholder="Invoice footer EN"
               value={form.invoiceFooterEn}
               onChange={(e) =>
@@ -373,7 +373,7 @@ export function FinanceSettingsClient({
             />
 
             <textarea
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               placeholder="Receipt footer FR"
               value={form.receiptFooterFr}
               onChange={(e) =>
@@ -385,7 +385,7 @@ export function FinanceSettingsClient({
             />
 
             <textarea
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               placeholder="Receipt footer EN"
               value={form.receiptFooterEn}
               onChange={(e) =>
@@ -397,8 +397,8 @@ export function FinanceSettingsClient({
             />
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div className="font-semibold text-slate-900">
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="font-semibold text-foreground">
               Enabled Payment Methods
             </div>
 
@@ -406,7 +406,7 @@ export function FinanceSettingsClient({
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method}
-                  className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="flex items-center gap-2 rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 >
                   <input
                     type="checkbox"
@@ -423,7 +423,7 @@ export function FinanceSettingsClient({
             type="button"
             disabled={saving}
             onClick={saveSettings}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Finance Settings"}
           </button>

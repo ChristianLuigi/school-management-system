@@ -234,7 +234,7 @@ export function StudentProfileEditClient({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href={`/students/${studentId}`}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground hover:bg-surface"
         >
           <ArrowLeft className="h-4 w-4" />
           Profile
@@ -246,7 +246,7 @@ export function StudentProfileEditClient({
           disabled={loading}
           aria-label="Reload student profile"
           title="Reload student profile"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl border border-input px-3 py-2 text-sm font-medium text-foreground hover:bg-surface disabled:opacity-60"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Reload
@@ -254,19 +254,19 @@ export function StudentProfileEditClient({
       </div>
 
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {!profile && loading ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
           Loading student profile...
         </div>
       ) : null}
@@ -274,7 +274,7 @@ export function StudentProfileEditClient({
       {profile ? (
         <div className="space-y-5">
           <nav
-            className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-4"
+            className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-surface p-2 shadow-sm sm:grid-cols-4"
             aria-label="Student edit sections"
           >
             {EDIT_SECTIONS.map((item) => {
@@ -288,8 +288,8 @@ export function StudentProfileEditClient({
                   aria-current={active ? "page" : undefined}
                   className={`inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     active
-                      ? "bg-slate-950 text-white"
-                      : "text-slate-600 hover:bg-slate-50"
+                      ? "bg-primary text-solid-foreground"
+                      : "text-muted-foreground hover:bg-surface"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -301,38 +301,38 @@ export function StudentProfileEditClient({
           <div
             className={
               activeSection === "identity"
-                ? "rounded-2xl border border-slate-200 bg-white p-5"
+                ? "rounded-2xl border border-border bg-surface p-5"
                 : "hidden"
             }
           >
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Identity Information
             </h3>
 
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="First name"
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Last name"
                 value={lastName}
                 onChange={(event) => setLastName(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Student code"
                 value={studentCode}
                 onChange={(event) => setStudentCode(event.target.value)}
               />
 
               <select
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 value={gender}
                 onChange={(event) => setGender(event.target.value)}
               >
@@ -344,23 +344,23 @@ export function StudentProfileEditClient({
               <input
                 type="date"
                 max={new Date().toISOString().slice(0, 10)}
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 value={dateOfBirth}
                 onChange={(event) => setDateOfBirth(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Place of birth"
                 value={placeOfBirth}
                 onChange={(event) => setPlaceOfBirth(event.target.value)}
               />
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
-                <div className="font-semibold text-slate-900">
+              <div className="rounded-2xl border border-border bg-surface p-4 md:col-span-2">
+                <div className="font-semibold text-foreground">
                   Student Photo
                 </div>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Upload a student photo from this device or paste an existing
                   photo URL.
                 </p>
@@ -371,10 +371,10 @@ export function StudentProfileEditClient({
                     <img
                       src={photoUrl}
                       alt="Student photo preview"
-                      className="h-28 w-28 rounded-2xl border border-slate-200 object-cover"
+                      className="h-28 w-28 rounded-2xl border border-border object-cover"
                     />
                   ) : (
-                    <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-400">
+                    <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-border bg-surface text-sm text-muted-foreground">
                       No photo
                     </div>
                   )}
@@ -383,7 +383,7 @@ export function StudentProfileEditClient({
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                      className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                       onChange={(event) => {
                         const file = event.target.files?.[0];
                         if (file) {
@@ -393,14 +393,14 @@ export function StudentProfileEditClient({
                     />
 
                     <input
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                      className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                       placeholder="Photo URL"
                       value={photoUrl}
                       onChange={(event) => setPhotoUrl(event.target.value)}
                     />
 
                     {uploadingPhoto ? (
-                      <div className="text-sm text-slate-500">
+                      <div className="text-sm text-muted-foreground">
                         Uploading photo...
                       </div>
                     ) : null}
@@ -409,14 +409,14 @@ export function StudentProfileEditClient({
               </div>
 
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
                 placeholder="Previous school name"
                 value={previousSchoolName}
                 onChange={(event) => setPreviousSchoolName(event.target.value)}
               />
 
               <textarea
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
                 placeholder="Previous school address"
                 value={previousSchoolAddress}
                 onChange={(event) =>
@@ -429,16 +429,16 @@ export function StudentProfileEditClient({
           <div
             className={
               activeSection === "documents"
-                ? "rounded-2xl border border-slate-200 bg-white p-5"
+                ? "rounded-2xl border border-border bg-surface p-5"
                 : "hidden"
             }
           >
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Document Checklist
             </h3>
 
             <div className="mt-5 grid gap-3 md:grid-cols-2">
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+              <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
                 <input
                   type="checkbox"
                   checked={photoReceived}
@@ -447,7 +447,7 @@ export function StudentProfileEditClient({
                 Photo received
               </label>
 
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+              <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
                 <input
                   type="checkbox"
                   checked={birthCertificateReceived}
@@ -458,7 +458,7 @@ export function StudentProfileEditClient({
                 Birth certificate received
               </label>
 
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+              <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
                 <input
                   type="checkbox"
                   checked={vaccinationCardReceived}
@@ -469,7 +469,7 @@ export function StudentProfileEditClient({
                 Vaccination card received
               </label>
 
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+              <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
                 <input
                   type="checkbox"
                   checked={previousSchoolRecordReceived}
@@ -485,38 +485,38 @@ export function StudentProfileEditClient({
           <div
             className={
               activeSection === "health"
-                ? "rounded-2xl border border-slate-200 bg-white p-5"
+                ? "rounded-2xl border border-border bg-surface p-5"
                 : "hidden"
             }
           >
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Health Information
             </h3>
 
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Vaccination status"
                 value={vaccinationStatus}
                 onChange={(event) => setVaccinationStatus(event.target.value)}
               />
 
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                className="rounded-xl border border-input px-3 py-2 text-sm"
                 placeholder="Allergies"
                 value={allergies}
                 onChange={(event) => setAllergies(event.target.value)}
               />
 
               <textarea
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
                 placeholder="Medical notes"
                 value={medicalNotes}
                 onChange={(event) => setMedicalNotes(event.target.value)}
               />
 
               <textarea
-                className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
                 placeholder="Special needs"
                 value={specialNeeds}
                 onChange={(event) => setSpecialNeeds(event.target.value)}
@@ -524,7 +524,7 @@ export function StudentProfileEditClient({
             </div>
           </div>
 
-          <div className="sticky bottom-4 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-lg backdrop-blur">
+          <div className="sticky bottom-4 rounded-2xl border border-border bg-surface/95 p-4 shadow-lg backdrop-blur">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div />
 
@@ -532,7 +532,7 @@ export function StudentProfileEditClient({
                 type="button"
                 disabled={saving}
                 onClick={saveProfile}
-                className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                className="rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
               >
                 <Save className="mr-2 inline h-4 w-4" />
                 {saving ? "Saving…" : "Save changes"}

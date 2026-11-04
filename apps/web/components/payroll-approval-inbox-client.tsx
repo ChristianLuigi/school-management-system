@@ -174,10 +174,10 @@ export function PayrollApprovalInboxClient({
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-slate-950">
+          <h2 className="text-xl font-semibold text-foreground">
             School Admin approval inbox · {inbox.count}
           </h2>
-          <p className="mt-1 max-w-3xl text-sm text-slate-600">
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             Review totals, staff coverage, preparer and reviewer identities,
             and the immutable payroll fingerprint before making a decision.
           </p>
@@ -186,29 +186,29 @@ export function PayrollApprovalInboxClient({
           type="button"
           onClick={() => void loadInbox()}
           disabled={loading}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface disabled:opacity-60"
         >
           {loading ? "Refreshing…" : "Refresh inbox"}
         </button>
       </div>
 
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {!loading && inbox.runs.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-          <div className="font-semibold text-slate-900">
+        <div className="rounded-2xl border border-dashed border-input bg-surface p-8 text-center">
+          <div className="font-semibold text-foreground">
             No payroll is waiting for approval
           </div>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             Reviewed payroll runs appear here after they are sent to the School
             Admin.
           </p>
@@ -219,25 +219,25 @@ export function PayrollApprovalInboxClient({
         {<PaginatedCollection items={inbox.runs}>{(run) => (
           <article
             key={run.id}
-            className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm"
+            className="rounded-2xl border border-warning/40 bg-surface p-5 shadow-sm"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-lg font-semibold text-slate-950">
+                  <h3 className="text-lg font-semibold text-foreground">
                     {run.payrollNumber ?? "Payroll run"}
                   </h3>
                   <SchoolBadge tone="amber">PENDING APPROVAL</SchoolBadge>
                 </div>
-                <p className="mt-1 text-sm text-slate-700">{run.periodLabel}</p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-sm text-foreground">{run.periodLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
                   {run.periodStart ?? "No start date"} to{" "}
                   {run.periodEnd ?? "no end date"} · {run.currencyCode}
                 </p>
               </div>
               <Link
                 href={`/finance/payroll/runs/${encodeURIComponent(run.id)}`}
-                className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50"
+                className="rounded-xl border border-input px-4 py-2 text-sm font-medium hover:bg-surface"
               >
                 Inspect full payroll
               </Link>
@@ -251,62 +251,62 @@ export function PayrollApprovalInboxClient({
                 ["Deductions", money(run.totalDeductions, run.currencyCode)],
                 ["Net payroll", money(run.totalNet, run.currencyCode)],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-slate-50 p-3">
-                  <div className="text-xs text-slate-500">{label}</div>
-                  <div className="mt-1 font-semibold text-slate-950">{value}</div>
+                <div key={label} className="rounded-xl bg-surface p-3">
+                  <div className="text-xs text-muted-foreground">{label}</div>
+                  <div className="mt-1 font-semibold text-foreground">{value}</div>
                 </div>
               ))}
             </div>
 
             <div className="mt-5 grid gap-4 text-sm md:grid-cols-2">
-              <div className="rounded-xl border border-slate-200 p-4">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="rounded-xl border border-border p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Separation of duties
                 </div>
                 <dl className="mt-3 space-y-2">
                   <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Prepared by</dt>
-                    <dd className="text-right font-medium text-slate-900">
+                    <dt className="text-muted-foreground">Prepared by</dt>
+                    <dd className="text-right font-medium text-foreground">
                       {run.preparedBy?.fullName ?? "Not recorded"}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Reviewed by</dt>
-                    <dd className="text-right font-medium text-slate-900">
+                    <dt className="text-muted-foreground">Reviewed by</dt>
+                    <dd className="text-right font-medium text-foreground">
                       {run.reviewedBy?.fullName ?? "Not recorded"}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Waiting since</dt>
-                    <dd className="text-right font-medium text-slate-900">
+                    <dt className="text-muted-foreground">Waiting since</dt>
+                    <dd className="text-right font-medium text-foreground">
                       {dateTime(run.pendingApprovalAt)}
                     </dd>
                   </div>
                 </dl>
               </div>
 
-              <div className="rounded-xl border border-slate-200 p-4">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="rounded-xl border border-border p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Version being approved
                 </div>
                 <dl className="mt-3 space-y-2">
                   <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Run version</dt>
-                    <dd className="font-mono font-semibold text-slate-900">
+                    <dt className="text-muted-foreground">Run version</dt>
+                    <dd className="font-mono font-semibold text-foreground">
                       v{run.runVersion}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Content checksum</dt>
+                    <dt className="text-muted-foreground">Content checksum</dt>
                     <dd
-                      className="break-all text-right font-mono text-xs text-slate-900"
+                      className="break-all text-right font-mono text-xs text-foreground"
                       title={run.contentChecksum}
                     >
                       {shortChecksum(run.contentChecksum)}
                     </dd>
                   </div>
                 </dl>
-                <p className="mt-3 text-xs text-slate-500">
+                <p className="mt-3 text-xs text-muted-foreground">
                   A payroll content change invalidates the review and approval
                   and creates a new version.
                 </p>
@@ -314,7 +314,7 @@ export function PayrollApprovalInboxClient({
             </div>
 
             <label className="mt-5 block text-sm">
-              <span className="font-medium text-slate-900">Decision note</span>
+              <span className="font-medium text-foreground">Decision note</span>
               <textarea
                 value={notes[run.id] ?? ""}
                 onChange={(event) =>
@@ -324,9 +324,9 @@ export function PayrollApprovalInboxClient({
                   }))
                 }
                 placeholder="Approval comment, or required correction instructions"
-                className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 min-h-24 w-full rounded-xl border border-input px-3 py-2"
               />
-              <span className="mt-1 block text-xs text-slate-500">
+              <span className="mt-1 block text-xs text-muted-foreground">
                 A correction note is required when returning a payroll.
               </span>
             </label>
@@ -336,7 +336,7 @@ export function PayrollApprovalInboxClient({
                 type="button"
                 disabled={Boolean(busy)}
                 onClick={() => void decide(run, "APPROVED")}
-                className="rounded-xl bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-800 disabled:opacity-60"
+                className="rounded-xl bg-success px-4 py-2 text-sm font-semibold text-success-foreground hover:bg-success disabled:opacity-60"
               >
                 {busy === `${run.id}-APPROVED`
                   ? "Approving…"
@@ -346,7 +346,7 @@ export function PayrollApprovalInboxClient({
                 type="button"
                 disabled={Boolean(busy)}
                 onClick={() => void decide(run, "DRAFT")}
-                className="rounded-xl border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
+                className="rounded-xl border border-danger/40 px-4 py-2 text-sm font-semibold text-danger hover:bg-danger-subtle disabled:opacity-60"
               >
                 {busy === `${run.id}-DRAFT`
                   ? "Returning…"

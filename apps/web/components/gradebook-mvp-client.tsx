@@ -370,12 +370,12 @@ export function GradebookMvpClient({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-border bg-surface p-5">
         <div className="flex items-center gap-3">
-          <span className="rounded-xl bg-violet-50 p-2 text-violet-700">
+          <span className="rounded-xl bg-info-subtle p-2 text-info">
             <BookOpenCheck className="h-5 w-5" />
           </span>
-          <h2 className="text-lg font-semibold text-slate-950">
+          <h2 className="text-lg font-semibold text-foreground">
             {t("gradebooks.workspaceTitle")}
           </h2>
         </div>
@@ -405,11 +405,11 @@ export function GradebookMvpClient({
           />
 
           <div>
-            <label className="block text-sm font-medium text-slate-700">
+            <label className="block text-sm font-medium text-foreground">
               {t("gradebooks.subject")}
             </label>
             <select
-              className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-xl border border-input px-3 py-2 text-sm"
               value={subjectId}
               onChange={(event) => setSubjectId(event.target.value)}
             >
@@ -426,7 +426,7 @@ export function GradebookMvpClient({
         </div>
 
         {sectionId && subjects.length === 0 ? (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="mt-4 rounded-xl border border-warning/40 bg-warning-subtle p-3 text-sm text-warning">
             {canManageStructure
               ? t("gradebooks.noConfiguredSubjects")
               : t("gradebooks.noAssignedSubjectsForClass")}
@@ -434,27 +434,27 @@ export function GradebookMvpClient({
         ) : null}
 
         {message ? (
-          <div role="status" className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-700">
+          <div role="status" className="mt-4 rounded-xl bg-success-subtle p-3 text-sm text-success">
             {message}
           </div>
         ) : null}
 
         {error ? (
-          <div role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <div role="alert" className="mt-4 rounded-xl bg-danger-subtle p-3 text-sm text-danger">
             {error}
           </div>
         ) : null}
       </div>
 
       {sectionId ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="font-semibold text-slate-900">
+        <div className="rounded-2xl border border-border bg-surface p-5">
+          <h3 className="font-semibold text-foreground">
             {t("gradebooks.createAssessment")}
           </h3>
 
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               aria-label={t("gradebooks.assessmentTitle")}
               placeholder={t("gradebooks.assessmentTitle")}
               value={title}
@@ -462,7 +462,7 @@ export function GradebookMvpClient({
             />
 
             <select
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               value={assessmentType}
               onChange={(event) => setAssessmentType(event.target.value)}
             >
@@ -476,13 +476,13 @@ export function GradebookMvpClient({
             <input
               type="date"
               aria-label={t("attendance.date")}
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               value={assessmentDate}
               onChange={(event) => setAssessmentDate(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               aria-label={t("gradebooks.maxPoints")}
               placeholder={t("gradebooks.maxPoints")}
               value={maxPoints}
@@ -490,7 +490,7 @@ export function GradebookMvpClient({
             />
 
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               aria-label={t("gradebooks.weight")}
               placeholder={t("gradebooks.weight")}
               value={weightPercent}
@@ -501,7 +501,7 @@ export function GradebookMvpClient({
               type="button"
               onClick={createAssessment}
               disabled={saving || !subjectId}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary disabled:opacity-60"
             >
               <ListPlus className="h-4 w-4" />
               {saving
@@ -513,16 +513,16 @@ export function GradebookMvpClient({
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-border bg-surface p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-semibold text-slate-900">
+            <h3 className="font-semibold text-foreground">
               {t("gradebooks.assessments")}
             </h3>
             <button
               type="button"
               onClick={loadAssessments}
               disabled={loadingAssessments || !sectionId || !subjectId}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface disabled:opacity-60"
             >
               <RefreshCw
                 className={`h-4 w-4 ${loadingAssessments ? "animate-spin" : ""}`}
@@ -537,12 +537,12 @@ export function GradebookMvpClient({
             {<PaginatedCollection items={assessments}>{(assessment) => (
               <div
                 key={assessment.id}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                className="rounded-xl border border-border bg-surface p-4"
               >
                 <div className="flex justify-between gap-3">
                   <div>
                     <div className="font-semibold">{assessment.title}</div>
-                    <div className="text-sm text-slate-500">
+                    <div className="text-sm text-muted-foreground">
                       {assessment.subjectName} -{" "}
                       {t(
                         `gradebooks.assessmentTypes.${assessment.assessmentType}`,
@@ -550,7 +550,7 @@ export function GradebookMvpClient({
                       - /
                       {assessment.maxPoints}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {t("gradebooks.average")}:{" "}
                       {assessment.averageScore === null
                         ? "-"
@@ -568,7 +568,7 @@ export function GradebookMvpClient({
                 <button
                   type="button"
                   onClick={() => loadScores(assessment.id)}
-                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs hover:bg-slate-50"
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-input bg-surface px-3 py-2 text-xs hover:bg-surface"
                 >
                   <PencilLine className="h-3.5 w-3.5" />
                   {t("gradebooks.enterScores")}
@@ -577,21 +577,21 @@ export function GradebookMvpClient({
             )}</PaginatedCollection>}
 
             {assessments.length === 0 ? (
-              <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+              <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
                 {t("gradebooks.noAssessments")}
               </div>
             ) : null}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-border bg-surface p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold text-slate-900">
+              <h3 className="font-semibold text-foreground">
                 {t("gradebooks.scores")}
               </h3>
               {selectedAssessment ? (
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {selectedAssessment.title} / {selectedAssessment.maxPoints}
                 </p>
               ) : null}
@@ -611,17 +611,17 @@ export function GradebookMvpClient({
                 {students.map((student) => (
                   <div
                     key={student.id}
-                    className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-3"
+                    className="grid gap-3 rounded-xl border border-border bg-surface p-3 md:grid-cols-3"
                   >
                     <div>
                       <div className="font-medium">{studentName(student, t("gradebooks.unnamedStudent"))}</div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {student.studentCode ?? "-"}
                       </div>
                     </div>
 
                     <input
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="rounded-lg border border-input px-3 py-2 text-sm"
                       aria-label={`${t("gradebooks.score")}: ${studentName(
                         student,
                         t("gradebooks.unnamedStudent"),
@@ -640,7 +640,7 @@ export function GradebookMvpClient({
                     />
 
                     <input
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      className="rounded-lg border border-input px-3 py-2 text-sm"
                       aria-label={`${t("attendance.note")}: ${studentName(
                         student,
                         t("gradebooks.unnamedStudent"),
@@ -665,14 +665,14 @@ export function GradebookMvpClient({
                 type="button"
                 onClick={saveScores}
                 disabled={saving}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-60"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary disabled:opacity-60"
               >
                 <Save className="h-4 w-4" />
                 {saving ? t("common.saving") : t("gradebooks.saveScores")}
               </button>
             </>
           ) : (
-            <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+            <div className="mt-4 rounded-xl bg-surface p-4 text-sm text-muted-foreground">
               {t("gradebooks.selectAssessment")}
             </div>
           )}

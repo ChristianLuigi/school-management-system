@@ -41,7 +41,7 @@ export function FinanceNavigation() {
     <div className="-mx-1 overflow-x-auto px-1 pb-1 print:hidden">
       <nav
         aria-label={t("finance.navigation")}
-        className="flex min-w-max gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm"
+        className="flex min-w-max gap-1 rounded-2xl border border-border bg-surface p-1.5 shadow-sm"
       >
         {ITEMS.map((item) => {
           const Icon = item.icon;
@@ -55,10 +55,10 @@ export function FinanceNavigation() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${
+              className={`inline-flex min-h-10 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                 active
-                  ? "bg-slate-950 text-white shadow-sm"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-surface hover:text-foreground"
               }`}
             >
               <Icon className="h-4 w-4" aria-hidden="true" />

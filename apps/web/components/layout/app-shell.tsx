@@ -9,6 +9,7 @@ import { AppBreadcrumbs } from "@/components/layout/app-breadcrumbs";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { useI18n } from "@/components/i18n-provider";
+import { accessibleBrandColors } from "@/lib/theme-colors";
 
 export type NavigationIcon =
   | "academics"
@@ -22,14 +23,6 @@ export type NavigationIcon =
   | "schools"
   | "settings"
   | "students";
-
-function colorForeground(color: string) {
-  const channels = [1, 3, 5].map(offset => {
-    const channel = parseInt(color.slice(offset, offset + 2), 16) / 255;
-    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-  });
-  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722 > 0.179 ? "#000000" : "#ffffff";
-}
 
 export type NavigationItem = {
   href: string;
@@ -68,7 +61,7 @@ export function AppShell({
 }: AppShellProps) {
   const { locale } = useI18n();
   const router = useRouter();
-  const { setTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [appearance, setAppearance] = useState<{ schoolId: string; primaryColor: string; accentColor: string; logoUrl: string | null } | null>(null);
   useEffect(() => {
     if (!schoolId) return;
@@ -91,14 +84,7 @@ export function AppShell({
     return () => { controller.abort(); window.removeEventListener("almac:branding-change", load); };
   }, [schoolId, userId, setTheme]);
   const currentAppearance = appearance?.schoolId === schoolId ? appearance : null;
-  const appearanceStyle = currentAppearance ? {
-    "--primary": currentAppearance.primaryColor,
-    "--primary-hover": currentAppearance.primaryColor,
-    "--primary-foreground": colorForeground(currentAppearance.primaryColor),
-    "--accent": currentAppearance.accentColor,
-    "--accent-foreground": colorForeground(currentAppearance.accentColor),
-    "--ring": currentAppearance.primaryColor,
-  } as CSSProperties : undefined;
+  const appearanceStyle = currentAppearance ? accessibleBrandColors(currentAppearance.primaryColor, currentAppearance.accentColor, resolvedTheme === 'dark') as CSSProperties : undefined;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarVisible, setDesktopSidebarVisible] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -127,7 +113,7 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-svh bg-background text-foreground" style={appearanceStyle}>
+    <div data-application-ui className="min-h-svh bg-background text-foreground" style={appearanceStyle}>
       <a
         href="#main-content"
         className="sr-only z-50 rounded-md bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
@@ -179,7 +165,7 @@ export function AppShell({
             {logoutError ? (
               <p
                 role="alert"
-                className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+                className="mb-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger"
               >
                 {logoutError}
               </p>

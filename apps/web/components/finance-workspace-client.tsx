@@ -126,18 +126,18 @@ export function FinanceWorkspaceClient({
 
         {children}
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div className="text-sm text-slate-600">Need to go deeper?</div>
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="text-sm text-muted-foreground">Need to go deeper?</div>
           <div className="mt-3 flex flex-wrap gap-3">
             <Link
               href="/finance/actions"
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-white"
+              className="rounded-xl border border-input px-4 py-3 text-sm font-medium hover:bg-surface"
             >
               Open Finance Actions
             </Link>
             <Link
               href="/reports"
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-white"
+              className="rounded-xl border border-input px-4 py-3 text-sm font-medium hover:bg-surface"
             >
               Open Reports
             </Link>

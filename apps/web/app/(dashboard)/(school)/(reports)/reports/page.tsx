@@ -83,11 +83,11 @@ export default async function ReportsPage() {
               <ReportCardBatchesClient schoolId={currentSchoolId} />
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div className="text-sm font-semibold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <div className="text-sm font-semibold text-foreground">
                 Finance reporting placeholder
               </div>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Finance-specific reports will be added after invoice and payment workflows are hardened.
               </p>
             </div>

@@ -752,7 +752,7 @@ export function FinanceCashierClient({
       {message ? (
         <div
           role="status"
-          className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+          className="rounded-2xl border border-success/40 bg-success-subtle p-4 text-sm text-success"
         >
           {message}
         </div>
@@ -760,29 +760,29 @@ export function FinanceCashierClient({
       {error ? (
         <div
           role="alert"
-          className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-sm text-danger"
         >
           {error}
         </div>
       ) : null}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
+      <section className="rounded-2xl border border-border bg-surface p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+            <div className="text-xs font-semibold uppercase tracking-wider text-info">
               1
             </div>
-            <h2 className="mt-1 text-lg font-semibold text-slate-950">
+            <h2 className="mt-1 text-lg font-semibold text-foreground">
               {copy.findStudent}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">{copy.searchHint}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{copy.searchHint}</p>
           </div>
           {summary ? (
             <button
               type="button"
               onClick={resetForNextStudent}
               disabled={reviewing}
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
             >
               {copy.nextStudent}
             </button>
@@ -796,32 +796,32 @@ export function FinanceCashierClient({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={copy.studentPlaceholder}
-            className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3"
+            className="min-w-0 flex-1 rounded-xl border border-input px-4 py-3"
           />
           <button
             type="submit"
             disabled={Boolean(busy) || reviewing || !search.trim()}
-            className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             <Search aria-hidden="true" className="mr-2 inline h-4 w-4" />
             {busy === "search" ? copy.searching : copy.search}
           </button>
         </form>
         {results.length ? (
-          <div className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200">
+          <div className="mt-3 divide-y divide-border rounded-xl border border-border">
             {<PaginatedCollection items={results}>{(student) => (
               <button
                 key={student.id}
                 type="button"
                 disabled={reviewing}
                 onClick={() => void loadStudent(student.id)}
-                className="flex w-full items-center justify-between gap-4 p-3 text-left hover:bg-slate-50"
+                className="flex w-full items-center justify-between gap-4 p-3 text-left hover:bg-surface"
               >
                 <span>
-                  <span className="block font-medium text-slate-950">
+                  <span className="block font-medium text-foreground">
                     {studentName(student)}
                   </span>
-                  <span className="block text-xs text-slate-500">
+                  <span className="block text-xs text-muted-foreground">
                     {student.studentCode ?? "Code pending"}
                     {student.gradeLevelCode
                       ? ` · ${student.gradeLevelCode}`
@@ -829,7 +829,7 @@ export function FinanceCashierClient({
                     {student.sectionCode ? ` · ${student.sectionCode}` : ""}
                   </span>
                 </span>
-                <span className="text-sm font-medium text-blue-700">
+                <span className="text-sm font-medium text-info">
                   {copy.select}
                 </span>
               </button>
@@ -839,14 +839,14 @@ export function FinanceCashierClient({
       </section>
 
       {summary ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+        <section className="rounded-2xl border border-border bg-surface p-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-info">
             2
           </div>
-          <h2 className="mt-1 text-lg font-semibold text-slate-950">
+          <h2 className="mt-1 text-lg font-semibold text-foreground">
             {copy.selectInvoice}
           </h2>
-          <div className="mt-1 text-sm text-slate-600">
+          <div className="mt-1 text-sm text-muted-foreground">
             {studentName(summary.student)} ·{" "}
             {summary.student.studentCode ?? "Code pending"}
           </div>
@@ -862,20 +862,20 @@ export function FinanceCashierClient({
                   aria-pressed={selectedInvoiceId === invoice.id}
                   className={`rounded-2xl border p-4 text-left ${
                     selectedInvoiceId === invoice.id
-                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
-                      : "border-slate-200 hover:bg-slate-50"
+                      ? "border-info/40 bg-info-subtle ring-2 ring-ring"
+                      : "border-border hover:bg-surface"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <span className="font-semibold text-slate-950">
+                    <span className="font-semibold text-foreground">
                       {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
                     </span>
                     <SchoolBadge>{invoice.invoiceStatus}</SchoolBadge>
                   </div>
-                  <div className="mt-3 text-2xl font-bold text-slate-950">
+                  <div className="mt-3 text-2xl font-bold text-foreground">
                     {money(invoice.balanceDue, invoice.currencyCode)}
                   </div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-1 text-xs text-muted-foreground">
                     Total {money(invoice.totalAmount, invoice.currencyCode)} ·
                     Due {invoice.dueDate ?? "not set"}
                   </div>
@@ -883,7 +883,7 @@ export function FinanceCashierClient({
               ))}
           </div>
           {!summary.invoices.some(invoiceCanReceivePayment) ? (
-            <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+            <div className="mt-4 rounded-xl bg-surface p-4 text-sm text-muted-foreground">
               {copy.noInvoices}
             </div>
           ) : null}
@@ -891,23 +891,23 @@ export function FinanceCashierClient({
       ) : null}
 
       {selectedInvoice ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+        <section className="rounded-2xl border border-border bg-surface p-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-info">
             3
           </div>
-          <h2 className="mt-1 text-lg font-semibold text-slate-950">
+          <h2 className="mt-1 text-lg font-semibold text-foreground">
             {copy.verifyDrawer}
           </h2>
           {busy === "session" ? (
-            <div className="mt-4 text-sm text-slate-500">Loading session…</div>
+            <div className="mt-4 text-sm text-muted-foreground">Loading session…</div>
           ) : sessionEnvelope?.session ? (
             <SessionSummary session={sessionEnvelope.session} />
           ) : sessionReadyCurrency === selectedInvoice.currencyCode ? (
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <div className="font-medium text-amber-950">
+            <div className="mt-4 rounded-2xl border border-warning/40 bg-warning-subtle p-4">
+              <div className="font-medium text-warning">
                 Open the {selectedInvoice.currencyCode} cash drawer
               </div>
-              <p className="mt-1 text-sm text-amber-800">
+              <p className="mt-1 text-sm text-warning">
                 Count the physical cash already in the drawer before recording
                 today’s first payment.
               </p>
@@ -918,14 +918,14 @@ export function FinanceCashierClient({
                   step="0.01"
                   value={openingCashAmount}
                   onChange={(event) => setOpeningCashAmount(event.target.value)}
-                  className="rounded-xl border border-amber-300 bg-white px-3 py-2"
+                  className="rounded-xl border border-warning/40 bg-surface px-3 py-2"
                   aria-label="Opening cash amount"
                 />
                 <button
                   type="button"
                   onClick={() => void openCashierSession()}
                   disabled={busy === "open-session"}
-                  className="rounded-xl bg-amber-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                  className="rounded-xl bg-warning px-4 py-2 text-sm font-semibold text-warning-foreground disabled:opacity-60"
                 >
                   {busy === "open-session" ? "Opening…" : "Open session"}
                 </button>
@@ -933,7 +933,7 @@ export function FinanceCashierClient({
             </div>
           ) : (
             <div className="mt-4 space-y-2">
-              <p className="text-sm text-amber-800">
+              <p className="text-sm text-warning">
                 {copy.currencyUnavailable}
               </p>
               <button
@@ -949,14 +949,14 @@ export function FinanceCashierClient({
       ) : null}
 
       {selectedInvoice && openSession && summary && !reviewing && !success ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
-          <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+        <section className="rounded-2xl border border-border bg-surface p-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-info">
             4
           </div>
-          <h2 className="mt-1 text-lg font-semibold text-slate-950">
+          <h2 className="mt-1 text-lg font-semibold text-foreground">
             {copy.enterPayment}
           </h2>
-          <div className="mt-3 flex flex-wrap gap-4 rounded-xl bg-slate-50 p-3 text-sm">
+          <div className="mt-3 flex flex-wrap gap-4 rounded-xl bg-surface p-3 text-sm">
             <span>
               {copy.balance}:{" "}
               <strong>
@@ -978,7 +978,7 @@ export function FinanceCashierClient({
             </span>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-foreground">
               {copy.amount} ({selectedInvoice.currencyCode})
               <input
                 type="number"
@@ -993,15 +993,15 @@ export function FinanceCashierClient({
                     reviewPayment();
                   }
                 }}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-foreground">
               {copy.method}
               <select
                 value={method}
                 onChange={(event) => setMethod(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               >
                 {enabledPaymentMethods.map((paymentMethod) => (
                   <option key={paymentMethod} value={paymentMethod}>
@@ -1010,23 +1010,23 @@ export function FinanceCashierClient({
                 ))}
               </select>
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-foreground">
               {copy.reference} (
               {method === "CASH" ? copy.optional : copy.required})
               <input
                 maxLength={200}
                 value={reference}
                 onChange={(event) => setReference(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-foreground">
               {copy.notes} ({copy.optional})
               <input
                 maxLength={2000}
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="mt-1 w-full rounded-xl border border-input px-3 py-2"
               />
             </label>
           </div>
@@ -1042,11 +1042,11 @@ export function FinanceCashierClient({
       ) : null}
 
       {reviewing && selectedInvoice && summary && openSession ? (
-        <section className="rounded-2xl border-2 border-blue-500 bg-blue-50 p-5">
-          <div className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+        <section className="rounded-2xl border-2 border-info/40 bg-info-subtle p-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-info">
             5 · {copy.confirmation}
           </div>
-          <h2 className="mt-1 text-xl font-semibold text-slate-950">
+          <h2 className="mt-1 text-xl font-semibold text-foreground">
             {copy.confirmTitle}
           </h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -1098,7 +1098,7 @@ export function FinanceCashierClient({
               data-cashier-confirm="true"
               onClick={() => void confirmPayment()}
               disabled={busy === "payment"}
-              className="rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+              className="rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
               {busy === "payment" ? copy.posting : copy.confirm}
             </button>
@@ -1106,14 +1106,14 @@ export function FinanceCashierClient({
               type="button"
               onClick={() => setReviewing(false)}
               disabled={paymentUncertain}
-              className="rounded-xl border border-blue-300 bg-white px-5 py-3 text-sm font-medium"
+              className="rounded-xl border border-info/40 bg-surface px-5 py-3 text-sm font-medium"
             >
               {copy.back}
             </button>
           </div>
-          <p className="mt-3 text-xs text-blue-800">{copy.shortcut}</p>
+          <p className="mt-3 text-xs text-info">{copy.shortcut}</p>
           {paymentUncertain ? (
-            <p role="status" className="mt-3 text-sm text-amber-900">
+            <p role="status" className="mt-3 text-sm text-warning">
               {copy.uncertain}
             </p>
           ) : null}
@@ -1121,14 +1121,14 @@ export function FinanceCashierClient({
       ) : null}
 
       {success ? (
-        <section className="rounded-2xl border border-green-300 bg-green-50 p-5">
-          <div className="text-xs font-semibold uppercase tracking-wider text-green-700">
+        <section className="rounded-2xl border border-success/40 bg-success-subtle p-5">
+          <div className="text-xs font-semibold uppercase tracking-wider text-success">
             6 · {copy.complete}
           </div>
-          <h2 className="mt-1 text-xl font-semibold text-green-950">
+          <h2 className="mt-1 text-xl font-semibold text-success">
             Receipt {success.receiptNumber} is ready
           </h2>
-          <p className="mt-2 text-sm text-green-800">
+          <p className="mt-2 text-sm text-success">
             <CheckCircle2 aria-hidden="true" className="mr-1 inline h-4 w-4" />
             {money(success.amount, success.currencyCode)} recorded. Remaining
             balance: {money(success.invoice.balanceDue, success.currencyCode)}.
@@ -1138,7 +1138,7 @@ export function FinanceCashierClient({
               type="button"
               onClick={() => void printReceipt("THERMAL_80MM")}
               disabled={busy === "print"}
-              className="rounded-xl bg-green-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+              className="rounded-xl bg-success px-4 py-2 text-sm font-semibold text-success-foreground disabled:opacity-60"
             >
               <Printer aria-hidden="true" className="mr-1 inline h-4 w-4" />
               {copy.printThermal}
@@ -1147,20 +1147,20 @@ export function FinanceCashierClient({
               type="button"
               onClick={() => void printReceipt("A4")}
               disabled={busy === "print"}
-              className="rounded-xl border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-900"
+              className="rounded-xl border border-success/40 bg-surface px-4 py-2 text-sm font-medium text-success"
             >
               {copy.printA4}
             </button>
             <Link
               href={`/finance/payments/${success.paymentId}/receipt`}
-              className="rounded-xl border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-900"
+              className="rounded-xl border border-success/40 bg-surface px-4 py-2 text-sm font-medium text-success"
             >
               {copy.openReceipt}
             </Link>
             <button
               type="button"
               onClick={resetForNextStudent}
-              className="rounded-xl border border-green-300 bg-white px-4 py-2 text-sm font-medium text-green-900"
+              className="rounded-xl border border-success/40 bg-surface px-4 py-2 text-sm font-medium text-success"
             >
               {copy.nextStudent}
             </button>
@@ -1181,9 +1181,9 @@ export function FinanceCashierClient({
       ) : null}
 
       {openSession && !reviewing ? (
-        <section className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white">
+        <section className="rounded-2xl border border-border bg-primary p-5 text-solid-foreground">
           <h2 className="text-lg font-semibold">Close this cash drawer</h2>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="mt-1 text-sm text-muted-foreground">
             Expected cash is{" "}
             {money(openSession.expectedCashAmount, openSession.currencyCode)}.
             Count the drawer and enter the physical amount below.
@@ -1196,10 +1196,10 @@ export function FinanceCashierClient({
               value={closingCashAmount}
               onChange={(event) => setClosingCashAmount(event.target.value)}
               placeholder="Counted cash"
-              className="rounded-xl border border-slate-600 bg-white px-3 py-2 text-slate-950"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-foreground"
             />
             {closingCashAmount ? (
-              <span className="text-sm text-slate-300">
+              <span className="text-sm text-muted-foreground">
                 Variance preview:{" "}
                 {money(
                   Number(closingCashAmount) - openSession.expectedCashAmount,
@@ -1211,7 +1211,7 @@ export function FinanceCashierClient({
               type="button"
               onClick={() => void closeSession()}
               disabled={!closingCashAmount || busy === "close-session"}
-              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
+              className="rounded-xl bg-surface px-4 py-2 text-sm font-semibold text-foreground disabled:opacity-50"
             >
               {busy === "close-session" ? "Closing…" : "Close and reconcile"}
             </button>
@@ -1220,25 +1220,25 @@ export function FinanceCashierClient({
       ) : null}
 
       {sessionEnvelope?.canSupervise && dailySessions.length && !reviewing ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-slate-950">
+        <section className="rounded-2xl border border-border bg-surface p-5">
+          <h2 className="text-lg font-semibold text-foreground">
             Supervisor · today’s cashier sessions
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Closed sessions can only be reopened here with an audited reason.
           </p>
           <div className="mt-4 space-y-3">
             {<PaginatedCollection items={dailySessions}>{(session) => (
               <div
                 key={session.id}
-                className="rounded-xl border border-slate-200 p-4"
+                className="rounded-xl border border-border p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="font-medium text-slate-950">
+                    <div className="font-medium text-foreground">
                       {studentName(session.cashier)} · {session.currencyCode}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-muted-foreground">
                       {session.collectionCount} payment(s) · net{" "}
                       {money(session.collectionTotal, session.currencyCode)}
                       {session.refundCount > 0 ? (
@@ -1254,7 +1254,7 @@ export function FinanceCashierClient({
                 </div>
                 {session.status === "CLOSED" ? (
                   <div className="mt-3">
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-muted-foreground">
                       Expected{" "}
                       {money(session.expectedCashAmount, session.currencyCode)}{" "}
                       · Counted{" "}
@@ -1273,7 +1273,7 @@ export function FinanceCashierClient({
                             setReopenReason(event.target.value)
                           }
                           placeholder="Required supervisor reason"
-                          className="min-w-72 flex-1 rounded-xl border border-slate-300 px-3 py-2"
+                          className="min-w-72 flex-1 rounded-xl border border-input px-3 py-2"
                         />
                         <button
                           type="button"
@@ -1282,7 +1282,7 @@ export function FinanceCashierClient({
                             reopenReason.trim().length < 10 ||
                             busy === `reopen-${session.id}`
                           }
-                          className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                          className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                         >
                           Approve reopening
                         </button>
@@ -1294,7 +1294,7 @@ export function FinanceCashierClient({
                           setReopenSessionId(session.id);
                           setReopenReason("");
                         }}
-                        className="mt-3 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium"
+                        className="mt-3 rounded-lg border border-input px-3 py-2 text-xs font-medium"
                       >
                         Review reopening
                       </button>
@@ -1312,11 +1312,11 @@ export function FinanceCashierClient({
 
 function ReviewItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-blue-200 bg-white p-3">
-      <div className="text-xs uppercase tracking-wider text-slate-500">
+    <div className="rounded-xl border border-info/40 bg-surface p-3">
+      <div className="text-xs uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
-      <div className="mt-1 font-semibold text-slate-950">{value}</div>
+      <div className="mt-1 font-semibold text-foreground">{value}</div>
     </div>
   );
 }
@@ -1326,16 +1326,16 @@ function SessionSummary({ session }: { session: CashierSession }) {
     <div
       className={`mt-4 rounded-2xl border p-4 ${
         session.status === "OPEN"
-          ? "border-green-200 bg-green-50"
-          : "border-slate-300 bg-slate-50"
+          ? "border-success/40 bg-success-subtle"
+          : "border-input bg-surface"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="font-medium text-slate-950">
+          <div className="font-medium text-foreground">
             {session.currencyCode} session · {session.businessDate}
           </div>
-          <div className="mt-1 text-sm text-slate-600">
+          <div className="mt-1 text-sm text-muted-foreground">
             Opening cash{" "}
             {money(session.openingCashAmount, session.currencyCode)} · Expected
             cash {money(session.expectedCashAmount, session.currencyCode)}
@@ -1348,7 +1348,7 @@ function SessionSummary({ session }: { session: CashierSession }) {
           {session.collectionsByMethod.map((item) => (
             <span
               key={item.paymentMethod}
-              className="rounded-full bg-white px-3 py-1 text-xs text-slate-700"
+              className="rounded-full bg-surface px-3 py-1 text-xs text-foreground"
             >
               {PAYMENT_METHOD_LABELS[item.paymentMethod] ?? item.paymentMethod}:{" "}
               net {money(item.totalAmount, session.currencyCode)} (
@@ -1360,7 +1360,7 @@ function SessionSummary({ session }: { session: CashierSession }) {
         </div>
       ) : null}
       {session.status === "CLOSED" ? (
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-muted-foreground">
           This session is closed. A supervisor must reopen it before another
           payment can be posted.
         </p>

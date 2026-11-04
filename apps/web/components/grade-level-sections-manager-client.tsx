@@ -146,24 +146,24 @@ export function GradeLevelSectionsManagerClient({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div>
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-foreground">
           {t("academic.classesAndSections")}
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           {t("academic.classesAndSectionsDescription")}
         </p>
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -179,10 +179,10 @@ export function GradeLevelSectionsManagerClient({
           return (
             <div
               key={division}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              className="rounded-2xl border border-border bg-surface p-4"
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="font-semibold text-slate-900">
+                <h3 className="font-semibold text-foreground">
                   {divisionLabel(division === "OTHER" ? null : division, t)}
                 </h3>
 
@@ -199,11 +199,11 @@ export function GradeLevelSectionsManagerClient({
                   return (
                     <div
                       key={level.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-4"
+                      className="rounded-2xl border border-border bg-surface p-4"
                     >
                       <div className="grid gap-4 lg:grid-cols-[1fr_150px_120px] lg:items-center">
                         <div>
-                          <div className="font-semibold text-slate-900">
+                          <div className="font-semibold text-foreground">
                             {i18nName(level.nameI18n, level.code, locale)}
                           </div>
 
@@ -212,7 +212,7 @@ export function GradeLevelSectionsManagerClient({
                               <PaginatedCollection items={level.sections}>{(section) => (
                                 <span
                                   key={section.id}
-                                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
+                                  className="rounded-full border border-border bg-surface px-3 py-1 text-xs text-foreground"
                                 >
                                   <span className="font-semibold">
                                     {sectionLetter(section)}
@@ -221,14 +221,14 @@ export function GradeLevelSectionsManagerClient({
                                 </span>
                               )}</PaginatedCollection>
                             ) : (
-                              <span className="text-sm text-slate-500">
+                              <span className="text-sm text-muted-foreground">
                                 {t("academic.noSectionYet")}
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <label className="grid gap-1 text-xs font-medium text-slate-500">
+                        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
                           {t("academic.numberOfSections")}
                           <input
                             type="number"
@@ -238,7 +238,7 @@ export function GradeLevelSectionsManagerClient({
                             onChange={(event) =>
                               updateCount(level.id, Number(event.target.value))
                             }
-                            className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900"
+                            className="rounded-xl border border-input px-3 py-2 text-sm text-foreground"
                           />
                         </label>
 
@@ -246,7 +246,7 @@ export function GradeLevelSectionsManagerClient({
                           type="button"
                           disabled={savingId === level.id}
                           onClick={() => saveLevel(level)}
-                          className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                          className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
                         >
                           {savingId === level.id ? t("common.saving") : t("common.save")}
                         </button>
@@ -260,7 +260,7 @@ export function GradeLevelSectionsManagerClient({
         })}
 
         {levels.length === 0 ? (
-          <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+          <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground">
             {t("common.noRecords")}
           </div>
         ) : null}

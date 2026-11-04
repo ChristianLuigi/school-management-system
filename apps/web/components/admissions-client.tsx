@@ -395,13 +395,13 @@ export function AdmissionsClient({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-border bg-surface p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">
+            <h3 className="text-lg font-semibold text-foreground">
               {fr ? "Candidatures" : "Applications"}
             </h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               {fr
                 ? "Suivez les candidatures avant leur inscription définitive."
                 : "Track applications before enrollment."}
@@ -436,7 +436,7 @@ export function AdmissionsClient({
         {message ? (
           <div
             role="status"
-            className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700"
+            className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success"
           >
             {message}
           </div>
@@ -445,14 +445,14 @@ export function AdmissionsClient({
         {error ? (
           <div
             role="alert"
-            className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger"
           >
             {error}
           </div>
         ) : null}
 
         {!structureReady && structureMessage ? (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="mt-4 rounded-xl border border-warning/40 bg-warning-subtle p-4 text-sm text-warning">
             <div className="font-semibold">
               {fr
                 ? "Structure scolaire requise"
@@ -462,7 +462,7 @@ export function AdmissionsClient({
 
             <a
               href="/academic-structure"
-              className="mt-3 inline-flex rounded-lg bg-amber-700 px-3 py-2 text-xs font-medium text-white hover:bg-amber-800"
+              className="mt-3 inline-flex rounded-lg bg-warning px-3 py-2 text-xs font-medium text-warning-foreground hover:bg-warning"
             >
               {fr ? "Configurer les classes" : "Configure classes"}
             </a>
@@ -554,13 +554,13 @@ export function AdmissionsClient({
         ) : null}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-border bg-surface p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h4 className="font-semibold text-slate-900">
+            <h4 className="font-semibold text-foreground">
               {fr ? "Répertoire des candidatures" : "Application directory"}
             </h4>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               {fr
                 ? "Numéro, candidat, responsable ou téléphone."
                 : "Number, applicant, guardian or phone."}
@@ -571,7 +571,7 @@ export function AdmissionsClient({
             type="button"
             onClick={loadApplications}
             disabled={loading}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface disabled:opacity-60"
           >
             <RefreshCw aria-hidden="true" size={16} className="mr-1 inline" />
             {loading
@@ -594,7 +594,7 @@ export function AdmissionsClient({
           <label className="min-w-0 flex-1 text-sm font-medium">
             {fr ? "Rechercher" : "Search"}
             <input
-              className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 min-h-11 w-full rounded-xl border border-input px-3 py-2 text-sm"
               placeholder={
                 fr ? "Nom, numéro ou téléphone" : "Name, number or phone"
               }
@@ -605,7 +605,7 @@ export function AdmissionsClient({
           <label className="text-sm font-medium">
             {fr ? "Statut" : "Status"}
             <select
-              className="mt-1 block min-h-11 rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 block min-h-11 rounded-xl border border-input px-3 py-2 text-sm"
               value={status}
               onChange={(event) => setStatus(event.target.value)}
             >
@@ -644,10 +644,10 @@ export function AdmissionsClient({
 
         <div
           aria-busy={loading}
-          className="overflow-x-auto rounded-2xl border border-slate-200"
+          className="overflow-x-auto rounded-2xl border border-border"
         >
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left text-slate-600">
+            <thead className="bg-surface-muted text-left text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">
                   {fr ? "Candidature" : "Application"}
@@ -664,21 +664,21 @@ export function AdmissionsClient({
 
             <tbody>
               {<PaginatedCollection items={rows} rows columns={6}>{(row) => (
-                <tr key={row.id} className="border-t border-slate-200">
+                <tr key={row.id} className="border-t border-border">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-foreground">
                       {row.applicationNumber}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {new Date(row.createdAt).toLocaleDateString()}
                     </div>
                   </td>
 
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-foreground">
                       {row.firstName} {row.lastName}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {row.gender === "MALE"
                         ? "Boy / Garcon"
                         : row.gender === "FEMALE"
@@ -693,7 +693,7 @@ export function AdmissionsClient({
 
                   <td className="px-4 py-3">
                     <div>{row.parentFullName ?? "-"}</div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {row.parentPhone ?? "-"}
                     </div>
                   </td>
@@ -722,7 +722,7 @@ export function AdmissionsClient({
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-4 py-8 text-center text-slate-500"
+                    className="px-4 py-8 text-center text-muted-foreground"
                   >
                     <EmptySchoolState
                       title={
@@ -747,7 +747,7 @@ export function AdmissionsClient({
           </table>
         </div>
         {loading ? (
-          <p role="status" className="mt-3 text-sm text-slate-500">
+          <p role="status" className="mt-3 text-sm text-muted-foreground">
             {fr ? "Chargement des candidatures…" : "Loading applications…"}
           </p>
         ) : null}

@@ -126,7 +126,7 @@ export function StudentFinanceStatementClient({
         <div className="flex flex-wrap gap-2">
           <Link
             href="/finance"
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             Back to Finance
           </Link>
@@ -134,7 +134,7 @@ export function StudentFinanceStatementClient({
           <button
             type="button"
             onClick={() => window.print()}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
           >
             Print / Save as PDF
           </button>
@@ -143,38 +143,38 @@ export function StudentFinanceStatementClient({
         <button
           type="button"
           onClick={loadProfile}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           Refresh
         </button>
       </div>
 
       {loading ? (
-        <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 print:hidden">
+        <div className="rounded-xl bg-surface p-4 text-sm text-muted-foreground print:hidden">
           Loading student statement...
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 print:hidden">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger print:hidden">
           {error}
         </div>
       ) : null}
 
       {profile ? (
-        <div className="mx-auto max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
-          <div className="border-b border-slate-200 pb-6">
+        <div className="mx-auto max-w-5xl rounded-3xl border border-border bg-surface p-8 shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
+          <div className="border-b border-border pb-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                <div className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
                   Student Financial Statement
                 </div>
 
-                <h1 className="mt-2 text-3xl font-bold text-slate-900">
+                <h1 className="mt-2 text-3xl font-bold text-foreground">
                   Finance Statement
                 </h1>
 
-                <div className="mt-1 text-sm text-slate-500">
+                <div className="mt-1 text-sm text-muted-foreground">
                   Generated on {new Date().toLocaleDateString()}
                 </div>
               </div>
@@ -199,37 +199,37 @@ export function StudentFinanceStatementClient({
             </div>
           </div>
 
-          <div className="grid gap-6 border-b border-slate-200 py-6 md:grid-cols-2">
+          <div className="grid gap-6 border-b border-border py-6 md:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-wider text-slate-500">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">
                 Student
               </div>
 
-              <div className="mt-1 text-xl font-bold text-slate-900">
+              <div className="mt-1 text-xl font-bold text-foreground">
                 {profile.student.firstName ?? ""} {profile.student.lastName ?? ""}
               </div>
 
-              <div className="mt-1 text-sm text-slate-500">
+              <div className="mt-1 text-sm text-muted-foreground">
                 Code: {profile.student.code ?? "Code pending"}
               </div>
             </div>
 
 
             <div>
-              <div className="text-xs uppercase tracking-wider text-slate-500">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">
                 Statement Type
               </div>
 
-              <div className="mt-1 text-xl font-bold text-slate-900">
+              <div className="mt-1 text-xl font-bold text-foreground">
                 Account Summary
               </div>
             </div>
           </div>
 
           <div className="grid gap-4 py-6 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 print:bg-white">
-              <div className="text-sm text-slate-500">Invoices</div>
-              <div className="mt-2 text-3xl font-bold text-slate-900">
+            <div className="rounded-2xl border border-border bg-surface p-5 print:bg-white">
+              <div className="text-sm text-muted-foreground">Invoices</div>
+              <div className="mt-2 text-3xl font-bold text-foreground">
                 {profile.summary.invoiceCount}
               </div>
             </div>
@@ -237,34 +237,34 @@ export function StudentFinanceStatementClient({
             {profile.totalsByCurrency.flatMap((totals) => [
               <div
                 key={`${totals.currencyCode}-billed`}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-5 print:bg-white"
+                className="rounded-2xl border border-border bg-surface p-5 print:bg-white"
               >
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-muted-foreground">
                   Total Billed ({totals.currencyCode})
                 </div>
-                <div className="mt-2 text-2xl font-bold text-slate-900">
+                <div className="mt-2 text-2xl font-bold text-foreground">
                   {money(totals.totalBilled, totals.currencyCode)}
                 </div>
               </div>,
               <div
                 key={`${totals.currencyCode}-paid`}
-                className="rounded-2xl border border-green-200 bg-green-50 p-5 print:bg-white"
+                className="rounded-2xl border border-success/40 bg-success-subtle p-5 print:bg-white"
               >
-                <div className="text-sm text-green-700">
+                <div className="text-sm text-success">
                   Total Paid ({totals.currencyCode})
                 </div>
-                <div className="mt-2 text-2xl font-bold text-green-900">
+                <div className="mt-2 text-2xl font-bold text-success">
                   {money(totals.totalPaid, totals.currencyCode)}
                 </div>
               </div>,
               <div
                 key={`${totals.currencyCode}-outstanding`}
-                className="rounded-2xl border border-amber-200 bg-amber-50 p-5 print:bg-white"
+                className="rounded-2xl border border-warning/40 bg-warning-subtle p-5 print:bg-white"
               >
-                <div className="text-sm text-amber-700">
+                <div className="text-sm text-warning">
                   Outstanding ({totals.currencyCode})
                 </div>
-                <div className="mt-2 text-2xl font-bold text-amber-900">
+                <div className="mt-2 text-2xl font-bold text-warning">
                   {money(totals.totalOutstanding, totals.currencyCode)}
                 </div>
               </div>,
@@ -272,13 +272,13 @@ export function StudentFinanceStatementClient({
           </div>
 
           <div className="mt-2">
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">
+            <h2 className="mb-3 text-lg font-semibold text-foreground">
               Invoices
             </h2>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <div className="overflow-x-auto rounded-2xl border border-border">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-100 text-left text-slate-600 print:bg-white">
+                <thead className="bg-surface-muted text-left text-muted-foreground print:bg-white">
                   <tr>
                     <th className="px-4 py-3">Invoice</th>
                     <th className="px-4 py-3">Status</th>
@@ -292,14 +292,14 @@ export function StudentFinanceStatementClient({
 
                 <tbody>
                   {profile.invoices.map((invoice) => (
-                    <tr key={invoice.id} className="border-t border-slate-200">
+                    <tr key={invoice.id} className="border-t border-border">
                       <td className="px-4 py-3">
-                        <div className="font-medium text-slate-900">
+                        <div className="font-medium text-foreground">
                           {invoice.invoiceNumber ?? invoice.id.slice(0, 8)}
                         </div>
 
                         {invoice.items.length > 0 ? (
-                          <div className="mt-2 space-y-1 text-xs text-slate-500">
+                          <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                             {invoice.items.map((item) => (
                               <div key={item.id}>
                                 {item.description} - {item.quantity} x{" "}
@@ -316,7 +316,7 @@ export function StudentFinanceStatementClient({
                         </SchoolBadge>
 
                         {invoice.daysOverdue ? (
-                          <div className="mt-1 text-xs text-red-700">
+                          <div className="mt-1 text-xs text-danger">
                             {invoice.daysOverdue} day(s) overdue
                           </div>
                         ) : null}
@@ -343,7 +343,7 @@ export function StudentFinanceStatementClient({
                     <tr>
                       <td
                         colSpan={7}
-                        className="px-4 py-8 text-center text-slate-500"
+                        className="px-4 py-8 text-center text-muted-foreground"
                       >
                         No invoices found.
                       </td>
@@ -355,13 +355,13 @@ export function StudentFinanceStatementClient({
           </div>
 
           <div className="mt-8">
-            <h2 className="mb-3 text-lg font-semibold text-slate-900">
+            <h2 className="mb-3 text-lg font-semibold text-foreground">
               Payments
             </h2>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <div className="overflow-x-auto rounded-2xl border border-border">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-100 text-left text-slate-600 print:bg-white">
+                <thead className="bg-surface-muted text-left text-muted-foreground print:bg-white">
                   <tr>
                     <th className="px-4 py-3">Date</th>
                     <th className="px-4 py-3">Invoice</th>
@@ -375,7 +375,7 @@ export function StudentFinanceStatementClient({
 
                 <tbody>
                   {profile.payments.map((payment) => (
-                    <tr key={payment.id} className="border-t border-slate-200">
+                    <tr key={payment.id} className="border-t border-border">
                       <td className="px-4 py-3">{payment.paymentDate}</td>
 
                       <td className="px-4 py-3">
@@ -397,7 +397,7 @@ export function StudentFinanceStatementClient({
                       <td className="px-4 py-3 print:hidden">
                         <a
                           href={`/finance/payments/${payment.id}/receipt`}
-                          className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                          className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary"
                         >
                           Receipt
                         </a>
@@ -409,7 +409,7 @@ export function StudentFinanceStatementClient({
                     <tr>
                       <td
                         colSpan={7}
-                        className="px-4 py-8 text-center text-slate-500"
+                        className="px-4 py-8 text-center text-muted-foreground"
                       >
                         No payments found.
                       </td>
@@ -420,12 +420,12 @@ export function StudentFinanceStatementClient({
             </div>
           </div>
 
-          <div className="mt-10 grid gap-8 border-t border-slate-200 pt-10 md:grid-cols-2">
-            <div className="h-24 border-t border-slate-300 pt-2 text-center text-sm text-slate-500">
+          <div className="mt-10 grid gap-8 border-t border-border pt-10 md:grid-cols-2">
+            <div className="h-24 border-t border-input pt-2 text-center text-sm text-muted-foreground">
               Finance Officer
             </div>
 
-            <div className="h-24 border-t border-slate-300 pt-2 text-center text-sm text-slate-500">
+            <div className="h-24 border-t border-input pt-2 text-center text-sm text-muted-foreground">
               Parent / Guardian
             </div>
           </div>

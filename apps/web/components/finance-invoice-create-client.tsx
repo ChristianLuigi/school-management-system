@@ -264,18 +264,18 @@ export function FinanceInvoiceCreateClient({
   }, [schoolId]);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Create Invoice
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Create a draft or issued invoice for a student. Preview it before saving.
           </p>
 
           {settingsLoading ? (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               Loading finance defaults...
             </p>
           ) : null}
@@ -284,20 +284,20 @@ export function FinanceInvoiceCreateClient({
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
         >
           {open ? "Close" : "New Invoice"}
         </button>
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -318,7 +318,7 @@ export function FinanceInvoiceCreateClient({
             </div>
 
             <select
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               value={invoiceStatus}
               onChange={(e) => {
                 setInvoiceStatus(e.target.value as "DRAFT" | "ISSUED");
@@ -330,7 +330,7 @@ export function FinanceInvoiceCreateClient({
             </select>
 
             <select
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               value={currencyCode}
               onChange={(e) => {
                 setCurrencyCode(e.target.value);
@@ -343,7 +343,7 @@ export function FinanceInvoiceCreateClient({
 
             <input
               type="date"
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               value={issueDate}
               onChange={(e) => {
                 setIssueDate(e.target.value);
@@ -353,7 +353,7 @@ export function FinanceInvoiceCreateClient({
 
             <input
               type="date"
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               value={dueDate}
               onChange={(e) => {
                 setDueDate(e.target.value);
@@ -362,7 +362,7 @@ export function FinanceInvoiceCreateClient({
             />
 
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-xl border border-input px-3 py-2 text-sm"
               placeholder="Discount amount"
               value={discountAmount}
               onChange={(e) => {
@@ -372,7 +372,7 @@ export function FinanceInvoiceCreateClient({
             />
 
             <textarea
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input px-3 py-2 text-sm md:col-span-2"
               placeholder="Notes"
               value={notes}
               onChange={(e) => {
@@ -382,14 +382,14 @@ export function FinanceInvoiceCreateClient({
             />
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-2xl border border-border bg-surface p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div className="font-semibold text-slate-900">Invoice Items</div>
+              <div className="font-semibold text-foreground">Invoice Items</div>
 
               <button
                 type="button"
                 onClick={addItem}
-                className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50"
+                className="rounded-xl border border-input bg-surface px-3 py-2 text-sm hover:bg-surface"
               >
                 Add Item
               </button>
@@ -403,10 +403,10 @@ export function FinanceInvoiceCreateClient({
                 return (
                   <div
                     key={index}
-                    className="grid gap-3 rounded-xl border border-slate-200 bg-white p-3 md:grid-cols-[1fr_120px_140px_140px_auto]"
+                    className="grid gap-3 rounded-xl border border-border bg-surface p-3 md:grid-cols-[1fr_120px_140px_140px_auto]"
                   >
                     <input
-                      className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                      className="rounded-xl border border-input px-3 py-2 text-sm"
                       placeholder="Description"
                       value={item.description}
                       onChange={(e) =>
@@ -415,7 +415,7 @@ export function FinanceInvoiceCreateClient({
                     />
 
                     <input
-                      className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                      className="rounded-xl border border-input px-3 py-2 text-sm"
                       placeholder="Qty"
                       value={item.quantity}
                       onChange={(e) =>
@@ -424,7 +424,7 @@ export function FinanceInvoiceCreateClient({
                     />
 
                     <input
-                      className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+                      className="rounded-xl border border-input px-3 py-2 text-sm"
                       placeholder="Unit amount"
                       value={item.unitAmount}
                       onChange={(e) =>
@@ -432,14 +432,14 @@ export function FinanceInvoiceCreateClient({
                       }
                     />
 
-                    <div className="rounded-xl bg-slate-50 px-3 py-2 text-sm font-semibold">
+                    <div className="rounded-xl bg-surface px-3 py-2 text-sm font-semibold">
                       {money(lineTotal, currencyCode)}
                     </div>
 
                     <button
                       type="button"
                       onClick={() => removeItem(index)}
-                      className="rounded-xl border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
+                      className="rounded-xl border border-danger/40 px-3 py-2 text-sm text-danger hover:bg-danger-subtle"
                     >
                       Remove
                     </button>
@@ -450,22 +450,22 @@ export function FinanceInvoiceCreateClient({
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Subtotal</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Subtotal</div>
               <div className="mt-2 text-2xl font-bold">
                 {money(subtotal, currencyCode)}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="text-sm text-slate-500">Discount</div>
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <div className="text-sm text-muted-foreground">Discount</div>
               <div className="mt-2 text-2xl font-bold">
                 {money(discount, currencyCode)}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-900 bg-slate-900 p-4 text-white">
-              <div className="text-sm text-slate-300">Total</div>
+            <div className="rounded-2xl border border-input bg-primary p-4 text-solid-foreground">
+              <div className="text-sm text-muted-foreground">Total</div>
               <div className="mt-2 text-2xl font-bold">
                 {money(total, currencyCode)}
               </div>
@@ -476,7 +476,7 @@ export function FinanceInvoiceCreateClient({
             <button
               type="button"
               onClick={previewInvoice}
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-slate-50"
+              className="rounded-xl border border-input px-4 py-3 text-sm font-medium hover:bg-surface"
             >
               Preview Invoice
             </button>
@@ -485,31 +485,31 @@ export function FinanceInvoiceCreateClient({
               type="button"
               disabled={saving || !previewVisible}
               onClick={createInvoice}
-              className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+              className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
             >
               {saving ? "Creating..." : "Create Invoice"}
             </button>
           </div>
 
           {!previewVisible ? (
-            <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="rounded-xl bg-warning-subtle p-3 text-sm text-warning">
               Preview the invoice before creating it.
             </div>
           ) : null}
 
           {previewVisible ? (
-            <div className="rounded-3xl border border-slate-300 bg-white p-6 shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-5">
+            <div className="rounded-3xl border border-input bg-surface p-6 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-5">
                 <div>
-                  <div className="text-sm uppercase tracking-[0.2em] text-slate-500">
+                  <div className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
                     Invoice Preview
                   </div>
 
-                  <h4 className="mt-2 text-2xl font-bold text-slate-900">
+                  <h4 className="mt-2 text-2xl font-bold text-foreground">
                     Pending Invoice
                   </h4>
 
-                  <div className="mt-1 text-sm text-slate-500">
+                  <div className="mt-1 text-sm text-muted-foreground">
                     This invoice has not been saved yet.
                   </div>
                 </div>
@@ -519,55 +519,55 @@ export function FinanceInvoiceCreateClient({
                     {invoiceStatus}
                   </SchoolBadge>
 
-                  <div className="mt-3 text-sm text-slate-500">
+                  <div className="mt-3 text-sm text-muted-foreground">
                     Issue date: {effectiveIssueDate}
                   </div>
 
-                  <div className="text-sm text-slate-500">
+                  <div className="text-sm text-muted-foreground">
                     Due date: {effectiveDueDate}
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-6 border-b border-slate-200 py-5 md:grid-cols-3">
+              <div className="grid gap-6 border-b border-border py-5 md:grid-cols-3">
                 <div>
-                  <div className="text-xs uppercase tracking-wider text-slate-500">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">
                     Student
                   </div>
-                  <div className="mt-1 break-all font-semibold text-slate-900">
+                  <div className="mt-1 break-all font-semibold text-foreground">
                     {selectedStudent
                       ? `${selectedStudent.firstName ?? ""} ${selectedStudent.lastName ?? ""}`.trim() ||
                         selectedStudent.studentCode ||
                         selectedStudent.id
                       : "-"}
                   </div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-1 text-xs text-muted-foreground">
                     {selectedStudent?.studentCode ?? ""}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-xs uppercase tracking-wider text-slate-500">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">
                     Currency
                   </div>
-                  <div className="mt-1 font-semibold text-slate-900">
+                  <div className="mt-1 font-semibold text-foreground">
                     {currencyCode}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-xs uppercase tracking-wider text-slate-500">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground">
                     Items
                   </div>
-                  <div className="mt-1 font-semibold text-slate-900">
+                  <div className="mt-1 font-semibold text-foreground">
                     {cleanItems.length}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
+              <div className="mt-5 overflow-x-auto rounded-2xl border border-border">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-slate-100 text-left text-slate-600">
+                  <thead className="bg-surface-muted text-left text-muted-foreground">
                     <tr>
                       <th className="px-4 py-3">Description</th>
                       <th className="px-4 py-3">Qty</th>
@@ -578,8 +578,8 @@ export function FinanceInvoiceCreateClient({
 
                   <tbody>
                     {cleanItems.map((item, index) => (
-                      <tr key={index} className="border-t border-slate-200">
-                        <td className="px-4 py-3 font-medium text-slate-900">
+                      <tr key={index} className="border-t border-border">
+                        <td className="px-4 py-3 font-medium text-foreground">
                           {item.description}
                         </td>
                         <td className="px-4 py-3">{item.quantity}</td>
@@ -596,25 +596,25 @@ export function FinanceInvoiceCreateClient({
               </div>
 
               <div className="mt-6 flex justify-end">
-                <div className="w-full max-w-sm rounded-2xl border border-slate-200 p-4">
+                <div className="w-full max-w-sm rounded-2xl border border-border p-4">
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between gap-4">
-                      <span className="text-slate-500">Subtotal</span>
+                      <span className="text-muted-foreground">Subtotal</span>
                       <span className="font-medium">
                         {money(subtotal, currencyCode)}
                       </span>
                     </div>
 
                     <div className="flex justify-between gap-4">
-                      <span className="text-slate-500">Discount</span>
+                      <span className="text-muted-foreground">Discount</span>
                       <span className="font-medium">
                         {money(discount, currencyCode)}
                       </span>
                     </div>
 
-                    <div className="flex justify-between gap-4 border-t border-slate-200 pt-2 text-lg">
-                      <span className="font-bold text-slate-900">Total</span>
-                      <span className="font-bold text-slate-900">
+                    <div className="flex justify-between gap-4 border-t border-border pt-2 text-lg">
+                      <span className="font-bold text-foreground">Total</span>
+                      <span className="font-bold text-foreground">
                         {money(total, currencyCode)}
                       </span>
                     </div>
@@ -623,15 +623,15 @@ export function FinanceInvoiceCreateClient({
               </div>
 
               {notes ? (
-                <div className="mt-5 rounded-2xl border border-slate-200 p-4">
-                  <div className="text-sm font-semibold text-slate-900">
+                <div className="mt-5 rounded-2xl border border-border p-4">
+                  <div className="text-sm font-semibold text-foreground">
                     Notes
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">{notes}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{notes}</p>
                 </div>
               ) : null}
 
-              <div className="mt-5 rounded-xl bg-green-50 p-3 text-sm text-green-800">
+              <div className="mt-5 rounded-xl bg-success-subtle p-3 text-sm text-success">
                 Preview ready. You can now create this invoice.
               </div>
             </div>

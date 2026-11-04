@@ -158,24 +158,24 @@ export function ReportCardBatchesClient({
   }
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="space-y-5 rounded-2xl border border-border bg-surface p-5">
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">
+        <h3 className="text-lg font-semibold text-foreground">
           Report Card Batches
         </h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Review generated report cards and publish validated batches.
         </p>
       </div>
 
       {message ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
@@ -201,14 +201,14 @@ export function ReportCardBatchesClient({
         type="button"
         onClick={loadBatches}
         disabled={loading}
-        className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+        className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
       >
         {loading ? "Loading..." : "Load Batches"}
       </button>
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-200">
+      <div className="overflow-x-auto rounded-2xl border border-border">
         <table className="min-w-full text-sm">
-          <thead className="bg-slate-100 text-left text-slate-600">
+          <thead className="bg-surface-muted text-left text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Period</th>
               <th className="px-4 py-3">Section</th>
@@ -221,18 +221,18 @@ export function ReportCardBatchesClient({
           </thead>
           <tbody>
             {<PaginatedCollection items={rows} rows columns={7}>{(row) => (
-              <tr key={row.id} className="border-t border-slate-200">
+              <tr key={row.id} className="border-t border-border">
                 <td className="px-4 py-3">
                   {row.gradingPeriodNameI18n?.fr ??
                     row.gradingPeriodNameI18n?.en ??
                     row.gradingPeriodId}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-slate-900">
+                  <div className="font-medium text-foreground">
                     {row.gradeLevelNameI18n?.fr ?? row.gradeLevelCode ?? "-"} -{" "}
                     {row.sectionNameI18n?.fr ?? row.sectionCode ?? "-"}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-muted-foreground">
                     {row.sectionCode ?? "-"}
                   </div>
                 </td>
@@ -253,13 +253,13 @@ export function ReportCardBatchesClient({
                     <button
                       type="button"
                       onClick={() => openBatch(row.id)}
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-xs hover:bg-slate-50"
+                      className="rounded-lg border border-input px-3 py-2 text-xs hover:bg-surface"
                     >
                       Open
                     </button>
                     <a
                       href={`/reports/batches/${row.id}/print`}
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-xs hover:bg-slate-50"
+                      className="rounded-lg border border-input px-3 py-2 text-xs hover:bg-surface"
                     >
                       Print Batch
                     </a>
@@ -268,7 +268,7 @@ export function ReportCardBatchesClient({
                         type="button"
                         disabled={publishingId === row.id}
                         onClick={() => publishBatch(row.id)}
-                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
                       >
                         {publishingId === row.id ? "Publishing..." : "Publish"}
                       </button>
@@ -280,7 +280,7 @@ export function ReportCardBatchesClient({
 
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                   No report card batches loaded yet.
                 </td>
               </tr>
@@ -290,13 +290,13 @@ export function ReportCardBatchesClient({
       </div>
 
       {details ? (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <div className="rounded-2xl border border-border bg-surface p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h4 className="text-lg font-semibold text-slate-900">
+              <h4 className="text-lg font-semibold text-foreground">
                 Batch Details
               </h4>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {details.batch.gradingPeriodNameI18n?.fr ??
                   details.batch.gradingPeriodNameI18n?.en ??
                   details.batch.gradingPeriodId}
@@ -305,7 +305,7 @@ export function ReportCardBatchesClient({
             <div className="flex flex-wrap gap-2">
               <a
                 href={`/reports/batches/${details.batch.id}/print`}
-                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
               >
                 Print Batch
               </a>
@@ -315,9 +315,9 @@ export function ReportCardBatchesClient({
             </div>
           </div>
 
-          <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+          <div className="mt-4 overflow-x-auto rounded-2xl border border-border bg-surface">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-600">
+              <thead className="bg-surface-muted text-left text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3">Rank</th>
                   <th className="px-4 py-3">Student</th>
@@ -328,13 +328,13 @@ export function ReportCardBatchesClient({
               </thead>
               <tbody>
                 {<PaginatedCollection items={details.cards} rows columns={5}>{(card) => (
-                  <tr key={card.id} className="border-t border-slate-200">
+                  <tr key={card.id} className="border-t border-border">
                     <td className="px-4 py-3">{card.rankInSection ?? "-"}</td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-foreground">
                         {card.firstName ?? ""} {card.lastName ?? ""}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {card.studentCode ?? card.studentId}
                       </div>
                     </td>
@@ -361,7 +361,7 @@ export function ReportCardBatchesClient({
                     <td className="px-4 py-3">
                       <a
                         href={`/reports/cards/${card.id}`}
-                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary"
                       >
                         Open
                       </a>
@@ -373,7 +373,7 @@ export function ReportCardBatchesClient({
                   <tr>
                     <td
                       colSpan={5}
-                      className="px-4 py-8 text-center text-slate-500"
+                      className="px-4 py-8 text-center text-muted-foreground"
                     >
                       No report cards found in this batch.
                     </td>

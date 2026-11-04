@@ -248,13 +248,13 @@ export function AcademicSubjectSetupClient({
   }, [gradeLevelId]);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             {t("academic.subjectSetup")}
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t("academic.subjectSetupDescription")}
           </p>
         </div>
@@ -263,54 +263,54 @@ export function AcademicSubjectSetupClient({
           type="button"
           onClick={loadAll}
           disabled={loading}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-60"
+          className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface disabled:opacity-60"
         >
           {loading ? t("common.loading") : t("common.refresh")}
         </button>
       </div>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="font-semibold text-slate-900">
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <h4 className="font-semibold text-foreground">
             {t("academic.createSubject")}
           </h4>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder={t("academic.subjectCodePlaceholder")}
               value={code}
               onChange={(event) => setCode(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder={t("academic.frenchName")}
               value={nameFr}
               onChange={(event) => setNameFr(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               placeholder={t("academic.englishNameOptional")}
               value={nameEn}
               onChange={(event) => setNameEn(event.target.value)}
             />
 
             <textarea
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               placeholder={t("academic.descriptionOptional")}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -321,7 +321,7 @@ export function AcademicSubjectSetupClient({
             type="button"
             disabled={savingSubject}
             onClick={createSubject}
-            className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {savingSubject ? t("common.saving") : t("academic.saveSubject")}
           </button>
@@ -330,14 +330,14 @@ export function AcademicSubjectSetupClient({
             {<PaginatedCollection items={subjects}>{(subject) => (
               <div
                 key={subject.id}
-                className="rounded-xl border border-slate-200 bg-white p-3"
+                className="rounded-xl border border-border bg-surface p-3"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-foreground">
                       {i18nName(subject.nameI18n, subject.code, locale)}
                     </div>
-                    <div className="text-xs text-slate-500">{subject.code}</div>
+                    <div className="text-xs text-muted-foreground">{subject.code}</div>
                   </div>
 
                   <SchoolBadge tone={subject.subjectActive ? "green" : "red"}>
@@ -350,21 +350,21 @@ export function AcademicSubjectSetupClient({
             )}</PaginatedCollection>}
 
             {subjects.length === 0 ? (
-              <div className="rounded-xl bg-white p-3 text-sm text-slate-500">
+              <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                 {t("academic.noSubjectsYet")}
               </div>
             ) : null}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="font-semibold text-slate-900">
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <h4 className="font-semibold text-foreground">
             {t("academic.assignSubjectToClass")}
           </h4>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <select
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               value={gradeLevelId}
               onChange={(event) => setGradeLevelId(event.target.value)}
             >
@@ -377,7 +377,7 @@ export function AcademicSubjectSetupClient({
             </select>
 
             <select
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
               value={subjectId}
               onChange={(event) => setSubjectId(event.target.value)}
             >
@@ -390,21 +390,21 @@ export function AcademicSubjectSetupClient({
             </select>
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder={t("academic.coefficient")}
               value={coefficient}
               onChange={(event) => setCoefficient(event.target.value)}
             />
 
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder={t("academic.displayOrder")}
               value={displayOrder}
               onChange={(event) => setDisplayOrder(event.target.value)}
             />
           </div>
 
-          <label className="mt-3 flex items-center gap-2 text-sm text-slate-700">
+          <label className="mt-3 flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
               checked={isRequired}
@@ -417,7 +417,7 @@ export function AcademicSubjectSetupClient({
             type="button"
             disabled={assigning}
             onClick={assignSubject}
-            className="mt-4 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {assigning ? t("academic.assigning") : t("academic.assignSubject")}
           </button>
@@ -426,14 +426,14 @@ export function AcademicSubjectSetupClient({
             {<PaginatedCollection items={assignedSubjects}>{(subject) => (
               <div
                 key={subject.id}
-                className="rounded-xl border border-slate-200 bg-white p-3"
+                className="rounded-xl border border-border bg-surface p-3"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-foreground">
                       {i18nName(subject.nameI18n, subject.code, locale)}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-muted-foreground">
                       {subject.code} - {t("academic.order")} {subject.displayOrder}
                     </div>
                   </div>
@@ -454,7 +454,7 @@ export function AcademicSubjectSetupClient({
             )}</PaginatedCollection>}
 
             {assignedSubjects.length === 0 ? (
-              <div className="rounded-xl bg-white p-3 text-sm text-slate-500">
+              <div className="rounded-xl bg-surface p-3 text-sm text-muted-foreground">
                 {t("academic.noAssignedSubjects")}
               </div>
             ) : null}

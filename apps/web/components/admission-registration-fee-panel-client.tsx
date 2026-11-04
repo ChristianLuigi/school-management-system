@@ -134,13 +134,13 @@ export function AdmissionRegistrationFeePanelClient({
   const locked = Boolean(convertedStudentId);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">
+          <h3 className="text-lg font-semibold text-foreground">
             Frais d’inscription
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Suivre le paiement requis avant confirmation ou conversion en eleve.
           </p>
 
@@ -150,11 +150,11 @@ export function AdmissionRegistrationFeePanelClient({
             </SchoolBadge>
 
             {fee.required ? (
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-foreground">
                 {money(fee.amount, fee.currencyCode)}
               </span>
             ) : (
-              <span className="text-sm text-slate-500">Non requis</span>
+              <span className="text-sm text-muted-foreground">Non requis</span>
             )}
           </div>
         </div>
@@ -163,7 +163,7 @@ export function AdmissionRegistrationFeePanelClient({
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+            className="rounded-xl border border-input px-4 py-2 text-sm hover:bg-surface"
           >
             {open ? "Close" : "Update Fee"}
           </button>
@@ -171,7 +171,7 @@ export function AdmissionRegistrationFeePanelClient({
       </div>
 
       {fee.receiptNumber ? (
-        <div className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-800">
+        <div className="mt-4 rounded-xl bg-success-subtle p-3 text-sm text-success">
           <div>
             Receipt: <span className="font-semibold">{fee.receiptNumber}</span>
             {fee.paidAt
@@ -182,14 +182,14 @@ export function AdmissionRegistrationFeePanelClient({
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href={`/admissions/${admissionApplicationId}/registration-receipt`}
-              className="rounded-lg border border-green-300 bg-white px-3 py-2 text-xs font-medium text-green-800 hover:bg-green-50"
+              className="rounded-lg border border-success/40 bg-surface px-3 py-2 text-xs font-medium text-success hover:bg-success-subtle"
             >
               Open Receipt
             </Link>
 
             <Link
               href={`/admissions/${admissionApplicationId}/registration-receipt/thermal?autoprint=1`}
-              className="rounded-lg bg-green-700 px-3 py-2 text-xs font-medium text-white hover:bg-green-800"
+              className="rounded-lg bg-success px-3 py-2 text-xs font-medium text-success-foreground hover:bg-success"
             >
               Print 80mm
             </Link>
@@ -198,26 +198,26 @@ export function AdmissionRegistrationFeePanelClient({
       ) : null}
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       {locked ? (
-        <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+        <div className="mt-4 rounded-xl bg-surface p-3 text-sm text-muted-foreground">
           This application is locked because it has already been converted.
         </div>
       ) : null}
 
       {open && !locked ? (
-        <div className="mt-5 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+        <div className="mt-5 space-y-4 rounded-2xl border border-border bg-surface p-4">
+          <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
             <input
               type="checkbox"
               checked={required}
@@ -233,14 +233,14 @@ export function AdmissionRegistrationFeePanelClient({
             <>
               <div className="grid gap-4 md:grid-cols-2">
                 <input
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                   placeholder="Amount"
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
                 />
 
                 <select
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                   value={currencyCode}
                   onChange={(event) => setCurrencyCode(event.target.value)}
                 >
@@ -249,7 +249,7 @@ export function AdmissionRegistrationFeePanelClient({
                 </select>
 
                 <select
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                   value={status}
                   onChange={(event) => setStatus(event.target.value)}
                 >
@@ -260,7 +260,7 @@ export function AdmissionRegistrationFeePanelClient({
                 </select>
 
                 <select
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                   value={paymentMethod}
                   onChange={(event) => setPaymentMethod(event.target.value)}
                 >
@@ -274,7 +274,7 @@ export function AdmissionRegistrationFeePanelClient({
                 </select>
 
                 <input
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm md:col-span-2"
+                  className="rounded-xl border border-input bg-surface px-3 py-2 text-sm md:col-span-2"
                   placeholder="Payment reference"
                   value={paymentReference}
                   onChange={(event) => setPaymentReference(event.target.value)}
@@ -282,7 +282,7 @@ export function AdmissionRegistrationFeePanelClient({
               </div>
 
               <textarea
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 placeholder="Payment notes"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
@@ -294,7 +294,7 @@ export function AdmissionRegistrationFeePanelClient({
             type="button"
             disabled={saving}
             onClick={saveFee}
-            className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Registration Fee"}
           </button>

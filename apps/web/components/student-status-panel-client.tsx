@@ -73,37 +73,37 @@ const STATUS_META: Record<
 > = {
   REGISTERED: {
     icon: UserCheck,
-    tone: "border-blue-200 bg-blue-50 text-blue-800",
+    tone: "border-info/40 bg-info-subtle text-info",
     actionKey: "students.statusActions.REGISTERED",
   },
   ACTIVE: {
     icon: UserCheck,
-    tone: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    tone: "border-success/40 bg-success-subtle text-success",
     actionKey: "students.statusActions.ACTIVE",
   },
   SUSPENDED: {
     icon: PauseCircle,
-    tone: "border-amber-200 bg-amber-50 text-amber-800",
+    tone: "border-warning/40 bg-warning-subtle text-warning",
     actionKey: "students.statusActions.SUSPENDED",
   },
   WITHDRAWN: {
     icon: UserX,
-    tone: "border-red-200 bg-red-50 text-red-800",
+    tone: "border-danger/40 bg-danger-subtle text-danger",
     actionKey: "students.statusActions.WITHDRAWN",
   },
   TRANSFERRED: {
     icon: ArrowRightLeft,
-    tone: "border-orange-200 bg-orange-50 text-orange-800",
+    tone: "border-warning/40 bg-warning-subtle text-warning",
     actionKey: "students.statusActions.TRANSFERRED",
   },
   GRADUATED: {
     icon: GraduationCap,
-    tone: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    tone: "border-success/40 bg-success-subtle text-success",
     actionKey: "students.statusActions.GRADUATED",
   },
   ARCHIVED: {
     icon: Archive,
-    tone: "border-slate-200 bg-slate-50 text-slate-700",
+    tone: "border-border bg-surface text-foreground",
     actionKey: "students.statusActions.ARCHIVED",
   },
 };
@@ -219,14 +219,14 @@ export function StudentStatusPanelClient({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white">
+    <section className="rounded-2xl border border-border bg-surface">
       <div className="flex flex-wrap items-center justify-between gap-3 p-5">
         <div className="flex items-center gap-3">
-          <span className="rounded-xl bg-slate-100 p-2.5 text-slate-700">
+          <span className="rounded-xl bg-surface-muted p-2.5 text-foreground">
             <RotateCcw className="h-5 w-5" />
           </span>
           <div>
-            <h3 className="font-semibold text-slate-950">
+            <h3 className="font-semibold text-foreground">
               {t("students.lifecycle")}
             </h3>
             <div className="mt-1">
@@ -239,22 +239,22 @@ export function StudentStatusPanelClient({
         <button
           type="button"
           onClick={() => setShowHistory((value) => !value)}
-          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+          className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-surface-muted"
         >
           <History className="h-4 w-4" />
           {t("students.history")}
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs">
+          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs">
             {statusHistory.length}
           </span>
         </button>
       </div>
 
-      <div className="border-t border-slate-200 p-5">
+      <div className="border-t border-border p-5">
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {options.map((status) => {
             const meta = STATUS_META[status] ?? {
               icon: ArrowRight,
-              tone: "border-slate-200 bg-slate-50 text-slate-700",
+              tone: "border-border bg-surface text-foreground",
               actionKey: "",
             };
             const Icon = meta.icon;
@@ -269,7 +269,7 @@ export function StudentStatusPanelClient({
                   setError("");
                 }}
                 className={`flex items-center gap-2 rounded-xl border p-3 text-left text-sm font-semibold transition ${meta.tone} ${
-                  selected ? "ring-2 ring-slate-900 ring-offset-2" : ""
+                  selected ? "ring-2 ring-ring ring-offset-2" : ""
                 }`}
               >
                 <Icon className="h-4 w-4 shrink-0" />
@@ -282,9 +282,9 @@ export function StudentStatusPanelClient({
         </div>
 
         {selectedStatus ? (
-          <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mt-4 space-y-3 rounded-xl border border-border bg-surface p-4">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-foreground">
                 {studentStatusLabel(currentStatus, t)}
                 <ArrowRight className="mx-2 inline h-4 w-4" />
                 {studentStatusLabel(selectedStatus, t)}
@@ -293,20 +293,20 @@ export function StudentStatusPanelClient({
                 type="button"
                 onClick={() => setSelectedStatus(null)}
                 aria-label={t("students.cancelStatusChange")}
-                className="rounded-lg p-1 text-slate-500 hover:bg-white"
+                className="rounded-lg p-1 text-muted-foreground hover:bg-surface"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {activeBlocked ? (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              <div className="rounded-lg border border-warning/40 bg-warning-subtle p-3 text-sm text-warning">
                 {t("students.assignClassBeforeActivation")}
               </div>
             ) : null}
 
             {reasonRequired ? (
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-foreground">
                 {t("students.reason")}
                 <textarea
                   required
@@ -315,7 +315,7 @@ export function StudentStatusPanelClient({
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                   placeholder={t("students.administrativeReason")}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm"
                 />
               </label>
             ) : null}
@@ -325,7 +325,7 @@ export function StudentStatusPanelClient({
                 type="button"
                 disabled={saving || !canSubmit}
                 onClick={requestStatusChange}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -339,49 +339,49 @@ export function StudentStatusPanelClient({
         ) : null}
 
         {message ? (
-          <div role="status" className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+          <div role="status" className="mt-4 flex items-center gap-2 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
             <CheckCircle2 className="h-4 w-4" />
             {message}
           </div>
         ) : null}
         {error ? (
-          <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div role="alert" className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
             {error}
           </div>
         ) : null}
       </div>
 
       {showHistory ? (
-        <div className="border-t border-slate-200 p-5">
+        <div className="border-t border-border p-5">
           <div className="space-y-3">
             {statusHistory.map((row) => (
               <div key={row.id} className="flex gap-3 text-sm">
-                <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-slate-300" />
+                <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-surface-muted" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-slate-900">
+                    <span className="font-medium text-foreground">
                       {row.previousStatus
                         ? studentStatusLabel(row.previousStatus, t)
                         : t("students.createdStatus")}
                     </span>
-                    <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
                     <SchoolBadge tone={studentStatusTone(row.newStatus)}>
                       {studentStatusLabel(row.newStatus, t)}
                     </SchoolBadge>
-                    <time className="ml-auto text-xs text-slate-500">
+                    <time className="ml-auto text-xs text-muted-foreground">
                       {new Date(row.changedAt).toLocaleString(
                         locale === "fr" ? "fr-HT" : "en-US",
                       )}
                     </time>
                   </div>
                   {row.reason ? (
-                    <p className="mt-1 text-slate-600">{row.reason}</p>
+                    <p className="mt-1 text-muted-foreground">{row.reason}</p>
                   ) : null}
                 </div>
               </div>
             ))}
             {!statusHistory.length ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {t("students.noLifecycleHistory")}
               </p>
             ) : null}

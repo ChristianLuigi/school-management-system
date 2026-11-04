@@ -22,7 +22,8 @@
   --muted-foreground: #596579;
   --border: #d9e0e9;
   --border-strong: #bcc7d6;
-  --input: #c8d2df;
+  --input: #8393a9;
+  --solid-foreground: var(--foreground);
   --ring: #2563eb;
   --primary: #1d4ed8;
   --primary-hover: #1e40af;
@@ -36,7 +37,7 @@
   --success: #15803d;
   --success-subtle: #dcfce7;
   --success-foreground: #ffffff;
-  --warning: #a16207;
+  --warning: #854d0e;
   --warning-subtle: #fef3c7;
   --warning-foreground: #ffffff;
   --danger: #b91c1c;
@@ -74,7 +75,7 @@
   --muted-foreground: #9aa9bd;
   --border: #2b3951;
   --border-strong: #40506a;
-  --input: #40506a;
+  --input: #71839e;
   --ring: #60a5fa;
   --primary: #60a5fa;
   --primary-hover: #93c5fd;
@@ -130,6 +131,7 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
+  --color-solid-foreground: var(--solid-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-hover: var(--secondary-hover);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -200,6 +202,7 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
   }
 
   h1,
@@ -233,7 +236,7 @@
   }
 
   :focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--ring) 55%, transparent);
+    outline: 3px solid var(--ring);
     outline-offset: 2px;
   }
 
@@ -244,6 +247,54 @@
 }
 
 @layer components {
+  /* Filled controls define their own foreground, including conditional variants. */
+  .bg-primary { --solid-foreground: var(--primary-foreground); }
+  .bg-success { --solid-foreground: var(--success-foreground); }
+  .bg-warning { --solid-foreground: var(--warning-foreground); }
+  .bg-danger, .bg-destructive { --solid-foreground: var(--danger-foreground); }
+  .bg-info { --solid-foreground: var(--info-foreground); }
+  .bg-accent { --solid-foreground: var(--accent-foreground); }
+
+  [data-application-ui] :where(h1) {
+    letter-spacing: -0.035em;
+    line-height: 1.2;
+  }
+  [data-application-ui] :where(h2, h3) { letter-spacing: -0.02em; }
+  [data-application-ui] :where(table) {
+    border-collapse: separate;
+    border-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  [data-application-ui] :where(th) {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    vertical-align: middle;
+  }
+  [data-application-ui] :where(td) { vertical-align: top; }
+  [data-application-ui] :where(tbody > tr) { transition: background-color 120ms ease; }
+  [data-application-ui] :where(tbody > tr:hover) { background: var(--surface-muted); }
+  [data-application-ui] :where(input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]), select, textarea) {
+    background-color: var(--surface);
+    color: var(--foreground);
+    border-color: var(--input);
+    min-height: 2.5rem;
+    border-radius: 0.625rem;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  [data-application-ui] :where(input, textarea)::placeholder { color: var(--muted-foreground); opacity: 1; }
+  [data-application-ui] :where(input, select, textarea):focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 18%, transparent);
+  }
+  [data-application-ui] :where(input, select, textarea):disabled { background-color: var(--surface-muted); }
+  [data-application-ui] :where(input[type="checkbox"], input[type="radio"]) { accent-color: var(--primary); }
+  [data-application-ui] :where(input):autofill {
+    -webkit-text-fill-color: var(--foreground);
+    box-shadow: 0 0 0 1000px var(--surface) inset;
+  }
+  [data-application-ui] :where(button, a) { touch-action: manipulation; }
+  [data-application-ui] :where(dialog) { margin: auto; max-height: 90dvh; overflow-y: auto; }
+
   .staff-input {
     @apply mt-1 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground shadow-xs transition;
   }

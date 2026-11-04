@@ -334,7 +334,7 @@ export function PlatformSchoolDetailClient({ data }: Props) {
 
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-blue-600"
+              className="h-full rounded-full bg-primary"
               style={{ width: `${setupCompletion}%` }}
             />
           </div>
@@ -378,19 +378,19 @@ export function PlatformSchoolDetailClient({ data }: Props) {
             <button
               disabled={loading}
               onClick={() => void changeStatus("activate")}
-              className="w-full rounded-xl bg-green-600 px-4 py-3 text-white hover:bg-green-700 disabled:opacity-60"
+              className="w-full rounded-xl bg-success px-4 py-3 text-success-foreground hover:bg-success disabled:opacity-60"
             >{pt("Activate")}{" "}</button>
 
             <button
               disabled={loading}
               onClick={() => void changeStatus("suspend")}
-              className="w-full rounded-xl bg-warning-subtle0 px-4 py-3 text-white hover:bg-amber-600 disabled:opacity-60"
+              className="w-full rounded-xl bg-warning-subtle0 px-4 py-3 text-warning-foreground hover:bg-warning disabled:opacity-60"
             >{pt("Suspend")}{" "}</button>
 
             <button
               disabled={loading}
               onClick={() => void changeStatus("archive")}
-              className="w-full rounded-xl bg-red-600 px-4 py-3 text-white hover:bg-red-700 disabled:opacity-60"
+              className="w-full rounded-xl bg-danger px-4 py-3 text-danger-foreground hover:bg-danger disabled:opacity-60"
             >{pt("Archive")}{" "}</button>
 
             <Link

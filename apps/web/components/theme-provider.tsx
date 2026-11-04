@@ -73,7 +73,8 @@ export function ThemeProvider({
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      const storedTheme = window.localStorage.getItem(storageKey);
+      let storedTheme: string | null = null;
+      try { storedTheme = window.localStorage.getItem(storageKey); } catch { /* Use the default when browser storage is unavailable. */ }
       const initialTheme = isTheme(storedTheme) ? storedTheme : defaultTheme;
 
       setThemeState(initialTheme);

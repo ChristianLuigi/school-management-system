@@ -149,43 +149,43 @@ export function SubjectSetupClient({
   }, [gradeLevels]);
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+    <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
       <h2 className="text-lg font-semibold">Subject Setup</h2>
-      <p className="mt-1 text-sm text-slate-600">
+      <p className="mt-1 text-sm text-muted-foreground">
         Create school subjects and assign them to grade levels with coefficients.
       </p>
 
       {message ? (
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-xl border border-success/40 bg-success-subtle p-3 text-sm text-success">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-xl border border-danger/40 bg-danger-subtle p-3 text-sm text-danger">
           {error}
         </div>
       ) : null}
 
       <div className="mt-5 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h3 className="font-semibold text-slate-900">Create subject</h3>
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <h3 className="font-semibold text-foreground">Create subject</h3>
 
           <div className="mt-4 grid gap-3">
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="Code, example: MATH"
               value={code}
               onChange={(event) => setCode(event.target.value)}
             />
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="French name"
               value={nameFr}
               onChange={(event) => setNameFr(event.target.value)}
             />
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="English name optional"
               value={nameEn}
               onChange={(event) => setNameEn(event.target.value)}
@@ -194,21 +194,21 @@ export function SubjectSetupClient({
               type="button"
               onClick={createSubject}
               disabled={saving}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
             >
               Save subject
             </button>
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h3 className="font-semibold text-slate-900">
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <h3 className="font-semibold text-foreground">
             Assign to grade level
           </h3>
 
           <div className="mt-4 grid gap-3">
             <select
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               value={gradeLevelId}
               onChange={(event) => setGradeLevelId(event.target.value)}
             >
@@ -220,7 +220,7 @@ export function SubjectSetupClient({
               ))}
             </select>
             <select
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               value={subjectId}
               onChange={(event) => setSubjectId(event.target.value)}
             >
@@ -232,13 +232,13 @@ export function SubjectSetupClient({
               ))}
             </select>
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="Coefficient"
               value={coefficient}
               onChange={(event) => setCoefficient(event.target.value)}
             />
             <input
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="rounded-xl border border-input bg-surface px-3 py-2 text-sm"
               placeholder="Display order"
               value={displayOrder}
               onChange={(event) => setDisplayOrder(event.target.value)}
@@ -247,7 +247,7 @@ export function SubjectSetupClient({
               type="button"
               onClick={assignSubject}
               disabled={saving}
-              className="rounded-xl bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60"
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary disabled:opacity-60"
             >
               Assign subject
             </button>

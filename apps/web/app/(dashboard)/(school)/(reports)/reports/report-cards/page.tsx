@@ -106,7 +106,7 @@ export default async function ReportCardsPreviewPage({
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Report Card Preview</h1>
-          <p className="mt-1 text-slate-600">
+          <p className="mt-1 text-muted-foreground">
             Preview weighted trimester results before draft generation or
             publishing.
           </p>
@@ -115,14 +115,14 @@ export default async function ReportCardsPreviewPage({
         {/* Student + Period selectors — GET form, no JS required */}
         <form
           method="GET"
-          className="flex flex-wrap gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+          className="flex flex-wrap gap-4 rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring"
         >
           <div className="flex-1 min-w-48">
             <label className="mb-1 block text-sm font-medium">Student</label>
             <select
               name="studentId"
               defaultValue={selectedStudentId ?? ""}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-input px-3 py-2 text-sm"
             >
               {students.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -139,7 +139,7 @@ export default async function ReportCardsPreviewPage({
             <select
               name="gradingPeriodId"
               defaultValue={selectedPeriodId ?? ""}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-input px-3 py-2 text-sm"
             >
               {periods.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -153,7 +153,7 @@ export default async function ReportCardsPreviewPage({
           <div className="flex items-end">
             <button
               type="submit"
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary"
             >
               Load Preview
             </button>
@@ -161,13 +161,13 @@ export default async function ReportCardsPreviewPage({
         </form>
 
         {apiError ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-danger">
             {apiError}
           </div>
         ) : null}
 
         {!selectedStudentId || !selectedPeriodId ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
+          <div className="rounded-2xl border border-warning/40 bg-warning-subtle p-4 text-warning">
             No active academic year or students found. Complete school setup
             first.
           </div>
@@ -176,25 +176,25 @@ export default async function ReportCardsPreviewPage({
         {preview ? (
           <>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div className="text-sm text-slate-500">Student</div>
+              <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
+                <div className="text-sm text-muted-foreground">Student</div>
                 <div className="mt-2 text-xl font-bold">
                   {preview.student.firstName} {preview.student.lastName}
                 </div>
-                <div className="mt-1 text-sm text-slate-600">
+                <div className="mt-1 text-sm text-muted-foreground">
                   #{preview.student.studentNumber}
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div className="text-sm text-slate-500">Overall Average</div>
+              <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
+                <div className="text-sm text-muted-foreground">Overall Average</div>
                 <div className="mt-2 text-3xl font-bold">
                   {preview.summary.overallAverage ?? "—"}
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <div className="text-sm text-slate-500">Rank in Section</div>
+              <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
+                <div className="text-sm text-muted-foreground">Rank in Section</div>
                 <div className="mt-2 text-3xl font-bold">
                   {preview.summary.rankInSection ?? "—"}
                 </div>
@@ -202,9 +202,9 @@ export default async function ReportCardsPreviewPage({
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
                 <h2 className="text-lg font-semibold">Academic Context</h2>
-                <div className="mt-4 space-y-2 text-sm text-slate-700">
+                <div className="mt-4 space-y-2 text-sm text-foreground">
                   <div>
                     <span className="font-medium">Academic Year:</span>{" "}
                     {preview.academic.academicYearNameI18n?.fr ??
@@ -228,29 +228,29 @@ export default async function ReportCardsPreviewPage({
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
                 <h2 className="text-lg font-semibold">Attendance Summary</h2>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <div className="text-slate-500">Present</div>
+                  <div className="rounded-xl bg-surface p-3">
+                    <div className="text-muted-foreground">Present</div>
                     <div className="mt-1 text-xl font-bold">
                       {preview.summary.attendance.present}
                     </div>
                   </div>
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <div className="text-slate-500">Absent</div>
+                  <div className="rounded-xl bg-surface p-3">
+                    <div className="text-muted-foreground">Absent</div>
                     <div className="mt-1 text-xl font-bold">
                       {preview.summary.attendance.absent}
                     </div>
                   </div>
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <div className="text-slate-500">Late</div>
+                  <div className="rounded-xl bg-surface p-3">
+                    <div className="text-muted-foreground">Late</div>
                     <div className="mt-1 text-xl font-bold">
                       {preview.summary.attendance.late}
                     </div>
                   </div>
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <div className="text-slate-500">Excused</div>
+                  <div className="rounded-xl bg-surface p-3">
+                    <div className="text-muted-foreground">Excused</div>
                     <div className="mt-1 text-xl font-bold">
                       {preview.summary.attendance.excused}
                     </div>
@@ -259,20 +259,20 @@ export default async function ReportCardsPreviewPage({
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-ring">
               <h2 className="text-lg font-semibold">Coverage Status</h2>
               <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-                <div className="rounded-full bg-slate-100 px-3 py-2">
+                <div className="rounded-full bg-surface-muted px-3 py-2">
                   Total subjects: {preview.coverage.totalSectionSubjects}
                 </div>
-                <div className="rounded-full bg-slate-100 px-3 py-2">
+                <div className="rounded-full bg-surface-muted px-3 py-2">
                   Approved gradebooks: {preview.coverage.approvedGradebooks}
                 </div>
                 <div
                   className={`rounded-full px-3 py-2 font-medium ${
                     preview.coverage.isComplete
-                      ? "bg-green-100 text-green-700"
-                      : "bg-amber-100 text-amber-700"
+                      ? "bg-success-subtle text-success"
+                      : "bg-warning-subtle text-warning"
                   }`}
                 >
                   {preview.coverage.isComplete ? "Complete" : "Incomplete"}
@@ -280,13 +280,13 @@ export default async function ReportCardsPreviewPage({
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-              <div className="border-b border-slate-200 px-5 py-4">
+            <div className="overflow-hidden rounded-2xl bg-surface shadow-sm ring-1 ring-ring">
+              <div className="border-b border-border px-5 py-4">
                 <h2 className="text-lg font-semibold">Subject Results</h2>
               </div>
 
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-100 text-left text-slate-600">
+                <thead className="bg-surface-muted text-left text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3">Code</th>
                     <th className="px-4 py-3">Subject</th>
@@ -299,7 +299,7 @@ export default async function ReportCardsPreviewPage({
                   {preview.subjects.map((subject) => (
                     <tr
                       key={subject.section_subject_id}
-                      className="border-t border-slate-200"
+                      className="border-t border-border"
                     >
                       <td className="px-4 py-3">{subject.subject_code}</td>
                       <td className="px-4 py-3">
@@ -315,7 +315,7 @@ export default async function ReportCardsPreviewPage({
                     <tr>
                       <td
                         colSpan={5}
-                        className="px-4 py-6 text-center text-slate-500"
+                        className="px-4 py-6 text-center text-muted-foreground"
                       >
                         No approved subject lines yet.
                       </td>
