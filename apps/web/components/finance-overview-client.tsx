@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useCallback, useEffect, useState } from "react";
 import { FinanceInvoiceCreateClient } from "@/components/finance-invoice-create-client";
 import { FinanceSettingsClient } from "@/components/finance-settings-client";
@@ -355,7 +356,7 @@ export function FinanceOverviewClient({ schoolId }: { schoolId: string }) {
               </tr>
             </thead>
             <tbody>
-              {invoices.map((invoice) => (
+              {<PaginatedCollection items={invoices} rows columns={8}>{(invoice) => (
                 <tr key={invoice.id} className="border-t border-slate-200">
                   <td className="px-4 py-3">
                     <div className="font-medium text-slate-900">
@@ -434,7 +435,7 @@ export function FinanceOverviewClient({ schoolId }: { schoolId: string }) {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )}</PaginatedCollection>}
 
               {invoices.length === 0 ? (
                 <tr>

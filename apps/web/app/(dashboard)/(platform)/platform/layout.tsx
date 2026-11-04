@@ -22,7 +22,7 @@ export default async function PlatformWorkspaceLayout({
   return (
     <AppShell
       navigation={getPlatformNavigation(locale)}
-      workspaceLabel="Platform workspace"
+      workspaceLabel={locale === "fr" ? "Administration ALMAC" : "ALMAC administration"}
       workspaceName="Super Admin"
       user={{ name: userName, email: context.user.email }}
       actions={<LanguageSwitcher />}

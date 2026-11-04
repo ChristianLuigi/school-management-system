@@ -1,6 +1,13 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+
+import { platformErrorKey, platformFr } from "@/lib/i18n/platform-copy";
+import { usePlatformCopy } from "@/components/use-platform-copy";
+import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
+import { PlatformAuditSummary } from "@/components/platform-audit-summary";
+import { ListPagination } from "@/components/list-pagination";
+import { LIST_PAGE_SIZE } from "@/lib/list-pagination";
 import {
   EmptyState,
   PlatformBadge,
@@ -76,6 +83,9 @@ export function PlatformActivityClient({
   initialSchoolId = "",
   initialEventType = "",
 }: Props) {
+  const pt = usePlatformCopy();
+  const { locale } = useI18n();
+
   const [rows, setRows] = useState<ActivityRow[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,16 +93,24 @@ export function PlatformActivityClient({
 
   const [schoolId, setSchoolId] = useState(initialSchoolId);
   const [eventType, setEventType] = useState(initialEventType);
+  const latestRequest = useRef(0);
+  const [page, setPage] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [appliedEventType, setAppliedEventType] = useState(initialEventType);
 
-  async function loadData() {
+  async function loadData(nextPage = 0, applyFilters = false) {
+    const requestId = ++latestRequest.current;
     setLoading(true);
     setError("");
+    if (applyFilters) { setRows([]); setPage(0); setHasNext(false); }
 
     try {
       const params = new URLSearchParams();
-      params.set("limit", "50");
+      params.set("limit", String(LIST_PAGE_SIZE + 1));
+      params.set("offset", String(nextPage * LIST_PAGE_SIZE));
       if (schoolId) params.set("schoolId", schoolId);
-      if (eventType.trim()) params.set("eventType", eventType.trim());
+      const nextEventType = applyFilters ? eventType.trim() : appliedEventType;
+      if (nextEventType) params.set("eventType", nextEventType);
 
       const [activityRes, summaryRes] = await Promise.all([
         fetch(`/api/proxy/platform/activity?${params.toString()}`, {
@@ -114,52 +132,60 @@ export function PlatformActivityClient({
         throw new Error(summaryBody?.message ?? "Failed to load activity summary.");
       }
 
-      setRows(normalizeActivityRows(activityBody));
-      setSummary(normalizeSummary(summaryBody));
+      if (requestId === latestRequest.current) {
+        const items = normalizeActivityRows(activityBody);
+        setRows(items.slice(0, LIST_PAGE_SIZE));
+        setHasNext(items.length > LIST_PAGE_SIZE);
+        setPage(nextPage);
+        setAppliedEventType(nextEventType);
+        setSummary(normalizeSummary(summaryBody));
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load activity.");
+      if (requestId === latestRequest.current) setError(err instanceof Error ? err.message : "Failed to load activity.");
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
   }
 
   useEffect(() => {
-    void loadData();
+    void loadData(0, true);
+    return () => { latestRequest.current += 1; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolId, eventType]);
+  }, [schoolId]);
 
   return (
     <div className="space-y-6">
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+        <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-sm text-danger">
+          {pt(platformErrorKey(error))}
         </div>
       ) : null}
 
       {summary ? (
         <div className="grid gap-4 md:grid-cols-5">
-          <PlatformStatCard label="Total Events (7d)" value={summary.total7d} />
+          <PlatformStatCard label={pt("Total Events (7d)")} value={summary.total7d} />
           <PlatformStatCard
-            label="School Creations"
+            label={pt("School Creations")}
             value={summary.schoolCreations7d}
           />
-          <PlatformStatCard label="Staff Creations" value={summary.staffCreations7d} />
+          <PlatformStatCard label={pt("Staff Creations")} value={summary.staffCreations7d} />
           <PlatformStatCard
-            label="Password Resets"
+            label={pt("Password Resets")}
             value={summary.passwordResets7d}
           />
-          <PlatformStatCard label="Status Changes" value={summary.statusChanges7d} />
+          <PlatformStatCard label={pt("Status Changes")} value={summary.statusChanges7d} />
         </div>
       ) : null}
 
-      <PlatformPanel title="Filters" subtitle="Narrow the feed by school or event type.">
-        <div className="flex flex-wrap gap-3">
+      <PlatformPanel title={pt("Filters")} subtitle={pt("Narrow the feed by school or event type.")}>
+        <form onSubmit={event => { event.preventDefault(); void loadData(0, true); }} className="flex flex-wrap gap-3">
           <select
-            className="rounded-xl border border-slate-300 px-3 py-2"
+            aria-label={pt("School")}
+            className="rounded-xl border border-input bg-surface text-foreground px-3 py-2"
             value={schoolId}
             onChange={(e) => setSchoolId(e.target.value)}
           >
-            <option value="">All schools</option>
+            <option value="">{pt("All schools")}</option>
             {schools.map((school) => (
               <option key={school.id} value={school.id}>
                 {school.name} ({school.code})
@@ -168,54 +194,51 @@ export function PlatformActivityClient({
           </select>
 
           <input
-            className="rounded-xl border border-slate-300 px-3 py-2"
-            placeholder="Event type (optional)"
+            aria-label={pt("Event type")}
+            className="rounded-xl border border-input bg-surface text-foreground px-3 py-2"
+            placeholder={pt("Event type (optional)")}
             value={eventType}
             onChange={(e) => setEventType(e.target.value)}
           />
 
           <button
-            type="button"
-            onClick={() => void loadData()}
-            className="rounded-xl border border-slate-300 px-4 py-2 hover:bg-slate-50"
-          >
-            Apply
-          </button>
-        </div>
+            type="submit"
+            disabled={loading}
+            className="rounded-xl border border-input bg-surface text-foreground px-4 py-2 hover:bg-surface-muted"
+          >{pt("Apply")}{" "}</button>
+        </form>
       </PlatformPanel>
 
       <PlatformPanel
-        title="Recent Platform Activity"
-        subtitle="Latest school operations, lifecycle changes, support actions, and managed workspace entry."
+        title={pt("Recent Platform Activity")}
+        subtitle={pt("Latest school operations, lifecycle changes, support actions, and managed workspace entry.")}
       >
         {loading ? (
-          <div className="rounded-xl bg-slate-50 p-4 text-slate-500">
-            Loading activity...
-          </div>
+          <div className="rounded-xl bg-surface-muted p-4 text-muted-foreground">{pt("Loading activity...")}{" "}</div>
         ) : rows.length === 0 ? (
           <EmptyState
-            title="No activity found"
-            description="Platform events will appear here as actions happen."
+            title={pt("No activity found")}
+            description={pt("Platform events will appear here as actions happen.")}
           />
         ) : (
           <div className="space-y-3">
             {rows.map((row) => (
               <div
                 key={row.id}
-                className="rounded-2xl border border-slate-200 p-4"
+                className="rounded-2xl border border-border p-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-slate-900">
-                    {row.summary}
+                  <div className="text-sm font-semibold text-foreground">
+                    <PlatformAuditSummary summary={row.summary} eventType={row.event_type} />
                   </div>
-                  <div className="text-xs text-slate-500">
-                    {new Date(row.created_at).toLocaleString()}
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(row.created_at).toLocaleString(locale === "fr" ? "fr-HT" : "en-US")}
                   </div>
                 </div>
 
-                <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
-                  <PlatformBadge>{row.event_type}</PlatformBadge>
-                  <PlatformBadge tone="neutral">{row.actor_type}</PlatformBadge>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <PlatformBadge>{pt(row.event_type in platformFr ? row.event_type : "Recorded action")}</PlatformBadge>
+                  <PlatformBadge tone="neutral">{pt(row.actor_type)}</PlatformBadge>
                   {row.school_name ? (
                     <PlatformBadge tone="blue">{row.school_name}</PlatformBadge>
                   ) : null}
@@ -225,6 +248,7 @@ export function PlatformActivityClient({
           </div>
         )}
       </PlatformPanel>
+      <ListPagination page={page} start={rows.length ? page * LIST_PAGE_SIZE + 1 : 0} end={rows.length ? page * LIST_PAGE_SIZE + rows.length : 0} hasNext={hasNext} disabled={loading} onPageChange={nextPage => void loadData(nextPage)} />
     </div>
   );
 }

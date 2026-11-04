@@ -1,7 +1,13 @@
 ﻿"use client";
 
+
+import { platformErrorKey } from "@/lib/i18n/platform-copy";
+import { usePlatformCopy } from "@/components/use-platform-copy";
+import { ListPagination, useListPage } from "@/components/list-pagination";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
+import { platformLabel } from "@/lib/platform-presentation";
 import {
   Area,
   AreaChart,
@@ -124,6 +130,11 @@ function chartTitle(metric: TrendMetric) {
 }
 
 export function PlatformDashboardClient({ data, schools }: Props) {
+  const onboardingPage = useListPage(data.onboardingReadiness);
+  const pt = usePlatformCopy();
+
+  const { locale } = useI18n();
+  const fr = locale === "fr";
   const [metric, setMetric] = useState<TrendMetric>("students_created");
   const [range, setRange] = useState<TrendRange>("30d");
   const [schoolId, setSchoolId] = useState("");
@@ -133,9 +144,11 @@ export function PlatformDashboardClient({ data, schools }: Props) {
   const [trendError, setTrendError] = useState("");
 
   useEffect(() => {
+    const controller = new AbortController();
     async function loadTrend() {
       setLoadingTrend(true);
       setTrendError("");
+      setTrend(null);
 
       try {
         const params = new URLSearchParams({
@@ -153,6 +166,7 @@ export function PlatformDashboardClient({ data, schools }: Props) {
 
         const res = await fetch(`/api/platform/dashboard/trends?${params.toString()}`, {
           cache: "no-store",
+          signal: controller.signal,
         });
 
         const body = await res.json().catch(() => null);
@@ -161,52 +175,50 @@ export function PlatformDashboardClient({ data, schools }: Props) {
           throw new Error(body?.message ?? "Failed to load trend data.");
         }
 
-        setTrend(body);
-      } catch (err) {
-        setTrendError(
-          err instanceof Error ? err.message : "Failed to load trend data.",
-        );
+        if (!controller.signal.aborted) setTrend(body);
+      } catch {
+        if (!controller.signal.aborted) setTrendError(fr ? "Impossible de charger les tendances." : "Unable to load trends.");
       } finally {
-        setLoadingTrend(false);
+        if (!controller.signal.aborted) setLoadingTrend(false);
       }
     }
 
     void loadTrend();
-  }, [metric, range, schoolId, managementMode]);
+    return () => controller.abort();
+  }, [metric, range, schoolId, managementMode, fr]);
 
   return (
     <div className="space-y-6">
       <PlatformPanel
-        title="Platform Overview"
-        subtitle="Monitor school growth, onboarding progress, staffing trends, and the operating model across the platform."
+        title={fr ? "Vue d’ensemble" : "Overview"}
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <PlatformStatCard label="Total Schools" value={data.kpis.totalSchools} />
-          <PlatformStatCard label="Students" value={data.kpis.totalStudents} />
-          <PlatformStatCard label="Teachers" value={data.kpis.totalTeachers} />
+          <PlatformStatCard label={fr ? "Écoles" : "Schools"} value={data.kpis.totalSchools} />
+          <PlatformStatCard label={fr ? "Élèves" : "Students"} value={data.kpis.totalStudents} />
+          <PlatformStatCard label={fr ? "Enseignants" : "Teachers"} value={data.kpis.totalTeachers} />
           <PlatformStatCard
-            label="Finance Admins"
+            label={fr ? "Responsables financiers" : "Finance admins"}
             value={data.kpis.totalFinanceAdmins}
           />
-          <PlatformStatCard label="In Setup" value={data.kpis.setupSchools} />
+          <PlatformStatCard label={fr ? "En configuration" : "In setup"} value={data.kpis.setupSchools} />
         </div>
       </PlatformPanel>
 
       <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <PlatformPanel
-          title={chartTitle(metric)}
-          subtitle="Switch the metric and date range to explore platform movement over time."
+          title={pt(chartTitle(metric))}
           action={
             <div className="flex flex-wrap gap-2">
               {rangeOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
+                  aria-pressed={range === option.value}
                   onClick={() => setRange(option.value)}
                   className={`rounded-xl px-3 py-2 text-sm font-medium ${
                     range === option.value
-                      ? "bg-slate-900 text-white"
-                      : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-input bg-surface text-foreground text-foreground hover:bg-surface-muted"
                   }`}
                 >
                   {option.label}
@@ -216,24 +228,24 @@ export function PlatformDashboardClient({ data, schools }: Props) {
           }
         >
           <div className="grid gap-4 md:grid-cols-3">
-            <select
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            <select aria-label={fr ? "Indicateur" : "Metric"}
+              className="rounded-xl border border-input bg-surface text-foreground px-3 py-2 text-sm"
               value={metric}
               onChange={(e) => setMetric(e.target.value as TrendMetric)}
             >
               {metricOptions.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {fr ? ({ students_created: "Élèves", teachers_created: "Enseignants", finance_admins_created: "Responsables financiers", schools_created: "Écoles" })[option.value] : option.label}
                 </option>
               ))}
             </select>
 
-            <select
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            <select aria-label={fr ? "École" : "School"}
+              className="rounded-xl border border-input bg-surface text-foreground px-3 py-2 text-sm"
               value={schoolId}
               onChange={(e) => setSchoolId(e.target.value)}
             >
-              <option value="">All Schools</option>
+              <option value="">{fr ? "Toutes les écoles" : "All schools"}</option>
               {schools.map((school) => (
                 <option key={school.id} value={school.id}>
                   {school.name} ({school.code})
@@ -241,28 +253,26 @@ export function PlatformDashboardClient({ data, schools }: Props) {
               ))}
             </select>
 
-            <select
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            <select aria-label={fr ? "Mode de gestion" : "Management mode"}
+              className="rounded-xl border border-input bg-surface text-foreground px-3 py-2 text-sm"
               value={managementMode}
               onChange={(e) => setManagementMode(e.target.value)}
             >
-              <option value="">All Management Modes</option>
-              <option value="SELF_MANAGED">Self Managed</option>
-              <option value="SUPERADMIN_MANAGED">Superadmin Managed</option>
-              <option value="HYBRID_MANAGED">Hybrid Managed</option>
+              <option value="">{fr ? "Tous les modes" : "All management modes"}</option>
+              {['SELF_MANAGED', 'SUPERADMIN_MANAGED', 'HYBRID_MANAGED'].map(value => <option key={value} value={value}>{platformLabel(value, locale)}</option>)}
             </select>
           </div>
 
           <div className="mt-6 h-96">
             {loadingTrend ? (
-              <div className="flex h-full items-center justify-center rounded-2xl bg-slate-50 text-slate-500">
-                Loading trend...
+              <div className="flex h-full items-center justify-center rounded-2xl bg-surface-muted text-muted-foreground">
+                {fr ? "Chargement…" : "Loading…"}
               </div>
             ) : trendError ? (
-              <div className="flex h-full items-center justify-center rounded-2xl border border-red-200 bg-red-50 text-red-700">
-                {trendError}
+              <div className="flex h-full items-center justify-center rounded-2xl border border-danger/40 bg-danger-subtle text-danger">
+                {pt(platformErrorKey(trendError))}
               </div>
-            ) : (
+            ) : !trend?.series.length ? <EmptyState title={fr ? "Aucune donnée" : "No data"} description={fr ? "Essayez une autre période ou école." : "Try another date range or school."} /> : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trend?.series ?? []}>
                   <defs>
@@ -271,17 +281,17 @@ export function PlatformDashboardClient({ data, schools }: Props) {
                       <stop offset="95%" stopColor="#2563eb" stopOpacity={0.04} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="label" tick={{ fill: 'var(--muted-foreground)' }} />
+                  <YAxis allowDecimals={false} tick={{ fill: 'var(--muted-foreground)' }} />
+                  <Tooltip contentStyle={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--foreground)' }} />
                   <Area
                     type="monotone"
                     dataKey="value"
                     stroke="#2563eb"
                     fill="url(#trendFill)"
                     strokeWidth={3}
-                    name="Count"
+                    name={fr ? "Nombre" : "Count"}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -290,12 +300,12 @@ export function PlatformDashboardClient({ data, schools }: Props) {
         </PlatformPanel>
 
         <div className="space-y-6">
-          <PlatformPanel title="Schools by Status">
+          <PlatformPanel title={pt("Schools by Status")}>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={data.schoolsByStatus}
+                    data={data.schoolsByStatus.map(row => ({ ...row, status: pt(row.status) }))}
                     dataKey="count"
                     nameKey="status"
                     outerRadius={90}
@@ -314,48 +324,42 @@ export function PlatformDashboardClient({ data, schools }: Props) {
             </div>
           </PlatformPanel>
 
-          <PlatformPanel title="Quick Actions">
+          <PlatformPanel title={pt("Quick Actions")}>
             <div className="grid gap-3">
-              <PlatformPrimaryLinkButton href="/platform/schools/new">
-                Create School
-              </PlatformPrimaryLinkButton>
+              <PlatformPrimaryLinkButton href="/platform/schools/new">{pt("Create School")}{" "}</PlatformPrimaryLinkButton>
               <Link
                 href="/platform/schools"
-                className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-slate-50"
-              >
-                Manage Schools
-              </Link>
+                className="rounded-xl border border-input bg-surface text-foreground px-4 py-3 text-sm font-medium hover:bg-surface-muted"
+              >{pt("Manage Schools")}{" "}</Link>
               <Link
                 href="/platform/onboarding"
-                className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium hover:bg-slate-50"
-              >
-                Review Onboarding
-              </Link>
+                className="rounded-xl border border-input bg-surface text-foreground px-4 py-3 text-sm font-medium hover:bg-surface-muted"
+              >{pt("Review Onboarding")}{" "}</Link>
             </div>
           </PlatformPanel>
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <PlatformPanel title="Management Mode Distribution">
+        <PlatformPanel title={pt("Management Mode Distribution")}>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.schoolsByManagementMode}>
+              <BarChart data={data.schoolsByManagementMode.map(row => ({ ...row, managementMode: pt(row.managementMode) }))}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="managementMode" />
                 <YAxis allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="count" fill="#1d4ed8" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="count" name={pt("Count")} fill="#1d4ed8" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </PlatformPanel>
 
-        <PlatformPanel title="Staff Distribution by School">
+        <PlatformPanel title={pt("Staff Distribution by School")}>
           {data.staffDistribution.length === 0 ? (
             <EmptyState
-              title="No staff distribution yet"
-              description="Staff metrics will appear here as schools are provisioned."
+              title={pt("No staff distribution yet")}
+              description={pt("Staff metrics will appear here as schools are provisioned.")}
             />
           ) : (
             <div className="h-80">
@@ -366,9 +370,9 @@ export function PlatformDashboardClient({ data, schools }: Props) {
                   <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="schoolAdmins" name="School Admins" stackId="a" fill="#1d4ed8" />
-                  <Bar dataKey="teachers" name="Teachers" stackId="a" fill="#0f766e" />
-                  <Bar dataKey="financeAdmins" name="Finance Admins" stackId="a" fill="#f59e0b" />
+                  <Bar dataKey="schoolAdmins" name={pt("School Admins")} stackId="a" fill="#1d4ed8" />
+                  <Bar dataKey="teachers" name={pt("Teachers")} stackId="a" fill="#0f766e" />
+                  <Bar dataKey="financeAdmins" name={pt("Finance Admins")} stackId="a" fill="#f59e0b" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -377,32 +381,32 @@ export function PlatformDashboardClient({ data, schools }: Props) {
       </div>
 
       <PlatformPanel
-        title="Onboarding Detail"
-        subtitle="Setup readiness across tracked schools."
+        title={pt("Onboarding Detail")}
+        subtitle={pt("Setup readiness across tracked schools.")}
       >
         {data.onboardingReadiness.length === 0 ? (
           <EmptyState
-            title="No onboarding data yet"
-            description="School setup progress will appear here after onboarding begins."
+            title={pt("No onboarding data yet")}
+            description={pt("School setup progress will appear here after onboarding begins.")}
           />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-600">
+              <thead className="bg-surface-muted text-left text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">School</th>
-                  <th className="px-4 py-3">Completion</th>
-                  <th className="px-4 py-3">Levels</th>
-                  <th className="px-4 py-3">Years</th>
-                  <th className="px-4 py-3">Periods</th>
-                  <th className="px-4 py-3">Grade Levels</th>
-                  <th className="px-4 py-3">Sections</th>
+                  <th className="px-4 py-3">{pt("School")}</th>
+                  <th className="px-4 py-3">{pt("Completion")}</th>
+                  <th className="px-4 py-3">{pt("Levels")}</th>
+                  <th className="px-4 py-3">{pt("Years")}</th>
+                  <th className="px-4 py-3">{pt("Periods")}</th>
+                  <th className="px-4 py-3">{pt("Grade Levels")}</th>
+                  <th className="px-4 py-3">{pt("Sections")}</th>
                 </tr>
               </thead>
               <tbody>
-                {data.onboardingReadiness.map((row) => (
-                  <tr key={row.schoolId} className="border-t border-slate-200">
-                    <td className="px-4 py-3 text-slate-900">{row.schoolName}</td>
+                {onboardingPage.items.map((row) => (
+                  <tr key={row.schoolId} className="border-t border-border">
+                    <td className="px-4 py-3 text-foreground">{row.schoolName}</td>
                     <td className="px-4 py-3">{row.completionPercent}%</td>
                     <td className="px-4 py-3">{row.levels}</td>
                     <td className="px-4 py-3">{row.academicYears}</td>
@@ -413,6 +417,7 @@ export function PlatformDashboardClient({ data, schools }: Props) {
                 ))}
               </tbody>
             </table>
+            <ListPagination {...onboardingPage} />
           </div>
         )}
       </PlatformPanel>

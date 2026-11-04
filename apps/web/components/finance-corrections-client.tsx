@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
@@ -529,7 +530,7 @@ export function FinanceCorrectionsClient({
             <div className="text-sm text-slate-500">Loading corrections…</div>
           ) : null}
 
-          {data.paymentCorrections.map((correction) => {
+          {<PaginatedCollection items={data.paymentCorrections}>{(correction) => {
             const canReview =
               correction.status === "PENDING_REVIEW" &&
               data.capabilities.canApprove &&
@@ -702,9 +703,9 @@ export function FinanceCorrectionsClient({
                 ) : null}
               </article>
             );
-          })}
+          }}</PaginatedCollection>}
 
-          {data.creditNotes.map((credit) => {
+          {<PaginatedCollection items={data.creditNotes}>{(credit) => {
             const canReview =
               credit.status === "PENDING_REVIEW" &&
               data.capabilities.canApprove &&
@@ -783,7 +784,7 @@ export function FinanceCorrectionsClient({
                 ) : null}
               </article>
             );
-          })}
+          }}</PaginatedCollection>}
 
           {!loading &&
           !data.paymentCorrections.length &&

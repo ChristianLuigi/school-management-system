@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { SchoolBadge } from "@/components/school-ui";
@@ -326,7 +327,7 @@ export function AcademicSubjectSetupClient({
           </button>
 
           <div className="mt-5 space-y-2">
-            {subjects.map((subject) => (
+            {<PaginatedCollection items={subjects}>{(subject) => (
               <div
                 key={subject.id}
                 className="rounded-xl border border-slate-200 bg-white p-3"
@@ -346,7 +347,7 @@ export function AcademicSubjectSetupClient({
                   </SchoolBadge>
                 </div>
               </div>
-            ))}
+            )}</PaginatedCollection>}
 
             {subjects.length === 0 ? (
               <div className="rounded-xl bg-white p-3 text-sm text-slate-500">
@@ -422,7 +423,7 @@ export function AcademicSubjectSetupClient({
           </button>
 
           <div className="mt-5 space-y-2">
-            {assignedSubjects.map((subject) => (
+            {<PaginatedCollection items={assignedSubjects}>{(subject) => (
               <div
                 key={subject.id}
                 className="rounded-xl border border-slate-200 bg-white p-3"
@@ -450,7 +451,7 @@ export function AcademicSubjectSetupClient({
                   </div>
                 </div>
               </div>
-            ))}
+            )}</PaginatedCollection>}
 
             {assignedSubjects.length === 0 ? (
               <div className="rounded-xl bg-white p-3 text-sm text-slate-500">

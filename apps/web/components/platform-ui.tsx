@@ -1,5 +1,7 @@
 ﻿import Link from "next/link";
 import { ReactNode } from "react";
+import { ArrowUpRight, Inbox } from "lucide-react";
+import { PlatformValueLabel } from "@/components/platform-value-label";
 
 export function PlatformPageHeader({
   title,
@@ -13,11 +15,11 @@ export function PlatformPageHeader({
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1 text-sm text-slate-600">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
 
@@ -38,12 +40,12 @@ export function PlatformPanel({
   action?: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section className="rounded-2xl border border-border bg-surface p-5 text-foreground shadow-xs sm:p-6">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           {subtitle ? (
-            <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
           ) : null}
         </div>
 
@@ -65,10 +67,10 @@ export function PlatformStatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-      <div className="text-sm text-slate-500">{label}</div>
-      <div className="mt-2 text-3xl font-bold text-slate-900">{value}</div>
-      {hint ? <div className="mt-1 text-xs text-slate-500">{hint}</div> : null}
+    <div className="rounded-2xl border border-border bg-surface-muted p-5">
+      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="mt-2 text-3xl font-bold text-foreground">{value}</div>
+      {hint ? <div className="mt-1 text-xs text-muted-foreground">{hint}</div> : null}
     </div>
   );
 }
@@ -81,15 +83,15 @@ export function PlatformBadge({
   tone?: "neutral" | "green" | "amber" | "red" | "blue";
 }) {
   const styles = {
-    neutral: "bg-slate-100 text-slate-700",
-    green: "bg-green-100 text-green-700",
-    amber: "bg-amber-100 text-amber-800",
-    red: "bg-red-100 text-red-700",
-    blue: "bg-blue-100 text-blue-700",
+    neutral: "bg-surface-muted text-foreground",
+    green: "bg-success-subtle text-success",
+    amber: "bg-warning-subtle text-warning",
+    red: "bg-danger-subtle text-danger",
+    blue: "bg-info-subtle text-info",
   };
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${styles[tone]}`}>
+    <span className={`inline-flex items-center whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium ${styles[tone]}`}>
       {children}
     </span>
   );
@@ -97,34 +99,34 @@ export function PlatformBadge({
 
 export function StatusBadge({ status }: { status: string }) {
   if (status === "ACTIVE") {
-    return <PlatformBadge tone="green">{status}</PlatformBadge>;
+    return <PlatformBadge tone="green"><PlatformValueLabel value={status} /></PlatformBadge>;
   }
 
   if (status === "ACTIVE_SETUP") {
-    return <PlatformBadge tone="amber">{status}</PlatformBadge>;
+    return <PlatformBadge tone="amber"><PlatformValueLabel value={status} /></PlatformBadge>;
   }
 
   if (status === "SUSPENDED") {
-    return <PlatformBadge tone="red">{status}</PlatformBadge>;
+    return <PlatformBadge tone="red"><PlatformValueLabel value={status} /></PlatformBadge>;
   }
 
   if (status === "ARCHIVED") {
-    return <PlatformBadge tone="neutral">{status}</PlatformBadge>;
+    return <PlatformBadge tone="neutral"><PlatformValueLabel value={status} /></PlatformBadge>;
   }
 
-  return <PlatformBadge>{status}</PlatformBadge>;
+  return <PlatformBadge><PlatformValueLabel value={status} /></PlatformBadge>;
 }
 
 export function ManagementModeBadge({ mode }: { mode: string }) {
   if (mode === "SUPERADMIN_MANAGED") {
-    return <PlatformBadge tone="blue">{mode}</PlatformBadge>;
+    return <PlatformBadge tone="blue"><PlatformValueLabel value={mode} /></PlatformBadge>;
   }
 
   if (mode === "HYBRID_MANAGED") {
-    return <PlatformBadge tone="amber">{mode}</PlatformBadge>;
+    return <PlatformBadge tone="amber"><PlatformValueLabel value={mode} /></PlatformBadge>;
   }
 
-  return <PlatformBadge>{mode}</PlatformBadge>;
+  return <PlatformBadge><PlatformValueLabel value={mode} /></PlatformBadge>;
 }
 
 export function EmptyState({
@@ -137,9 +139,10 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-      <div className="text-lg font-semibold text-slate-900">{title}</div>
-      <p className="mt-2 text-sm text-slate-600">{description}</p>
+    <div className="rounded-2xl border border-dashed border-input bg-surface-muted p-8 text-center">
+      <Inbox size={28} className="mx-auto mb-3 text-muted-foreground" aria-hidden="true" />
+      <div className="text-lg font-semibold text-foreground">{title}</div>
+      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
@@ -155,9 +158,10 @@ export function PlatformPrimaryLinkButton({
   return (
     <Link
       href={href}
-      className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800"
+      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
     >
       {children}
+      <ArrowUpRight size={16} aria-hidden="true" />
     </Link>
   );
 }

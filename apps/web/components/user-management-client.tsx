@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -421,7 +422,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
             <div className="text-sm text-slate-500">{t("common.loading")}</div>
           )}
           {tab === "users"
-            ? data.users.map((user) => (
+            ? <PaginatedCollection items={data.users}>{(user) => (
                 <div
                   key={user.id}
                   className="rounded-2xl border border-slate-200 p-4"
@@ -501,8 +502,8 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
                     </div>
                   </div>
                 </div>
-              ))
-            : data.invitations.map((invitation) => (
+              )}</PaginatedCollection>
+            : <PaginatedCollection items={data.invitations}>{(invitation) => (
                 <div
                   key={invitation.id}
                   className="rounded-2xl border border-slate-200 p-4"
@@ -563,7 +564,7 @@ export function UserManagementClient({ schoolId }: { schoolId: string }) {
                     )}
                   </div>
                 </div>
-              ))}
+              )}</PaginatedCollection>}
           {!loading &&
             !(tab === "users"
               ? data.users.length

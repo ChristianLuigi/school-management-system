@@ -1,3 +1,5 @@
+
+import { getServerPlatformCopy } from "@/lib/i18n";
 import { PlatformDashboardClient } from "@/components/platform-dashboard-client";
 import {
   EmptyState,
@@ -6,7 +8,9 @@ import {
   PlatformPanel,
   PlatformPrimaryLinkButton,
 } from "@/components/platform-ui";
-import { getMeContext } from "@/lib/server-context";
+import { getServerTranslator } from "@/lib/i18n";
+import { PlatformAuditSummary } from "@/components/platform-audit-summary";
+import { PlatformValueLabel } from "@/components/platform-value-label";
 import { serverApiGet } from "@/lib/server-api";
 
 type PlatformDashboardData = {
@@ -65,7 +69,10 @@ type ActivityRow = {
 };
 
 export default async function PlatformDashboardPage() {
-  const context = await getMeContext();
+  const pt = await getServerPlatformCopy();
+
+  const { locale } = await getServerTranslator();
+  const fr = locale === "fr";
 
   const [dashboard, schools, activity] = await Promise.all([
     serverApiGet<PlatformDashboardData>("/platform/dashboard/summary"),
@@ -81,45 +88,30 @@ export default async function PlatformDashboardPage() {
   return (
     <div className="space-y-6">
       <PlatformPageHeader
-        title="Platform Dashboard"
-        description="Super admin command center across all school tenants."
+        title={fr ? "Tableau de bord" : "Dashboard"}
+        description={fr ? "Écoles, activité et priorités de la plateforme." : "Schools, activity and platform priorities."}
         action={
           <PlatformPrimaryLinkButton href="/platform/schools/new">
-            Create School
+            {fr ? "Nouvelle école" : "New school"}
           </PlatformPrimaryLinkButton>
         }
       />
-
-      <PlatformPanel title="Logged-in User">
-        <div className="text-xl font-bold text-foreground">
-          {context.user.firstName ?? ""} {context.user.lastName ?? ""}
-        </div>
-        <div className="mt-1 text-sm text-muted-foreground">
-          {context.user.email}
-        </div>
-        <div className="mt-3">
-          <PlatformBadge tone="blue">
-            Platform role: {context.user.platformRole ?? "-"}
-          </PlatformBadge>
-        </div>
-      </PlatformPanel>
 
       <PlatformDashboardClient data={dashboard} schools={schools} />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <PlatformPanel
-          title="Schools Needing Attention"
-          subtitle="Tenants that are not yet fully operational."
+          title={fr ? "Écoles à accompagner" : "Schools needing attention"}
           action={
             <PlatformPrimaryLinkButton href="/platform/onboarding">
-              Open Onboarding
+              {fr ? "Voir le suivi" : "View onboarding"}
             </PlatformPrimaryLinkButton>
           }
         >
           {attentionSchools.length === 0 ? (
             <EmptyState
-              title="No schools need attention"
-              description="All tracked schools are currently complete."
+              title={pt("No schools need attention")}
+              description={pt("All tracked schools are currently complete.")}
             />
           ) : (
             <div className="space-y-3">
@@ -150,18 +142,17 @@ export default async function PlatformDashboardPage() {
         </PlatformPanel>
 
         <PlatformPanel
-          title="Recent Activity"
-          subtitle="Latest high-level actions across the platform."
+          title={fr ? "Activité récente" : "Recent activity"}
           action={
             <PlatformPrimaryLinkButton href="/platform/activity">
-              Open Activity
+              {fr ? "Voir l’activité" : "View activity"}
             </PlatformPrimaryLinkButton>
           }
         >
           {activity.length === 0 ? (
             <EmptyState
-              title="No recent activity"
-              description="Platform events will appear here as actions happen."
+              title={pt("No recent activity")}
+              description={pt("Platform events will appear here as actions happen.")}
             />
           ) : (
             <div className="space-y-3">
@@ -172,16 +163,16 @@ export default async function PlatformDashboardPage() {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="text-sm font-semibold text-foreground">
-                      {row.summary}
+                      <PlatformAuditSummary summary={row.summary} eventType={row.event_type} />
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(row.created_at).toLocaleString()}
+                      {new Date(row.created_at).toLocaleString(fr ? "fr-HT" : "en-US")}
                     </div>
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <PlatformBadge>{row.event_type}</PlatformBadge>
-                    <PlatformBadge tone="neutral">{row.actor_type}</PlatformBadge>
+                    <PlatformBadge><PlatformValueLabel value={row.event_type} /></PlatformBadge>
+                    <PlatformBadge tone="neutral"><PlatformValueLabel value={row.actor_type} /></PlatformBadge>
                     {row.school_name ? (
                       <PlatformBadge tone="blue">{row.school_name}</PlatformBadge>
                     ) : null}

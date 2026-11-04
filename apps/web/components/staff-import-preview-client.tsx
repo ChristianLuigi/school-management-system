@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { ChangeEvent, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { createSafeCsv } from "@/lib/csv/safe-csv";
@@ -342,7 +343,7 @@ export function StaffImportPreviewClient({
             </div>
           ) : null}
           <div className="space-y-2">
-            {preview.rows.map((row) => (
+            {<PaginatedCollection items={preview.rows}>{(row) => (
               <div
                 key={row.rowNumber}
                 className={`rounded-xl border bg-white p-3 ${
@@ -371,7 +372,7 @@ export function StaffImportPreviewClient({
                   </p>
                 ))}
               </div>
-            ))}
+            )}</PaginatedCollection>}
           </div>
         </div>
       ) : null}

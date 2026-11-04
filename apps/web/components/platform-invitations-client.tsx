@@ -1,5 +1,9 @@
 "use client";
 
+
+import { platformErrorKey } from "@/lib/i18n/platform-copy";
+import { usePlatformCopy } from "@/components/use-platform-copy";
+import { ListPagination, useListPage } from "@/components/list-pagination";
 import { FormEvent, useEffect, useState } from "react";
 
 type School = {
@@ -100,10 +104,13 @@ export function PlatformInvitationsClient({
 }: {
   initialSchools: School[];
 }) {
+  const pt = usePlatformCopy();
+
   const [selectedSchoolId, setSelectedSchoolId] = useState(
     initialSchools[0]?.id ?? ""
   );
   const [staff, setStaff] = useState<StaffMember[]>([]);
+  const staffPage = useListPage(staff);
   const [loadingStaff, setLoadingStaff] = useState(false);
 
   const [form, setForm] = useState({
@@ -192,24 +199,17 @@ export function PlatformInvitationsClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Staff Management</h1>
-        <p className="mt-1 text-slate-600">
-          Create accounts for school admins, teachers, and finance admins.
-          Credentials are set once and shared directly with the user.
-        </p>
+        <h1 className="text-3xl font-bold">{pt("Staff Management")}</h1>
+        <p className="mt-1 text-muted-foreground">{pt("Create accounts for school admins, teachers, and finance admins. Credentials are set once and shared directly with the user.")}{" "}</p>
       </div>
 
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <label className="mb-2 block text-sm font-medium text-slate-700">
-          Select School
-        </label>
+      <div className="rounded-2xl bg-surface text-foreground p-5 shadow-sm ring-1 ring-border">
+        <label className="mb-2 block text-sm font-medium text-foreground">{pt("Select School")}{" "}</label>
         {initialSchools.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            No schools yet. Create one first.
-          </p>
+          <p className="text-sm text-muted-foreground">{pt("No schools yet. Create one first.")}{" "}</p>
         ) : (
           <select
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2 text-sm"
             value={selectedSchoolId}
             onChange={(e) => {
               setSelectedSchoolId(e.target.value);
@@ -227,50 +227,45 @@ export function PlatformInvitationsClient({
       </div>
 
       {created && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 space-y-3">
-          <div className="text-sm font-semibold text-green-700">
-            Account created - share these credentials with the user
-          </div>
-          <div className="rounded-xl bg-white ring-1 ring-green-200 p-4 grid gap-2 text-sm">
-            <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <span className="text-slate-500">Role</span>
+        <div className="rounded-2xl border border-success/40 bg-success-subtle p-5 space-y-3">
+          <div className="text-sm font-semibold text-success">{pt("Account created - share these credentials with the user")}{" "}</div>
+          <div className="rounded-xl bg-surface text-foreground ring-1 ring-green-200 p-4 grid gap-2 text-sm">
+            <div className="flex justify-between rounded-lg bg-surface-muted px-3 py-2">
+              <span className="text-muted-foreground">{pt("Role")}</span>
               <span className="font-medium">
-                {ROLE_LABELS[created.role] ?? created.role}
+                {pt(ROLE_LABELS[created.role] ?? created.role)}
               </span>
             </div>
-            <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <span className="text-slate-500">Email</span>
+            <div className="flex justify-between rounded-lg bg-surface-muted px-3 py-2">
+              <span className="text-muted-foreground">{pt("Email")}</span>
               <span className="font-mono font-medium">{created.email}</span>
             </div>
-            <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <span className="text-slate-500">Temporary Password</span>
+            <div className="flex justify-between rounded-lg bg-surface-muted px-3 py-2">
+              <span className="text-muted-foreground">{pt("Temporary Password")}</span>
               <span className="font-mono font-medium">
                 {created.tempPassword}
               </span>
             </div>
           </div>
-          <p className="text-xs text-amber-700">
-            This password is shown once. Copy it now before creating another
-            account.
-          </p>
+          <p className="text-xs text-warning">{pt("This password is shown once. Copy it now before creating another account.")}{" "}</p>
         </div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+        <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-sm text-danger">
+          {pt(platformErrorKey(error))}
         </div>
       )}
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <h2 className="mb-4 text-lg font-semibold">Create Account</h2>
+        <div className="rounded-2xl bg-surface text-foreground p-6 shadow-sm ring-1 ring-border">
+          <h2 className="mb-4 text-lg font-semibold">{pt("Create Account")}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">Role</label>
+              <label className="mb-1 block text-sm font-medium">{pt("Role")}</label>
               <select
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2 text-sm"
                 value={form.role}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -279,18 +274,18 @@ export function PlatformInvitationsClient({
                   }))
                 }
               >
-                <option value="TEACHER">Teacher</option>
-                <option value="FINANCE_ADMIN">Finance Admin</option>
-                <option value="SCHOOL_ADMIN">School Admin</option>
+                <option value="TEACHER">{pt("Teacher")}</option>
+                <option value="FINANCE_ADMIN">{pt("Finance Admin")}</option>
+                <option value="SCHOOL_ADMIN">{pt("School Admin")}</option>
               </select>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Email</label>
+              <label className="mb-1 block text-sm font-medium">{pt("Email")}</label>
               <input
                 type="email"
                 required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2 text-sm"
                 placeholder="teacher@school.com"
                 value={form.email}
                 onChange={(e) =>
@@ -301,12 +296,11 @@ export function PlatformInvitationsClient({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium">
-                  First Name{" "}
-                  <span className="font-normal text-slate-400">(optional)</span>
+                <label className="mb-1 block text-sm font-medium">{pt("First Name")}{" "}
+                  <span className="font-normal text-muted-foreground">{pt("(optional)")}</span>
                 </label>
                 <input
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2 text-sm"
                   placeholder="Marie"
                   value={form.firstName}
                   onChange={(e) =>
@@ -318,12 +312,11 @@ export function PlatformInvitationsClient({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Last Name{" "}
-                  <span className="font-normal text-slate-400">(optional)</span>
+                <label className="mb-1 block text-sm font-medium">{pt("Last Name")}{" "}
+                  <span className="font-normal text-muted-foreground">{pt("(optional)")}</span>
                 </label>
                 <input
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2 text-sm"
                   placeholder="Pierre"
                   value={form.lastName}
                   onChange={(e) =>
@@ -337,15 +330,13 @@ export function PlatformInvitationsClient({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
-                Temporary Password
-              </label>
+              <label className="mb-1 block text-sm font-medium">{pt("Temporary Password")}{" "}</label>
               <input
                 type="text"
                 required
                 minLength={8}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
-                placeholder="At least 8 characters"
+                className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2 font-mono text-sm"
+                placeholder={pt("At least 8 characters")}
                 value={form.temporaryPassword}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -354,38 +345,34 @@ export function PlatformInvitationsClient({
                   }))
                 }
               />
-              <p className="mt-1 text-xs text-slate-500">
-                The user logs in with this on first access.
-              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{pt("The user logs in with this on first access.")}{" "}</p>
             </div>
 
             <button
               type="submit"
               disabled={submitting || !selectedSchoolId}
-              className="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+              className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
             >
-              {submitting ? "Creating..." : "Create Account"}
+              {submitting ? pt("Creating...") : pt("Create Account")}
             </button>
           </form>
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <div className="rounded-2xl bg-surface text-foreground p-6 shadow-sm ring-1 ring-border">
           <h2 className="mb-4 text-lg font-semibold">
-            {selectedSchool ? `${selectedSchool.name} - Staff` : "Staff"}
+            {selectedSchool ? `${selectedSchool.name} - Staff` : pt("Staff")}
           </h2>
 
           {loadingStaff ? (
-            <p className="text-sm text-slate-500">Loading staff...</p>
+            <p className="text-sm text-muted-foreground">{pt("Loading staff...")}</p>
           ) : staff.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              No staff accounts yet for this school.
-            </p>
+            <p className="text-sm text-muted-foreground">{pt("No staff accounts yet for this school.")}{" "}</p>
           ) : (
             <div className="space-y-2">
-              {staff.map((member) => (
+              {staffPage.items.map((member) => (
                 <div
                   key={member.user_id}
-                  className="rounded-xl border border-slate-200 px-4 py-3"
+                  className="rounded-xl border border-border px-4 py-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
@@ -394,7 +381,7 @@ export function PlatformInvitationsClient({
                           ? `${member.first_name ?? ""} ${member.last_name ?? ""}`.trim()
                           : "-"}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-muted-foreground">
                         {member.email}
                       </div>
                     </div>
@@ -402,15 +389,16 @@ export function PlatformInvitationsClient({
                       {member.roles.map((role) => (
                         <span
                           key={role}
-                          className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
+                          className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-foreground"
                         >
-                          {ROLE_LABELS[role] ?? role}
+                          {pt(ROLE_LABELS[role] ?? role)}
                         </span>
                       ))}
                     </div>
                   </div>
                 </div>
               ))}
+              <ListPagination {...staffPage} disabled={loadingStaff || submitting} />
             </div>
           )}
         </div>

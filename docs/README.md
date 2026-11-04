@@ -18,6 +18,10 @@ Point d'entrée pour les développeurs, opérateurs et utilisateurs. Les documen
 
 ## Modules métier
 
+- [Pagination des listes](LIST_PAGINATION.md) : couverture, protection des saisies et vérifications d’impression/import.
+
+- [Raffinement de l’interface Super Admin](SUPERADMIN_UX.md) : périmètre, recette et limites de la passe courante.
+
 - Finances : [intégrité](FINANCE_CORE_INTEGRITY.md), [caisse](FINANCE_CASHIER_WORKFLOW.md), [facturation](FINANCE_BILLING_RUNS.md), [corrections](FINANCE_CONTROLLED_CORRECTIONS.md), [rapprochement/clôture](FINANCE_RECONCILIATION_AND_PERIOD_CLOSE.md).
 - Personnel : [annuaire](STAFF_DIRECTORY_FOUNDATION.md), [cycle de vie](STAFF_MANAGEMENT_LIFECYCLE.md), [conformité/congés](STAFF_COMPLIANCE_AND_LEAVE.md), [libre-service](STAFF_SELF_SERVICE.md), [réconciliation de roadmap](STAFF_ROADMAP_RECONCILIATION.md).
 - [Rôles administratifs](ADMINISTRATIVE_ROLES.md), [validation admissions](ADMISSIONS_UX_VALIDATION.md).

@@ -1,3 +1,5 @@
+
+import { getServerPlatformCopy } from "@/lib/i18n";
 import { PlatformSchoolDetailClient } from "@/components/platform-school-detail-client";
 import { PlatformPageHeader } from "@/components/platform-ui";
 import { serverApiGet } from "@/lib/server-api";
@@ -34,6 +36,8 @@ export default async function PlatformSchoolDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const pt = await getServerPlatformCopy();
+
   const { id } = await params;
 
   const data = await serverApiGet<SchoolDetailResponse>(`/platform/schools/${id}`);
@@ -42,7 +46,7 @@ export default async function PlatformSchoolDetailPage({
       <div className="space-y-6">
         <PlatformPageHeader
           title={`School: ${data.school.name}`}
-          description="Inspect school state, management mode, onboarding readiness, and lifecycle controls."
+          description={pt("Inspect school state, management mode, onboarding readiness, and lifecycle controls.")}
         />
         <PlatformSchoolDetailClient data={data} />
       </div>

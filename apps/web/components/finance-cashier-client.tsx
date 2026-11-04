@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import Link from "next/link";
 import {
   FormEvent,
@@ -808,7 +809,7 @@ export function FinanceCashierClient({
         </form>
         {results.length ? (
           <div className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200">
-            {results.map((student) => (
+            {<PaginatedCollection items={results}>{(student) => (
               <button
                 key={student.id}
                 type="button"
@@ -832,7 +833,7 @@ export function FinanceCashierClient({
                   {copy.select}
                 </span>
               </button>
-            ))}
+            )}</PaginatedCollection>}
           </div>
         ) : null}
       </section>
@@ -1227,7 +1228,7 @@ export function FinanceCashierClient({
             Closed sessions can only be reopened here with an audited reason.
           </p>
           <div className="mt-4 space-y-3">
-            {dailySessions.map((session) => (
+            {<PaginatedCollection items={dailySessions}>{(session) => (
               <div
                 key={session.id}
                 className="rounded-xl border border-slate-200 p-4"
@@ -1301,7 +1302,7 @@ export function FinanceCashierClient({
                   </div>
                 ) : null}
               </div>
-            ))}
+            )}</PaginatedCollection>}
           </div>
         </section>
       ) : null}

@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 import { StudentSelectorClient } from "@/components/student-selector-client";
@@ -257,7 +258,7 @@ export function StudentFinanceProfileClient({
                 </thead>
 
                 <tbody>
-                  {profile.invoices.map((invoice) => (
+                  {<PaginatedCollection items={profile.invoices} rows columns={6}>{(invoice) => (
                     <tr key={invoice.id} className="border-t border-slate-200">
                       <td className="px-4 py-3">
                         <a
@@ -312,7 +313,7 @@ export function StudentFinanceProfileClient({
                         {money(invoice.balanceDue, invoice.currencyCode)}
                       </td>
                     </tr>
-                  ))}
+                  )}</PaginatedCollection>}
 
                   {profile.invoices.length === 0 ? (
                     <tr>
@@ -335,7 +336,7 @@ export function StudentFinanceProfileClient({
             </div>
 
             <div className="space-y-2 p-4">
-              {profile.payments.map((payment) => (
+              {<PaginatedCollection items={profile.payments}>{(payment) => (
                 <div
                   key={payment.id}
                   className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm"
@@ -363,7 +364,7 @@ export function StudentFinanceProfileClient({
                     </div>
                   ) : null}
                 </div>
-              ))}
+              )}</PaginatedCollection>}
 
               {profile.payments.length === 0 ? (
                 <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">

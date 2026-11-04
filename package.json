@@ -5,7 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "pnpm --dir apps/api test --runInBand && npm --prefix typescript-starter-master test -- --runInBand",
+    "test": "pnpm --dir apps/api test --runInBand && pnpm --dir apps/web test:ux && npm --prefix typescript-starter-master test -- --runInBand",
     "lint": "pnpm --dir apps/api lint && pnpm --dir apps/web lint && npm --prefix typescript-starter-master run lint",
     "build": "pnpm build:api && pnpm build:web && npm --prefix typescript-starter-master run build",
     "check": "pnpm lint && pnpm test && pnpm build",

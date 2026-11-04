@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SchoolBadge } from "@/components/school-ui";
@@ -230,7 +231,7 @@ export function StudentFinanceSummaryPanelClient({
               </div>
 
               <div className="mt-3 space-y-2">
-                {summary.invoices.slice(0, 5).map((invoice) => (
+                {<PaginatedCollection items={summary.invoices}>{(invoice) => (
                   <div
                     key={invoice.id}
                     className="rounded-xl border border-slate-200 bg-slate-50 p-3"
@@ -297,7 +298,7 @@ export function StudentFinanceSummaryPanelClient({
                       </div>
                     ) : null}
                   </div>
-                ))}
+                )}</PaginatedCollection>}
 
                 {summary.invoices.length === 0 ? (
                   <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
@@ -313,7 +314,7 @@ export function StudentFinanceSummaryPanelClient({
               </div>
 
               <div className="mt-3 space-y-2">
-                {summary.payments.slice(0, 5).map((payment) => (
+                {<PaginatedCollection items={summary.payments}>{(payment) => (
                   <div
                     key={payment.id}
                     className="rounded-xl border border-slate-200 bg-slate-50 p-3"
@@ -368,7 +369,7 @@ export function StudentFinanceSummaryPanelClient({
                       Print 80mm
                     </Link>
                   </div>
-                ))}
+                )}</PaginatedCollection>}
 
                 {summary.payments.length === 0 ? (
                   <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">

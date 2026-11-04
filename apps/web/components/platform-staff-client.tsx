@@ -1,5 +1,9 @@
 ﻿"use client";
 
+
+import { platformErrorKey } from "@/lib/i18n/platform-copy";
+import { usePlatformCopy } from "@/components/use-platform-copy";
+import { ListPagination, useListPage } from "@/components/list-pagination";
 import { FormEvent, useEffect, useState } from "react";
 import {
   EmptyState,
@@ -133,12 +137,16 @@ export function PlatformStaffClient({
   initialRole = "",
   initialStatus = "",
 }: Props) {
+  const pt = usePlatformCopy();
+
   const [rows, setRows] = useState<StaffRow[]>([]);
+  const staffPage = useListPage(rows);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [messageParams, setMessageParams] = useState<Record<string, string>>({});
   const [tempPassword, setTempPassword] = useState("");
 
   const [filters, setFilters] = useState({
@@ -223,7 +231,8 @@ export function PlatformStaffClient({
         throw new Error(body?.message ?? "Failed to create staff.");
       }
 
-      setMessage(`Staff account created for ${body.user.email}`);
+      setMessage("Staff account created for {email}");
+      setMessageParams({ email: body.user.email });
       setTempPassword(body.temporaryPassword ?? "");
       setForm({
         schoolId: form.schoolId,
@@ -263,7 +272,8 @@ export function PlatformStaffClient({
       }
 
       if (action === "reset-password") {
-        setMessage(`Temporary password reset for ${body.email}`);
+        setMessage("Temporary password reset for {email}");
+        setMessageParams({ email: body.email });
         setTempPassword(body.temporaryPassword ?? "");
       } else {
         setMessage(
@@ -289,16 +299,16 @@ export function PlatformStaffClient({
   return (
     <div className="space-y-6">
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+        <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-sm text-danger">
+          {pt(platformErrorKey(error))}
         </div>
       ) : null}
 
       {message ? (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-          <div>{message}</div>
+        <div className="rounded-2xl border border-success/40 bg-success-subtle p-4 text-sm text-success">
+          <div>{pt(message, messageParams)}</div>
           {tempPassword ? (
-            <div className="mt-3 rounded-xl bg-white p-3 font-mono text-sm text-slate-900 ring-1 ring-green-200">
+            <div className="mt-3 rounded-xl bg-surface text-foreground p-3 font-mono text-sm text-foreground ring-1 ring-green-200">
               {tempPassword}
             </div>
           ) : null}
@@ -307,23 +317,21 @@ export function PlatformStaffClient({
 
       <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <PlatformPanel
-          title="Create Staff"
-          subtitle="Accounts are activated immediately and return a temporary password once."
+          title={pt("Create Staff")}
+          subtitle={pt("Accounts are activated immediately and return a temporary password once.")}
         >
           <form onSubmit={createStaff} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                School
-              </label>
+              <label className="mb-1 block text-sm font-medium text-foreground">{pt("School")}{" "}</label>
               <select
-                className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="w-full rounded-xl border border-input bg-surface text-foreground px-3 py-2"
                 value={form.schoolId}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, schoolId: e.target.value }))
                 }
                 required
               >
-                <option value="">Select school</option>
+                <option value="">{pt("Select school")}</option>
                 {schools.map((school) => (
                   <option key={school.id} value={school.id}>
                     {school.name} ({school.code})
@@ -333,11 +341,9 @@ export function PlatformStaffClient({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">
-                Email
-              </label>
+              <label className="mb-1 block text-sm font-medium text-foreground">{pt("Email")}{" "}</label>
               <input
-                className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                className="w-full rounded-xl border border-input bg-surface text-foreground px-3 py-2"
                 placeholder="teacher@school.com"
                 type="email"
                 value={form.email}
@@ -348,11 +354,9 @@ export function PlatformStaffClient({
 
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  First Name
-                </label>
+                <label className="mb-1 block text-sm font-medium text-foreground">{pt("First Name")}{" "}</label>
                 <input
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                  className="w-full rounded-xl border border-input bg-surface text-foreground px-3 py-2"
                   placeholder="Marie"
                   value={form.firstName}
                   onChange={(e) =>
@@ -362,11 +366,9 @@ export function PlatformStaffClient({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Last Name
-                </label>
+                <label className="mb-1 block text-sm font-medium text-foreground">{pt("Last Name")}{" "}</label>
                 <input
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                  className="w-full rounded-xl border border-input bg-surface text-foreground px-3 py-2"
                   placeholder="Pierre"
                   value={form.lastName}
                   onChange={(e) =>
@@ -379,26 +381,22 @@ export function PlatformStaffClient({
 
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Role
-                </label>
+                <label className="mb-1 block text-sm font-medium text-foreground">{pt("Role")}{" "}</label>
                 <select
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2"
+                  className="w-full rounded-xl border border-input bg-surface text-foreground px-3 py-2"
                   value={form.role}
                   onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value }))}
                 >
-                  <option value="SCHOOL_ADMIN">School Admin</option>
-                  <option value="TEACHER">Teacher</option>
-                  <option value="FINANCE_ADMIN">Finance Admin</option>
+                  <option value="SCHOOL_ADMIN">{pt("School Admin")}</option>
+                  <option value="TEACHER">{pt("Teacher")}</option>
+                  <option value="FINANCE_ADMIN">{pt("Finance Admin")}</option>
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Job Title
-                </label>
+                <label className="mb-1 block text-sm font-medium text-foreground">{pt("Job Title")}{" "}</label>
                 <input
-                  className="w-full rounded-xl border border-slate-300 px-3 py-2"
-                  placeholder="Math Teacher"
+                  className="w-full rounded-xl border border-input bg-surface text-foreground px-3 py-2"
+                  placeholder={pt("Math Teacher")}
                   value={form.jobTitle}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, jobTitle: e.target.value }))
@@ -410,27 +408,27 @@ export function PlatformStaffClient({
             <button
               type="submit"
               disabled={submitting || schools.length === 0}
-              className="w-full rounded-xl bg-slate-900 px-4 py-3 text-white hover:bg-slate-800 disabled:opacity-60"
+              className="w-full rounded-xl bg-primary px-4 py-3 text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
             >
-              {submitting ? "Creating..." : "Create Staff"}
+              {submitting ? pt("Creating...") : pt("Create Staff")}
             </button>
           </form>
         </PlatformPanel>
 
         <PlatformPanel
-          title="Staff Directory"
-          subtitle="Search and manage staff memberships across school tenants."
+          title={pt("Staff Directory")}
+          subtitle={pt("Search and manage staff memberships across school tenants.")}
         >
           <div className="space-y-4">
             <form onSubmit={applyFilters} className="flex flex-wrap gap-3">
               <select
-                className="rounded-xl border border-slate-300 px-3 py-2"
+                className="rounded-xl border border-input bg-surface text-foreground px-3 py-2"
                 value={filters.schoolId}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, schoolId: e.target.value }))
                 }
               >
-                <option value="">All schools</option>
+                <option value="">{pt("All schools")}</option>
                 {schools.map((school) => (
                   <option key={school.id} value={school.id}>
                     {school.name}
@@ -439,35 +437,35 @@ export function PlatformStaffClient({
               </select>
 
               <select
-                className="rounded-xl border border-slate-300 px-3 py-2"
+                className="rounded-xl border border-input bg-surface text-foreground px-3 py-2"
                 value={filters.role}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, role: e.target.value }))
                 }
               >
-                <option value="">All roles</option>
-                <option value="SCHOOL_ADMIN">School Admin</option>
-                <option value="TEACHER">Teacher</option>
-                <option value="FINANCE_ADMIN">Finance Admin</option>
+                <option value="">{pt("All roles")}</option>
+                <option value="SCHOOL_ADMIN">{pt("School Admin")}</option>
+                <option value="TEACHER">{pt("Teacher")}</option>
+                <option value="FINANCE_ADMIN">{pt("Finance Admin")}</option>
               </select>
 
               <select
-                className="rounded-xl border border-slate-300 px-3 py-2"
+                className="rounded-xl border border-input bg-surface text-foreground px-3 py-2"
                 value={filters.status}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, status: e.target.value }))
                 }
               >
-                <option value="">All statuses</option>
-                <option value="ACTIVE">Active</option>
-                <option value="SUSPENDED">Suspended</option>
-                <option value="INVITED">Invited</option>
-                <option value="REMOVED">Removed</option>
+                <option value="">{pt("All statuses")}</option>
+                <option value="ACTIVE">{pt("Active")}</option>
+                <option value="SUSPENDED">{pt("Suspended")}</option>
+                <option value="INVITED">{pt("Invited")}</option>
+                <option value="REMOVED">{pt("Removed")}</option>
               </select>
 
               <input
-                className="min-w-48 flex-1 rounded-xl border border-slate-300 px-3 py-2"
-                placeholder="Search name or email"
+                className="min-w-48 flex-1 rounded-xl border border-input bg-surface text-foreground px-3 py-2"
+                placeholder={pt("Search name or email")}
                 value={filters.search}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, search: e.target.value }))
@@ -476,47 +474,43 @@ export function PlatformStaffClient({
 
               <button
                 type="submit"
-                className="rounded-xl border border-slate-300 px-4 py-2 hover:bg-slate-50"
-              >
-                Apply
-              </button>
+                className="rounded-xl border border-input bg-surface text-foreground px-4 py-2 hover:bg-surface-muted"
+              >{pt("Apply")}{" "}</button>
             </form>
 
             {loading ? (
-              <div className="rounded-2xl bg-slate-50 p-6 text-center text-slate-500">
-                Loading staff...
-              </div>
+              <div className="rounded-2xl bg-surface-muted p-6 text-center text-muted-foreground">{pt("Loading staff...")}{" "}</div>
             ) : rows.length === 0 ? (
               <EmptyState
-                title="No staff found"
-                description="Try widening the filters or create a new staff account."
+                title={pt("No staff found")}
+                description={pt("Try widening the filters or create a new staff account.")}
               />
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-slate-100 text-left text-slate-600">
+                  <thead className="bg-surface-muted text-left text-muted-foreground">
                     <tr>
-                      <th className="px-4 py-3">Staff</th>
-                      <th className="px-4 py-3">School</th>
-                      <th className="px-4 py-3">Roles</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3">Actions</th>
+                      <th className="px-4 py-3">{pt("Staff")}</th>
+                      <th className="px-4 py-3">{pt("School")}</th>
+                      <th className="px-4 py-3">{pt("Roles")}</th>
+                      <th className="px-4 py-3">{pt("Status")}</th>
+                      <th className="px-4 py-3">{pt("Actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row) => {
+                    {staffPage.items.map((row) => {
                       const busy = actingId === row.membership_id;
                       const fullName = [row.first_name, row.last_name]
                         .filter(Boolean)
                         .join(" ");
 
                       return (
-                        <tr key={row.membership_id} className="border-t border-slate-200">
+                        <tr key={row.membership_id} className="border-t border-border">
                           <td className="px-4 py-3 align-top">
-                            <div className="font-medium text-slate-900">{fullName || "-"}</div>
-                            <div className="text-slate-500">{row.email}</div>
+                            <div className="font-medium text-foreground">{fullName || "-"}</div>
+                            <div className="text-muted-foreground">{row.email}</div>
                             {row.job_title ? (
-                              <div className="mt-1 text-xs text-slate-400">{row.job_title}</div>
+                              <div className="mt-1 text-xs text-muted-foreground">{row.job_title}</div>
                             ) : null}
                           </td>
                           <td className="px-4 py-3 align-top">
@@ -527,17 +521,17 @@ export function PlatformStaffClient({
                               {row.roles.length > 0 ? (
                                 row.roles.map((role) => (
                                   <PlatformBadge key={role}>
-                                    {ROLE_LABELS[role] ?? role}
+                                    {pt(ROLE_LABELS[role] ?? role)}
                                   </PlatformBadge>
                                 ))
                               ) : (
-                                <span className="text-slate-400">-</span>
+                                <span className="text-muted-foreground">-</span>
                               )}
                             </div>
                           </td>
                           <td className="px-4 py-3 align-top">
                             <PlatformBadge tone={statusTone(row.membership_status)}>
-                              {row.membership_status}
+                              {pt(row.membership_status)}
                             </PlatformBadge>
                           </td>
                           <td className="px-4 py-3 align-top">
@@ -547,18 +541,18 @@ export function PlatformStaffClient({
                                   type="button"
                                   disabled={busy}
                                   onClick={() => runAction(row.membership_id, "suspend")}
-                                  className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-60"
+                                  className="rounded-lg border border-warning/40 bg-warning-subtle px-3 py-2 text-xs font-medium text-warning hover:bg-warning-subtle disabled:opacity-60"
                                 >
-                                  {busy ? "Working..." : "Suspend"}
+                                  {busy ? pt("Working...") : pt("Suspend")}
                                 </button>
                               ) : (
                                 <button
                                   type="button"
                                   disabled={busy}
                                   onClick={() => runAction(row.membership_id, "reactivate")}
-                                  className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-60"
+                                  className="rounded-lg border border-success/40 bg-success-subtle px-3 py-2 text-xs font-medium text-success hover:bg-success-subtle disabled:opacity-60"
                                 >
-                                  {busy ? "Working..." : "Reactivate"}
+                                  {busy ? pt("Working...") : pt("Reactivate")}
                                 </button>
                               )}
 
@@ -566,9 +560,9 @@ export function PlatformStaffClient({
                                 type="button"
                                 disabled={busy}
                                 onClick={() => runAction(row.membership_id, "reset-password")}
-                                className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium hover:bg-slate-50 disabled:opacity-60"
+                                className="rounded-lg border border-input bg-surface text-foreground px-3 py-2 text-xs font-medium hover:bg-surface-muted disabled:opacity-60"
                               >
-                                {busy ? "Working..." : "Reset Password"}
+                                {busy ? pt("Working...") : pt("Reset Password")}
                               </button>
                             </div>
                           </td>
@@ -577,6 +571,7 @@ export function PlatformStaffClient({
                     })}
                   </tbody>
                 </table>
+                <ListPagination {...staffPage} disabled={loading || !!actingId} />
               </div>
             )}
           </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
@@ -614,7 +615,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
           Billing plans
         </h2>
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          {context?.plans.map((plan) => (
+          {<PaginatedCollection items={context?.plans}>{(plan) => (
             <div
               key={plan.id}
               className="rounded-2xl border border-slate-200 p-4"
@@ -637,7 +638,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                   {plan.isActive ? "ACTIVE" : "ARCHIVED"}
                 </SchoolBadge>
               </div>
-              {context.capabilities.canManage ? (
+              {context?.capabilities.canManage ? (
                 <button
                   type="button"
                   disabled={action === plan.id}
@@ -648,7 +649,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                 </button>
               ) : null}
             </div>
-          ))}
+          )}</PaginatedCollection>}
           {!context?.plans.length ? (
             <div className="text-sm text-slate-500">
               No controlled billing plans yet.
@@ -852,7 +853,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
               </tr>
             </thead>
             <tbody>
-              {context?.recentRuns.map((run) => (
+              {<PaginatedCollection items={context?.recentRuns} rows columns={6}>{(run) => (
                 <tr key={run.id} className="border-t border-slate-200">
                   <td className="px-4 py-3">
                     <div className="font-medium">
@@ -883,7 +884,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )}</PaginatedCollection>}
               {!context?.recentRuns.length ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
@@ -921,7 +922,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
             </button>
           </div>
           <div className="mt-4 space-y-2">
-            {runDetail.items.map((item) => (
+            {<PaginatedCollection items={runDetail.items}>{(item) => (
               <div
                 key={item.studentId}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3 text-sm"
@@ -950,7 +951,7 @@ export function FinanceBillingClient({ schoolId }: { schoolId: string }) {
                   ) : null}
                 </div>
               </div>
-            ))}
+            )}</PaginatedCollection>}
           </div>
         </section>
       ) : null}

@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useMemo, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 
@@ -288,7 +289,7 @@ export function GradebookOverviewClient({
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((row) => (
+                {<PaginatedCollection items={filteredRows} rows columns={5}>{(row) => (
                   <tr
                     key={row.sectionSubjectId}
                     className="border-t border-slate-200"
@@ -342,7 +343,7 @@ export function GradebookOverviewClient({
                       )}
                     </td>
                   </tr>
-                ))}
+                )}</PaginatedCollection>}
 
                 {filteredRows.length === 0 ? (
                   <tr>

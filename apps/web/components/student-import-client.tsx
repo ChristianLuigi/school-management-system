@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { ChangeEvent, useState } from "react";
 import { Download, FileUp, Loader2, Upload } from "lucide-react";
 import { useI18n } from "@/components/i18n-provider";
@@ -63,7 +64,7 @@ const COPY = {
     warnings: "Avertissements",
     row: "Ligne",
     ready: "Toutes les lignes sont valides. Aucun import partiel ne sera créé.",
-    shown: "Seules les 25 premières lignes sont affichées.",
+    shown: "Toutes les lignes sont consultables avec Précédent / Suivant.",
   },
   en: {
     title: "Import students",
@@ -80,7 +81,7 @@ const COPY = {
     warnings: "Warnings",
     row: "Row",
     ready: "All rows are valid. No partial import will be created.",
-    shown: "Only the first 25 rows are shown.",
+    shown: "Use Previous / Next to review every row.",
   },
 } as const;
 
@@ -358,11 +359,11 @@ export function StudentImportClient({
               </button>
             </div>
           ) : null}
-          {preview.rows.length > 25 ? (
+          {preview.rows.length > 10 ? (
             <p className="text-xs text-slate-500">{copy.shown}</p>
           ) : null}
           <div className="space-y-2">
-            {preview.rows.slice(0, 25).map((row) => (
+            {<PaginatedCollection items={preview.rows}>{(row) => (
               <div
                 key={row.rowNumber}
                 className={`rounded-xl border bg-white p-3 ${
@@ -389,7 +390,7 @@ export function StudentImportClient({
                   </p>
                 ))}
               </div>
-            ))}
+            )}</PaginatedCollection>}
           </div>
         </div>
       ) : null}

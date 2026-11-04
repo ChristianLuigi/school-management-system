@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useMemo, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 
@@ -298,7 +299,7 @@ export function ReportCardReadinessClient({
                 </tr>
               </thead>
               <tbody>
-                {data.rows.map((row) => (
+                {<PaginatedCollection items={data.rows} rows columns={5}>{(row) => (
                   <tr key={row.sectionSubjectId} className="border-t border-slate-200">
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-900">
@@ -352,7 +353,7 @@ export function ReportCardReadinessClient({
                       )}
                     </td>
                   </tr>
-                ))}
+                )}</PaginatedCollection>}
 
                 {data.rows.length === 0 ? (
                   <tr>

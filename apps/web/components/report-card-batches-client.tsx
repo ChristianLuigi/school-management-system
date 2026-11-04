@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 import { ReportCardAcademicSelectorsClient } from "@/components/report-card-academic-selectors-client";
@@ -219,7 +220,7 @@ export function ReportCardBatchesClient({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {<PaginatedCollection items={rows} rows columns={7}>{(row) => (
               <tr key={row.id} className="border-t border-slate-200">
                 <td className="px-4 py-3">
                   {row.gradingPeriodNameI18n?.fr ??
@@ -275,7 +276,7 @@ export function ReportCardBatchesClient({
                   </div>
                 </td>
               </tr>
-            ))}
+            )}</PaginatedCollection>}
 
             {rows.length === 0 ? (
               <tr>
@@ -326,7 +327,7 @@ export function ReportCardBatchesClient({
                 </tr>
               </thead>
               <tbody>
-                {details.cards.map((card) => (
+                {<PaginatedCollection items={details.cards} rows columns={5}>{(card) => (
                   <tr key={card.id} className="border-t border-slate-200">
                     <td className="px-4 py-3">{card.rankInSection ?? "-"}</td>
                     <td className="px-4 py-3">
@@ -366,7 +367,7 @@ export function ReportCardBatchesClient({
                       </a>
                     </td>
                   </tr>
-                ))}
+                )}</PaginatedCollection>}
 
                 {details.cards.length === 0 ? (
                   <tr>

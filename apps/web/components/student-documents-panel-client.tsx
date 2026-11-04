@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useState } from "react";
 import {
   CheckCircle2,
@@ -436,7 +437,7 @@ export function StudentDocumentsPanelClient({
       ) : null}
 
       <div className="space-y-3 p-5">
-        {documents.map((document) => (
+        {<PaginatedCollection items={documents}>{(document) => (
           <article
             key={document.id}
             className="rounded-2xl border border-slate-200 p-4"
@@ -534,7 +535,7 @@ export function StudentDocumentsPanelClient({
               ) : null}
             </div>
           </article>
-        ))}
+        )}</PaginatedCollection>}
         {!documents.length ? (
           <div className="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
             <FileText className="mx-auto mb-2 h-7 w-7 text-slate-300" />

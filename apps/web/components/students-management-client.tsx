@@ -75,7 +75,7 @@ type StudentDirectoryResponse = {
 
 const EMPTY_PAGINATION: DirectoryPagination = {
   page: 1,
-  pageSize: 25,
+  pageSize: 10,
   total: 0,
   pageCount: 0,
 };
@@ -177,7 +177,7 @@ export function StudentsManagementClient({
   const [filterSectionId, setFilterSectionId] = useState("");
   const [enrollmentState, setEnrollmentState] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [showImport, setShowImport] = useState(false);
 
   const [loading, setLoading] = useState(true);
@@ -774,6 +774,7 @@ export function StudentsManagementClient({
                 }}
                 className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700"
               >
+                <option value={10}>{t("students.perPage", { count: 10 })}</option>
                 <option value={25}>
                   {t("students.perPage", { count: 25 })}
                 </option>

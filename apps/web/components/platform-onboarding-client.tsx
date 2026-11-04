@@ -1,7 +1,12 @@
 ﻿"use client";
 
+
+import { platformErrorKey } from "@/lib/i18n/platform-copy";
+import { usePlatformCopy } from "@/components/use-platform-copy";
+import { ListPagination, useListPage } from "@/components/list-pagination";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/components/i18n-provider";
 import {
   EmptyState,
   ManagementModeBadge,
@@ -47,7 +52,7 @@ type Props = {
   initialSearch?: string;
 };
 
-function formatLastActivity(value: string | null) {
+function formatLastActivity(value: string | null, locale: string) {
   if (!value) {
     return "-";
   }
@@ -58,7 +63,7 @@ function formatLastActivity(value: string | null) {
     return "-";
   }
 
-  return date.toLocaleString();
+  return date.toLocaleString(locale === "fr" ? "fr-HT" : "en-US");
 }
 
 function normalizeResponse(data: unknown): ResponseShape | null {
@@ -89,7 +94,11 @@ export function PlatformOnboardingClient({
   initialAttentionOnly = false,
   initialSearch = "",
 }: Props) {
+  const pt = usePlatformCopy();
+  const { locale } = useI18n();
+
   const [data, setData] = useState<ResponseShape | null>(null);
+  const onboardingPage = useListPage(data?.rows ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -97,8 +106,10 @@ export function PlatformOnboardingClient({
   const [managementMode, setManagementMode] = useState(initialManagementMode);
   const [attentionOnly, setAttentionOnly] = useState(initialAttentionOnly);
   const [search, setSearch] = useState(initialSearch);
+  const latestRequest = useRef(0);
 
   async function loadData(nextSearch = search) {
+    const requestId = ++latestRequest.current;
     setLoading(true);
     setError("");
 
@@ -123,133 +134,128 @@ export function PlatformOnboardingClient({
         throw new Error(body?.message ?? "Failed to load onboarding data.");
       }
 
-      setData(normalizeResponse(body));
+      if (requestId === latestRequest.current) setData(normalizeResponse(body));
     } catch (err) {
-      setError(
+      if (requestId === latestRequest.current) setError(
         err instanceof Error ? err.message : "Failed to load onboarding data.",
       );
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
   }
 
   useEffect(() => {
     void loadData();
+    return () => { latestRequest.current += 1; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, managementMode, attentionOnly]);
 
   return (
     <div className="space-y-6">
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
+        <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-sm text-danger">
+          {pt(platformErrorKey(error))}
         </div>
       ) : null}
 
       {data ? (
         <div className="grid gap-4 md:grid-cols-4">
-          <PlatformStatCard label="Tracked Schools" value={data.summary.totalSchools} />
+          <PlatformStatCard label={pt("Tracked Schools")} value={data.summary.totalSchools} />
           <PlatformStatCard
-            label="Need Attention"
+            label={pt("Need Attention")}
             value={data.summary.needingAttention}
           />
-          <PlatformStatCard label="Complete" value={data.summary.complete} />
+          <PlatformStatCard label={pt("Complete")} value={data.summary.complete} />
           <PlatformStatCard
-            label="Admin Not Logged In"
+            label={pt("Admin Not Logged In")}
             value={data.summary.adminNotLoggedIn}
           />
         </div>
       ) : null}
 
       <PlatformPanel
-        title="Filters"
-        subtitle="Refine the onboarding tracker by status, management mode, or attention needs."
+        title={pt("Filters")}
+        subtitle={pt("Refine the onboarding tracker by status, management mode, or attention needs.")}
       >
         <div className="flex flex-wrap gap-3">
           <select
-            className="rounded-xl border border-slate-300 px-3 py-2"
+            className="rounded-xl border border-input bg-surface text-foreground px-3 py-2"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
-            <option value="">All statuses</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="ACTIVE_SETUP">ACTIVE_SETUP</option>
-            <option value="SUSPENDED">SUSPENDED</option>
-            <option value="ARCHIVED">ARCHIVED</option>
+            <option value="">{pt("All statuses")}</option>
+            <option value="ACTIVE">{pt("ACTIVE")}</option>
+            <option value="ACTIVE_SETUP">{pt("ACTIVE_SETUP")}</option>
+            <option value="SUSPENDED">{pt("SUSPENDED")}</option>
+            <option value="ARCHIVED">{pt("ARCHIVED")}</option>
           </select>
 
           <select
-            className="rounded-xl border border-slate-300 px-3 py-2"
+            className="rounded-xl border border-input bg-surface text-foreground px-3 py-2"
             value={managementMode}
             onChange={(e) => setManagementMode(e.target.value)}
           >
-            <option value="">All management modes</option>
-            <option value="SELF_MANAGED">SELF_MANAGED</option>
-            <option value="SUPERADMIN_MANAGED">SUPERADMIN_MANAGED</option>
-            <option value="HYBRID_MANAGED">HYBRID_MANAGED</option>
+            <option value="">{pt("All management modes")}</option>
+            <option value="SELF_MANAGED">{pt("SELF_MANAGED")}</option>
+            <option value="SUPERADMIN_MANAGED">{pt("SUPERADMIN_MANAGED")}</option>
+            <option value="HYBRID_MANAGED">{pt("HYBRID_MANAGED")}</option>
           </select>
 
           <input
-            className="rounded-xl border border-slate-300 px-3 py-2"
-            placeholder="Search school"
+            className="rounded-xl border border-input bg-surface text-foreground px-3 py-2"
+            placeholder={pt("Search school")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <label className="flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm">
+          <label className="flex items-center gap-2 rounded-xl border border-input bg-surface text-foreground px-3 py-2 text-sm">
             <input
               type="checkbox"
               checked={attentionOnly}
               onChange={(e) => setAttentionOnly(e.target.checked)}
-            />
-            Attention only
-          </label>
+            />{pt("Attention only")}{" "}</label>
 
           <button
             type="button"
             onClick={() => void loadData()}
-            className="rounded-xl border border-slate-300 px-4 py-2 hover:bg-slate-50"
-          >
-            Apply
-          </button>
+            className="rounded-xl border border-input bg-surface text-foreground px-4 py-2 hover:bg-surface-muted"
+          >{pt("Apply")}{" "}</button>
         </div>
       </PlatformPanel>
 
       <PlatformPanel
-        title="Onboarding Tracker"
-        subtitle="Review completion progress, missing setup pieces, and intervention needs."
+        title={pt("Onboarding Tracker")}
+        subtitle={pt("Review completion progress, missing setup pieces, and intervention needs.")}
       >
         {loading ? (
-          <div className="rounded-2xl bg-slate-50 p-6 text-center text-slate-500">
-            Loading onboarding data...
-          </div>
+          <div className="rounded-2xl bg-surface-muted p-6 text-center text-muted-foreground">{pt("Loading onboarding data...")}{" "}</div>
         ) : !data || data.rows.length === 0 ? (
           <EmptyState
-            title="No schools found"
-            description="No schools match the current onboarding filters."
+            title={pt("No schools found")}
+            description={pt("No schools match the current onboarding filters.")}
           />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-slate-100 text-left text-slate-600">
+              <thead className="bg-surface-muted text-left text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3">School</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Mode</th>
-                  <th className="px-4 py-3">Completion</th>
-                  <th className="px-4 py-3">Admin</th>
-                  <th className="px-4 py-3">Setup</th>
-                  <th className="px-4 py-3">Action Needed</th>
-                  <th className="px-4 py-3">Last Activity</th>
-                  <th className="px-4 py-3">Open</th>
+                  <th className="px-4 py-3">{pt("School")}</th>
+                  <th className="px-4 py-3">{pt("Status")}</th>
+                  <th className="px-4 py-3">{pt("Mode")}</th>
+                  <th className="px-4 py-3">{pt("Completion")}</th>
+                  <th className="px-4 py-3">{pt("Admin")}</th>
+                  <th className="px-4 py-3">{pt("Setup")}</th>
+                  <th className="px-4 py-3">{pt("Action Needed")}</th>
+                  <th className="px-4 py-3">{pt("Last Activity")}</th>
+                  <th className="px-4 py-3">{pt("Open")}</th>
                 </tr>
               </thead>
               <tbody>
-                {data.rows.map((row) => (
-                  <tr key={row.schoolId} className="border-t border-slate-200">
+                {onboardingPage.items.map((row) => (
+                  <tr key={row.schoolId} className="border-t border-border">
                     <td className="px-4 py-3 align-top">
-                      <div className="font-medium text-slate-900">{row.schoolName}</div>
-                      <div className="text-slate-500">{row.schoolCode}</div>
+                      <div className="font-medium text-foreground">{row.schoolName}</div>
+                      <div className="text-muted-foreground">{row.schoolCode}</div>
                     </td>
                     <td className="px-4 py-3 align-top">
                       <StatusBadge status={row.schoolStatus} />
@@ -259,17 +265,17 @@ export function PlatformOnboardingClient({
                     </td>
                     <td className="px-4 py-3 align-top">
                       <div className="min-w-[140px]">
-                        <div className="mb-1 text-xs text-slate-600">
+                        <div className="mb-1 text-xs text-muted-foreground">
                           {row.completionPercent}%
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                        <div className="h-2 overflow-hidden rounded-full bg-muted">
                           <div
                             className={`h-full rounded-full ${
                               row.completionPercent === 100
                                 ? "bg-green-600"
                                 : row.completionPercent >= 50
-                                  ? "bg-amber-500"
-                                  : "bg-red-500"
+                                  ? "bg-warning-subtle0"
+                                  : "bg-danger-subtle0"
                             }`}
                             style={{ width: `${row.completionPercent}%` }}
                           />
@@ -277,32 +283,30 @@ export function PlatformOnboardingClient({
                       </div>
                     </td>
                     <td className="px-4 py-3 align-top">
-                      {row.schoolAdmins} admin(s) / {row.adminLogins} logged in
-                    </td>
+                      {row.schoolAdmins}{" "}{pt("admin(s) /")}{" "}{row.adminLogins}{" "}{pt("logged in")}{" "}</td>
                     <td className="px-4 py-3 align-top">
                       L:{row.levels} · Y:{row.academicYears} · P:{row.gradingPeriods} ·
                       G:{row.gradeLevels} · S:{row.sections}
                     </td>
                     <td className="px-4 py-3 align-top">
                       <PlatformBadge tone={row.needsAttention ? "amber" : "green"}>
-                        {row.actionNeeded}
+                        {pt(row.actionNeeded)}
                       </PlatformBadge>
                     </td>
                     <td className="px-4 py-3 align-top">
-                      {formatLastActivity(row.lastActivityAt)}
+                      {formatLastActivity(row.lastActivityAt, locale)}
                     </td>
                     <td className="px-4 py-3 align-top">
                       <Link
                         href={`/platform/schools/${row.schoolId}`}
-                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800"
-                      >
-                        Open
-                      </Link>
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary-hover"
+                      >{pt("Open")}{" "}</Link>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <ListPagination {...onboardingPage} disabled={loading} />
           </div>
         )}
       </PlatformPanel>

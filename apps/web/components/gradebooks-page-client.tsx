@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 const API_PROXY_PREFIX = "/api/proxy";
@@ -666,7 +667,7 @@ export function GradebooksPageClient({
         <h2 className="text-lg font-semibold">Assessments</h2>
 
         <div className="mt-4 space-y-3">
-          {assessments.map((assessment) => (
+          {<PaginatedCollection items={assessments}>{(assessment) => (
             <button
               key={assessment.id}
               type="button"
@@ -687,7 +688,7 @@ export function GradebooksPageClient({
                 {" | "}Weight: {assessment.weight_percent}%
               </div>
             </button>
-          ))}
+          )}</PaginatedCollection>}
 
           {assessments.length === 0 ? (
             <div className="text-sm text-slate-500">

@@ -32,6 +32,12 @@ export async function getServerTranslator() {
   };
 }
 
+export async function getServerPlatformCopy() {
+  const locale = await getServerLocale();
+  const { t } = await getT("platform", { lng: locale });
+  return (text: string, params?: Record<string, string | number>) => String(t(text, { ...params, keySeparator: false }));
+}
+
 export {
   defaultLocale,
   isSupportedLocale,

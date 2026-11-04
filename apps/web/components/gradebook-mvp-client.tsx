@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useMemo, useState } from "react";
 import {
   BookOpenCheck,
@@ -533,7 +534,7 @@ export function GradebookMvpClient({
           </div>
 
           <div className="mt-4 space-y-3">
-            {assessments.map((assessment) => (
+            {<PaginatedCollection items={assessments}>{(assessment) => (
               <div
                 key={assessment.id}
                 className="rounded-xl border border-slate-200 bg-slate-50 p-4"
@@ -573,7 +574,7 @@ export function GradebookMvpClient({
                   {t("gradebooks.enterScores")}
                 </button>
               </div>
-            ))}
+            )}</PaginatedCollection>}
 
             {assessments.length === 0 ? (
               <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">

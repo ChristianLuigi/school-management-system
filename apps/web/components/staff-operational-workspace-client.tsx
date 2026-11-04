@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 import { useI18n } from "@/components/i18n-provider";
@@ -902,7 +903,7 @@ export function StaffOperationalWorkspaceClient({
         <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr]">
           <Panel title={copy.assignments}>
             <div className="divide-y divide-slate-100">
-              {assignments.items.map((assignment) => (
+              {<PaginatedCollection items={assignments.items}>{(assignment) => (
                 <div
                   key={assignment.id}
                   className="flex items-center justify-between gap-3 py-3"
@@ -926,7 +927,7 @@ export function StaffOperationalWorkspaceClient({
                     {assignment.assignment_status}
                   </SchoolBadge>
                 </div>
-              ))}
+              )}</PaginatedCollection>}
               {!assignments.items.length ? (
                 <div className="py-6 text-sm text-slate-500">
                   {copy.noAssignments}

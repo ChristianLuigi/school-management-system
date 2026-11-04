@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 
@@ -161,7 +162,7 @@ export function AttendanceDashboardOverviewClient({
           </div>
 
           <div className="mt-5 space-y-3">
-            {dashboard.bySection.map((row) => (
+            {<PaginatedCollection items={dashboard.bySection}>{(row) => (
               <div
                 key={row.sectionId}
                 className="rounded-xl border border-slate-200 bg-slate-50 p-4"
@@ -214,7 +215,7 @@ export function AttendanceDashboardOverviewClient({
                   </div>
                 </div>
               </div>
-            ))}
+            )}</PaginatedCollection>}
 
             {dashboard.bySection.length === 0 ? (
               <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">

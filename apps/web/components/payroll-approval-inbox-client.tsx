@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
@@ -215,7 +216,7 @@ export function PayrollApprovalInboxClient({
       ) : null}
 
       <div className="space-y-4">
-        {inbox.runs.map((run) => (
+        {<PaginatedCollection items={inbox.runs}>{(run) => (
           <article
             key={run.id}
             className="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm"
@@ -353,7 +354,7 @@ export function PayrollApprovalInboxClient({
               </button>
             </div>
           </article>
-        ))}
+        )}</PaginatedCollection>}
       </div>
     </div>
   );

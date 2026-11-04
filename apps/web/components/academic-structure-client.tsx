@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useCallback, useMemo, useState } from "react";
 import { ChevronDown, Settings2 } from "lucide-react";
 import { AcademicQuickSetupClient } from "@/components/academic-quick-setup-client";
@@ -401,7 +402,7 @@ export function AcademicStructureClient({
 
                           <div className="mt-3 flex flex-wrap gap-2">
                             {levelSections.length ? (
-                              levelSections.map((section) => (
+                              <PaginatedCollection items={levelSections}>{(section) => (
                                 <span
                                   key={section.id}
                                   className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
@@ -417,7 +418,7 @@ export function AcademicStructureClient({
                                     </span>
                                   ) : null}
                                 </span>
-                              ))
+                              )}</PaginatedCollection>
                             ) : (
                               <span className="text-sm text-slate-500">
                                 {t("academic.noSectionsConfigured")}

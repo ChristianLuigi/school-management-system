@@ -189,7 +189,7 @@ export function StaffDirectoryClient({ schoolId }: { schoolId: string }) {
   const copy = COPY[locale];
   const [data, setData] = useState<StaffListResponse>({
     items: [],
-    pagination: { page: 1, pageSize: 25, total: 0, pageCount: 0 },
+    pagination: { page: 1, pageSize: 10, total: 0, pageCount: 0 },
   });
   const [options, setOptions] = useState<StaffOptions>(EMPTY_OPTIONS);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
@@ -235,7 +235,7 @@ export function StaffDirectoryClient({ schoolId }: { schoolId: string }) {
       const query = new URLSearchParams({
         schoolId,
         page: String(page),
-        pageSize: "25",
+        pageSize: "10",
       });
       for (const [key, value] of Object.entries(appliedFilters)) {
         if (value.trim()) query.set(key, value.trim());

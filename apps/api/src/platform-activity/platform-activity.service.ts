@@ -84,6 +84,8 @@ export class PlatformActivityService {
     }
 
     values.push(query.limit ?? 25);
+    const limitParameter = values.length;
+    values.push(query.offset ?? 0);
 
     const result = await this.db.query<{
       id: string;
@@ -112,8 +114,9 @@ export class PlatformActivityService {
       FROM platform_activity_logs pal
       LEFT JOIN schools s ON s.id = pal.school_id
       WHERE ${where.join(' AND ')}
-      ORDER BY pal.created_at DESC
-      LIMIT $${values.length}
+      ORDER BY pal.created_at DESC, pal.id DESC
+      LIMIT $${limitParameter}
+      OFFSET $${values.length}
       `,
       values,
     );

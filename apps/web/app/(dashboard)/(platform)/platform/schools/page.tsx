@@ -1,3 +1,5 @@
+
+import { getServerPlatformCopy } from "@/lib/i18n";
 import { PlatformSchoolsClient } from "@/components/platform-schools-client";
 import {
   PlatformPageHeader,
@@ -18,16 +20,18 @@ type School = {
 };
 
 export default async function PlatformSchoolsPage() {
+  const pt = await getServerPlatformCopy();
+
   const schools = await serverApiGet<School[]>("/platform/schools");
 
   return (
       <div className="space-y-6">
         <PlatformPageHeader
-          title="Schools"
-          description="Manage school tenants across the platform."
+          title={pt("Schools")}
+          description={pt("Manage school tenants across the platform.")}
           action={
             <PlatformPrimaryLinkButton href="/platform/schools/new">
-              Create School
+              {pt("Create School")}
             </PlatformPrimaryLinkButton>
           }
         />

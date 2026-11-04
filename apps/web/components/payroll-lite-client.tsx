@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
@@ -289,13 +290,13 @@ export function PayrollLiteClient({
           </div>
         ) : null}
         <div className="mt-5 space-y-3">
-          {runs.map((run) => (
+          {<PaginatedCollection items={runs}>{(run) => (
             <article key={run.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3"><div><div className="font-semibold text-slate-900">{run.payrollNumber ?? "Payroll run"}</div><div className="mt-1 text-sm text-slate-600">{run.periodLabel}</div><div className="mt-1 text-xs text-slate-500">{run.periodStart ?? "No start"} to {run.periodEnd ?? "no end"} · {run.currencyCode}</div></div><SchoolBadge tone={runTone(run.payrollStatus)}>{run.payrollStatus.replaceAll("_", " ")}</SchoolBadge></div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[["Gross", run.totalGross], ["Allowances", run.totalAllowances], ["Deductions", run.totalDeductions], ["Net", run.totalNet]].map(([label, value]) => <div key={String(label)}><div className="text-xs text-slate-500">{label}</div><div className="font-semibold">{money(Number(value), run.currencyCode)}</div></div>)}</div>
               <Link href={`/finance/payroll/runs/${run.id}`} className="mt-4 inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50">Open run</Link>
             </article>
-          ))}
+          )}</PaginatedCollection>}
           {!runs.length && !loading ? <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">No payroll runs yet.</div> : null}
         </div>
       </section>
@@ -312,7 +313,7 @@ export function PayrollLiteClient({
           </div>
         ) : null}
         <div className="mt-5 grid gap-3 lg:grid-cols-2">
-          {profiles.map((profile) => (
+          {<PaginatedCollection items={profiles} keepMounted>{(profile) => (
             <article
               key={profile.id}
               className="rounded-xl border border-slate-200 bg-slate-50 p-4"
@@ -348,7 +349,7 @@ export function PayrollLiteClient({
                 />
               ) : null}
             </article>
-          ))}
+          )}</PaginatedCollection>}
           {!profiles.length && !loading ? <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">No linked payroll profiles yet.</div> : null}
         </div>
       </section>

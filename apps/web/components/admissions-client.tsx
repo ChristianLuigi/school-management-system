@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -662,7 +663,7 @@ export function AdmissionsClient({
             </thead>
 
             <tbody>
-              {rows.map((row) => (
+              {<PaginatedCollection items={rows} rows columns={6}>{(row) => (
                 <tr key={row.id} className="border-t border-slate-200">
                   <td className="px-4 py-3">
                     <div className="font-medium text-slate-900">
@@ -715,7 +716,7 @@ export function AdmissionsClient({
                     </Link>
                   </td>
                 </tr>
-              ))}
+              )}</PaginatedCollection>}
 
               {rows.length === 0 && !loading && !error ? (
                 <tr>

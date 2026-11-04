@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useState } from "react";
 import { SchoolBadge } from "@/components/school-ui";
 
@@ -237,7 +238,7 @@ export function AttendanceAdminReviewClient({
                 </tr>
               </thead>
               <tbody>
-                {overview.sectionBreakdown.map((section) => (
+                {<PaginatedCollection items={overview.sectionBreakdown} rows columns={5}>{(section) => (
                   <tr key={section.sectionId} className="border-t border-slate-200">
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-900">
@@ -305,7 +306,7 @@ export function AttendanceAdminReviewClient({
                       )}
                     </td>
                   </tr>
-                ))}
+                )}</PaginatedCollection>}
 
                 {overview.sectionBreakdown.length === 0 ? (
                   <tr>

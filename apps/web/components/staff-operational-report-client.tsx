@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
@@ -493,7 +494,7 @@ export function StaffOperationalReportClient({
               {!report.departmentHeadcount.length ? (
                 <p className="text-sm text-slate-500">{copy.noItems}</p>
               ) : null}
-              {report.departmentHeadcount.map((item) => (
+              {<PaginatedCollection items={report.departmentHeadcount}>{(item) => (
                 <div
                   key={item.department ?? "UNSPECIFIED"}
                   className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2 text-sm"
@@ -506,7 +507,7 @@ export function StaffOperationalReportClient({
                     {item.currentHeadcount}
                   </span>
                 </div>
-              ))}
+              )}</PaginatedCollection>}
             </div>
           </section>
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -517,7 +518,7 @@ export function StaffOperationalReportClient({
               {!report.teacherAssignmentCoverage.length ? (
                 <p className="text-sm text-slate-500">{copy.noItems}</p>
               ) : null}
-              {report.teacherAssignmentCoverage.map((teacher) => (
+              {<PaginatedCollection items={report.teacherAssignmentCoverage}>{(teacher) => (
                 <div
                   key={teacher.staffId}
                   className="rounded-xl border border-slate-200 p-3"
@@ -577,7 +578,7 @@ export function StaffOperationalReportClient({
                     </div>
                   ) : null}
                 </div>
-              ))}
+              )}</PaginatedCollection>}
             </div>
           </section>          <section className="rounded-2xl border border-slate-200 bg-white p-5">
             <h2 className="text-lg font-semibold text-slate-950">
@@ -587,7 +588,7 @@ export function StaffOperationalReportClient({
               {!report.payrollEligibility.length ? (
                 <p className="text-sm text-slate-500">{copy.noItems}</p>
               ) : null}
-              {report.payrollEligibility.map((item) => (
+              {<PaginatedCollection items={report.payrollEligibility}>{(item) => (
                 <div
                   key={item.staffId}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
@@ -623,7 +624,7 @@ export function StaffOperationalReportClient({
                     </Link>
                   </div>
                 </div>
-              ))}
+              )}</PaginatedCollection>}
             </div>
           </section>
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -634,7 +635,7 @@ export function StaffOperationalReportClient({
               {!report.accessReconciliation.length ? (
                 <p className="text-sm text-slate-500">{copy.noItems}</p>
               ) : null}
-              {report.accessReconciliation.map((item) => (
+              {<PaginatedCollection items={report.accessReconciliation}>{(item) => (
                 <div
                   key={item.staffId}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
@@ -671,7 +672,7 @@ export function StaffOperationalReportClient({
                     </Link>
                   </div>
                 </div>
-              ))}
+              )}</PaginatedCollection>}
             </div>
           </section>          <section className="rounded-2xl border border-slate-200 bg-white p-5">
             <h2 className="text-lg font-semibold text-slate-950">
@@ -681,7 +682,7 @@ export function StaffOperationalReportClient({
               {!report.credentialAlerts.length ? (
                 <p className="text-sm text-slate-500">{copy.none}</p>
               ) : null}
-              {report.credentialAlerts.map((item) => (
+              {<PaginatedCollection items={report.credentialAlerts}>{(item) => (
                 <div
                   key={item.documentId}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
@@ -701,7 +702,7 @@ export function StaffOperationalReportClient({
                     {copy.open}
                   </Link>
                 </div>
-              ))}
+              )}</PaginatedCollection>}
             </div>
           </section>
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -712,7 +713,7 @@ export function StaffOperationalReportClient({
               {!report.leaveQueue.length ? (
                 <p className="text-sm text-slate-500">{copy.none}</p>
               ) : null}
-              {report.leaveQueue.map((item) => (
+              {<PaginatedCollection items={report.leaveQueue}>{(item) => (
                 <div
                   key={item.leaveRequestId}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"
@@ -734,7 +735,7 @@ export function StaffOperationalReportClient({
                     {copy.open}
                   </Link>
                 </div>
-              ))}
+              )}</PaginatedCollection>}
             </div>
           </section>
         </>

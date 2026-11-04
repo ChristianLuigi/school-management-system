@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { SchoolBadge } from "@/components/school-ui";
@@ -208,7 +209,7 @@ export function GradeLevelSectionsManagerClient({
 
                           <div className="mt-3 flex flex-wrap gap-2">
                             {level.sections?.length ? (
-                              level.sections.map((section) => (
+                              <PaginatedCollection items={level.sections}>{(section) => (
                                 <span
                                   key={section.id}
                                   className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
@@ -218,7 +219,7 @@ export function GradeLevelSectionsManagerClient({
                                   </span>{" "}
                                   - {i18nName(section.nameI18n, section.code, locale)}
                                 </span>
-                              ))
+                              )}</PaginatedCollection>
                             ) : (
                               <span className="text-sm text-slate-500">
                                 {t("academic.noSectionYet")}

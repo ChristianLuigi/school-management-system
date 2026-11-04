@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { I18nProvider as NextI18nProvider, useT } from "next-i18next/client";
+import { platformFr, platformEn } from "@/lib/i18n/platform-copy";
 import {
   defaultLocale,
   LOCALE_COOKIE,
@@ -71,7 +72,7 @@ export function I18nProvider({
     [router],
   );
 
-  return <NextI18nProvider language={locale} resources={{ fr: { common: messages.fr }, en: { common: messages.en } }}
+  return <NextI18nProvider language={locale} resources={{ fr: { common: messages.fr, platform: platformFr }, en: { common: messages.en, platform: platformEn } }}
     i18nextOptions={{ fallbackLng: "fr", defaultNS: "common", interpolation: { escapeValue: false, prefix: "{", suffix: "}" } }}>
     <TranslationBridge locale={locale} setLocale={setLocale}>{children}</TranslationBridge>
   </NextI18nProvider>;

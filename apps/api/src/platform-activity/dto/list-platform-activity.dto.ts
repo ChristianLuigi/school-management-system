@@ -10,6 +10,13 @@ export class ListPlatformActivityDto {
   limit?: number = 25;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(2147483647)
+  offset?: number = 0;
+
+  @IsOptional()
   @IsUUID('all')
   schoolId?: string;
 

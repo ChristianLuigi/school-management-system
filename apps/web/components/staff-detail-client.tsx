@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
@@ -1021,13 +1022,13 @@ function Timeline({
     return <div className="text-sm text-slate-500">{empty}</div>;
   return (
     <ol className="space-y-4">
-      {items.map((item) => (
+      {<PaginatedCollection items={items}>{(item) => (
         <li key={item.id} className="border-l-2 border-slate-200 pl-4">
           <div className="font-medium text-slate-900">{item.title}</div>
           <div className="mt-1 text-sm text-slate-600">{item.subtitle}</div>
           <div className="mt-1 text-xs text-slate-500">{item.meta}</div>
         </li>
-      ))}
+      )}</PaginatedCollection>}
     </ol>
   );
 }

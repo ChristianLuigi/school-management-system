@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { SchoolBadge, SchoolPanel } from "@/components/school-ui";
@@ -458,7 +459,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
           {!documents.length ? (
             <p className="text-sm text-slate-500">{copy.noDocuments}</p>
           ) : null}
-          {documents.map((document) => (
+          {<PaginatedCollection items={documents}>{(document) => (
             <div
               key={document.id}
               className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 p-4"
@@ -498,7 +499,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
                 {copy.download}
               </a>
             </div>
-          ))}
+          )}</PaginatedCollection>}
         </div>
       </SchoolPanel>
 
@@ -581,7 +582,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
           {!leaveRequests.length ? (
             <p className="text-sm text-slate-500">{copy.noLeave}</p>
           ) : null}
-          {leaveRequests.map((request) => (
+          {<PaginatedCollection items={leaveRequests}>{(request) => (
             <div
               key={request.id}
               className="rounded-2xl border border-slate-200 p-4"
@@ -626,7 +627,7 @@ export function StaffSelfServiceClient({ schoolId }: { schoolId: string }) {
                 ) : null}
               </div>
             </div>
-          ))}
+          )}</PaginatedCollection>}
         </div>
       </SchoolPanel>
     </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SchoolBadge } from "@/components/school-ui";
@@ -237,7 +238,7 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
               <h3 className="font-semibold text-slate-900">Recent Invoices</h3>
 
               <div className="mt-4 space-y-3">
-                {dashboard.recentInvoices.map((invoice) => (
+                {<PaginatedCollection items={dashboard.recentInvoices}>{(invoice) => (
                   <div
                     key={invoice.id}
                     className="rounded-xl border border-slate-200 bg-slate-50 p-4"
@@ -310,7 +311,7 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
                       </Link>
                     </div>
                   </div>
-                ))}
+                )}</PaginatedCollection>}
 
                 {dashboard.recentInvoices.length === 0 ? (
                   <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
@@ -324,7 +325,7 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
               <h3 className="font-semibold text-slate-900">Recent Payments</h3>
 
               <div className="mt-4 space-y-3">
-                {dashboard.recentPayments.map((payment) => (
+                {<PaginatedCollection items={dashboard.recentPayments}>{(payment) => (
                   <div
                     key={payment.id}
                     className="rounded-xl border border-slate-200 bg-slate-50 p-4"
@@ -386,7 +387,7 @@ export function FinanceDashboardClient({ schoolId }: { schoolId: string }) {
                       </Link>
                     </div>
                   </div>
-                ))}
+                )}</PaginatedCollection>}
 
                 {dashboard.recentPayments.length === 0 ? (
                   <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">

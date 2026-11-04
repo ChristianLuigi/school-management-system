@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FinanceInvoiceStatusActionsClient } from "@/components/finance-invoice-status-actions-client";
@@ -473,7 +474,7 @@ export function FinanceInvoiceDetailClient({
                 </thead>
 
                 <tbody>
-                  {invoice.payments.map((payment) => (
+                  {<PaginatedCollection items={invoice.payments} rows columns={7}>{(payment) => (
                     <tr key={payment.id} className="border-t border-slate-200">
                       <td className="px-4 py-3 font-medium">
                         {payment.paymentNumber ?? payment.id.slice(0, 8)}
@@ -505,7 +506,7 @@ export function FinanceInvoiceDetailClient({
                         </a>
                       </td>
                     </tr>
-                  ))}
+                  )}</PaginatedCollection>}
 
                   {invoice.payments.length === 0 ? (
                     <tr>

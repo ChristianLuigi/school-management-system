@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useMemo, useState } from "react";
 import { GradebookReadinessClient } from "@/components/gradebook-readiness-client";
 import { SchoolBadge } from "@/components/school-ui";
@@ -209,7 +210,7 @@ export function GradebookApprovalClient({
               </tr>
             </thead>
             <tbody>
-              {visibleRows.map((row) => (
+              {<PaginatedCollection items={visibleRows} rows columns={4}>{(row) => (
                 <tr key={row.sectionSubjectId} className="border-t border-slate-200">
                   <td className="px-4 py-3">
                     <div className="font-medium text-slate-900">
@@ -310,7 +311,7 @@ export function GradebookApprovalClient({
                     ) : null}
                   </td>
                 </tr>
-              ))}
+              )}</PaginatedCollection>}
             </tbody>
           </table>
         </div>

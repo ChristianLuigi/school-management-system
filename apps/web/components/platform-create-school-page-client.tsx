@@ -1,5 +1,8 @@
 "use client";
 
+
+import { platformErrorKey } from "@/lib/i18n/platform-copy";
+import { usePlatformCopy } from "@/components/use-platform-copy";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
@@ -105,6 +108,8 @@ function normalizeCreateSchoolResponse(
 }
 
 export function PlatformCreateSchoolPageClient() {
+  const pt = usePlatformCopy();
+
   const [form, setForm] = useState({
     name: "",
     defaultLocale: "fr",
@@ -199,97 +204,80 @@ export function PlatformCreateSchoolPageClient() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Create School</h1>
-          <p className="mt-1 text-slate-600">
-            Provision a new tenant and set the first admin&apos;s login
-            credentials.
-          </p>
+          <h1 className="text-3xl font-bold">{pt("Create School")}</h1>
+          <p className="mt-1 text-muted-foreground">{pt("Provision a new tenant and set the first admin's login credentials.")}{" "}</p>
         </div>
 
         <Link
           href="/platform/schools"
-          className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium hover:bg-slate-50"
-        >
-          Back to Schools
-        </Link>
+          className="rounded-xl border border-input bg-surface text-foreground px-4 py-3 text-sm font-medium hover:bg-surface-muted"
+        >{pt("Back to Schools")}{" "}</Link>
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-          {error}
+        <div className="rounded-2xl border border-danger/40 bg-danger-subtle p-4 text-danger">
+          {pt(platformErrorKey(error))}
         </div>
       ) : null}
 
       {result ? (
-        <div className="space-y-4 rounded-2xl border border-green-200 bg-green-50 p-5">
+        <div className="space-y-4 rounded-2xl border border-success/40 bg-success-subtle p-5">
           <div>
-            <div className="text-sm font-medium text-green-700">
-              School created successfully
-            </div>
+            <div className="text-sm font-medium text-success">{pt("School created successfully")}{" "}</div>
             <div className="mt-1 text-xl font-bold text-green-900">
               {result.school.name}
             </div>
             <div className="mt-2 flex flex-wrap gap-3 text-sm">
-              <div className="rounded-lg bg-green-100 px-3 py-1 font-mono font-semibold text-green-800">
+              <div className="rounded-lg bg-success-subtle px-3 py-1 font-mono font-semibold text-success">
                 {result.school.code}
               </div>
-              <div className="rounded-lg bg-green-100 px-3 py-1 text-green-800">
+              <div className="rounded-lg bg-success-subtle px-3 py-1 text-success">
                 {result.school.status}
               </div>
-              <div className="rounded-lg bg-green-100 px-3 py-1 text-green-800">
-                Levels: {result.levels.map((l) => l.code).join(", ")}
+              <div className="rounded-lg bg-success-subtle px-3 py-1 text-success">{pt("Levels:")}{" "}{result.levels.map((l) => l.code).join(", ")}
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-4 ring-1 ring-green-200">
-            <div className="text-sm font-semibold text-slate-700">
-              First Admin — Login Credentials
-            </div>
-            <p className="mt-1 text-xs text-slate-500">
-              Share these with the school admin. They will use them to log in
-              and complete onboarding.
-            </p>
+          <div className="rounded-xl bg-surface text-foreground p-4 ring-1 ring-green-200">
+            <div className="text-sm font-semibold text-foreground">{pt("First Admin — Login Credentials")}{" "}</div>
+            <p className="mt-1 text-xs text-muted-foreground">{pt("Share these with the school admin. They will use them to log in and complete onboarding.")}{" "}</p>
 
             <div className="mt-3 grid gap-2 text-sm">
-              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                <span className="text-slate-500">Email</span>
+              <div className="flex items-center justify-between rounded-lg bg-surface-muted px-3 py-2">
+                <span className="text-muted-foreground">{pt("Email")}</span>
                 <span className="font-mono font-medium">
                   {result.firstAdmin.email}
                 </span>
               </div>
-              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                <span className="text-slate-500">Temporary Password</span>
+              <div className="flex items-center justify-between rounded-lg bg-surface-muted px-3 py-2">
+                <span className="text-muted-foreground">{pt("Temporary Password")}</span>
                 <span className="font-mono font-medium">
                   {result.tempPassword}
                 </span>
               </div>
             </div>
 
-            <p className="mt-3 text-xs text-amber-700">
-              This password is shown once. Copy it now before leaving this page.
-            </p>
+            <p className="mt-3 text-xs text-warning">{pt("This password is shown once. Copy it now before leaving this page.")}{" "}</p>
           </div>
         </div>
       ) : null}
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+        className="space-y-6 rounded-2xl bg-surface text-foreground p-6 shadow-sm ring-1 ring-border"
       >
         <div className="grid gap-6 xl:grid-cols-2">
           {/* School details */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">School Details</h2>
+            <h2 className="text-lg font-semibold">{pt("School Details")}</h2>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
-                School Name
-              </label>
+              <label className="mb-1 block text-sm font-medium">{pt("School Name")}{" "}</label>
               <input
                 required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="Beta International School"
+                className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2"
+                placeholder={pt("Beta International School")}
                 value={form.name}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, name: e.target.value }))
@@ -299,11 +287,9 @@ export function PlatformCreateSchoolPageClient() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Default Locale
-                </label>
+                <label className="mb-1 block text-sm font-medium">{pt("Default Locale")}{" "}</label>
                 <select
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2"
                   value={form.defaultLocale}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -312,18 +298,16 @@ export function PlatformCreateSchoolPageClient() {
                     }))
                   }
                 >
-                  <option value="fr">fr</option>
-                  <option value="en">en</option>
+                  <option value="fr">{pt("fr")}</option>
+                  <option value="en">{pt("en")}</option>
                 </select>
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Timezone
-                </label>
+                <label className="mb-1 block text-sm font-medium">{pt("Timezone")}{" "}</label>
                 <input
                   required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2"
                   value={form.timezone}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, timezone: e.target.value }))
@@ -334,12 +318,10 @@ export function PlatformCreateSchoolPageClient() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Currency Code
-                </label>
+                <label className="mb-1 block text-sm font-medium">{pt("Currency Code")}{" "}</label>
                 <input
                   required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2"
                   value={form.currencyCode}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -351,12 +333,10 @@ export function PlatformCreateSchoolPageClient() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Country Code
-                </label>
+                <label className="mb-1 block text-sm font-medium">{pt("Country Code")}{" "}</label>
                 <input
                   required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2"
                   value={form.countryCode}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -369,9 +349,7 @@ export function PlatformCreateSchoolPageClient() {
             </div>
 
             <div>
-              <div className="mb-2 block text-sm font-medium">
-                Initial Levels
-              </div>
+              <div className="mb-2 block text-sm font-medium">{pt("Initial Levels")}{" "}</div>
               <div className="flex flex-wrap gap-4 text-sm">
                 <label className="flex items-center gap-2">
                   <input
@@ -383,9 +361,7 @@ export function PlatformCreateSchoolPageClient() {
                         includeKG: e.target.checked,
                       }))
                     }
-                  />
-                  Kindergarten
-                </label>
+                  />{pt("Kindergarten")}{" "}</label>
 
                 <label className="flex items-center gap-2">
                   <input
@@ -397,9 +373,7 @@ export function PlatformCreateSchoolPageClient() {
                         includePRIM: e.target.checked,
                       }))
                     }
-                  />
-                  Primary
-                </label>
+                  />{pt("Primary")}{" "}</label>
 
                 <label className="flex items-center gap-2">
                   <input
@@ -411,27 +385,22 @@ export function PlatformCreateSchoolPageClient() {
                         includeSEC: e.target.checked,
                       }))
                     }
-                  />
-                  Secondary
-                </label>
+                  />{pt("Secondary")}{" "}</label>
               </div>
             </div>
           </div>
 
           {/* First admin */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">First School Admin</h2>
-            <p className="text-sm text-slate-500">
-              This person will receive the credentials below and log in to
-              complete the school setup.
-            </p>
+            <h2 className="text-lg font-semibold">{pt("First School Admin")}</h2>
+            <p className="text-sm text-muted-foreground">{pt("This person will receive the credentials below and log in to complete the school setup.")}{" "}</p>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Email</label>
+              <label className="mb-1 block text-sm font-medium">{pt("Email")}</label>
               <input
                 type="email"
                 required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2"
                 placeholder="director@school.com"
                 value={form.adminEmail}
                 onChange={(e) =>
@@ -441,15 +410,13 @@ export function PlatformCreateSchoolPageClient() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
-                Temporary Password
-              </label>
+              <label className="mb-1 block text-sm font-medium">{pt("Temporary Password")}{" "}</label>
               <input
                 type="text"
                 required
                 minLength={8}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono"
-                placeholder="At least 8 characters"
+                className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2 font-mono"
+                placeholder={pt("At least 8 characters")}
                 value={form.adminPassword}
                 onChange={(e) =>
                   setForm((prev) => ({
@@ -458,19 +425,16 @@ export function PlatformCreateSchoolPageClient() {
                   }))
                 }
               />
-              <p className="mt-1 text-xs text-slate-500">
-                You set this. The admin uses it to log in for the first time.
-              </p>
+              <p className="mt-1 text-xs text-muted-foreground">{pt("You set this. The admin uses it to log in for the first time.")}{" "}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium">
-                  First Name{" "}
-                  <span className="font-normal text-slate-400">(optional)</span>
+                <label className="mb-1 block text-sm font-medium">{pt("First Name")}{" "}
+                  <span className="font-normal text-muted-foreground">{pt("(optional)")}</span>
                 </label>
                 <input
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2"
                   placeholder="Marie"
                   value={form.adminFirstName}
                   onChange={(e) =>
@@ -483,12 +447,11 @@ export function PlatformCreateSchoolPageClient() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Last Name{" "}
-                  <span className="font-normal text-slate-400">(optional)</span>
+                <label className="mb-1 block text-sm font-medium">{pt("Last Name")}{" "}
+                  <span className="font-normal text-muted-foreground">{pt("(optional)")}</span>
                 </label>
                 <input
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
+                  className="w-full rounded-lg border border-input bg-surface text-foreground px-3 py-2"
                   placeholder="Pierre"
                   value={form.adminLastName}
                   onChange={(e) =>
@@ -506,9 +469,9 @@ export function PlatformCreateSchoolPageClient() {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-xl bg-slate-900 px-5 py-3 text-white hover:bg-slate-800 disabled:opacity-60"
+          className="rounded-xl bg-primary px-5 py-3 text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
         >
-          {submitting ? "Creating School..." : "Create School"}
+          {submitting ? pt("Creating School...") : pt("Create School")}
         </button>
       </form>
     </div>

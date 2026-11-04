@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 
@@ -543,7 +544,7 @@ export function StaffComplianceWorkspaceClient({
             {!loading && !documents.length ? (
               <p className="text-sm text-slate-500">{copy.noDocuments}</p>
             ) : null}
-            {documents.map((item) => (
+            {<PaginatedCollection items={documents}>{(item) => (
               <div
                 key={item.id}
                 className="rounded-2xl border border-slate-200 bg-white p-4"
@@ -608,7 +609,7 @@ export function StaffComplianceWorkspaceClient({
                   </div>
                 </div>
               </div>
-            ))}
+            )}</PaginatedCollection>}
           </div>
         </>
       ) : (
@@ -701,7 +702,7 @@ export function StaffComplianceWorkspaceClient({
             {!loading && !leaveRequests.length ? (
               <p className="text-sm text-slate-500">{copy.noLeave}</p>
             ) : null}
-            {leaveRequests.map((item) => (
+            {<PaginatedCollection items={leaveRequests}>{(item) => (
               <div
                 key={item.id}
                 className="rounded-2xl border border-slate-200 bg-white p-4"
@@ -755,7 +756,7 @@ export function StaffComplianceWorkspaceClient({
                   </div>
                 </div>
               </div>
-            ))}
+            )}</PaginatedCollection>}
           </div>
         </>
       )}

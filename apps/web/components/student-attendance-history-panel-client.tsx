@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { useEffect, useState } from "react";
 import { SchoolBadge, type SchoolBadgeTone } from "@/components/school-ui";
 
@@ -164,7 +165,7 @@ export function StudentAttendanceHistoryPanelClient({
           </div>
 
           <div className="mt-5 space-y-3">
-            {history.records.map((record, index) => (
+            {<PaginatedCollection items={history.records}>{(record, index) => (
               <div
                 key={`${record.attendanceDate}-${record.slot}-${index}`}
                 className="rounded-xl border border-slate-200 bg-slate-50 p-4"
@@ -191,7 +192,7 @@ export function StudentAttendanceHistoryPanelClient({
                   </SchoolBadge>
                 </div>
               </div>
-            ))}
+            )}</PaginatedCollection>}
 
             {history.records.length === 0 ? (
               <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">

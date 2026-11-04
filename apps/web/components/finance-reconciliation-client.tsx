@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginatedCollection } from "@/components/paginated-collection";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type BankAccount = {
@@ -643,7 +644,7 @@ export function FinanceReconciliationClient({
               ) : null}
 
               <div className="space-y-3">
-                {context.deposits.map((deposit) => (
+                {<PaginatedCollection items={context.deposits}>{(deposit) => (
                   <article
                     key={deposit.id}
                     className="rounded-2xl border border-slate-200 p-4"
@@ -751,7 +752,7 @@ export function FinanceReconciliationClient({
                       </div>
                     ) : null}
                   </article>
-                ))}
+                )}</PaginatedCollection>}
                 {!context.deposits.length && !loading ? (
                   <div className="text-sm text-slate-500">
                     No deposit records yet.
@@ -828,7 +829,7 @@ export function FinanceReconciliationClient({
               ) : null}
 
               <div className="space-y-3">
-                {context.periods.map((period) => (
+                {<PaginatedCollection items={context.periods}>{(period) => (
                   <article
                     key={period.id}
                     className="rounded-2xl border border-slate-200 p-4"
@@ -895,7 +896,7 @@ export function FinanceReconciliationClient({
                       </div>
                     ) : null}
                   </article>
-                ))}
+                )}</PaginatedCollection>}
                 {!context.periods.length && !loading ? (
                   <div className="text-sm text-slate-500">
                     No accounting periods configured.
@@ -984,7 +985,7 @@ export function FinanceReconciliationClient({
               ) : null}
 
               <div className="grid gap-3 md:grid-cols-2">
-                {context.bankAccounts.map((account) => (
+                {<PaginatedCollection items={context.bankAccounts}>{(account) => (
                   <article
                     key={account.id}
                     className="rounded-2xl border border-slate-200 p-4"
@@ -1022,7 +1023,7 @@ export function FinanceReconciliationClient({
                       ) : null}
                     </div>
                   </article>
-                ))}
+                )}</PaginatedCollection>}
                 {!context.bankAccounts.length && !loading ? (
                   <div className="text-sm text-slate-500">
                     No bank destinations configured.
