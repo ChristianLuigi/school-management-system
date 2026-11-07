@@ -5,10 +5,7 @@ import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
-  Eye,
-  FileUp,
   GraduationCap,
-  Pencil,
   Plus,
   RefreshCw,
   Search,
@@ -21,6 +18,7 @@ import { StudentImportClient } from "@/components/student-import-client";
 import { GuardianImportClient } from "@/components/guardian-import-client";
 import { BulkCleanupClient } from "@/components/bulk-cleanup-client";
 import { BulkPlacementClient } from "@/components/bulk-placement-client";
+import { RecordActions } from "@/components/record-actions";
 import {
   EmptySchoolState,
   SchoolBadge,
@@ -185,6 +183,30 @@ export function StudentsManagementClient({
   const [showGuardianImport, setShowGuardianImport] = useState(false);
   const [showCleanup, setShowCleanup] = useState(false);
   const [showPlacement, setShowPlacement] = useState(false);
+  const selectionScope = JSON.stringify([schoolId, search, status, gradeLevelId, filterSectionId, enrollmentState, page, pageSize]);
+  const [selection, setSelection] = useState<{ scope: string; ids: string[] }>({ scope: "", ids: [] });
+  const selectedIds = selection.scope === selectionScope ? selection.ids : [];
+  function setSelectedIds(value: string[] | ((ids: string[]) => string[])) {
+    setSelection((current) => ({ scope: selectionScope, ids: typeof value === "function" ? value(current.scope === selectionScope ? current.ids : []) : value }));
+  }
+  const [placementIds, setPlacementIds] = useState<string[]>([]);
+  const fr = locale === "fr";
+  function toggleSelection(id: string) {
+    setSelectedIds((ids) => ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id]);
+  }
+  function openPanel(panel: "import" | "guardians" | "cleanup" | "placement") {
+    setShowImport(panel === "import");
+    setShowGuardianImport(panel === "guardians");
+    setShowCleanup(panel === "cleanup");
+    setShowPlacement(panel === "placement");
+    if (panel === "placement") setPlacementIds([...selectedIds]);
+  }
+  function studentActions(student: StudentRow) {
+    return [
+      { label: t("students.profile"), href: `/students/${student.id}` },
+      ...(canCreate ? [{ label: t("common.edit"), href: `/students/${student.id}/edit` }] : []),
+    ];
+  }
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -212,6 +234,7 @@ export function StudentsManagementClient({
     const controller = new AbortController();
     requestRef.current = controller;
     setLoading(true);
+    setSelectedIds([]);
     setError("");
 
     try {
@@ -356,68 +379,15 @@ export function StudentsManagementClient({
                 className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
               />
             </button>
-            {canImport ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowGuardianImport(false);
-                  setShowImport((value) => !value);
-                }}
-                aria-expanded={showImport}
-                aria-controls="student-import-panel"
-                className={schoolActionClass()}
-              >
-                <FileUp className="h-4 w-4" />
-                <span>{t("students.importCsv")}</span>
-              </button>
-            ) : null}
-            {canImport ? (
-              <button
-                type="button"
-                className={schoolActionClass()}
-                aria-expanded={showGuardianImport}
-                aria-controls="guardian-import-panel"
-                onClick={() => {
-                  setShowImport(false);
-                  setShowGuardianImport((value) => !value);
-                }}
-              >
-                <FileUp className="h-4 w-4" />
-                {locale === "fr"
-                  ? "Importer des responsables"
-                  : "Import guardians"}
-              </button>
-            ) : null}
-            {canImport ? (
-              <button
-                type="button"
-                className={schoolActionClass()}
-                aria-expanded={showCleanup}
-                aria-controls="bulk-cleanup-panel"
-                onClick={() => setShowCleanup((value) => !value)}
-              >
-                {locale === "fr" ? "Suppression groupée" : "Bulk deletion"}
-              </button>
-            ) : null}
-            {canImport ? (
-              <button
-                type="button"
-                className={schoolActionClass()}
-                aria-expanded={showPlacement}
-                aria-controls="bulk-placement-panel"
-                onClick={() => {
-                  setShowPlacement((value) => !value);
-                  setShowCleanup(false);
-                  setShowGuardianImport(false);
-                  setShowImport(false);
-                }}
-              >
-                <GraduationCap className="h-4 w-4" />
-                {locale === "fr"
-                  ? "Affectation groupée"
-                  : "Bulk class placement"}
-              </button>
-            ) : null}
+            {canImport && <RecordActions label={t("common.actions")} disabled={loading} actions={selectedIds.length ? [
+              { label: fr ? "Affecter la sélection à une classe" : "Assign selection to a class", disabled: rows.some((row) => selectedIds.includes(row.id) && !!row.currentEnrollment), onClick: () => openPanel("placement") },
+              { label: fr ? "Effacer la sélection" : "Clear selection", onClick: () => setSelectedIds([]) },
+            ] : [
+              { label: t("students.importCsv"), onClick: () => openPanel("import") },
+              { label: fr ? "Importer des responsables" : "Import guardians", onClick: () => openPanel("guardians") },
+              { label: fr ? "Suppression groupée (sélection sécurisée)" : "Bulk deletion (protected selection)", onClick: () => openPanel("cleanup") },
+              { label: fr ? "Affectation groupée" : "Bulk class placement", onClick: () => openPanel("placement") },
+            ]} />}
             {canCreate ? (
               <Link
                 href="/students/new"
@@ -433,8 +403,9 @@ export function StudentsManagementClient({
         {showPlacement ? (
           <div id="bulk-placement-panel" className="border-b border-border p-5">
             <BulkPlacementClient
-              key={schoolId}
+              key={`${schoolId}:${placementIds.join(",")}`}
               schoolId={schoolId}
+              initialStudentIds={placementIds}
               onClose={() => setShowPlacement(false)}
               onAssigned={() => {
                 setPage(1);
@@ -626,6 +597,13 @@ export function StudentsManagementClient({
           </div>
         </div>
 
+        {canImport && <div className="flex items-center gap-3 border-b border-border px-5 py-3 text-sm text-muted-foreground">
+          <input type="checkbox" aria-label={fr ? "Sélectionner toute la page" : "Select this page"} disabled={loading || !rows.length}
+            checked={!!rows.length && selectedIds.length === rows.length}
+            ref={(node) => { if (node) node.indeterminate = selectedIds.length > 0 && selectedIds.length < rows.length; }}
+            onChange={(event) => setSelectedIds(event.target.checked ? rows.map((row) => row.id) : [])} />
+          <span aria-live="polite">{selectedIds.length} {fr ? "sélectionné(s) · page affichée uniquement" : "selected · current page only"}</span>
+        </div>}
         <div className="hidden overflow-x-auto md:block" aria-busy={loading}>
           <table className="min-w-full text-sm">
             <thead className="bg-surface text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -647,6 +625,7 @@ export function StudentsManagementClient({
                 <tr key={student.id} className="transition hover:bg-surface/80">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
+                      {canImport && <input type="checkbox" disabled={loading} checked={selectedIds.includes(student.id)} onChange={() => toggleSelection(student.id)} aria-label={`${fr ? "Sélectionner" : "Select"} ${studentName(student, t("students.unnamedStudent"))}`} />}
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted font-semibold text-muted-foreground">
                         {studentName(student, t("students.unnamedStudent"))
                           .slice(0, 2)
@@ -689,36 +668,7 @@ export function StudentsManagementClient({
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex justify-end gap-1">
-                      <Link
-                        href={`/students/${student.id}`}
-                        title={t("students.profile")}
-                        aria-label={t("students.openProfile", {
-                          name: studentName(
-                            student,
-                            t("students.unnamedStudent"),
-                          ),
-                        })}
-                        className={schoolActionClass()}
-                      >
-                        <Eye className="h-4 w-4" />
-                        {t("students.profile")}
-                      </Link>
-                      {canCreate ? (
-                        <Link
-                          href={`/students/${student.id}/edit`}
-                          title={t("common.edit")}
-                          aria-label={t("students.editStudent", {
-                            name: studentName(
-                              student,
-                              t("students.unnamedStudent"),
-                            ),
-                          })}
-                          className={schoolActionClass()}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          {t("common.edit")}
-                        </Link>
-                      ) : null}
+                      <RecordActions compact label={`${t("common.actions")} · ${studentName(student, t("students.unnamedStudent"))}`} actions={studentActions(student)} />
                     </div>
                   </td>
                 </tr>
@@ -744,6 +694,7 @@ export function StudentsManagementClient({
             <article key={student.id} className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
+                  {canImport && <input type="checkbox" disabled={loading} checked={selectedIds.includes(student.id)} onChange={() => toggleSelection(student.id)} aria-label={`${fr ? "Sélectionner" : "Select"} ${studentName(student, t("students.unnamedStudent"))}`} />}
                   <div className="truncate font-semibold text-foreground">
                     {studentName(student, t("students.unnamedStudent"))}
                   </div>
@@ -774,25 +725,7 @@ export function StudentsManagementClient({
                 </span>
               </div>
               <div className="mt-4 flex gap-2">
-                <Link
-                  href={`/students/${student.id}`}
-                  className={schoolActionClass()}
-                >
-                  <Eye className="h-4 w-4" />
-                  {t("students.profile")}
-                </Link>
-                {canCreate ? (
-                  <Link
-                    href={`/students/${student.id}/edit`}
-                    aria-label={t("students.editStudent", {
-                      name: studentName(student, t("students.unnamedStudent")),
-                    })}
-                    className={schoolActionClass()}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    {t("common.edit")}
-                  </Link>
-                ) : null}
+                <RecordActions compact label={`${t("common.actions")} · ${studentName(student, t("students.unnamedStudent"))}`} actions={studentActions(student)} />
               </div>
             </article>
           ))}

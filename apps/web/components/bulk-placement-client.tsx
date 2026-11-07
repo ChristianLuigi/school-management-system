@@ -67,10 +67,12 @@ export function BulkPlacementClient({
   schoolId,
   onClose,
   onAssigned,
+  initialStudentIds = [],
 }: {
   schoolId: string;
   onClose: () => void;
   onAssigned: () => void;
+  initialStudentIds?: string[];
 }) {
   const { locale, t } = useI18n();
   const fr = locale === "fr";
@@ -80,7 +82,7 @@ export function BulkPlacementClient({
   const [yearId, setYearId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
-  const [ids, setIds] = useState<string[]>([]);
+  const [ids, setIds] = useState<string[]>(() => [...new Set(initialStudentIds)].slice(0, 100));
   const [search, setSearch] = useState("");
   const [applied, setApplied] = useState("");
   const [page, setPage] = useState(1);
