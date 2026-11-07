@@ -19,6 +19,7 @@ import {
 import { SectionSelectorClient } from "@/components/section-selector-client";
 import { StudentImportClient } from "@/components/student-import-client";
 import { GuardianImportClient } from "@/components/guardian-import-client";
+import { BulkCleanupClient } from "@/components/bulk-cleanup-client";
 import {
   EmptySchoolState,
   SchoolBadge,
@@ -181,6 +182,7 @@ export function StudentsManagementClient({
   const [pageSize, setPageSize] = useState(10);
   const [showImport, setShowImport] = useState(false);
   const [showGuardianImport, setShowGuardianImport] = useState(false);
+  const [showCleanup, setShowCleanup] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -384,6 +386,17 @@ export function StudentsManagementClient({
                   : "Import guardians"}
               </button>
             ) : null}
+            {canImport ? (
+              <button
+                type="button"
+                className={schoolActionClass()}
+                aria-expanded={showCleanup}
+                aria-controls="bulk-cleanup-panel"
+                onClick={() => setShowCleanup((value) => !value)}
+              >
+                {locale === "fr" ? "Suppression groupée" : "Bulk deletion"}
+              </button>
+            ) : null}
             {canCreate ? (
               <Link
                 href="/students/new"
@@ -396,6 +409,19 @@ export function StudentsManagementClient({
           </div>
         </div>
 
+        {showCleanup ? (
+          <div id="bulk-cleanup-panel" className="border-b border-border p-5">
+            <BulkCleanupClient
+              key={schoolId}
+              schoolId={schoolId}
+              onClose={() => setShowCleanup(false)}
+              onDeleted={() => {
+                setPage(1);
+                void loadStudents(1);
+              }}
+            />
+          </div>
+        ) : null}
         {showGuardianImport ? (
           <div
             id="guardian-import-panel"
