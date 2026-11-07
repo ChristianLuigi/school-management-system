@@ -1,5 +1,8 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { Pool } from 'pg';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { BulkCleanupService } from '../src/school-students/bulk-cleanup.service';
 import {
   createIntegrationPool,
   resetIntegrationDatabase,
@@ -90,6 +93,181 @@ describe('CSV import integration', () => {
     await expect(
       harness.staffManagement.importStaff(input, admin.id),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('reimports a deleted student code without erasing the previous identity or history', async () => {
+    const schoolId = await factory.school();
+    const admin = await factory.user();
+    await factory.membership(schoolId, admin.id, 'SCHOOL_ADMIN');
+    const input = {
+      schoolId,
+      rows: [
+        {
+          rowNumber: 2,
+          firstName: 'Original',
+          lastName: 'Student',
+          studentCode: 'LOAD-0001',
+        },
+      ],
+    };
+    await harness.schoolStudents.importStudents(input, admin.id, null);
+    const original = (
+      await pool.query<{ id: string }>(
+        'SELECT id FROM students WHERE school_id=$1',
+        [schoolId],
+      )
+    ).rows[0];
+    const cleanup = new BulkCleanupService(
+      harness.db,
+      harness.schoolStudents,
+      harness.activity,
+    );
+    await cleanup.commit(
+      {
+        schoolId,
+        kind: 'students',
+        ids: [original.id],
+        confirmation: 'DELETE',
+        reason: 'Replace incorrect test import',
+      },
+      admin.id,
+      null,
+    );
+    // Reproduce an existing installation with the old constraint and a deleted
+    // record, then apply the real upgrade migration without modifying that row.
+    await pool.query(`DROP INDEX uq_students_school_student_number_live;
+      ALTER TABLE students ADD CONSTRAINT uq_student_number_per_school UNIQUE(school_id,student_number)`);
+    const migration = await readFile(
+      resolve(
+        __dirname,
+        '../../../infra/db/migrations/081_student_number_soft_delete_uniqueness.sql',
+      ),
+      'utf8',
+    );
+    await pool.query(migration);
+    const corrected = {
+      ...input,
+      rows: [{ ...input.rows[0], firstName: 'Corrected' }],
+    };
+    expect(
+      (
+        await harness.schoolStudents.previewStudentImport(
+          corrected,
+          admin.id,
+          null,
+        )
+      ).readyForImport,
+    ).toBe(true);
+    await expect(
+      harness.schoolStudents.importStudents(corrected, admin.id, null),
+    ).resolves.toEqual({ imported: true, importedCount: 1 });
+    const records = await pool.query<{
+      id: string;
+      first_name: string;
+      deleted_at: Date | null;
+    }>(
+      'SELECT id,first_name,deleted_at FROM students WHERE school_id=$1 ORDER BY created_at,id',
+      [schoolId],
+    );
+    expect(records.rows).toHaveLength(2);
+    expect(records.rows.find((r) => r.id === original.id)).toMatchObject({
+      first_name: 'Original',
+    });
+    expect(
+      records.rows.find((r) => r.id === original.id)?.deleted_at,
+    ).toBeInstanceOf(Date);
+    const live = records.rows.find((r) => !r.deleted_at)!;
+    expect(live.first_name).toBe('Corrected');
+    expect(live.id).not.toBe(original.id);
+    expect(
+      (
+        await pool.query(
+          'SELECT id FROM student_status_history WHERE student_id=$1',
+          [original.id],
+        )
+      ).rowCount,
+    ).toBe(1);
+    expect(
+      (
+        await harness.schoolStudents.previewStudentImport(
+          corrected,
+          admin.id,
+          null,
+        )
+      ).readyForImport,
+    ).toBe(false);
+    // An operator cannot restore both identities under the reused live code.
+    await expect(
+      pool.query('UPDATE students SET deleted_at=NULL WHERE id=$1', [
+        original.id,
+      ]),
+    ).rejects.toMatchObject({ code: '23505' });
+  });
+
+  it('rejects a legacy student number in preview even if its public code differs', async () => {
+    const schoolId = await factory.school();
+    const admin = await factory.user();
+    await factory.membership(schoolId, admin.id, 'SCHOOL_ADMIN');
+    const id = await factory.student(schoolId);
+    await pool.query(
+      "UPDATE students SET student_number='LEGACY-NUMBER',student_code='PUBLIC-CODE' WHERE id=$1",
+      [id],
+    );
+    const preview = await harness.schoolStudents.previewStudentImport(
+      {
+        schoolId,
+        rows: [
+          {
+            rowNumber: 2,
+            firstName: 'New',
+            lastName: 'Student',
+            studentCode: 'LEGACY-NUMBER',
+          },
+        ],
+      },
+      admin.id,
+      null,
+    );
+    expect(preview.readyForImport).toBe(false);
+    expect(preview.rows[0].errors).toContainEqual(
+      expect.objectContaining({ code: 'STUDENT_CODE_ALREADY_EXISTS' }),
+    );
+    await expect(
+      pool.query(
+        "INSERT INTO students(school_id,student_number,student_code,first_name,last_name) VALUES($1,'LEGACY-NUMBER','ANOTHER-CODE','Another','Student')",
+        [schoolId],
+      ),
+    ).rejects.toMatchObject({ code: '23505' });
+  });
+
+  it('keeps concurrent imports of the same live code unique', async () => {
+    const schoolId = await factory.school();
+    const admin = await factory.user();
+    await factory.membership(schoolId, admin.id, 'SCHOOL_ADMIN');
+    const input = {
+      schoolId,
+      rows: [
+        {
+          rowNumber: 2,
+          firstName: 'Concurrent',
+          lastName: 'Student',
+          studentCode: 'LOAD-RACE',
+        },
+      ],
+    };
+    const results = await Promise.allSettled([
+      harness.schoolStudents.importStudents(input, admin.id, null),
+      harness.schoolStudents.importStudents(input, admin.id, null),
+    ]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    expect(
+      (
+        await pool.query(
+          "SELECT id FROM students WHERE school_id=$1 AND student_number='LOAD-RACE' AND deleted_at IS NULL",
+          [schoolId],
+        )
+      ).rowCount,
+    ).toBe(1);
   });
 
   it('validates and atomically imports 600 students without cross-school scope leaks', async () => {

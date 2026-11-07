@@ -2908,14 +2908,12 @@ export class SchoolStudentsService {
     const [existingResult, sectionResult] = await Promise.all([
       this.db.query<{ student_code: string }>(
         `
-        SELECT UPPER(COALESCE(student_code, student_number)) AS student_code
+        SELECT DISTINCT UPPER(codes.value) AS student_code
         FROM students
+        CROSS JOIN LATERAL (VALUES (student_code), (student_number)) AS codes(value)
         WHERE school_id = $1
           AND deleted_at IS NULL
-          AND (
-            UPPER(COALESCE(student_code, '')) = ANY($2::text[])
-            OR UPPER(COALESCE(student_number, '')) = ANY($2::text[])
-          )
+          AND UPPER(codes.value) = ANY($2::text[])
         `,
         [dto.schoolId, studentCodes],
       ),

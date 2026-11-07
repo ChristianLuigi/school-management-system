@@ -28,7 +28,12 @@ La validation est répétée dans la transaction, même après une prévisualisa
 
 ## Safety / operations
 
-No hard DELETE is issued and no new migration is required. The service discovers
+No hard DELETE is issued. Apply migration `081_student_number_soft_delete_uniqueness.sql`
+to allow reuse of a student number after soft deletion. It replaces the legacy
+all-row unique constraint with a live-row unique index, without changing records.
+Older migration files must not be edited. Back up before applying; a lock timeout
+requires retrying in a quieter deployment window, never bypassing the constraint.
+The service discovers
 database foreign keys so new record dependencies block cleanup by default. This
 does not replace authorization review when adding a module that stores references
 only inside JSON or external storage; add its explicit blocker before release.
@@ -50,6 +55,9 @@ not an unreviewed end-user bulk action.
 3. In a transaction, lock the exact students/guardians and links. Verify their
    current deleted_at matches the audited deletion and they have not subsequently
    been repurposed. Check unique codes/references and primary contact conflicts.
+   If a student code was reused by a new live record, restoration must stop until
+   an operator resolves the identity/code conflict. Never merge the two UUIDs or
+   transfer historical ownership automatically.
 4. Restore only those exact rows by setting deleted_at=NULL and updated_at=NOW().
    Restore associated links only if both student and guardian are live. If their
    guardian was removed in a later batch, restore/review that batch first.
