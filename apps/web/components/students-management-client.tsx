@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { SectionSelectorClient } from "@/components/section-selector-client";
 import { StudentImportClient } from "@/components/student-import-client";
+import { GuardianImportClient } from "@/components/guardian-import-client";
 import {
   EmptySchoolState,
   SchoolBadge,
@@ -179,6 +180,7 @@ export function StudentsManagementClient({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [showImport, setShowImport] = useState(false);
+  const [showGuardianImport, setShowGuardianImport] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -353,13 +355,33 @@ export function StudentsManagementClient({
             {canImport ? (
               <button
                 type="button"
-                onClick={() => setShowImport((value) => !value)}
+                onClick={() => {
+                  setShowGuardianImport(false);
+                  setShowImport((value) => !value);
+                }}
                 aria-expanded={showImport}
                 aria-controls="student-import-panel"
                 className={schoolActionClass()}
               >
                 <FileUp className="h-4 w-4" />
                 <span>{t("students.importCsv")}</span>
+              </button>
+            ) : null}
+            {canImport ? (
+              <button
+                type="button"
+                className={schoolActionClass()}
+                aria-expanded={showGuardianImport}
+                aria-controls="guardian-import-panel"
+                onClick={() => {
+                  setShowImport(false);
+                  setShowGuardianImport((value) => !value);
+                }}
+              >
+                <FileUp className="h-4 w-4" />
+                {locale === "fr"
+                  ? "Importer des responsables"
+                  : "Import guardians"}
               </button>
             ) : null}
             {canCreate ? (
@@ -374,11 +396,20 @@ export function StudentsManagementClient({
           </div>
         </div>
 
-        {showImport ? (
+        {showGuardianImport ? (
           <div
-            id="student-import-panel"
+            id="guardian-import-panel"
             className="border-b border-border p-5"
           >
+            <GuardianImportClient
+              key={schoolId}
+              schoolId={schoolId}
+              onClose={() => setShowGuardianImport(false)}
+            />
+          </div>
+        ) : null}
+        {showImport ? (
+          <div id="student-import-panel" className="border-b border-border p-5">
             <StudentImportClient
               schoolId={schoolId}
               onClose={() => setShowImport(false)}
@@ -553,10 +584,7 @@ export function StudentsManagementClient({
             >
               {loading && !rows.length ? <DirectorySkeleton /> : null}
               {rows.map((student) => (
-                <tr
-                  key={student.id}
-                  className="transition hover:bg-surface/80"
-                >
+                <tr key={student.id} className="transition hover:bg-surface/80">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-muted font-semibold text-muted-foreground">
@@ -774,7 +802,9 @@ export function StudentsManagementClient({
                 }}
                 className="rounded-lg border border-border bg-surface px-2 py-1.5 text-xs text-foreground"
               >
-                <option value={10}>{t("students.perPage", { count: 10 })}</option>
+                <option value={10}>
+                  {t("students.perPage", { count: 10 })}
+                </option>
                 <option value={25}>
                   {t("students.perPage", { count: 25 })}
                 </option>

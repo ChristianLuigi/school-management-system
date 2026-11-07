@@ -22,12 +22,15 @@ import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 import { UpdateStudentDocumentDto } from './dto/update-student-document.dto';
 import { UpdateStudentGuardianDto } from './dto/update-student-guardian.dto';
 import { SchoolStudentsService } from './school-students.service';
+import { GuardianImportService } from './guardian-import.service';
+import { GuardianImportDto } from './dto/guardian-import.dto';
 
 @Controller('school-students')
 export class SchoolStudentsController {
   constructor(
     private readonly schoolStudentsService: SchoolStudentsService,
     private readonly internalAuthService: InternalAuthService,
+    private readonly guardianImportService: GuardianImportService,
   ) {}
 
   private async requireSession(authorization: string | undefined) {
@@ -239,6 +242,32 @@ export class SchoolStudentsController {
   ) {
     const session = await this.requireSession(authorization);
     return this.schoolStudentsService.previewStudentImport(
+      body,
+      session.user_id,
+      session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null,
+    );
+  }
+
+  @Post('guardians/import/preview')
+  async previewGuardians(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: GuardianImportDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.guardianImportService.preview(
+      body,
+      session.user_id,
+      session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null,
+    );
+  }
+
+  @Post('guardians/import')
+  async importGuardians(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: GuardianImportDto,
+  ) {
+    const session = await this.requireSession(authorization);
+    return this.guardianImportService.commit(
       body,
       session.user_id,
       session.platform_role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : null,
