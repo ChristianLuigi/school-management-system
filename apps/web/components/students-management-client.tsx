@@ -20,6 +20,7 @@ import { SectionSelectorClient } from "@/components/section-selector-client";
 import { StudentImportClient } from "@/components/student-import-client";
 import { GuardianImportClient } from "@/components/guardian-import-client";
 import { BulkCleanupClient } from "@/components/bulk-cleanup-client";
+import { BulkPlacementClient } from "@/components/bulk-placement-client";
 import {
   EmptySchoolState,
   SchoolBadge,
@@ -183,6 +184,7 @@ export function StudentsManagementClient({
   const [showImport, setShowImport] = useState(false);
   const [showGuardianImport, setShowGuardianImport] = useState(false);
   const [showCleanup, setShowCleanup] = useState(false);
+  const [showPlacement, setShowPlacement] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -397,6 +399,25 @@ export function StudentsManagementClient({
                 {locale === "fr" ? "Suppression groupée" : "Bulk deletion"}
               </button>
             ) : null}
+            {canImport ? (
+              <button
+                type="button"
+                className={schoolActionClass()}
+                aria-expanded={showPlacement}
+                aria-controls="bulk-placement-panel"
+                onClick={() => {
+                  setShowPlacement((value) => !value);
+                  setShowCleanup(false);
+                  setShowGuardianImport(false);
+                  setShowImport(false);
+                }}
+              >
+                <GraduationCap className="h-4 w-4" />
+                {locale === "fr"
+                  ? "Affectation groupée"
+                  : "Bulk class placement"}
+              </button>
+            ) : null}
             {canCreate ? (
               <Link
                 href="/students/new"
@@ -409,6 +430,19 @@ export function StudentsManagementClient({
           </div>
         </div>
 
+        {showPlacement ? (
+          <div id="bulk-placement-panel" className="border-b border-border p-5">
+            <BulkPlacementClient
+              key={schoolId}
+              schoolId={schoolId}
+              onClose={() => setShowPlacement(false)}
+              onAssigned={() => {
+                setPage(1);
+                void loadStudents(1);
+              }}
+            />
+          </div>
+        ) : null}
         {showCleanup ? (
           <div id="bulk-cleanup-panel" className="border-b border-border p-5">
             <BulkCleanupClient

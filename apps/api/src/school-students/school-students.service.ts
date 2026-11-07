@@ -18,6 +18,7 @@ import { UpdateSchoolStudentDto } from './dto/update-school-student.dto';
 import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 import { UpdateStudentDocumentDto } from './dto/update-student-document.dto';
 import { UpdateStudentGuardianDto } from './dto/update-student-guardian.dto';
+import type { PoolClient } from 'pg';
 
 @Injectable()
 export class SchoolStudentsService {
@@ -346,7 +347,9 @@ export class SchoolStudentsService {
       platformRole,
       ['SCHOOL_ADMIN', 'ADMIN_STAFF', 'TEACHER', 'FINANCE_ADMIN'],
     );
-    const officeOnly = !actorRoles.some((role) => ['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'].includes(role));
+    const officeOnly = !actorRoles.some((role) =>
+      ['SCHOOL_ADMIN', 'TEACHER', 'FINANCE_ADMIN'].includes(role),
+    );
 
     const studentResult = await this.db.query<{
       id: string;
@@ -818,7 +821,9 @@ export class SchoolStudentsService {
         previousSchoolAddress: student.previous_school_address,
         photoReceived: student.photo_received,
         birthCertificateReceived: student.birth_certificate_received,
-        vaccinationCardReceived: officeOnly ? null : student.vaccination_card_received,
+        vaccinationCardReceived: officeOnly
+          ? null
+          : student.vaccination_card_received,
         previousSchoolRecordReceived: student.previous_school_record_received,
         healthNotes: officeOnly ? null : student.health_notes,
         allergyNotes: officeOnly ? null : student.allergy_notes,
@@ -838,7 +843,9 @@ export class SchoolStudentsService {
       documents: {
         photoReceived: student.photo_received,
         birthCertificateReceived: student.birth_certificate_received,
-        vaccinationCardReceived: officeOnly ? null : student.vaccination_card_received,
+        vaccinationCardReceived: officeOnly
+          ? null
+          : student.vaccination_card_received,
         previousSchoolRecordReceived: student.previous_school_record_received,
       },
       health: {
@@ -847,17 +854,19 @@ export class SchoolStudentsService {
         medicalNotes: officeOnly ? null : student.medical_notes,
         specialNeeds: officeOnly ? null : student.special_needs,
       },
-      documentRecords: (officeOnly ? [] : documentRecordsResult.rows).map((row) => ({
-        id: row.id,
-        documentType: row.document_type,
-        documentStatus: row.document_status,
-        fileName: row.file_name,
-        fileUrl: row.file_url,
-        receivedAt: row.received_at,
-        verifiedAt: row.verified_at,
-        notes: row.notes,
-        createdAt: row.created_at,
-      })),
+      documentRecords: (officeOnly ? [] : documentRecordsResult.rows).map(
+        (row) => ({
+          id: row.id,
+          documentType: row.document_type,
+          documentStatus: row.document_status,
+          fileName: row.file_name,
+          fileUrl: row.file_url,
+          receivedAt: row.received_at,
+          verifiedAt: row.verified_at,
+          notes: row.notes,
+          createdAt: row.created_at,
+        }),
+      ),
       guardians: guardiansResult.rows.map((row) => ({
         studentGuardianId: row.student_guardian_id,
         guardianId: row.guardian_id,
@@ -922,14 +931,16 @@ export class SchoolStudentsService {
         endedAt: row.ended_at,
         endReason: row.ended_reason,
       })),
-      statusHistory: (officeOnly ? [] : statusHistoryResult.rows).map((row) => ({
-        id: row.id,
-        previousStatus: row.previous_status,
-        newStatus: row.new_status,
-        reason: row.reason,
-        changedByUserId: row.changed_by_user_id,
-        changedAt: row.changed_at,
-      })),
+      statusHistory: (officeOnly ? [] : statusHistoryResult.rows).map(
+        (row) => ({
+          id: row.id,
+          previousStatus: row.previous_status,
+          newStatus: row.new_status,
+          reason: row.reason,
+          changedByUserId: row.changed_by_user_id,
+          changedAt: row.changed_at,
+        }),
+      ),
       capabilities: financeCapabilities,
       finance: financeCapabilities.canViewFinance
         ? {
@@ -982,14 +993,33 @@ export class SchoolStudentsService {
       ['SCHOOL_ADMIN'],
     );
 
-    return this.db.withTransaction(async (client) => {
-      const studentResult = await client.query<{
-        id: string;
-        first_name: string | null;
-        last_name: string | null;
-        student_status: string;
-      }>(
-        `
+    return this.db.withTransaction((client) =>
+      this.assignStudentSectionTx(
+        client,
+        studentId,
+        dto,
+        actorUserId,
+        platformRole,
+      ),
+    );
+  }
+
+  // Caller authorizes first. Sharing the client keeps bulk placement atomic.
+  async assignStudentSectionTx(
+    client: PoolClient,
+    studentId: string,
+    dto: AssignStudentSectionDto,
+    actorUserId: string,
+    platformRole: 'SUPER_ADMIN' | null,
+    onlyUnassigned = false,
+  ) {
+    const studentResult = await client.query<{
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+      student_status: string;
+    }>(
+      `
         SELECT id, first_name, last_name, status::text AS student_status
         FROM students
         WHERE id = $1
@@ -998,39 +1028,39 @@ export class SchoolStudentsService {
         LIMIT 1
         FOR UPDATE
         `,
-        [studentId, dto.schoolId],
+      [studentId, dto.schoolId],
+    );
+
+    const student = studentResult.rows[0];
+
+    if (!student) {
+      throw new NotFoundException('Student not found for this school.');
+    }
+
+    if (
+      !['PRE_REGISTERED', 'REGISTERED', 'ACTIVE'].includes(
+        student.student_status,
+      )
+    ) {
+      throw new BadRequestException(
+        'Only pre-registered, registered, or active students can receive an academic placement.',
       );
+    }
 
-      const student = studentResult.rows[0];
-
-      if (!student) {
-        throw new NotFoundException('Student not found for this school.');
-      }
-
-      if (
-        !['PRE_REGISTERED', 'REGISTERED', 'ACTIVE'].includes(
-          student.student_status,
-        )
-      ) {
-        throw new BadRequestException(
-          'Only pre-registered, registered, or active students can receive an academic placement.',
-        );
-      }
-
-      const sectionResult = await client.query<{
-        id: string;
-        code: string;
-        name_i18n: Record<string, string> | null;
-        academic_year_id: string;
-        academic_year_status: string;
-        academic_year_name_i18n: Record<string, string> | null;
-        grade_level_id: string;
-        grade_level_code: string;
-        grade_level_name_i18n: Record<string, string> | null;
-        capacity: number | null;
-        start_date: string;
-      }>(
-        `
+    const sectionResult = await client.query<{
+      id: string;
+      code: string;
+      name_i18n: Record<string, string> | null;
+      academic_year_id: string;
+      academic_year_status: string;
+      academic_year_name_i18n: Record<string, string> | null;
+      grade_level_id: string;
+      grade_level_code: string;
+      grade_level_name_i18n: Record<string, string> | null;
+      capacity: number | null;
+      start_date: string;
+    }>(
+      `
         SELECT
           se.id,
           se.code,
@@ -1058,26 +1088,26 @@ export class SchoolStudentsService {
         LIMIT 1
         FOR UPDATE OF se
         `,
-        [dto.sectionId, dto.schoolId],
+      [dto.sectionId, dto.schoolId],
+    );
+
+    const section = sectionResult.rows[0];
+
+    if (!section) {
+      throw new NotFoundException('Section not found for this school.');
+    }
+
+    if (section.academic_year_status === 'CLOSED') {
+      throw new BadRequestException(
+        'Students cannot be assigned to a closed academic year.',
       );
+    }
 
-      const section = sectionResult.rows[0];
-
-      if (!section) {
-        throw new NotFoundException('Section not found for this school.');
-      }
-
-      if (section.academic_year_status === 'CLOSED') {
-        throw new BadRequestException(
-          'Students cannot be assigned to a closed academic year.',
-        );
-      }
-
-      const currentEnrollmentResult = await client.query<{
-        id: string;
-        section_id: string;
-      }>(
-        `
+    const currentEnrollmentResult = await client.query<{
+      id: string;
+      section_id: string;
+    }>(
+      `
         SELECT id, section_id
         FROM enrollments
         WHERE student_id = $1
@@ -1087,30 +1117,36 @@ export class SchoolStudentsService {
         LIMIT 1
         FOR UPDATE
         `,
-        [studentId],
+      [studentId],
+    );
+
+    const currentEnrollment = currentEnrollmentResult.rows[0];
+
+    if (onlyUnassigned && currentEnrollment) {
+      throw new BadRequestException(
+        'Bulk placement cannot transfer an already assigned student.',
       );
+    }
 
-      const currentEnrollment = currentEnrollmentResult.rows[0];
+    if (currentEnrollment?.section_id === dto.sectionId) {
+      return {
+        studentId,
+        sectionId: dto.sectionId,
+        studentStatus: student.student_status,
+        unchanged: true,
+      };
+    }
 
-      if (currentEnrollment?.section_id === dto.sectionId) {
-        return {
-          studentId,
-          sectionId: dto.sectionId,
-          studentStatus: student.student_status,
-          unchanged: true,
-        };
-      }
+    const reason = dto.reason?.trim() || null;
 
-      const reason = dto.reason?.trim() || null;
+    if (currentEnrollment && !reason) {
+      throw new BadRequestException(
+        'A reason is required when transferring a student to another section.',
+      );
+    }
 
-      if (currentEnrollment && !reason) {
-        throw new BadRequestException(
-          'A reason is required when transferring a student to another section.',
-        );
-      }
-
-      const occupancyResult = await client.query<{ count: string }>(
-        `
+    const occupancyResult = await client.query<{ count: string }>(
+      `
         SELECT COUNT(*)::text AS count
         FROM enrollments
         WHERE section_id = $1
@@ -1118,22 +1154,22 @@ export class SchoolStudentsService {
           AND enrollment_status = 'ACTIVE'
           AND deleted_at IS NULL
         `,
-        [dto.sectionId, studentId],
+      [dto.sectionId, studentId],
+    );
+    const activeEnrollmentCount = Number(occupancyResult.rows[0]?.count ?? 0);
+
+    if (
+      section.capacity !== null &&
+      activeEnrollmentCount >= section.capacity
+    ) {
+      throw new BadRequestException(
+        'The selected section has reached its configured capacity.',
       );
-      const activeEnrollmentCount = Number(occupancyResult.rows[0]?.count ?? 0);
+    }
 
-      if (
-        section.capacity !== null &&
-        activeEnrollmentCount >= section.capacity
-      ) {
-        throw new BadRequestException(
-          'The selected section has reached its configured capacity.',
-        );
-      }
-
-      if (currentEnrollment) {
-        await client.query(
-          `
+    if (currentEnrollment) {
+      await client.query(
+        `
           UPDATE enrollments
           SET
             enrollment_status = 'TRANSFERRED',
@@ -1146,12 +1182,12 @@ export class SchoolStudentsService {
             AND deleted_at IS NULL
             AND enrollment_status = 'ACTIVE'
           `,
-          [currentEnrollment.id, reason, actorUserId],
-        );
-      }
+        [currentEnrollment.id, reason, actorUserId],
+      );
+    }
 
-      const enrollmentResult = await client.query<{ id: string }>(
-        `
+    const enrollmentResult = await client.query<{ id: string }>(
+      `
         INSERT INTO enrollments (
           student_id,
           academic_year_id,
@@ -1163,34 +1199,34 @@ export class SchoolStudentsService {
         VALUES ($1, $2, $3, $4, 'ACTIVE', $5::date)
         RETURNING id
         `,
-        [
-          studentId,
-          section.academic_year_id,
-          section.grade_level_id,
-          dto.sectionId,
-          section.start_date,
-        ],
-      );
+      [
+        studentId,
+        section.academic_year_id,
+        section.grade_level_id,
+        dto.sectionId,
+        section.start_date,
+      ],
+    );
 
-      let studentStatus = student.student_status;
-      let activated = false;
+    let studentStatus = student.student_status;
+    let activated = false;
 
-      if (dto.activateStudent && student.student_status !== 'ACTIVE') {
-        studentStatus = 'ACTIVE';
-        activated = true;
-        const activationReason = reason || 'Activated with academic placement.';
+    if (dto.activateStudent && student.student_status !== 'ACTIVE') {
+      studentStatus = 'ACTIVE';
+      activated = true;
+      const activationReason = reason || 'Activated with academic placement.';
 
-        await client.query(
-          `
+      await client.query(
+        `
           UPDATE students
           SET status = 'ACTIVE', updated_at = NOW()
           WHERE id = $1
             AND school_id = $2
           `,
-          [studentId, dto.schoolId],
-        );
-        await client.query(
-          `
+        [studentId, dto.schoolId],
+      );
+      await client.query(
+        `
           INSERT INTO student_status_history (
             school_id,
             student_id,
@@ -1201,63 +1237,61 @@ export class SchoolStudentsService {
           )
           VALUES ($1, $2, $3, 'ACTIVE', $4, $5)
           `,
-          [
-            dto.schoolId,
-            studentId,
-            student.student_status,
-            activationReason,
-            actorUserId,
-          ],
-        );
-      }
-
-      await this.platformActivityService.recordTx(client, {
-        eventType: currentEnrollment
-          ? 'STUDENT_SECTION_TRANSFERRED'
-          : 'STUDENT_SECTION_ASSIGNED',
-        actorType:
-          platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
-        actorUserId,
-        schoolId: dto.schoolId,
-        summary: currentEnrollment
-          ? 'Student transferred to section ' + section.code + '.'
-          : 'Student assigned to section ' + section.code + '.',
-        payload: {
+        [
+          dto.schoolId,
           studentId,
-          previousEnrollmentId: currentEnrollment?.id ?? null,
-          previousSectionId: currentEnrollment?.section_id ?? null,
-          newEnrollmentId: enrollmentResult.rows[0].id,
-          newSectionId: dto.sectionId,
-          sectionCode: section.code,
-          reason,
-          activated,
-        },
-      });
+          student.student_status,
+          activationReason,
+          actorUserId,
+        ],
+      );
+    }
 
-      return {
+    await this.platformActivityService.recordTx(client, {
+      eventType: currentEnrollment
+        ? 'STUDENT_SECTION_TRANSFERRED'
+        : 'STUDENT_SECTION_ASSIGNED',
+      actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+      actorUserId,
+      schoolId: dto.schoolId,
+      summary: currentEnrollment
+        ? 'Student transferred to section ' + section.code + '.'
+        : 'Student assigned to section ' + section.code + '.',
+      payload: {
         studentId,
-        enrollmentId: enrollmentResult.rows[0].id,
-        studentStatus,
+        previousEnrollmentId: currentEnrollment?.id ?? null,
+        previousSectionId: currentEnrollment?.section_id ?? null,
+        newEnrollmentId: enrollmentResult.rows[0].id,
+        newSectionId: dto.sectionId,
+        sectionCode: section.code,
+        reason,
         activated,
-        section: {
-          id: section.id,
-          code: section.code,
-          nameI18n: section.name_i18n,
-          capacity: section.capacity,
-          activeEnrollmentCount: activeEnrollmentCount + 1,
-        },
-        academicYear: {
-          id: section.academic_year_id,
-          nameI18n: section.academic_year_name_i18n,
-          status: section.academic_year_status,
-        },
-        gradeLevel: {
-          id: section.grade_level_id,
-          code: section.grade_level_code,
-          nameI18n: section.grade_level_name_i18n,
-        },
-      };
+      },
     });
+
+    return {
+      studentId,
+      enrollmentId: enrollmentResult.rows[0].id,
+      studentStatus,
+      activated,
+      section: {
+        id: section.id,
+        code: section.code,
+        nameI18n: section.name_i18n,
+        capacity: section.capacity,
+        activeEnrollmentCount: activeEnrollmentCount + 1,
+      },
+      academicYear: {
+        id: section.academic_year_id,
+        nameI18n: section.academic_year_name_i18n,
+        status: section.academic_year_status,
+      },
+      gradeLevel: {
+        id: section.grade_level_id,
+        code: section.grade_level_code,
+        nameI18n: section.grade_level_name_i18n,
+      },
+    };
   }
 
   async changeStudentStatus(
@@ -2776,7 +2810,11 @@ export class SchoolStudentsService {
 
     type ImportIssue = { code: string; field: string; message: string };
     const addIssue = (issues: ImportIssue[], issue: ImportIssue) => {
-      if (!issues.some((item) => item.code === issue.code && item.field === issue.field)) {
+      if (
+        !issues.some(
+          (item) => item.code === issue.code && item.field === issue.field,
+        )
+      ) {
         issues.push(issue);
       }
     };
@@ -2802,32 +2840,44 @@ export class SchoolStudentsService {
 
       if (!firstName) {
         addIssue(errors, {
-          code: 'FIRST_NAME_REQUIRED', field: 'firstName', message: 'First name is required.',
+          code: 'FIRST_NAME_REQUIRED',
+          field: 'firstName',
+          message: 'First name is required.',
         });
       }
       if (!lastName) {
         addIssue(errors, {
-          code: 'LAST_NAME_REQUIRED', field: 'lastName', message: 'Last name is required.',
+          code: 'LAST_NAME_REQUIRED',
+          field: 'lastName',
+          message: 'Last name is required.',
         });
       }
       if (firstName && firstName.length > 120) {
         addIssue(errors, {
-          code: 'FIRST_NAME_TOO_LONG', field: 'firstName', message: 'First name cannot exceed 120 characters.',
+          code: 'FIRST_NAME_TOO_LONG',
+          field: 'firstName',
+          message: 'First name cannot exceed 120 characters.',
         });
       }
       if (lastName && lastName.length > 120) {
         addIssue(errors, {
-          code: 'LAST_NAME_TOO_LONG', field: 'lastName', message: 'Last name cannot exceed 120 characters.',
+          code: 'LAST_NAME_TOO_LONG',
+          field: 'lastName',
+          message: 'Last name cannot exceed 120 characters.',
         });
       }
       if (studentCode && studentCode.length > 50) {
         addIssue(errors, {
-          code: 'STUDENT_CODE_TOO_LONG', field: 'studentCode', message: 'Student code cannot exceed 50 characters.',
+          code: 'STUDENT_CODE_TOO_LONG',
+          field: 'studentCode',
+          message: 'Student code cannot exceed 50 characters.',
         });
       }
       if (gender && gender !== 'MALE' && gender !== 'FEMALE') {
         addIssue(errors, {
-          code: 'INVALID_GENDER', field: 'gender', message: 'Gender must be MALE or FEMALE.',
+          code: 'INVALID_GENDER',
+          field: 'gender',
+          message: 'Gender must be MALE or FEMALE.',
         });
       }
       if (dateOfBirth) {
@@ -2840,27 +2890,37 @@ export class SchoolStudentsService {
           parsed.toISOString().slice(0, 10) !== dateOfBirth
         ) {
           addIssue(errors, {
-            code: 'INVALID_DATE_OF_BIRTH', field: 'dateOfBirth', message: 'Date of birth must be a valid YYYY-MM-DD date.',
+            code: 'INVALID_DATE_OF_BIRTH',
+            field: 'dateOfBirth',
+            message: 'Date of birth must be a valid YYYY-MM-DD date.',
           });
         } else if (dateOfBirth > today) {
           addIssue(errors, {
-            code: 'FUTURE_DATE_OF_BIRTH', field: 'dateOfBirth', message: 'Date of birth cannot be in the future.',
+            code: 'FUTURE_DATE_OF_BIRTH',
+            field: 'dateOfBirth',
+            message: 'Date of birth cannot be in the future.',
           });
         }
       }
       if ((rowNumberCounts.get(row.rowNumber) ?? 0) > 1) {
         addIssue(errors, {
-          code: 'DUPLICATE_ROW_NUMBER', field: 'rowNumber', message: 'CSV row number is duplicated in this request.',
+          code: 'DUPLICATE_ROW_NUMBER',
+          field: 'rowNumber',
+          message: 'CSV row number is duplicated in this request.',
         });
       }
       if (!studentCode) {
         addIssue(warnings, {
-          code: 'STUDENT_CODE_WILL_BE_GENERATED', field: 'studentCode', message: 'A student code will be generated during import.',
+          code: 'STUDENT_CODE_WILL_BE_GENERATED',
+          field: 'studentCode',
+          message: 'A student code will be generated during import.',
         });
       }
       if (!sectionId) {
         addIssue(warnings, {
-          code: 'NO_SECTION', field: 'sectionId', message: 'The student will be registered without a class.',
+          code: 'NO_SECTION',
+          field: 'sectionId',
+          message: 'The student will be registered without a class.',
         });
       }
 
@@ -2879,8 +2939,11 @@ export class SchoolStudentsService {
           photoReceived: row.photoReceived ?? false,
           birthCertificateReceived: row.birthCertificateReceived ?? false,
           vaccinationCardReceived: row.vaccinationCardReceived ?? false,
-          previousSchoolRecordReceived: row.previousSchoolRecordReceived ?? false,
-          studentStatus: sectionId ? ('ACTIVE' as const) : ('REGISTERED' as const),
+          previousSchoolRecordReceived:
+            row.previousSchoolRecordReceived ?? false,
+          studentStatus: sectionId
+            ? ('ACTIVE' as const)
+            : ('REGISTERED' as const),
         },
         valid: false,
         errors,
@@ -2940,17 +3003,26 @@ export class SchoolStudentsService {
       const studentCode = row.normalized.studentCode;
       if (studentCode && (codeCounts.get(studentCode) ?? 0) > 1) {
         addIssue(row.errors, {
-          code: 'DUPLICATE_STUDENT_CODE_IN_FILE', field: 'studentCode', message: 'Student code appears more than once in this file.',
+          code: 'DUPLICATE_STUDENT_CODE_IN_FILE',
+          field: 'studentCode',
+          message: 'Student code appears more than once in this file.',
         });
       }
       if (studentCode && existingCodes.has(studentCode)) {
         addIssue(row.errors, {
-          code: 'STUDENT_CODE_ALREADY_EXISTS', field: 'studentCode', message: 'Student code is already used in this school.',
+          code: 'STUDENT_CODE_ALREADY_EXISTS',
+          field: 'studentCode',
+          message: 'Student code is already used in this school.',
         });
       }
-      if (row.normalized.sectionId && !availableSections.has(row.normalized.sectionId)) {
+      if (
+        row.normalized.sectionId &&
+        !availableSections.has(row.normalized.sectionId)
+      ) {
         addIssue(row.errors, {
-          code: 'SECTION_NOT_AVAILABLE', field: 'sectionId', message: 'The selected section is not available for this school.',
+          code: 'SECTION_NOT_AVAILABLE',
+          field: 'sectionId',
+          message: 'The selected section is not available for this school.',
         });
       }
       row.valid = row.errors.length === 0;
@@ -2975,7 +3047,11 @@ export class SchoolStudentsService {
     actorUserId: string,
     platformRole: 'SUPER_ADMIN' | null,
   ) {
-    const preview = await this.previewStudentImport(dto, actorUserId, platformRole);
+    const preview = await this.previewStudentImport(
+      dto,
+      actorUserId,
+      platformRole,
+    );
     if (!preview.readyForImport) {
       throw new BadRequestException(
         'The student file contains errors. Preview and correct it before importing.',
@@ -3065,7 +3141,8 @@ export class SchoolStudentsService {
         const importedCount = result.rows[0]?.imported_count ?? 0;
         await this.platformActivityService.recordTx(client, {
           eventType: 'STUDENTS_CSV_IMPORTED',
-          actorType: platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
+          actorType:
+            platformRole === 'SUPER_ADMIN' ? 'SUPERADMIN' : 'SCHOOL_STAFF',
           actorUserId,
           schoolId: dto.schoolId,
           summary: `${importedCount} student records imported from CSV.`,
